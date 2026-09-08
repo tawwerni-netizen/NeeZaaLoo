@@ -1,0 +1,35 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.logo img {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+
+/* Light theme is the default declaration (matches tokens.css's own
+   structure): show the light-ground asset, hide the dark-ground one. */
+.dark {
+  display: none;
+}
+
+/* System dark, unless the user explicitly chose light. */
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme="light"])) .light {
+    display: none;
+  }
+  :global(:root:not([data-theme="light"])) .dark {
+    display: block;
+  }
+}
+
+/* Explicit toggle wins in both directions. */
+:global([data-theme="dark"]) .light {
+  display: none;
+}
+:global([data-theme="dark"]) .dark {
+  display: block;
+}

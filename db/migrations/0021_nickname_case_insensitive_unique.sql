@@ -1,0 +1,13 @@
+-- nickname.mjs's own uniqueness check compares case-insensitively ("Admin"
+-- must not be claimable merely because "admin" is spelled differently),
+-- but an application-level SELECT-then-UPDATE check is exactly the shape
+-- of race this project has twice already found to be exploitable under
+-- real concurrency (see packages/auth/src/email-challenge.mjs and
+-- oauth-identity.mjs's own history -- and this exact index was born from
+-- a real-Postgres concurrency test in this slice failing the first time
+-- it ran without it). The ORIGINAL `handle` UNIQUE constraint (migration
+-- 0003) is case-SENSITIVE, so it does not by itself stop two players
+-- from concurrently claiming "Foo" and "foo". This functional index makes
+-- the case-insensitive guarantee a REAL database constraint, closing that
+-- race structurally rather than trusting application code to win it.
+CREATE UNIQUE INDEX player_handle_lower_unique ON player (LOWER(handle));

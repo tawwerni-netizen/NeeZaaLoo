@@ -1,0 +1,33 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+  max-width: 420px;
+}
+
+.label {
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+}
+
+.row {
+  display: flex;
+  gap: var(--nz-space-3);
+}
+
+.input {
+  flex: 1;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  color: inherit;
+  font: inherit;
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--nz-accent);
+  outline-offset: 1px;
+}

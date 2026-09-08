@@ -1,0 +1,11 @@
+.countdown {
+  font-family: var(--nz-font-num);
+  font-size: 120px;
+  font-weight: 700;
+  color: var(--nz-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .countdown { font-size: 80px; }
+}

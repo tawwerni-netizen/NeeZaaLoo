@@ -1,0 +1,85 @@
+/* The single source of truth for every colour, spacing, type, and motion
+   value in this app. Never redeclare a token here -- add missing tokens to
+   packages/tokens/tokens.css itself, so every future surface (admin,
+   Android WebView fallback, marketing site) shares the same values. */
+@import "../../../../packages/tokens/tokens.css";
+
+/* next/font self-hosts each face and exposes it under its own generated CSS
+   variable; this is the one place that plugs those variables in as the
+   FIRST choice in each token's existing fallback stack, without touching
+   packages/tokens/tokens.css itself (the shared source of truth every other
+   surface -- admin, a future marketing site -- also reads). */
+:root {
+  --nz-font-display: var(--font-archivo), "Archivo", "IBM Plex Sans", system-ui, sans-serif;
+  --nz-font-ui:      var(--font-plex-sans), "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nz-font-arabic:  var(--font-plex-arabic), "IBM Plex Sans Arabic", "Tajawal", "Cairo", sans-serif;
+  --nz-font-num:     var(--font-plex-mono), "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--nz-bg);
+  color: var(--nz-text);
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-base);
+  line-height: var(--nz-leading-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--nz-font-display);
+  letter-spacing: var(--nz-tracking-display);
+  text-wrap: balance;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--nz-focus);
+  border-radius: var(--nz-radius-sm);
+}
+
+/* Screen-reader-only utility -- critical information must never depend on
+   sight alone (accessibility: motion and colour both need a text fallback). */
+.nz-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nz-container {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-inline: var(--nz-space-6);
+}
+
+@media (max-width: 640px) {
+  .nz-container {
+    padding-inline: var(--nz-space-4);
+  }
+}

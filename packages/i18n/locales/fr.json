@@ -1,0 +1,640 @@
+{
+  "nav": {
+    "play": "Jouer",
+    "rank": "Classement",
+    "tournament": "Tournoi",
+    "learn": "Découvrir",
+    "wallet": "Portefeuille",
+    "log_in": "Connexion",
+    "log_out": "Déconnexion",
+    "play_now": "Jouer maintenant",
+    "home_aria_label": "Accueil Nizalo",
+    "security": "Sécurité",
+    "profile": "Profil",
+    "support": "Assistance",
+    "chat": "Chat",
+    "watch": "Regarder"
+  },
+  "footer": {
+    "learn": "Découvrir",
+    "tournaments": "Tournois",
+    "leaderboard": "Classement",
+    "support": "Support",
+    "copyright": "© {year} Nizalo. Votre duel. Votre preuve."
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Compétition mondiale de compétences",
+      "headline_line1": "Tu penses être doué ?",
+      "headline_line2": "Prouve-le.",
+      "subhead": "Votre duel. Votre preuve. Échecs et Calcul Rapide, décidés uniquement par le talent — appariés équitablement, notés honnêtement, jamais laissés au hasard.",
+      "cta_primary": "Trouver un adversaire",
+      "cta_secondary": "Voir comment ça marche"
+    },
+    "games": {
+      "heading": "Choisissez votre jeu",
+      "duration_label": "Durée",
+      "mode_label": "Mode",
+      "play_cta": "Jouer à {name}",
+      "coming_soon": {
+        "title": "D’autres jeux arrivent",
+        "body": "Memory Grid, Pattern, Reaction et Precision sont développés sur la même base équitable, contrôlée par le serveur."
+      },
+      "chess": {
+        "description": "L’épreuve de compétence originale. Entièrement contrôlé par le serveur, chaque règle appliquée, chaque partie rejouable.",
+        "duration": "5–15 min",
+        "mode": "1 contre 1 · Classé ou libre"
+      },
+      "speed_math": {
+        "description": "Un chronomètre partagé de 60 secondes. Les mêmes questions, au même instant — décidé uniquement par la vitesse et la précision.",
+        "duration": "60 s",
+        "mode": "1 contre 1 · Classé ou libre"
+      }
+    },
+    "how": {
+      "heading": "Comment ça marche",
+      "steps": {
+        "try": {
+          "title": "Essayez",
+          "body": "Choisissez un jeu. Jouez un duel — sans engagement, sans dépôt."
+        },
+        "compete": {
+          "title": "Affrontez",
+          "body": "Apparié avec un joueur de votre niveau, vérifié par le serveur du début à la fin."
+        },
+        "improve": {
+          "title": "Progressez",
+          "body": "Chaque résultat montre ce qu’il faut travailler, pas seulement si vous avez gagné."
+        },
+        "climb": {
+          "title": "Grimpez",
+          "body": "Votre classement et votre score de compétence mondiale évoluent à chaque partie."
+        },
+        "win": {
+          "title": "Gagnez",
+          "body": "Montez en rang, qualifiez-vous pour des tournois et, là où c’est autorisé, jouez pour de vrais prix."
+        }
+      }
+    }
+  },
+  "common": {
+    "game_names": {
+      "chess": "Échecs",
+      "speed_math": "Calcul Rapide"
+    },
+    "unknown_game": "Jeu inconnu."
+  },
+  "auth": {
+    "register": {
+      "title": "Créez votre compte",
+      "subtitle": "Un seul duel suffit pour montrer de quoi vous êtes capable.",
+      "password_label": "Mot de passe",
+      "submit": "Créer un compte",
+      "submitting": "Création du compte…",
+      "switch_prompt": "Déjà un compte ?",
+      "switch_cta": "Se connecter",
+      "nickname_label": "Pseudo"
+    },
+    "login": {
+      "title": "Connexion",
+      "subtitle": "Votre duel vous attend.",
+      "password_label": "Mot de passe",
+      "submit": "Se connecter",
+      "submitting": "Connexion…",
+      "switch_prompt": "Nouveau ici ?",
+      "switch_cta": "Créer un compte",
+      "nickname_label": "Pseudo",
+      "google_cta": "Continuer avec Google",
+      "email_code_cta": "M'envoyer un code à 6 caractères",
+      "forgot_password_cta": "Mot de passe oublié ?",
+      "or_divider": "ou"
+    },
+    "errors": {
+      "weak_password": "Ce mot de passe est trop facile à deviner. Utilisez au moins 10 caractères, en évitant les mots courants.",
+      "handle_taken": "Ce pseudo est déjà pris. Essayez-en un autre.",
+      "bad_credentials": "Pseudo ou mot de passe incorrect.",
+      "locked_out": "Trop de tentatives. Réessayez dans quelques minutes.",
+      "totp_required": "Saisissez votre code d’authentification pour continuer.",
+      "totp_invalid": "Ce code n’a pas fonctionné. Vérifiez votre authentificateur et réessayez.",
+      "network_error": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+      "generic": "Une erreur est survenue. Réessayez.",
+      "link_required": "Un compte existe déjà avec cet e-mail. Connectez-vous, puis associez Google depuis Sécurité.",
+      "subject_already_linked": "Ce compte Google est déjà associé à un autre compte Nizalo.",
+      "already_linked": "Votre compte est déjà associé à un autre compte Google.",
+      "last_auth_method": "Créez un mot de passe avant de déconnecter Google, pour ne pas perdre l'accès à votre compte.",
+      "not_linked": "Google n'est pas associé à votre compte.",
+      "credential_already_set": "Vous avez déjà un mot de passe. Utilisez plutôt « Changer le mot de passe ».",
+      "google_login_unavailable": "La connexion Google n'est pas disponible pour le moment. Essayez une autre méthode.",
+      "provider_error": "Un problème est survenu avec la connexion Google. Réessayez.",
+      "bad_state": "Ce lien de connexion est invalide ou a expiré. Réessayez.",
+      "google_denied": "Vous avez annulé la connexion Google. Aucune modification n'a été effectuée.",
+      "invalid_shape": "Le pseudo doit comporter 3 à 24 caractères : lettres, chiffres, tiret bas ou tiret uniquement.",
+      "reserved": "Ce pseudo n'est pas disponible.",
+      "prohibited": "Ce pseudo n'est pas autorisé.",
+      "taken": "Ce pseudo est déjà pris. Essayez-en un autre.",
+      "cooldown": "Vous pourrez changer votre pseudo à nouveau bientôt, mais pas tout de suite.",
+      "too_long": "Cette bio est trop longue.",
+      "too_large": "Cette image est trop volumineuse. Essayez un fichier plus petit.",
+      "invalid_image": "Cela ne ressemble pas à une image valide. Essayez un fichier PNG, JPEG ou WEBP.",
+      "not_owned": "Vous ne possédez pas encore ce badge.",
+      "cannot_report_self": "Vous ne pouvez pas signaler votre propre contenu."
+    },
+    "email_code": {
+      "title": "Se connecter avec un code",
+      "subtitle": "Nous vous enverrons un code à usage unique par e-mail.",
+      "email_label": "E-mail",
+      "request_cta": "Envoyer le code",
+      "requesting": "Envoi en cours…",
+      "sent_message": "Si cette adresse est éligible, un code a été envoyé. Vérifiez votre boîte de réception.",
+      "code_label": "Code à 6 caractères",
+      "totp_label": "Code d'authentification (si activé)",
+      "verify_cta": "Se connecter",
+      "verifying": "Connexion en cours…",
+      "back_to_password": "Se connecter avec un mot de passe à la place"
+    },
+    "forgot_password": {
+      "title": "Réinitialiser votre mot de passe",
+      "subtitle": "Nous vous enverrons un code par e-mail pour le réinitialiser.",
+      "email_label": "E-mail",
+      "request_cta": "Envoyer le code de réinitialisation",
+      "requesting": "Envoi en cours…",
+      "sent_message": "Si cette adresse possède un compte, un code de réinitialisation a été envoyé.",
+      "code_label": "Code de réinitialisation",
+      "new_password_label": "Nouveau mot de passe",
+      "confirm_cta": "Réinitialiser le mot de passe",
+      "confirming": "Réinitialisation en cours…",
+      "success_message": "Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.",
+      "back_to_login": "Retour à la connexion"
+    },
+    "google": {
+      "completing": "Finalisation de la connexion…",
+      "totp_label": "Code d'authentification",
+      "totp_cta": "Continuer",
+      "link_required_title": "Le compte existe déjà",
+      "link_required_cta": "Aller à la connexion",
+      "linked_title": "Google connecté",
+      "linked_body": "Votre compte Google est maintenant connecté.",
+      "link_failed_title": "Impossible de connecter Google",
+      "denied_title": "Connexion annulée",
+      "invalid_title": "Une erreur est survenue",
+      "error_title": "Impossible de se connecter avec Google",
+      "unavailable_title": "Connexion Google indisponible",
+      "continue_cta": "Continuer vers Nizalo"
+    },
+    "security": {
+      "title": "Sécurité",
+      "subtitle": "Gérez la façon dont vous vous connectez à Nizalo.",
+      "password_label": "Mot de passe",
+      "password_set": "Activé",
+      "password_not_set": "Non défini",
+      "email_label": "E-mail",
+      "email_verified": "Vérifié",
+      "email_unverified": "Non vérifié",
+      "email_not_set": "Non défini",
+      "google_label": "Google",
+      "google_connected": "Connecté",
+      "google_not_connected": "Non connecté",
+      "totp_label": "Authentification à deux facteurs",
+      "totp_enabled": "Activée",
+      "totp_disabled": "Désactivée",
+      "connect_google_cta": "Connecter",
+      "disconnect_google_cta": "Déconnecter",
+      "set_password_cta": "Définir un mot de passe",
+      "change_password_cta": "Changer le mot de passe",
+      "set_password_title": "Créez votre mot de passe Nizalo",
+      "change_password_title": "Changer le mot de passe",
+      "password_field_label": "Nouveau mot de passe",
+      "save_password_cta": "Enregistrer le mot de passe",
+      "saving_password": "Enregistrement…",
+      "password_saved": "Mot de passe enregistré.",
+      "need_password_before_disconnect_title": "Créez d'abord un mot de passe",
+      "need_password_before_disconnect_body": "Créez un mot de passe Nizalo avant de déconnecter Google, pour ne pas perdre l'accès à votre compte.",
+      "confirm_disconnect_title": "Déconnecter Google ?",
+      "confirm_disconnect_body": "Vous aurez besoin de votre mot de passe Nizalo pour vous connecter désormais.",
+      "confirm_disconnect_cta": "Déconnecter",
+      "cancel_cta": "Annuler",
+      "disconnected_message": "Google déconnecté.",
+      "step_up_password_label": "Confirmez votre mot de passe",
+      "step_up_totp_label": "Code d'authentification",
+      "step_up_cta": "Confirmer"
+    }
+  },
+  "play": {
+    "select": {
+      "heading": "Sélectionnez votre jeu",
+      "duration_label": "Durée",
+      "style_label": "Style",
+      "mode_label": "Mode",
+      "eligibility_label": "Éligibilité",
+      "cta": "Trouver un adversaire →",
+      "eligibility_free": "Gratuit",
+      "difficulty_deep": "Réfléchi",
+      "difficulty_fast": "Rapide"
+    },
+    "continue": "Continuer",
+    "back": "Retour",
+    "mode": {
+      "heading": "Choisissez comment jouer",
+      "vs_computer": { "title": "Contre l'ordinateur", "description": "Entraînez-vous contre une IA" },
+      "friend": { "title": "Défier un ami", "description": "Défiez quelqu'un par son pseudo" },
+      "competitive": { "title": "Compétitif", "description": "Appariement classé selon votre niveau" },
+      "tournament": { "title": "Tournoi", "description": "Affrontez-vous dans un tableau pour un prix" }
+    },
+    "difficulty": {
+      "heading": "Choisissez une difficulté"
+    },
+    "stake": {
+      "heading": "Choisissez votre mise",
+      "free_only": "Gratuit uniquement",
+      "free_only_note": "Les mises en argent ne sont pas encore disponibles pour ce jeu."
+    },
+    "challenge": {
+      "heading": "Défier un ami",
+      "nickname_label": "Pseudo de l'adversaire",
+      "nickname_placeholder": "Entrez un pseudo",
+      "send": "Envoyer le défi",
+      "sending": "Envoi…",
+      "sent": "Défi envoyé — en attente de la réponse de {handle}.",
+      "incoming_heading": "Défis reçus",
+      "outgoing_heading": "Défis envoyés",
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "cancel": "Annuler",
+      "empty_incoming": "Aucun défi reçu.",
+      "empty_outgoing": "Aucun défi envoyé.",
+      "from": "{handle} vous a défié",
+      "waiting_for": "En attente de {handle}",
+      "error_unknown_opponent": "Aucun joueur avec ce pseudo.",
+      "error_self": "Vous ne pouvez pas vous défier vous-même.",
+      "error_already_pending": "Vous avez déjà un défi en attente avec {handle}.",
+      "error_generic": "Impossible d'envoyer le défi. Réessayez."
+    }
+  },
+  "dashboard": {
+    "welcome": "Content de vous revoir",
+    "play_now": "Jouer maintenant",
+    "global_skill": {
+      "title": "Score de Compétence Mondiale",
+      "empty": "Jouez 10 parties classées dans un même jeu pour établir un score.",
+      "view_breakdown": "Voir le détail complet →",
+      "percentile": "{value}e percentile"
+    },
+    "recent": {
+      "title": "Parties récentes",
+      "empty": "Pas encore de partie. Votre historique apparaîtra ici.",
+      "full_history": "Historique complet →"
+    },
+    "tournaments": {
+      "title": "Tournois",
+      "empty": "Découvrez les inscriptions ouvertes.",
+      "browse": "Parcourir les tournois →"
+    }
+  },
+  "matchmaking": {
+    "joining_queue": "Ajout à la file {game}…",
+    "finding_1": "Recherche d’un adversaire…",
+    "finding_2": "Appariement selon votre niveau…",
+    "finding_3": "Préparation de votre duel…",
+    "cancel": "Annuler",
+    "you": "Vous",
+    "opponent": "Adversaire",
+    "vs": "VS",
+    "go": "GO",
+    "join_error": "Impossible de rejoindre la file. Réessayez."
+  },
+  "game": {
+    "connected": "● Connecté",
+    "connecting": "○ Connexion…",
+    "reconnecting": "○ Reconnexion…",
+    "resign": "Abandonner",
+    "playing_as": "Vous jouez en tant que {handle}",
+    "result_pending_note": "L’écran de résultat complet (changement de classement, prochain duel) est la prochaine étape à construire ici.",
+    "spectating": "Mode spectateur",
+    "watching_as": "Vous regardez en tant que {handle}",
+    "your_turn": "À vous de jouer",
+    "opponent_turn": "L'adversaire réfléchit",
+    "in_check": "Échec",
+    "offer_draw": "Proposer nulle",
+    "draw_offer_sent": "Proposition de nulle envoyée",
+    "draw_offer_received": "{handle} propose la nulle",
+    "accept_draw": "Accepter",
+    "decline_draw": "Refuser",
+    "resign_confirm_title": "Abandonner cette partie ?",
+    "resign_confirm_body": "Ceci compte comme une défaite et ne peut pas être annulé.",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "promote_title": "Choisissez une pièce",
+    "promote_queen": "Dame",
+    "promote_rook": "Tour",
+    "promote_bishop": "Fou",
+    "promote_knight": "Cavalier",
+    "result_win": "Vous avez gagné",
+    "result_loss": "Vous avez perdu",
+    "result_draw": "Nulle",
+    "reason": {
+      "CHECKMATE": "Échec et mat",
+      "STALEMATE": "Pat",
+      "FIFTY_MOVE": "Règle des 50 coups",
+      "THREEFOLD_REPETITION": "Triple répétition",
+      "INSUFFICIENT_MATERIAL": "Matériel insuffisant",
+      "RESIGNATION": "Abandon",
+      "TIMEOUT": "Temps écoulé",
+      "DRAW_AGREED": "Nulle par accord"
+    },
+    "rematch": "Revanche",
+    "new_opponent": "Nouvel adversaire",
+    "review": "Revoir la partie",
+    "exp_gained": "+{amount} XP",
+    "rating_change_up": "Classement +{amount}",
+    "rating_change_down": "Classement {amount}",
+    "level_up": "Niveau {level}",
+    "opponent_disconnected": "Adversaire déconnecté — son horloge continue de tourner",
+    "opponent_reconnected": "Adversaire reconnecté",
+    "you_disconnected": "Connexion perdue — reconnexion",
+    "vs_computer": "Contre l'ordinateur",
+    "difficulty": {
+      "EASY": "Facile",
+      "MEDIUM": "Moyen",
+      "HARD": "Difficile",
+      "EXPERT": "Expert"
+    },
+    "move_history": "Coups",
+    "achievement": {
+      "FIRST_WIN": { "title": "Première victoire !", "description": "Vous avez remporté votre premier duel." },
+      "FIRST_TOURNAMENT": { "title": "Débuts en tournoi", "description": "Vous avez terminé votre premier tournoi." }
+    }
+  },
+  "settings": {
+    "language": "Langue"
+  },
+  "tournamentsPage": {
+    "heading": "Tournois",
+    "empty": "Aucun tournoi ouvert aux inscriptions pour le moment.",
+    "entry_free": "Gratuit",
+    "entry_fee": "{amount} {asset}",
+    "registered_count": "{count}/{capacity} inscrits",
+    "starts_at": "Commence le {date}",
+    "view": "Voir →",
+    "back": "← Tous les tournois",
+    "format": {
+      "SINGLE_ELIMINATION": "Élimination directe",
+      "SWISS": "Suisse"
+    },
+    "status": {
+      "DRAFT": "Brouillon",
+      "REGISTRATION_OPEN": "Inscriptions ouvertes",
+      "REGISTRATION_CLOSED": "Inscriptions closes",
+      "IN_PROGRESS": "En cours",
+      "COMPLETED": "Terminé",
+      "CANCELLED": "Annulé"
+    },
+    "register": "S'inscrire",
+    "registering": "Inscription…",
+    "registered": "Vous êtes inscrit",
+    "withdraw": "Se retirer",
+    "your_match": "Jouer votre match →",
+    "standings_heading": "Classement",
+    "standings_rank": "Rang",
+    "standings_player": "Joueur",
+    "standings_points": "Points",
+    "standings_record": "V-D-N",
+    "error_at_capacity": "Ce tournoi est complet.",
+    "error_not_open": "Les inscriptions sont closes.",
+    "error_already_registered": "Vous êtes déjà inscrit.",
+    "error_generic": "Une erreur est survenue. Réessayez.",
+    "not_found": "Tournoi introuvable."
+  },
+  "meta": {
+    "title": "Nizalo — Votre duel. Votre preuve.",
+    "description": "Une plateforme mondiale de compétition 1 contre 1 basée sur la compétence. Échecs, Calcul Rapide et plus encore. Prouvez votre talent, grimpez au classement."
+  },
+  "email": {
+    "common": {
+      "footer": "Nizalo — Votre duel. Votre preuve.",
+      "support_note": "Des questions ? Contactez-nous à tout moment à info@nizalo.com."
+    },
+    "welcome": {
+      "subject": "Bienvenue chez Nizalo, {nickname}",
+      "heading": "Bienvenue chez Nizalo",
+      "body": "Votre compte est prêt. Nizalo est une plateforme mondiale de compétition basée sur la compétence — pas de chance, pas de hasard, juste la preuve du talent.",
+      "nav_note": "Depuis votre tableau de bord : trouvez un duel dans Jouer, consultez le classement dans Classement, découvrez les Tournois en cours, ou en savez plus dans Découvrir.",
+      "cta": "Jouer maintenant"
+    },
+    "verification": {
+      "subject": "Vérifiez votre adresse e-mail Nizalo",
+      "heading": "Confirmez votre adresse e-mail",
+      "body": "Saisissez ce code dans Nizalo pour confirmer que {email} est bien la vôtre :",
+      "expires_note": "Ce code expire dans {minutes} minutes et ne peut être utilisé qu’une seule fois.",
+      "ignore_note": "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité."
+    },
+    "login_code": {
+      "subject": "Votre code de connexion Nizalo",
+      "heading": "Votre code de connexion Nizalo",
+      "body": "Saisissez ce code pour vous connecter :",
+      "expires_note": "Ce code expire dans {minutes} minutes et ne peut être utilisé qu’une seule fois.",
+      "ignore_note": "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité."
+    },
+    "password_reset": {
+      "subject": "Réinitialisez votre mot de passe Nizalo",
+      "heading": "Réinitialisation de mot de passe demandée",
+      "body": "Saisissez ce code dans Nizalo pour réinitialiser votre mot de passe :",
+      "expires_note": "Ce code expire dans {minutes} minutes et ne peut être utilisé qu’une seule fois.",
+      "ignore_note": "Si vous n’avez pas demandé de réinitialisation de mot de passe, vous pouvez ignorer cet e-mail en toute sécurité."
+    },
+    "password_reset_confirmation": {
+      "subject": "Votre mot de passe Nizalo a été modifié",
+      "heading": "Votre mot de passe a été modifié",
+      "body": "Votre mot de passe Nizalo a été modifié avec succès.",
+      "warning": "Si vous n’êtes pas à l’origine de cette action, contactez immédiatement le support."
+    },
+    "ticket_common": {
+      "subject_label": "Ticket",
+      "view_cta": "Voir le ticket"
+    },
+    "ticket_created": {
+      "subject": "Nous avons bien reçu votre demande d’assistance",
+      "heading": "Votre ticket d’assistance a été créé",
+      "body": "Merci de nous avoir contactés. Notre équipe d’assistance va examiner votre demande et vous répondra bientôt."
+    },
+    "ticket_staff_replied": {
+      "subject": "Nouvelle réponse sur votre ticket d’assistance Nizalo",
+      "heading": "Vous avez une nouvelle réponse",
+      "body": "Notre équipe d’assistance a répondu à votre ticket. Connectez-vous pour lire le message complet et répondre."
+    },
+    "ticket_waiting_for_user": {
+      "subject": "Nous avons besoin de plus d’informations de votre part",
+      "heading": "Nous attendons votre réponse",
+      "body": "Notre équipe d’assistance a besoin de plus d’informations pour continuer à vous aider avec votre ticket."
+    },
+    "ticket_resolved": {
+      "subject": "Votre ticket d’assistance a été résolu",
+      "heading": "Votre ticket a été résolu",
+      "body": "Nous avons marqué votre ticket d’assistance comme résolu. Si vous avez encore besoin d’aide, répondez simplement et nous le rouvrirons."
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "edit_cta": "Modifier le profil",
+    "view_profile_cta": "Voir le profil",
+    "level_label": "Niveau",
+    "exp_label": "EXP",
+    "global_skill_label": "Compétence globale",
+    "bio_label": "Bio",
+    "no_bio": "Pas encore de bio.",
+    "ratings_title": "Classements de jeu",
+    "no_ratings": "Pas encore de classement — jouez une partie pour commencer.",
+    "stats_title": "Statistiques",
+    "games_label": "Parties",
+    "wins_label": "Victoires",
+    "losses_label": "Défaites",
+    "win_rate_label": "Taux de victoire",
+    "achievements_title": "Réussites",
+    "no_achievements": "Pas encore de réussite.",
+    "badges_title": "Badges",
+    "no_badges": "Pas encore de badge.",
+    "member_since_label": "Membre depuis",
+    "nickname_label": "Pseudo",
+    "save_cta": "Enregistrer les modifications",
+    "saving": "Enregistrement…",
+    "cancel_cta": "Annuler",
+    "change_avatar_cta": "Changer la photo",
+    "uploading_avatar": "Téléversement…",
+    "saved_message": "Profil enregistré.",
+    "report_cta": "Signaler",
+    "report_title": "Signaler ce profil",
+    "report_reason_label": "Motif (facultatif)",
+    "report_submit_cta": "Envoyer le signalement",
+    "reported_message": "Merci, votre signalement a été envoyé.",
+    "not_found": "Ce joueur est introuvable.",
+    "achievements_catalog": {
+      "FIRST_WIN": "Première victoire",
+      "FIRST_TOURNAMENT": "Premier tournoi"
+    }
+  },
+  "support": {
+    "title": "Assistance",
+    "my_tickets_title": "Mes tickets",
+    "new_ticket_cta": "Nouveau ticket",
+    "no_tickets": "Vous n’avez pas encore de ticket d’assistance.",
+    "back_to_list": "Retour à Mes tickets",
+    "created_label": "Créé",
+    "updated_label": "Mis à jour",
+    "category_label": "Catégorie",
+    "status": {
+      "OPEN": "Ouvert",
+      "TRIAGED": "Trié",
+      "ASSIGNED": "Assigné",
+      "IN_PROGRESS": "En cours",
+      "WAITING_FOR_USER": "En attente de votre réponse",
+      "ESCALATED": "Escaladé",
+      "RESOLVED": "Résolu",
+      "CLOSED": "Fermé"
+    },
+    "categories": {
+      "ACCOUNT": "Compte",
+      "LOGIN": "Problème de connexion",
+      "PASSWORD": "Mot de passe",
+      "DEPOSIT_PENDING": "Dépôt en attente",
+      "WITHDRAWAL_PENDING": "Retrait en attente",
+      "WITHDRAWAL_FAILED": "Retrait échoué",
+      "MISSING_FUNDS": "Fonds manquants",
+      "MATCH_PROBLEM": "Problème de partie",
+      "TOURNAMENT_PROBLEM": "Problème de tournoi",
+      "ANTI_CHEAT": "Signaler une triche",
+      "TECHNICAL": "Problème technique",
+      "ABUSE_REPORT": "Signaler un abus",
+      "OTHER": "Autre sujet"
+    },
+    "new": {
+      "title": "Nouveau ticket d’assistance",
+      "category_label": "De quoi avez-vous besoin ?",
+      "category_placeholder": "Sélectionnez une catégorie",
+      "reference_id_label": "ID de référence",
+      "reference_id_hint": "L’identifiant du dépôt, retrait, partie ou tournoi concerné.",
+      "subject_label": "Sujet",
+      "subject_placeholder": "Un bref résumé du problème",
+      "description_label": "Décrivez le problème",
+      "description_placeholder": "Donnez-nous autant de détails que possible.",
+      "secrets_warning": "N’incluez jamais votre mot de passe, votre code de connexion, votre code d’authentification (TOTP), un jeton OAuth, vos clés privées ou votre phrase de récupération de portefeuille. Notre équipe ne vous les demandera jamais.",
+      "submit_cta": "Envoyer le ticket",
+      "submitting": "Envoi en cours…",
+      "cancel_cta": "Annuler"
+    },
+    "duplicate_notice": "Vous avez déjà un ticket ouvert pour ce problème.",
+    "view_existing_cta": "Voir le ticket existant",
+    "detail": {
+      "conversation_title": "Conversation",
+      "reply_placeholder": "Tapez votre message…",
+      "send_cta": "Envoyer",
+      "sending": "Envoi en cours…",
+      "you_label": "Vous",
+      "support_label": "Assistance",
+      "closed_notice": "Ce ticket est fermé. Créez-en un nouveau si vous avez encore besoin d’aide.",
+      "reopened_notice": "Votre ticket a été rouvert.",
+      "no_messages": "Pas encore de messages."
+    },
+    "errors": {
+      "invalid_category": "Veuillez choisir une catégorie.",
+      "invalid_subject": "Veuillez saisir un sujet entre 1 et 200 caractères.",
+      "invalid_content": "Veuillez saisir un message.",
+      "reference_required": "Veuillez saisir un identifiant de référence pour cette catégorie.",
+      "reference_not_found": "Nous n’avons pas trouvé cette référence, ou elle n’appartient pas à votre compte.",
+      "duplicate_open_ticket": "Vous avez déjà un ticket ouvert pour ce problème.",
+      "ticket_closed": "Ce ticket est fermé.",
+      "not_found": "Ce ticket est introuvable.",
+      "generic": "Une erreur s’est produite. Veuillez réessayer."
+    },
+    "game_report_cta": "Signaler un problème avec cette partie"
+  },
+  "chat": {
+    "global_title": "Chat global",
+    "match_title": "Chat de la partie",
+    "placeholder": "Écrivez un message…",
+    "send_cta": "Envoyer",
+    "connecting": "Connexion…",
+    "reconnecting": "Reconnexion…",
+    "empty": "Pas encore de messages. Dites bonjour !",
+    "removed_message": "Ce message a été supprimé.",
+    "report_cta": "Signaler",
+    "report_title": "Signaler ce message",
+    "report_category_label": "Motif",
+    "report_category_placeholder": "Sélectionnez un motif",
+    "report_reason_label": "Détails supplémentaires (facultatif)",
+    "report_submit_cta": "Envoyer le signalement",
+    "report_submitted": "Merci, votre signalement a été envoyé.",
+    "block_cta": "Bloquer",
+    "block_confirm_title": "Bloquer {nickname} ?",
+    "block_confirm_body": "Vous ne verrez plus les messages de ce joueur dans le chat.",
+    "block_confirm_cta": "Bloquer",
+    "cancel_cta": "Annuler",
+    "categories": {
+      "ABUSE": "Abus",
+      "HARASSMENT": "Harcèlement",
+      "SPAM": "Spam",
+      "SCAM": "Arnaque",
+      "THREATS": "Menaces",
+      "INAPPROPRIATE_CONTENT": "Contenu inapproprié",
+      "OTHER": "Autre"
+    },
+    "errors": {
+      "MUTED": "Vous avez été temporairement rendu muet et ne pouvez pas envoyer de messages pour le moment.",
+      "RATE_LIMITED": "Vous envoyez des messages trop rapidement. Veuillez ralentir.",
+      "DUPLICATE_MESSAGE": "Vous avez déjà envoyé ce message.",
+      "NOT_SUBSCRIBED": "Reconnexion au chat, veuillez réessayer dans un instant.",
+      "EMPTY": "Veuillez saisir un message.",
+      "TOO_LONG": "Votre message est trop long.",
+      "CONTROL_CHARS": "Votre message contient des caractères non autorisés.",
+      "generic": "Votre message n’a pas pu être envoyé. Veuillez réessayer.",
+      "SPECTATORS_DISABLED": "Le mode spectateur n'est pas disponible pour cette partie.",
+      "POST_GAME_CLOSED": "Ce chat est fermé, la partie est terminée."
+    },
+    "spectator_title": "Chat des spectateurs"
+  },
+  "watch": {
+    "title": "Regarder en direct",
+    "subtitle": "Parties en direct que vous pouvez regarder maintenant.",
+    "empty": "Aucune partie en direct pour le moment. Revenez bientôt.",
+    "watch_cta": "Regarder",
+    "vs": "contre"
+  }
+}

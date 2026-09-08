@@ -1,0 +1,8 @@
+{
+  "name": "@nizalo/rating",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/glicko2.mjs",
+  "scripts": { "test": "node --test" }
+}

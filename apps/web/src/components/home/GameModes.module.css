@@ -1,0 +1,73 @@
+.section {
+  padding-block: var(--nz-space-16);
+  border-top: 1px solid var(--nz-line);
+}
+
+.heading {
+  font-size: var(--nz-text-2xl);
+  margin-bottom: var(--nz-space-8);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--nz-space-6);
+}
+
+.card, .comingSoon {
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-6);
+  display: flex;
+  flex-direction: column;
+}
+
+.comingSoon {
+  background: transparent;
+  border-style: dashed;
+  color: var(--nz-text-2);
+}
+
+.cardTitle {
+  font-size: var(--nz-text-xl);
+  margin-bottom: var(--nz-space-3);
+}
+
+.cardDescription {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  line-height: var(--nz-leading-body);
+  margin: 0 0 var(--nz-space-5);
+  flex: 1;
+}
+
+.meta {
+  display: flex;
+  gap: var(--nz-space-6);
+  margin: 0 0 var(--nz-space-6);
+}
+
+.meta dt {
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+  margin-bottom: var(--nz-space-1);
+}
+
+.meta dd {
+  margin: 0;
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+}
+
+.cardAction {
+  align-self: flex-start;
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

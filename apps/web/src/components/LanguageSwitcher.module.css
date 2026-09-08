@@ -1,0 +1,25 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.select {
+  appearance: none;
+  background: var(--nz-surface-2);
+  color: var(--nz-text-2);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-sm);
+  padding: var(--nz-space-2) var(--nz-space-3);
+  font-size: var(--nz-text-sm);
+  font-family: var(--nz-font-ui);
+  cursor: pointer;
+}
+
+.select:hover {
+  color: var(--nz-text);
+  border-color: var(--nz-line-strong);
+}
+
+.select:focus-visible {
+  outline: var(--nz-focus);
+}

@@ -1,0 +1,56 @@
+.strip {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  border-radius: var(--nz-radius-md);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-1);
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+/* The turn indicator: the SAME accent used everywhere else it means "your
+   move" -- a single 2px rule, never a background wash. */
+.active {
+  border-color: var(--nz-accent);
+  box-shadow: 0 0 0 1px var(--nz-accent);
+}
+
+.info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nickname { overflow: hidden; text-overflow: ellipsis; }
+
+.meta {
+  display: flex;
+  gap: var(--nz-space-3);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+}
+
+.disconnected {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-warn);
+}
+
+.clock {
+  font-size: var(--nz-text-xl);
+  font-weight: 600;
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-sm);
+  background: var(--nz-surface-2);
+  flex: none;
+}
+
+.low { color: var(--nz-warn); }
+.critical { color: var(--nz-loss); }
+.flagged { color: var(--nz-loss); background: var(--nz-accent-soft); }

@@ -1,0 +1,74 @@
+.stage {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+  text-align: center;
+}
+
+.status {
+  font-size: var(--nz-text-lg);
+  color: var(--nz-text-2);
+  margin: 0;
+}
+
+.timer {
+  font-size: var(--nz-text-3xl);
+  font-weight: 700;
+}
+
+.cancelLink {
+  background: none;
+  border: none;
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-sm);
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: var(--nz-space-4);
+}
+
+.vsWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-10);
+}
+
+.vsSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-2);
+  min-width: 160px;
+}
+
+.vsLabel {
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+}
+
+.vsHandle {
+  font-size: var(--nz-text-xl);
+  font-weight: 700;
+}
+
+.vsMark {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-2xl);
+  color: var(--nz-accent);
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .vsWrap {
+    gap: var(--nz-space-6);
+  }
+}

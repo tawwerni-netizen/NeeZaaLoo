@@ -1,0 +1,690 @@
+<title>Nizalo Brand Guidelines</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap">
+
+<style>
+/* ===== Tokens — dark-first, fully declared in all three theme states ===== */
+:root{
+  --ink:#0B0D10; --s1:#14171C; --s2:#1C2027; --s3:#252A33;
+  --line:#2B313A; --line-2:#3A424E;
+  --tx:#F2F4F7; --tx2:#9BA3AF; --tx3:#6B727E;
+  --accent:#FF5A2B; --on-accent:#0B0D10; --accent-soft:rgba(255,90,43,.13);
+  --win:#2FBF71; --loss:#E5484D; --draw:#8B93A1;
+  --stage:#000; --swatch-ring:rgba(255,255,255,.10);
+  --f-disp:"Archivo","IBM Plex Sans",system-ui,sans-serif;
+  --f-ui:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --f-ar:"IBM Plex Sans Arabic","IBM Plex Sans",sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --ink:#F7F8FA; --s1:#FFFFFF; --s2:#F0F2F5; --s3:#E7EAEF;
+    --line:#E2E5EA; --line-2:#C9CFD8;
+    --tx:#0B0D10; --tx2:#545B66; --tx3:#767E8A;
+    --accent:#CC3A14; --on-accent:#FFFFFF; --accent-soft:rgba(204,58,20,.09);
+    --win:#157F4A; --loss:#C2282D; --draw:#6B727E;
+    --stage:#0B0D10; --swatch-ring:rgba(11,13,16,.12);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --ink:#F7F8FA; --s1:#FFFFFF; --s2:#F0F2F5; --s3:#E7EAEF;
+  --line:#E2E5EA; --line-2:#C9CFD8;
+  --tx:#0B0D10; --tx2:#545B66; --tx3:#767E8A;
+  --accent:#CC3A14; --on-accent:#FFFFFF; --accent-soft:rgba(204,58,20,.09);
+  --win:#157F4A; --loss:#C2282D; --draw:#6B727E;
+  --stage:#0B0D10; --swatch-ring:rgba(11,13,16,.12);
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+body{background:var(--ink);color:var(--tx);font-family:var(--f-ui);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+.wrap{max-width:1120px;margin:0 auto;padding:0 32px}
+.measure{max-width:64ch}
+
+/* ---- Section scaffolding: mono eyebrow in a left rail ---- */
+section{border-top:1px solid var(--line);padding:72px 0 8px}
+section:first-of-type{border-top:none}
+.sec{display:grid;grid-template-columns:132px minmax(0,1fr);gap:40px;align-items:start}
+.eyebrow{font-family:var(--f-mono);font-size:11px;font-weight:500;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);
+  padding-top:9px;line-height:1.5}
+h2{font-family:var(--f-disp);font-weight:800;font-size:clamp(26px,3.4vw,38px);
+  letter-spacing:-.025em;line-height:1.08;margin:0 0 16px;text-wrap:balance}
+h3{font-family:var(--f-disp);font-weight:700;font-size:17px;letter-spacing:-.01em;
+  margin:0 0 8px}
+p{margin:0 0 16px;color:var(--tx2)}
+p strong,li strong{color:var(--tx);font-weight:600}
+a{color:var(--accent)}
+@media (max-width:820px){
+  .sec{grid-template-columns:1fr;gap:14px}
+  .eyebrow{padding-top:0}
+}
+
+/* ---- Masthead ---- */
+.mast{display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding:26px 0;flex-wrap:wrap}
+.mast-l{display:flex;align-items:center;gap:13px}
+.mast-name{font-family:var(--f-disp);font-weight:700;font-size:16px;letter-spacing:-.01em}
+.mast-meta{font-family:var(--f-mono);font-size:11px;color:var(--tx3);
+  letter-spacing:.08em;text-transform:uppercase}
+
+/* ---- Stage: the logo presented on true black, always ---- */
+.stage{background:var(--stage);border-radius:20px;padding:clamp(40px,7vw,88px) 32px;
+  display:flex;flex-direction:column;align-items:center;gap:34px;text-align:center}
+.stage svg{width:min(440px,84%);height:auto;display:block}
+.tag{font-family:var(--f-disp);font-weight:600;font-size:clamp(17px,2.2vw,22px);
+  letter-spacing:-.015em;color:#F2F4F7;margin:0}
+.tag-ar{font-family:var(--f-ar);font-weight:600;font-size:clamp(17px,2.2vw,22px);
+  color:#9BA3AF;margin:0;direction:rtl}
+.rule-diag{width:100%;height:1px;background:var(--line);margin:0}
+
+/* ---- Spec list (label / value) ---- */
+.spec{border-top:1px solid var(--line);margin:22px 0 0}
+.spec div{display:grid;grid-template-columns:170px minmax(0,1fr);gap:20px;
+  padding:11px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.spec dt{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--tx3)}
+.spec dd{margin:0;color:var(--tx)}
+@media (max-width:600px){.spec div{grid-template-columns:1fr;gap:2px}}
+
+/* ---- Plates: full-width specimen blocks ---- */
+.plate{background:var(--s1);border:1px solid var(--line);border-radius:16px;
+  padding:28px;margin:24px 0}
+.plate-hd{font-family:var(--f-mono);font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--tx3);margin:0 0 18px}
+
+.lockups{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.lock{border:1px solid var(--line);border-radius:12px;padding:26px 22px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:18px;min-height:150px}
+.lock.on-ink{background:#0B0D10}
+.lock.on-paper{background:#F7F8FA}
+.lock svg{max-width:100%;height:auto}
+.lock-cap{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase}
+.on-ink .lock-cap{color:#6B727E}
+.on-paper .lock-cap{color:#767E8A}
+
+/* ---- Colour ---- */
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:14px}
+.sw{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--s2)}
+.sw-chip{height:78px;box-shadow:inset 0 0 0 1px var(--swatch-ring)}
+.sw-b{padding:13px 14px 15px}
+.sw-name{font-family:var(--f-disp);font-weight:700;font-size:14px;margin:0 0 5px}
+.sw-hex{font-family:var(--f-mono);font-size:12px;color:var(--tx);margin:0}
+.sw-tok{font-family:var(--f-mono);font-size:10.5px;color:var(--tx3);margin:3px 0 0}
+.sw-ratio{font-family:var(--f-mono);font-size:10.5px;color:var(--tx2);margin:7px 0 0;
+  padding-top:7px;border-top:1px solid var(--line)}
+
+/* ---- Type specimens ---- */
+.spec-type{border-bottom:1px solid var(--line);padding:20px 0}
+.spec-type:last-child{border-bottom:none}
+.spec-lbl{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--tx3);margin:0 0 10px}
+.sp-disp{font-family:var(--f-disp);font-weight:800;font-size:clamp(30px,5.4vw,54px);
+  letter-spacing:-.032em;line-height:1;margin:0;color:var(--tx)}
+.sp-body{font-family:var(--f-ui);font-size:17px;line-height:1.55;margin:0;color:var(--tx)}
+.sp-mono{font-family:var(--f-mono);font-weight:500;font-size:clamp(19px,2.7vw,27px);
+  font-variant-numeric:tabular-nums;letter-spacing:0;margin:0;color:var(--tx)}
+.sp-ar{font-family:var(--f-ar);font-weight:600;font-size:clamp(23px,3.6vw,34px);
+  direction:rtl;text-align:right;margin:0;line-height:1.7;color:var(--tx)}
+
+/* ---- Tables ---- */
+.tbl-scroll{overflow-x:auto;margin:20px 0 4px}
+table{border-collapse:collapse;width:100%;min-width:440px;font-size:14.5px}
+th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--tx3);text-align:left;font-weight:500;
+  padding:0 16px 10px 0;border-bottom:1px solid var(--line-2);white-space:nowrap}
+td{padding:12px 16px 12px 0;border-bottom:1px solid var(--line);
+  color:var(--tx2);vertical-align:top}
+td:first-child{color:var(--tx)}
+td .mono{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+
+.say td:first-child{color:var(--tx);font-weight:500}
+.say td:last-child{color:var(--tx3);text-decoration:line-through;
+  text-decoration-color:var(--loss);text-decoration-thickness:1px}
+
+/* ---- Do / don't ---- */
+.dd{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0 4px}
+@media (max-width:700px){.dd{grid-template-columns:1fr}}
+.dd-col{border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+.dd-col h4{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;margin:0 0 14px;font-weight:500}
+.dd-do h4{color:var(--win)}
+.dd-no h4{color:var(--loss)}
+.dd-col ul{margin:0;padding-left:19px;color:var(--tx2);font-size:14.5px}
+.dd-col li{margin:0 0 8px;line-height:1.5}
+
+/* ---- Callout: the governing rule ---- */
+.govern{border-left:3px solid var(--accent);padding:4px 0 4px 26px;margin:26px 0 8px}
+.govern p{font-family:var(--f-disp);font-weight:600;font-size:clamp(19px,2.6vw,25px);
+  line-height:1.34;letter-spacing:-.018em;color:var(--tx);margin:0;text-wrap:balance}
+
+.note{font-size:13.5px;color:var(--tx3);border-top:1px solid var(--line);
+  padding-top:14px;margin-top:26px}
+ul.plain{margin:0 0 18px;padding-left:20px;color:var(--tx2)}
+ul.plain li{margin-bottom:7px}
+
+/* ---- Construction drawing ---- */
+.draw{background:var(--s1);border:1px solid var(--line);border-radius:16px;
+  padding:22px;margin:24px 0;overflow-x:auto}
+.draw svg{width:100%;min-width:400px;max-width:560px;height:auto;display:block;margin:0 auto}
+
+/* ---- Minimum-size demo strip ---- */
+.sizes{display:flex;align-items:flex-end;gap:34px;flex-wrap:wrap;
+  padding:8px 0 4px}
+.size-i{display:flex;flex-direction:column;align-items:center;gap:10px}
+.size-i .lab{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;color:var(--tx3)}
+
+footer{border-top:1px solid var(--line);margin-top:64px;padding:34px 0 60px;
+  font-family:var(--f-mono);font-size:11.5px;color:var(--tx3);letter-spacing:.05em;
+  display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="mast-l">
+      <svg width="30" height="30" viewBox="0 0 96 96" aria-hidden="true">
+        <defs><clipPath id="mA"><path d="M8 8h18l44 58V8h18v80H70L26 30v58H8z"/></clipPath></defs>
+        <g clip-path="url(#mA)">
+          <rect x="6" y="6" width="84" height="84" fill="var(--tx)"/>
+          <path d="M22 2.727 74 71.273v22L22 24.727z" fill="var(--accent)"/>
+        </g>
+      </svg>
+      <span class="mast-name">Nizalo</span>
+    </div>
+    <div class="mast-meta">Brand Guidelines · v1.0 · 2026-09-06</div>
+  </header>
+
+  <!-- ============ STAGE ============ -->
+  <div class="stage">
+    <svg viewBox="0 0 512 96" role="img" aria-label="Nizalo">
+      <defs><clipPath id="stgC"><path d="M8 8h18l44 58V8h18v80H70L26 30v58H8z"/></clipPath></defs>
+      <rect width="96" height="96" rx="21" fill="#F2F4F7"/>
+      <g transform="translate(20 20) scale(0.5833)" clip-path="url(#stgC)">
+        <rect x="6" y="6" width="84" height="84" fill="#0B0D10"/>
+        <path d="M22 2.727 74 71.273v22L22 24.727z" fill="#FF5A2B"/>
+      </g>
+      <g transform="translate(132 8)" fill="#F2F4F7">
+        <path d="M0 0h14l30 50V0h14v80H44L14 30v50H0z"/>
+        <path d="M74 0h14v80H74z"/>
+        <path d="M104 0h54v15l-33 51h33v14h-54V65l33-51h-33z"/>
+        <path fill-rule="evenodd" d="M174 80 194 0h22l20 80h-14l-4.5-18h-25L188 80zm31-64 8.5 36h-17z"/>
+        <path d="M252 0h14v66h36v14h-50z"/>
+        <path fill-rule="evenodd" d="M318 40a31 40 0 1 0 62 0 31 40 0 1 0-62 0m14 0a17 26 0 1 0 34 0 17 26 0 1 0-34 0"/>
+      </g>
+    </svg>
+    <div>
+      <p class="tag">Your duel. Your proof.</p>
+      <p class="tag-ar">نزال واحد يكفي</p>
+    </div>
+  </div>
+
+  <!-- ============ NAME ============ -->
+  <section><div class="sec">
+    <div class="eyebrow">The name</div>
+    <div>
+      <h2>Nizalo means duel.</h2>
+      <div class="measure">
+        <p>From the Arabic <span style="font-family:var(--f-ar);color:var(--tx)">نزال</span>
+        (<em>nizāl</em>) — <strong>a duel, a bout, a contest between two</strong>. It is the word
+        an Arabic speaker uses for a championship face-off. The Latinate <em>-o</em> turns a real
+        Arabic noun into a global brand.</p>
+        <p>It names the <strong>format</strong>, not the game — which is the whole point. Chess is
+        the flagship, not the category, and the name has to still make sense on the day the game
+        is Speed Math.</p>
+      </div>
+      <dl class="spec">
+        <div><dt>Arabic</dt><dd><span style="font-family:var(--f-ar)">نزالو</span> &nbsp;·&nbsp; <em>ni-ZAAL-o</em></dd></div>
+        <div><dt>English</dt><dd><em>nih-ZAH-loh</em> — stress on the second syllable, always</dd></div>
+        <div><dt>Written</dt><dd>Always <strong>Nizalo</strong>. One word, initial capital only. Never NIZALO in body copy, never Niz-alo, never NizaLo.</dd></div>
+        <div><dt>Wordmark</dt><dd>Set in all caps. The name in running text is not.</dd></div>
+      </dl>
+    </div>
+  </div></section>
+
+  <!-- ============ MARK ============ -->
+  <section><div class="sec">
+    <div class="eyebrow">The mark</div>
+    <div>
+      <h2>A letterform and a diagram at once.</h2>
+      <div class="measure">
+        <p>The mark is the letter <strong>N</strong>, built from three parts: <strong>two vertical
+        bars of identical weight</strong> — the two players, and the platform's promise that both
+        receive an equivalent challenge — and <strong>one diagonal in Duel Orange</strong>, the
+        contest between them.</p>
+      </div>
+
+      <div class="draw">
+        <svg viewBox="0 0 420 252" role="img"
+             aria-label="Construction drawing of the Nizalo mark: 96 by 96 unit box, 18 unit stems, 80 unit cap height, diagonal rise over run of 58 to 44.">
+          <defs>
+            <clipPath id="cnC"><path d="M8 8h18l44 58V8h18v80H70L26 30v58H8z"/></clipPath>
+          </defs>
+          <g transform="translate(120 26) scale(1.9)">
+            <!-- 8-unit grid -->
+            <g stroke="var(--line)" stroke-width=".45" fill="none" opacity=".85">
+              <path d="M0 0h96M0 8h96M0 16h96M0 24h96M0 32h96M0 40h96M0 48h96M0 56h96M0 64h96M0 72h96M0 80h96M0 88h96M0 96h96"/>
+              <path d="M0 0v96M8 0v96M16 0v96M24 0v96M32 0v96M40 0v96M48 0v96M56 0v96M64 0v96M72 0v96M80 0v96M88 0v96M96 0v96"/>
+            </g>
+            <rect x="0" y="0" width="96" height="96" fill="none"
+                  stroke="var(--line-2)" stroke-width=".8"/>
+            <g clip-path="url(#cnC)">
+              <rect x="6" y="6" width="84" height="84" fill="var(--tx)"/>
+              <path d="M22 2.727 74 71.273v22L22 24.727z" fill="var(--accent)"/>
+            </g>
+          </g>
+
+          <!-- dimensions -->
+          <g stroke="var(--tx3)" stroke-width="1" fill="none">
+            <path d="M104 41.2v152M100 41.2h8M100 193.2h8"/>
+            <path d="M135.2 219v10M169.4 219v10M135.2 224h34.2"/>
+          </g>
+          <g font-family="var(--f-mono)" font-size="11" fill="var(--tx2)">
+            <text x="95" y="121" text-anchor="middle" transform="rotate(-90 95 121)">80 cap</text>
+            <text x="152" y="243" text-anchor="middle">18</text>
+            <text x="302" y="20" text-anchor="end" fill="var(--tx3)">96 × 96 box</text>
+            <text x="248" y="128" fill="var(--accent)">rise 58 : run 44</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="measure">
+        <p>The N is drawn as a <strong>clipped two-colour construction</strong>, never as three
+        abutting shapes — abutting paths leave a hairline seam at most raster sizes. That seam is
+        the first thing to check in any rebuild.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- ============ LOCKUPS ============ -->
+  <section><div class="sec">
+    <div class="eyebrow">Lockups</div>
+    <div>
+      <h2>One accent per lockup.</h2>
+      <div class="measure">
+        <p>If the mark carries the orange, the wordmark is monotone. If the wordmark carries it,
+        no mark is present. Two accents in one lockup read as two brands.</p>
+        <p>In the horizontal lockup the mark sits in a <strong>rounded container</strong>. This is
+        not decoration: uncontained, the mark reads as a repeated letter and the lockup says
+        <em>"N NIZALO"</em>. The container makes it unambiguously an icon.</p>
+      </div>
+
+      <div class="plate">
+        <p class="plate-hd">Approved lockups</p>
+        <div class="lockups">
+          <div class="lock on-ink">
+            <svg viewBox="0 0 512 96" width="230" role="img" aria-label="Nizalo horizontal lockup on ink">
+              <defs><clipPath id="l1"><path d="M8 8h18l44 58V8h18v80H70L26 30v58H8z"/></clipPath></defs>
+              <rect width="96" height="96" rx="21" fill="#F2F4F7"/>
+              <g transform="translate(20 20) scale(0.5833)" clip-path="url(#l1)">
+                <rect x="6" y="6" width="84" height="84" fill="#0B0D10"/>
+                <path d="M22 2.727 74 71.273v22L22 24.727z" fill="#FF5A2B"/>
+              </g>
+              <g transform="translate(132 8)" fill="#F2F4F7">
+                <path d="M0 0h14l30 50V0h14v80H44L14 30v50H0z"/><path d="M74 0h14v80H74z"/>
+                <path d="M104 0h54v15l-33 51h33v14h-54V65l33-51h-33z"/>
+                <path fill-rule="evenodd" d="M174 80 194 0h22l20 80h-14l-4.5-18h-25L188 80zm31-64 8.5 36h-17z"/>
+                <path d="M252 0h14v66h36v14h-50z"/>
+                <path fill-rule="evenodd" d="M318 40a31 40 0 1 0 62 0 31 40 0 1 0-62 0m14 0a17 26 0 1 0 34 0 17 26 0 1 0-34 0"/>
+              </g>
+            </svg>
+            <span class="lock-cap">Primary · on Ink</span>
+          </div>
+
+          <div class="lock on-paper">
+            <svg viewBox="0 0 512 96" width="230" role="img" aria-label="Nizalo horizontal lockup on paper">
+              <defs><clipPath id="l2"><path d="M8 8h18l44 58V8h18v80H70L26 30v58H8z"/></clipPath></defs>
+              <rect width="96" height="96" rx="21" fill="#0B0D10"/>
+              <g transform="translate(20 20) scale(0.5833)" clip-path="url(#l2)">
+                <rect x="6" y="6" width="84" height="84" fill="#F2F4F7"/>
+                <path d="M22 2.727 74 71.273v22L22 24.727z" fill="#FF5A2B"/>
+              </g>
+              <g transform="translate(132 8)" fill="#0B0D10">
+                <path d="M0 0h14l30 50V0h14v80H44L14 30v50H0z"/><path d="M74 0h14v80H74z"/>
+                <path d="M104 0h54v15l-33 51h33v14h-54V65l33-51h-33z"/>
+                <path fill-rule="evenodd" d="M174 80 194 0h22l20 80h-14l-4.5-18h-25L188 80zm31-64 8.5 36h-17z"/>
+                <path d="M252 0h14v66h36v14h-50z"/>
+                <path fill-rule="evenodd" d="M318 40a31 40 0 1 0 62 0 31 40 0 1 0-62 0m14 0a17 26 0 1 0 34 0 17 26 0 1 0-34 0"/>
+              </g>
+            </svg>
+            <span class="lock-cap">Primary · on Paper</span>
+          </div>
+
+          <div class="lock on-ink">
+            <svg viewBox="0 0 380 80" width="200" role="img" aria-label="Nizalo wordmark">
+              <defs><clipPath id="l3"><path d="M0 0h14l30 50V0h14v80H44L14 30v50H0z"/></clipPath></defs>
+              <g clip-path="url(#l3)">
+                <rect x="-2" y="-2" width="62" height="84" fill="#F2F4F7"/>
+                <path d="M10 -6.667 52 63.333v30L10 23.333z" fill="#FF5A2B"/>
+              </g>
+              <g fill="#F2F4F7">
+                <path d="M74 0h14v80H74z"/>
+                <path d="M104 0h54v15l-33 51h33v14h-54V65l33-51h-33z"/>
+                <path fill-rule="evenodd" d="M174 80 194 0h22l20 80h-14l-4.5-18h-25L188 80zm31-64 8.5 36h-17z"/>
+                <path d="M252 0h14v66h36v14h-50z"/>
+                <path fill-rule="evenodd" d="M318 40a31 40 0 1 0 62 0 31 40 0 1 0-62 0m14 0a17 26 0 1 0 34 0 17 26 0 1 0-34 0"/>
+              </g>
+            </svg>
+            <span class="lock-cap">Wordmark · accent on N</span>
+          </div>
+
+          <div class="lock on-ink">
+            <svg viewBox="0 0 380 220" width="112" role="img" aria-label="Nizalo stacked lockup">
+              <defs><clipPath id="l4"><path d="M8 8h18l44 58V8h18v80H70L26 30v58H8z"/></clipPath></defs>
+              <g transform="translate(142 0)">
+                <rect width="96" height="96" rx="21" fill="#F2F4F7"/>
+                <g transform="translate(20 20) scale(0.5833)" clip-path="url(#l4)">
+                  <rect x="6" y="6" width="84" height="84" fill="#0B0D10"/>
+                  <path d="M22 2.727 74 71.273v22L22 24.727z" fill="#FF5A2B"/>
+                </g>
+              </g>
+              <g transform="translate(0 140)" fill="#F2F4F7">
+                <path d="M0 0h14l30 50V0h14v80H44L14 30v50H0z"/><path d="M74 0h14v80H74z"/>
+                <path d="M104 0h54v15l-33 51h33v14h-54V65l33-51h-33z"/>
+                <path fill-rule="evenodd" d="M174 80 194 0h22l20 80h-14l-4.5-18h-25L188 80zm31-64 8.5 36h-17z"/>
+                <path d="M252 0h14v66h36v14h-50z"/>
+                <path fill-rule="evenodd" d="M318 40a31 40 0 1 0 62 0 31 40 0 1 0-62 0m14 0a17 26 0 1 0 34 0 17 26 0 1 0-34 0"/>
+              </g>
+            </svg>
+            <span class="lock-cap">Stacked</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="plate">
+        <p class="plate-hd">Reproduction at size — rendered at true pixel dimensions</p>
+        <div class="sizes">
+          <div class="size-i">
+            <svg width="96" height="96" viewBox="0 0 512 512" aria-label="App icon at 96 pixels">
+              <defs><clipPath id="ic1"><path d="M8 8h18l44 58V8h18v80H70L26 30v58H8z"/></clipPath></defs>
+              <rect width="512" height="512" rx="114" fill="#0B0D10"/>
+              <g transform="translate(107 107) scale(3.104)" clip-path="url(#ic1)">
+                <rect x="6" y="6" width="84" height="84" fill="#F2F4F7"/>
+                <path d="M22 2.727 74 71.273v22L22 24.727z" fill="#FF5A2B"/>
+              </g>
+            </svg>
+            <span class="lab">App icon 96px</span>
+          </div>
+          <div class="size-i">
+            <svg width="32" height="32" viewBox="0 0 32 32" aria-label="Favicon at 32 pixels">
+              <defs><clipPath id="fv1"><path d="M7 6h4.5l9 13V6H25v20h-4.5l-9-13v13H7z"/></clipPath></defs>
+              <rect width="32" height="32" rx="7" fill="#0B0D10"/>
+              <g clip-path="url(#fv1)">
+                <rect x="6" y="5" width="20" height="22" fill="#F2F4F7"/>
+                <path d="M9.5 3.111 26.5 27.667v7L9.5 10.111z" fill="#FF5A2B"/>
+              </g>
+            </svg>
+            <span class="lab">Favicon 32px</span>
+          </div>
+          <div class="size-i">
+            <svg width="16" height="16" viewBox="0 0 32 32" aria-label="Favicon at 16 pixels">
+              <defs><clipPath id="fv2"><path d="M7 6h4.5l9 13V6H25v20h-4.5l-9-13v13H7z"/></clipPath></defs>
+              <rect width="32" height="32" rx="7" fill="#0B0D10"/>
+              <g clip-path="url(#fv2)">
+                <rect x="6" y="5" width="20" height="22" fill="#F2F4F7"/>
+                <path d="M9.5 3.111 26.5 27.667v7L9.5 10.111z" fill="#FF5A2B"/>
+              </g>
+            </svg>
+            <span class="lab">Favicon 16px</span>
+          </div>
+        </div>
+      </div>
+
+      <dl class="spec">
+        <div><dt>Clear space</dt><dd>One wordmark stem on all four sides — 14 units in the 512-unit lockup. Nothing enters it: no text, no rule, no image edge.</dd></div>
+        <div><dt>Min · lockup</dt><dd><span class="mono" style="font-family:var(--f-mono)">120px</span> wide digital &nbsp;·&nbsp; <span style="font-family:var(--f-mono)">30mm</span> print</dd></div>
+        <div><dt>Min · wordmark</dt><dd><span style="font-family:var(--f-mono)">90px</span> wide</dd></div>
+        <div><dt>Min · mark</dt><dd><span style="font-family:var(--f-mono)">20px</span> — below that, switch to the favicon geometry</dd></div>
+      </dl>
+
+      <div class="dd">
+        <div class="dd-col dd-do">
+          <h4>Do</h4>
+          <ul>
+            <li>Use the contained mark whenever it sits beside the wordmark.</li>
+            <li>Keep the diagonal Duel Orange and the stems Ink or Paper.</li>
+            <li>Drop to the mark alone below 120px of available width.</li>
+            <li>Use the mono lockup for embroidery, engraving, and one-colour print.</li>
+          </ul>
+        </div>
+        <div class="dd-col dd-no">
+          <h4>Never</h4>
+          <ul>
+            <li>Gradient, glow, bevel, drop shadow, or outline on the mark.</li>
+            <li>Rotate, skew, stretch, or condense any part of the logo.</li>
+            <li>Rebuild the wordmark in a system font — the letterforms are custom paths.</li>
+            <li>Letter-space the Arabic wordmark; tracking breaks connected script.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- ============ COLOUR ============ -->
+  <section><div class="sec">
+    <div class="eyebrow">Colour</div>
+    <div>
+      <h2>One accent, spent carefully.</h2>
+      <div class="measure">
+        <p>Duel Orange was chosen against the two obvious alternatives: <strong>gold reads
+        casino</strong>, and <strong>purple-cyan reads crypto</strong>. Orange is warm, fast, and
+        competitive, and carries neither association.</p>
+        <p>The neutrals run deliberately <strong>cool</strong> against that warm accent. The
+        tension is the brand: a calm, technical ground with one hot signal on top.</p>
+      </div>
+
+      <div class="plate">
+        <p class="plate-hd">Core — identical in every theme</p>
+        <div class="swatches">
+          <div class="sw"><div class="sw-chip" style="background:#FF5A2B"></div>
+            <div class="sw-b"><p class="sw-name">Duel Orange</p><p class="sw-hex">#FF5A2B</p>
+            <p class="sw-tok">--nz-brand-orange</p>
+            <p class="sw-ratio">6.24:1 on Ink · AA</p></div></div>
+          <div class="sw"><div class="sw-chip" style="background:#0B0D10"></div>
+            <div class="sw-b"><p class="sw-name">Ink</p><p class="sw-hex">#0B0D10</p>
+            <p class="sw-tok">--nz-brand-ink</p>
+            <p class="sw-ratio">Primary dark ground</p></div></div>
+          <div class="sw"><div class="sw-chip" style="background:#F7F8FA"></div>
+            <div class="sw-b"><p class="sw-name">Paper</p><p class="sw-hex">#F7F8FA</p>
+            <p class="sw-tok">--nz-brand-paper</p>
+            <p class="sw-ratio">Primary light ground</p></div></div>
+          <div class="sw"><div class="sw-chip" style="background:#CC3A14"></div>
+            <div class="sw-b"><p class="sw-name">Orange Deep</p><p class="sw-hex">#CC3A14</p>
+            <p class="sw-tok">light-theme accent</p>
+            <p class="sw-ratio">5.0:1 w/ white · AA</p></div></div>
+        </div>
+      </div>
+
+      <div class="plate">
+        <p class="plate-hd">Semantic — dark theme values, measured against Ink</p>
+        <div class="swatches">
+          <div class="sw"><div class="sw-chip" style="background:#2FBF71"></div>
+            <div class="sw-b"><p class="sw-name">Win</p><p class="sw-hex">#2FBF71</p>
+            <p class="sw-tok">--nz-win</p><p class="sw-ratio">8.1:1 · AAA</p></div></div>
+          <div class="sw"><div class="sw-chip" style="background:#E5484D"></div>
+            <div class="sw-b"><p class="sw-name">Loss</p><p class="sw-hex">#E5484D</p>
+            <p class="sw-tok">--nz-loss</p><p class="sw-ratio">4.96:1 · AA</p></div></div>
+          <div class="sw"><div class="sw-chip" style="background:#8B93A1"></div>
+            <div class="sw-b"><p class="sw-name">Draw</p><p class="sw-hex">#8B93A1</p>
+            <p class="sw-tok">--nz-draw</p><p class="sw-ratio">6.1:1 · AA</p></div></div>
+          <div class="sw"><div class="sw-chip" style="background:#3B82F6"></div>
+            <div class="sw-b"><p class="sw-name">Info</p><p class="sw-hex">#3B82F6</p>
+            <p class="sw-tok">--nz-info</p><p class="sw-ratio">5.28:1 · AA</p></div></div>
+        </div>
+      </div>
+
+      <div class="govern">
+        <p>Win and loss colour applies to game outcomes only — never to money. A balance is not
+        green when it rises.</p>
+      </div>
+      <div class="measure">
+        <p>Money is rendered in neutral text with tabular figures, because financial UI must read
+        as calm rather than as a scoreboard. Duel Orange means one thing: <strong>this is what
+        matters right now</strong> — your turn, your clock, the primary action. If a screen has
+        five orange elements, four of them are wrong.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- ============ TYPE ============ -->
+  <section><div class="sec">
+    <div class="eyebrow">Typography</div>
+    <div>
+      <h2>One superfamily, two scripts.</h2>
+      <div class="measure">
+        <p>Archivo supplies display presence and matches the wordmark's geometry. The three IBM
+        Plex faces — Sans, Mono, and Sans Arabic — are <strong>one superfamily</strong>, so Latin,
+        Arabic, and tabular data speak in a single voice. That coherence matters most in the
+        Arabic UI, where a mismatched pairing is the usual tell that a market was an afterthought.</p>
+      </div>
+
+      <div class="plate">
+        <div class="spec-type">
+          <p class="spec-lbl">Archivo 800 · display · tracking −0.032em</p>
+          <p class="sp-disp">Prove it in one duel</p>
+        </div>
+        <div class="spec-type">
+          <p class="spec-lbl">IBM Plex Sans 400 · body · 17/1.55</p>
+          <p class="sp-body">Two players enter a queue. The server generates one challenge and
+          sends both of them the same thing at the same instant. Ninety seconds later it decides
+          who was better — and nothing the clients said about it counts.</p>
+        </div>
+        <div class="spec-type">
+          <p class="spec-lbl">IBM Plex Mono 500 · tabular · clocks, money, ratings</p>
+          <p class="sp-mono">02:47.3 &nbsp; 1 842 &nbsp; USDT 128.50</p>
+        </div>
+        <div class="spec-type">
+          <p class="spec-lbl">IBM Plex Sans Arabic 600 · full RTL, never letter-spaced</p>
+          <p class="sp-ar">أثبت مهارتك — نزال واحد يكفي</p>
+        </div>
+      </div>
+
+      <div class="govern">
+        <p>Every number that represents money, time, or rating is tabular.</p>
+      </div>
+      <div class="measure">
+        <p>A clock whose digits change width jitters; a balance that reflows reads as unstable.
+        Both undermine trust in a product whose central claim is that it counts correctly.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- ============ MOTION ============ -->
+  <section><div class="sec">
+    <div class="eyebrow">Motion</div>
+    <div>
+      <h2>Motion is confirmation, not decoration.</h2>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>Duration</th><th>Token</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">90ms</td><td class="mono">--nz-dur-instant</td><td>State echo — press, toggle</td></tr>
+            <tr><td class="mono">140ms</td><td class="mono">--nz-dur-fast</td><td>Default UI transition</td></tr>
+            <tr><td class="mono">200ms</td><td class="mono">--nz-dur-base</td><td>Entrance, reveal</td></tr>
+            <tr><td class="mono">320ms</td><td class="mono">--nz-dur-slow</td><td>Rare — full-surface change</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="measure">
+        <p>A move snaps. A result resolves. A clock ticks. That is the entire vocabulary.
+        <code style="font-family:var(--f-mono);font-size:13px">prefers-reduced-motion</code> is
+        honoured everywhere, and removing motion never removes meaning.</p>
+      </div>
+      <div class="govern">
+        <p>Celebrate the result, never the transaction.</p>
+      </div>
+      <div class="measure">
+        <p><strong>Forbidden outright:</strong> slot-machine spins, coin showers, confetti on a
+        deposit, pulsing deposit buttons, and countdown pressure on any financial action.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- ============ VOICE ============ -->
+  <section><div class="sec">
+    <div class="eyebrow">Voice</div>
+    <div>
+      <h2>Direct. Confident. Never hyped.</h2>
+      <div class="tbl-scroll">
+        <table class="say">
+          <thead><tr><th>Say</th><th>Never</th></tr></thead>
+          <tbody>
+            <tr><td>Your move.</td><td>BET NOW!</td></tr>
+            <tr><td>Prove your skill.</td><td>Win big today!</td></tr>
+            <tr><td>Challenge anyone.</td><td>Easy money</td></tr>
+            <tr><td>Two players. One truth.</td><td>Guaranteed returns</td></tr>
+            <tr><td>You lost this one. Rematch?</td><td>Chase it back</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="measure">
+        <p>Losing is the majority experience in any 1v1 product, and how the brand handles it
+        determines retention more than any win screen. <strong>A loss is information, not a
+        wound.</strong> Show what changed — rating, what the opponent did better, the rematch
+        button. Never console, never taunt, never upsell.</p>
+        <p>On money: always show asset and network together —
+        <span style="font-family:var(--f-mono);font-size:14px;color:var(--tx)">USDT — TRON (TRC20)</span>,
+        never just "USDT". State fees before an action, never after. Never imply that winning is
+        likely, typical, or guaranteed.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- ============ THE RULE ============ -->
+  <section><div class="sec">
+    <div class="eyebrow">The rule</div>
+    <div>
+      <h2>Everything descends from one sentence.</h2>
+      <div class="govern">
+        <p>The money surfaces should feel like a bank. The game surfaces should feel like a sport.
+        Nothing should ever feel like a casino floor.</p>
+      </div>
+      <div class="measure">
+        <p>When a decision is genuinely close — a colour, a piece of copy, an animation, where the
+        Cash Games tile sits on the homepage — this is the tiebreaker. It has already settled the
+        accent choice, the money-colour rule, the motion ban list, and the homepage hierarchy.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- ============ OUTSTANDING ============ -->
+  <section><div class="sec">
+    <div class="eyebrow">Outstanding</div>
+    <div>
+      <h2>Before public launch.</h2>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Item</th><th>Owner</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">B1</td><td>Trademark clearance — classes 9, 41, 36 (USPTO, EUIPO, WIPO, SAIP, UAE, Egypt)</td><td>Counsel</td></tr>
+            <tr><td class="mono">B2</td><td>Arabic native-speaker review — Gulf, Levantine, Egyptian</td><td>Founder</td></tr>
+            <tr><td class="mono">B3</td><td>Register nizalo.com, .app, .games + defensive variants</td><td>Founder</td></tr>
+            <tr><td class="mono">B4</td><td>Manual .gg check at a registrar — no reliable RDAP exists for that TLD</td><td>Founder</td></tr>
+            <tr><td class="mono">B5</td><td>Social handles — X, Instagram, TikTok, YouTube, Discord, Telegram</td><td>Founder</td></tr>
+            <tr><td class="mono">B6</td><td>Arabic wordmark drawn as outlines by a type designer</td><td>Design</td></tr>
+            <tr><td class="mono">B7</td><td>Licence Archivo + IBM Plex for web and app embedding</td><td>Founder</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note"><strong style="color:var(--tx2)">Flag for counsel:</strong> <em>Nizoral</em>
+      (an antifungal brand) is the nearest phonetic neighbour found — different classes, different
+      spelling, different stress. Assessed as low risk, but raised explicitly rather than
+      discovered later. Domain availability was verified by registry RDAP on 2026-09-06; it proves
+      registration status only, never legal clearance.</p>
+    </div>
+  </div></section>
+
+  <footer>
+    <span>Nizalo — Brand Guidelines v1.0</span>
+    <span>نزالو</span>
+  </footer>
+
+</div>

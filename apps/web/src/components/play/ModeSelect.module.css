@@ -1,0 +1,49 @@
+.heading {
+  font-size: var(--nz-text-2xl);
+  padding-block: var(--nz-space-10) var(--nz-space-8);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--nz-space-6);
+  padding-bottom: var(--nz-space-16);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+  align-items: flex-start;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-8);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: start;
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out), transform var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.card:hover {
+  border-color: var(--nz-accent-line);
+  transform: translateY(-2px);
+}
+
+.cardTitle {
+  font-size: var(--nz-text-xl);
+  font-weight: 700;
+}
+
+.cardDescription {
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-3);
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

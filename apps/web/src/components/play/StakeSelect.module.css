@@ -1,0 +1,24 @@
+.heading {
+  font-size: var(--nz-text-2xl);
+  padding-block: var(--nz-space-10) var(--nz-space-8);
+}
+
+.card {
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-6) var(--nz-space-8);
+  margin-bottom: var(--nz-space-8);
+  max-width: 420px;
+}
+
+.freeLabel {
+  font-size: var(--nz-text-lg);
+  font-weight: 700;
+}
+
+.note {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-sm);
+  margin: var(--nz-space-2) 0 0;
+}

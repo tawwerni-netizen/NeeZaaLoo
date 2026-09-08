@@ -1,0 +1,225 @@
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--nz-space-8) var(--nz-space-4);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-4);
+  margin-bottom: var(--nz-space-6);
+}
+
+.title {
+  font-size: var(--nz-text-2xl);
+  margin: 0;
+}
+
+.card {
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-5);
+  margin-bottom: var(--nz-space-4);
+  background: var(--nz-surface-1);
+}
+
+.empty {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  margin: 0;
+}
+
+.ticketRow {
+  display: block;
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-4);
+  margin-bottom: var(--nz-space-3);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.ticketRow:hover {
+  border-color: var(--nz-line-strong);
+}
+
+.ticketRowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-3);
+  margin-bottom: var(--nz-space-2);
+}
+
+.ticketSubject {
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticketMeta {
+  display: flex;
+  gap: var(--nz-space-3);
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-xs);
+}
+
+.pill {
+  display: inline-block;
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  white-space: nowrap;
+}
+
+.pillInfo { background: rgba(29, 78, 216, 0.12); color: var(--nz-info); }
+.pillWarn { background: rgba(154, 97, 0, 0.14); color: var(--nz-warn); }
+.pillWin { background: rgba(21, 127, 74, 0.12); color: var(--nz-win); }
+.pillNeutral { background: var(--nz-surface-2); color: var(--nz-text-2); }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+  margin-bottom: var(--nz-space-4);
+}
+
+.field label {
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-2);
+}
+
+.field input,
+.field select,
+.field textarea {
+  font: inherit;
+  font-size: var(--nz-text-base);
+  padding: var(--nz-space-3);
+  border-radius: var(--nz-radius-md);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-bg);
+  color: var(--nz-text);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--nz-focus);
+}
+
+.hint {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+  margin: 0;
+}
+
+.secretsWarning {
+  background: rgba(154, 97, 0, 0.08);
+  border: 1px solid var(--nz-warn);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  color: var(--nz-warn);
+  font-size: var(--nz-text-sm);
+  margin-bottom: var(--nz-space-5);
+}
+
+.error {
+  color: var(--nz-loss);
+  font-size: var(--nz-text-sm);
+  margin: 0 0 var(--nz-space-4);
+}
+
+.actions {
+  display: flex;
+  gap: var(--nz-space-3);
+}
+
+.conversation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-3);
+  margin-bottom: var(--nz-space-5);
+}
+
+.message {
+  max-width: 80%;
+  padding: var(--nz-space-3) var(--nz-space-4);
+  border-radius: var(--nz-radius-lg);
+  background: var(--nz-surface-2);
+}
+
+.messageFromCustomer {
+  align-self: flex-end;
+  background: var(--nz-accent-soft);
+  border: 1px solid var(--nz-accent-line);
+}
+
+.messageAuthor {
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-2);
+  margin-bottom: var(--nz-space-1);
+}
+
+.messageContent {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.messageTime {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+  margin-top: var(--nz-space-1);
+}
+
+.replyForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-3);
+}
+
+.notice {
+  background: var(--nz-surface-2);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  margin-bottom: var(--nz-space-4);
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: var(--nz-space-4);
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--nz-accent);
+}
+
+@media (max-width: 640px) {
+  .ticketRowTop { flex-direction: column; align-items: flex-start; gap: var(--nz-space-1); }
+  .message { max-width: 100%; }
+}

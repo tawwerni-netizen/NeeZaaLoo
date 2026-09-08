@@ -1,0 +1,640 @@
+{
+  "nav": {
+    "play": "对战",
+    "rank": "排名",
+    "tournament": "锦标赛",
+    "learn": "了解",
+    "wallet": "钱包",
+    "log_in": "登录",
+    "log_out": "退出登录",
+    "play_now": "立即对战",
+    "home_aria_label": "Nizalo 首页",
+    "security": "安全",
+    "profile": "个人资料",
+    "support": "支持",
+    "chat": "聊天",
+    "watch": "观战"
+  },
+  "footer": {
+    "learn": "了解",
+    "tournaments": "锦标赛",
+    "leaderboard": "排行榜",
+    "support": "支持",
+    "copyright": "© {year} Nizalo。你的对决,你的证明。"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "全球技能竞技",
+      "headline_line1": "自认技高一筹?",
+      "headline_line2": "拿出证明。",
+      "subhead": "你的对决,你的证明。国际象棋与快速数学,只凭实力决胜负——公平匹配,诚实计分,绝不靠运气。",
+      "cta_primary": "寻找对手",
+      "cta_secondary": "了解玩法"
+    },
+    "games": {
+      "heading": "选择你的项目",
+      "duration_label": "时长",
+      "mode_label": "模式",
+      "play_cta": "开始{name}",
+      "coming_soon": {
+        "title": "更多项目即将上线",
+        "body": "记忆网格、图案、反应力与精准度项目正基于同一套公平、服务器主控的体系开发中。"
+      },
+      "chess": {
+        "description": "最原始的实力检验。服务器全程主控,每条规则强制执行,每局都可回放。",
+        "duration": "5–15 分钟",
+        "mode": "1对1 · 排位或休闲"
+      },
+      "speed_math": {
+        "description": "共享的60秒倒计时。同样的题目,同一瞬间开始——只凭速度与准确率定胜负。",
+        "duration": "60 秒",
+        "mode": "1对1 · 排位或休闲"
+      }
+    },
+    "how": {
+      "heading": "玩法说明",
+      "steps": {
+        "try": {
+          "title": "尝试",
+          "body": "选择一款游戏,打一局对决——无需承诺,无需充值。"
+        },
+        "compete": {
+          "title": "对战",
+          "body": "与同水平对手匹配,全程服务器验证。"
+        },
+        "improve": {
+          "title": "进步",
+          "body": "每场结果都会展示你该改进的地方,而不只是输赢。"
+        },
+        "climb": {
+          "title": "提升",
+          "body": "你的评分与全球技能分随每场对局而变化。"
+        },
+        "win": {
+          "title": "获胜",
+          "body": "提升排名,获得锦标赛资格,在允许的地区还可角逐真实奖金。"
+        }
+      }
+    }
+  },
+  "common": {
+    "game_names": {
+      "chess": "国际象棋",
+      "speed_math": "快速数学"
+    },
+    "unknown_game": "未知游戏。"
+  },
+  "auth": {
+    "register": {
+      "title": "创建账户",
+      "subtitle": "一局对决,足以证明你的实力。",
+      "password_label": "密码",
+      "submit": "创建账户",
+      "submitting": "正在创建账户…",
+      "switch_prompt": "已有账户?",
+      "switch_cta": "登录",
+      "nickname_label": "昵称"
+    },
+    "login": {
+      "title": "登录",
+      "subtitle": "你的对决正在等待。",
+      "password_label": "密码",
+      "submit": "登录",
+      "submitting": "正在登录…",
+      "switch_prompt": "还没有账户?",
+      "switch_cta": "创建账户",
+      "nickname_label": "昵称",
+      "google_cta": "使用 Google 继续",
+      "email_code_cta": "给我发送 6 位邮箱验证码",
+      "forgot_password_cta": "忘记密码？",
+      "or_divider": "或"
+    },
+    "errors": {
+      "weak_password": "该密码过于容易猜到。请使用至少10个字符,避免常见词汇。",
+      "handle_taken": "该用户名已被占用,请换一个。",
+      "bad_credentials": "用户名或密码不正确。",
+      "locked_out": "尝试次数过多,请几分钟后再试。",
+      "totp_required": "请输入身份验证码以继续。",
+      "totp_invalid": "验证码不正确,请检查身份验证器后重试。",
+      "network_error": "无法连接服务器,请检查网络后重试。",
+      "generic": "出现问题,请重试。",
+      "link_required": "该邮箱已有账户。请先登录，再到安全设置中连接 Google。",
+      "subject_already_linked": "此 Google 账户已连接到另一个 Nizalo 账户。",
+      "already_linked": "您的账户已连接到另一个 Google 账户。",
+      "last_auth_method": "断开 Google 前请先设置密码，以免无法登录账户。",
+      "not_linked": "您的账户尚未连接 Google。",
+      "credential_already_set": "您已设置密码，请使用“修改密码”。",
+      "google_login_unavailable": "Google 登录暂不可用，请尝试其他方式。",
+      "provider_error": "Google 登录出现问题，请重试。",
+      "bad_state": "该登录链接无效或已过期，请重试。",
+      "google_denied": "您已取消 Google 登录，未做任何更改。",
+      "invalid_shape": "昵称必须为 3-24 个字符：仅限字母、数字、下划线或连字符。",
+      "reserved": "该昵称不可用。",
+      "prohibited": "该昵称不被允许。",
+      "taken": "该昵称已被占用，请换一个。",
+      "cooldown": "您可以稍后再次更改昵称，但现在还不行。",
+      "too_long": "简介过长。",
+      "too_large": "图片过大，请尝试更小的文件。",
+      "invalid_image": "这似乎不是有效的图片，请尝试 PNG、JPEG 或 WEBP 文件。",
+      "not_owned": "您尚未拥有该徽章。",
+      "cannot_report_self": "您不能举报自己的内容。"
+    },
+    "email_code": {
+      "title": "使用验证码登录",
+      "subtitle": "我们会向您的邮箱发送一次性验证码。",
+      "email_label": "邮箱",
+      "request_cta": "发送验证码",
+      "requesting": "发送中…",
+      "sent_message": "如果该邮箱符合条件，验证码已发送，请查收邮箱。",
+      "code_label": "6 位验证码",
+      "totp_label": "身份验证器代码（如已启用）",
+      "verify_cta": "登录",
+      "verifying": "登录中…",
+      "back_to_password": "改用密码登录"
+    },
+    "forgot_password": {
+      "title": "重置密码",
+      "subtitle": "我们会向您的邮箱发送重置验证码。",
+      "email_label": "邮箱",
+      "request_cta": "发送重置验证码",
+      "requesting": "发送中…",
+      "sent_message": "如果该邮箱有对应账户，重置验证码已发送。",
+      "code_label": "重置验证码",
+      "new_password_label": "新密码",
+      "confirm_cta": "重置密码",
+      "confirming": "重置中…",
+      "success_message": "密码已重置，您现在可以登录了。",
+      "back_to_login": "返回登录"
+    },
+    "google": {
+      "completing": "正在完成登录…",
+      "totp_label": "身份验证器代码",
+      "totp_cta": "继续",
+      "link_required_title": "账户已存在",
+      "link_required_cta": "前往登录",
+      "linked_title": "Google 已连接",
+      "linked_body": "您的 Google 账户现已连接。",
+      "link_failed_title": "无法连接 Google",
+      "denied_title": "登录已取消",
+      "invalid_title": "出现问题",
+      "error_title": "无法使用 Google 登录",
+      "unavailable_title": "Google 登录不可用",
+      "continue_cta": "继续前往 Nizalo"
+    },
+    "security": {
+      "title": "安全",
+      "subtitle": "管理您登录 Nizalo 的方式。",
+      "password_label": "密码",
+      "password_set": "已启用",
+      "password_not_set": "未设置",
+      "email_label": "邮箱",
+      "email_verified": "已验证",
+      "email_unverified": "未验证",
+      "email_not_set": "未设置",
+      "google_label": "Google",
+      "google_connected": "已连接",
+      "google_not_connected": "未连接",
+      "totp_label": "双重身份验证",
+      "totp_enabled": "已启用",
+      "totp_disabled": "未启用",
+      "connect_google_cta": "连接",
+      "disconnect_google_cta": "断开连接",
+      "set_password_cta": "设置密码",
+      "change_password_cta": "修改密码",
+      "set_password_title": "创建您的 Nizalo 密码",
+      "change_password_title": "修改密码",
+      "password_field_label": "新密码",
+      "save_password_cta": "保存密码",
+      "saving_password": "保存中…",
+      "password_saved": "密码已保存。",
+      "need_password_before_disconnect_title": "请先创建密码",
+      "need_password_before_disconnect_body": "断开 Google 前请先创建 Nizalo 密码，以免无法访问您的账户。",
+      "confirm_disconnect_title": "断开 Google 连接？",
+      "confirm_disconnect_body": "从现在起，您需要使用 Nizalo 密码登录。",
+      "confirm_disconnect_cta": "断开连接",
+      "cancel_cta": "取消",
+      "disconnected_message": "Google 已断开连接。",
+      "step_up_password_label": "确认您的密码",
+      "step_up_totp_label": "身份验证器代码",
+      "step_up_cta": "确认"
+    }
+  },
+  "play": {
+    "select": {
+      "heading": "选择你的项目",
+      "duration_label": "时长",
+      "style_label": "风格",
+      "mode_label": "模式",
+      "eligibility_label": "参与资格",
+      "cta": "寻找对手 →",
+      "eligibility_free": "免费",
+      "difficulty_deep": "深度",
+      "difficulty_fast": "快节奏"
+    },
+    "continue": "继续",
+    "back": "返回",
+    "mode": {
+      "heading": "选择对战方式",
+      "vs_computer": { "title": "人机对战", "description": "与AI对手练习" },
+      "friend": { "title": "挑战好友", "description": "通过昵称挑战某人" },
+      "competitive": { "title": "竞技对战", "description": "根据你的水平进行排位匹配" },
+      "tournament": { "title": "锦标赛", "description": "参加淘汰赛争夺奖金" }
+    },
+    "difficulty": {
+      "heading": "选择难度"
+    },
+    "stake": {
+      "heading": "选择赌注",
+      "free_only": "仅限免费",
+      "free_only_note": "该项目暂不支持现金赌注。"
+    },
+    "challenge": {
+      "heading": "挑战好友",
+      "nickname_label": "对手昵称",
+      "nickname_placeholder": "输入昵称",
+      "send": "发送挑战",
+      "sending": "发送中…",
+      "sent": "挑战已发送——等待{handle}回应。",
+      "incoming_heading": "收到的挑战",
+      "outgoing_heading": "已发送的挑战",
+      "accept": "接受",
+      "decline": "拒绝",
+      "cancel": "取消",
+      "empty_incoming": "暂无收到的挑战。",
+      "empty_outgoing": "暂无已发送的挑战。",
+      "from": "{handle} 向你发起了挑战",
+      "waiting_for": "等待 {handle}",
+      "error_unknown_opponent": "找不到该昵称的玩家。",
+      "error_self": "不能挑战自己。",
+      "error_already_pending": "你与 {handle} 已有一个待处理的挑战。",
+      "error_generic": "挑战发送失败，请重试。"
+    }
+  },
+  "dashboard": {
+    "welcome": "欢迎回来",
+    "play_now": "立即对战",
+    "global_skill": {
+      "title": "全球技能分",
+      "empty": "在任意一款游戏中完成10场排位赛以生成分数。",
+      "view_breakdown": "查看完整分析 →",
+      "percentile": "第 {value}% 百分位"
+    },
+    "recent": {
+      "title": "最近对局",
+      "empty": "暂无对局记录,你的历史记录将显示在这里。",
+      "full_history": "完整历史 →"
+    },
+    "tournaments": {
+      "title": "锦标赛",
+      "empty": "查看当前开放报名的锦标赛。",
+      "browse": "浏览锦标赛 →"
+    }
+  },
+  "matchmaking": {
+    "joining_queue": "正在加入{game}队列…",
+    "finding_1": "正在寻找对手…",
+    "finding_2": "正在匹配你的技能水平…",
+    "finding_3": "正在准备你的对决…",
+    "cancel": "取消",
+    "you": "你",
+    "opponent": "对手",
+    "vs": "对战",
+    "go": "开始",
+    "join_error": "加入队列失败,请重试。"
+  },
+  "game": {
+    "connected": "● 已连接",
+    "connecting": "○ 连接中…",
+    "reconnecting": "○ 正在重新连接…",
+    "resign": "认输",
+    "playing_as": "当前身份:{handle}",
+    "result_pending_note": "完整的结果页面(评分变化、下一场对决)是接下来要构建的部分。",
+    "spectating": "观战中",
+    "watching_as": "以 {handle} 身份观战",
+    "your_turn": "轮到你走棋",
+    "opponent_turn": "对手正在思考",
+    "in_check": "将军",
+    "offer_draw": "提议和棋",
+    "draw_offer_sent": "已发送和棋请求",
+    "draw_offer_received": "{handle} 提议和棋",
+    "accept_draw": "接受",
+    "decline_draw": "拒绝",
+    "resign_confirm_title": "确定认输吗?",
+    "resign_confirm_body": "此操作将计为失败,且无法撤销。",
+    "confirm": "确认",
+    "cancel": "取消",
+    "promote_title": "选择升变棋子",
+    "promote_queen": "后",
+    "promote_rook": "车",
+    "promote_bishop": "象",
+    "promote_knight": "马",
+    "result_win": "你赢了",
+    "result_loss": "你输了",
+    "result_draw": "和棋",
+    "reason": {
+      "CHECKMATE": "将死",
+      "STALEMATE": "逼和",
+      "FIFTY_MOVE": "五十回合规则",
+      "THREEFOLD_REPETITION": "三次重复局面",
+      "INSUFFICIENT_MATERIAL": "子力不足",
+      "RESIGNATION": "认输",
+      "TIMEOUT": "超时",
+      "DRAW_AGREED": "协议和棋"
+    },
+    "rematch": "再战一局",
+    "new_opponent": "更换对手",
+    "review": "复盘",
+    "exp_gained": "+{amount} 经验",
+    "rating_change_up": "评分 +{amount}",
+    "rating_change_down": "评分 {amount}",
+    "level_up": "等级 {level}",
+    "opponent_disconnected": "对手已断线——其计时仍在继续",
+    "opponent_reconnected": "对手已重新连接",
+    "you_disconnected": "连接已断开——正在重新连接",
+    "vs_computer": "对战电脑",
+    "difficulty": {
+      "EASY": "简单",
+      "MEDIUM": "中等",
+      "HARD": "困难",
+      "EXPERT": "专家"
+    },
+    "move_history": "着法记录",
+    "achievement": {
+      "FIRST_WIN": { "title": "首胜！", "description": "你赢得了第一场对战。" },
+      "FIRST_TOURNAMENT": { "title": "锦标赛首秀", "description": "你完成了第一场锦标赛。" }
+    }
+  },
+  "settings": {
+    "language": "语言"
+  },
+  "tournamentsPage": {
+    "heading": "锦标赛",
+    "empty": "目前没有开放报名的锦标赛。",
+    "entry_free": "免费",
+    "entry_fee": "{amount} {asset}",
+    "registered_count": "已报名 {count}/{capacity}",
+    "starts_at": "开始时间：{date}",
+    "view": "查看 →",
+    "back": "← 所有锦标赛",
+    "format": {
+      "SINGLE_ELIMINATION": "单败淘汰",
+      "SWISS": "瑞士制"
+    },
+    "status": {
+      "DRAFT": "草稿",
+      "REGISTRATION_OPEN": "报名中",
+      "REGISTRATION_CLOSED": "报名已截止",
+      "IN_PROGRESS": "进行中",
+      "COMPLETED": "已结束",
+      "CANCELLED": "已取消"
+    },
+    "register": "报名",
+    "registering": "报名中…",
+    "registered": "你已报名",
+    "withdraw": "退出",
+    "your_match": "参加你的比赛 →",
+    "standings_heading": "排名",
+    "standings_rank": "名次",
+    "standings_player": "玩家",
+    "standings_points": "积分",
+    "standings_record": "胜-负-平",
+    "error_at_capacity": "该锦标赛名额已满。",
+    "error_not_open": "报名已截止。",
+    "error_already_registered": "你已经报名了。",
+    "error_generic": "出了点问题，请重试。",
+    "not_found": "未找到该锦标赛。"
+  },
+  "meta": {
+    "title": "Nizalo — 你的对决,你的证明。",
+    "description": "全球技能对战平台。国际象棋、快速数学等更多项目。证明你的实力,提升你的排名。"
+  },
+  "email": {
+    "common": {
+      "footer": "Nizalo——你的对决,你的证明。",
+      "support_note": "有疑问?随时通过 info@nizalo.com 联系我们。"
+    },
+    "welcome": {
+      "subject": "欢迎加入 Nizalo,{nickname}",
+      "heading": "欢迎加入 Nizalo",
+      "body": "您的账户已准备就绪。Nizalo 是一个全球性的技能竞技平台——没有运气,没有偶然,只有实力的证明。",
+      "nav_note": "在您的仪表盘中:在「对战」中寻找对手,在「排名」中查看排行榜,在「锦标赛」中浏览正在进行的赛事,或在「了解」中阅读更多信息。",
+      "cta": "立即对战"
+    },
+    "verification": {
+      "subject": "验证您的 Nizalo 邮箱",
+      "heading": "确认您的邮箱地址",
+      "body": "请在 Nizalo 中输入以下验证码以确认 {email} 是您的邮箱:",
+      "expires_note": "此验证码将在 {minutes} 分钟后失效,且仅可使用一次。",
+      "ignore_note": "如果这不是您本人的操作,请忽略此邮件。"
+    },
+    "login_code": {
+      "subject": "您的 Nizalo 登录验证码",
+      "heading": "您的 Nizalo 登录验证码",
+      "body": "请输入以下验证码登录:",
+      "expires_note": "此验证码将在 {minutes} 分钟后失效,且仅可使用一次。",
+      "ignore_note": "如果这不是您本人的操作,请忽略此邮件。"
+    },
+    "password_reset": {
+      "subject": "重置您的 Nizalo 密码",
+      "heading": "已请求重置密码",
+      "body": "请在 Nizalo 中输入以下验证码以重置密码:",
+      "expires_note": "此验证码将在 {minutes} 分钟后失效,且仅可使用一次。",
+      "ignore_note": "如果您没有请求重置密码,请忽略此邮件。"
+    },
+    "password_reset_confirmation": {
+      "subject": "您的 Nizalo 密码已更改",
+      "heading": "您的密码已更改",
+      "body": "您的 Nizalo 密码已成功更改。",
+      "warning": "如果这不是您本人的操作,请立即联系支持团队。"
+    },
+    "ticket_common": {
+      "subject_label": "工单",
+      "view_cta": "查看工单"
+    },
+    "ticket_created": {
+      "subject": "我们已收到您的支持请求",
+      "heading": "您的支持工单已创建",
+      "body": "感谢您的反馈。我们的支持团队会尽快处理您的请求。"
+    },
+    "ticket_staff_replied": {
+      "subject": "您的 Nizalo 支持工单有新回复",
+      "heading": "您有一条新回复",
+      "body": "我们的支持团队回复了您的工单。请登录查看完整信息并回复。"
+    },
+    "ticket_waiting_for_user": {
+      "subject": "我们需要您提供更多信息",
+      "heading": "我们正在等待您的回复",
+      "body": "我们的支持团队需要更多信息才能继续处理您的工单。"
+    },
+    "ticket_resolved": {
+      "subject": "您的支持工单已解决",
+      "heading": "您的工单已解决",
+      "body": "我们已将您的支持工单标记为已解决。如果仍需帮助,请直接回复,我们会重新开启工单。"
+    }
+  },
+  "profile": {
+    "title": "个人资料",
+    "edit_cta": "编辑资料",
+    "view_profile_cta": "查看资料",
+    "level_label": "等级",
+    "exp_label": "经验值",
+    "global_skill_label": "全球技能",
+    "bio_label": "简介",
+    "no_bio": "暂无简介。",
+    "ratings_title": "游戏评分",
+    "no_ratings": "暂无评分——开始一局游戏吧。",
+    "stats_title": "统计数据",
+    "games_label": "对局数",
+    "wins_label": "胜场",
+    "losses_label": "负场",
+    "win_rate_label": "胜率",
+    "achievements_title": "成就",
+    "no_achievements": "暂无成就。",
+    "badges_title": "徽章",
+    "no_badges": "暂无徽章。",
+    "member_since_label": "加入时间",
+    "nickname_label": "昵称",
+    "save_cta": "保存更改",
+    "saving": "保存中…",
+    "cancel_cta": "取消",
+    "change_avatar_cta": "更换照片",
+    "uploading_avatar": "上传中…",
+    "saved_message": "资料已保存。",
+    "report_cta": "举报",
+    "report_title": "举报该资料",
+    "report_reason_label": "原因（可选）",
+    "report_submit_cta": "提交举报",
+    "reported_message": "感谢您的举报，已提交。",
+    "not_found": "找不到该玩家。",
+    "achievements_catalog": {
+      "FIRST_WIN": "首次获胜",
+      "FIRST_TOURNAMENT": "首次参赛"
+    }
+  },
+  "support": {
+    "title": "支持",
+    "my_tickets_title": "我的工单",
+    "new_ticket_cta": "新建工单",
+    "no_tickets": "您还没有支持工单。",
+    "back_to_list": "返回我的工单",
+    "created_label": "创建时间",
+    "updated_label": "更新时间",
+    "category_label": "类别",
+    "status": {
+      "OPEN": "待处理",
+      "TRIAGED": "已分诊",
+      "ASSIGNED": "已分配",
+      "IN_PROGRESS": "处理中",
+      "WAITING_FOR_USER": "等待您的回复",
+      "ESCALATED": "已升级",
+      "RESOLVED": "已解决",
+      "CLOSED": "已关闭"
+    },
+    "categories": {
+      "ACCOUNT": "账户",
+      "LOGIN": "登录问题",
+      "PASSWORD": "密码",
+      "DEPOSIT_PENDING": "充值处理中",
+      "WITHDRAWAL_PENDING": "提现处理中",
+      "WITHDRAWAL_FAILED": "提现失败",
+      "MISSING_FUNDS": "资金缺失",
+      "MATCH_PROBLEM": "对局问题",
+      "TOURNAMENT_PROBLEM": "锦标赛问题",
+      "ANTI_CHEAT": "举报作弊",
+      "TECHNICAL": "技术问题",
+      "ABUSE_REPORT": "举报滥用行为",
+      "OTHER": "其他问题"
+    },
+    "new": {
+      "title": "新建支持工单",
+      "category_label": "您需要什么帮助？",
+      "category_placeholder": "选择类别",
+      "reference_id_label": "参考编号",
+      "reference_id_hint": "与此相关的充值、提现、对局或锦标赛的编号。",
+      "subject_label": "主题",
+      "subject_placeholder": "简要描述问题",
+      "description_label": "描述问题",
+      "description_placeholder": "请尽可能详细说明。",
+      "secrets_warning": "切勿提供您的密码、登录验证码、身份验证器（TOTP）代码、OAuth 令牌、私钥或钱包助记词。我们的工作人员绝不会向您索要这些信息。",
+      "submit_cta": "提交工单",
+      "submitting": "提交中…",
+      "cancel_cta": "取消"
+    },
+    "duplicate_notice": "您已有一个关于此问题的未结工单。",
+    "view_existing_cta": "查看现有工单",
+    "detail": {
+      "conversation_title": "对话记录",
+      "reply_placeholder": "输入您的消息…",
+      "send_cta": "发送",
+      "sending": "发送中…",
+      "you_label": "您",
+      "support_label": "支持团队",
+      "closed_notice": "此工单已关闭。如果仍需帮助，请创建新工单。",
+      "reopened_notice": "您的工单已重新开启。",
+      "no_messages": "暂无消息。"
+    },
+    "errors": {
+      "invalid_category": "请选择一个类别。",
+      "invalid_subject": "请输入 1 到 200 个字符的主题。",
+      "invalid_content": "请输入消息内容。",
+      "reference_required": "请为此类别输入参考编号。",
+      "reference_not_found": "未找到该参考信息，或它不属于您的账户。",
+      "duplicate_open_ticket": "您已有一个关于此问题的未结工单。",
+      "ticket_closed": "此工单已关闭。",
+      "not_found": "未找到此工单。",
+      "generic": "出了点问题，请重试。"
+    },
+    "game_report_cta": "举报此对局的问题"
+  },
+  "chat": {
+    "global_title": "全球聊天",
+    "match_title": "对局聊天",
+    "placeholder": "输入消息…",
+    "send_cta": "发送",
+    "connecting": "连接中…",
+    "reconnecting": "重新连接中…",
+    "empty": "暂无消息。打个招呼吧！",
+    "removed_message": "此消息已被移除。",
+    "report_cta": "举报",
+    "report_title": "举报此消息",
+    "report_category_label": "原因",
+    "report_category_placeholder": "选择原因",
+    "report_reason_label": "补充说明（可选）",
+    "report_submit_cta": "提交举报",
+    "report_submitted": "感谢您的举报，已提交。",
+    "block_cta": "屏蔽",
+    "block_confirm_title": "屏蔽 {nickname}？",
+    "block_confirm_body": "您将不再看到该玩家在聊天中发送的消息。",
+    "block_confirm_cta": "屏蔽",
+    "cancel_cta": "取消",
+    "categories": {
+      "ABUSE": "辱骂",
+      "HARASSMENT": "骚扰",
+      "SPAM": "垃圾信息",
+      "SCAM": "诈骗",
+      "THREATS": "威胁",
+      "INAPPROPRIATE_CONTENT": "不当内容",
+      "OTHER": "其他"
+    },
+    "errors": {
+      "MUTED": "您已被暂时禁言，目前无法发送消息。",
+      "RATE_LIMITED": "您发送消息的速度过快，请放慢速度。",
+      "DUPLICATE_MESSAGE": "您已经发送过该消息。",
+      "NOT_SUBSCRIBED": "正在重新连接聊天，请稍后重试。",
+      "EMPTY": "请输入消息。",
+      "TOO_LONG": "您的消息过长。",
+      "CONTROL_CHARS": "您的消息包含不允许的字符。",
+      "generic": "消息发送失败，请重试。",
+      "SPECTATORS_DISABLED": "该对局不支持观战。",
+      "POST_GAME_CLOSED": "对局已结束，聊天已关闭。"
+    },
+    "spectator_title": "观战聊天"
+  },
+  "watch": {
+    "title": "观看直播",
+    "subtitle": "当前可观战的实时对局。",
+    "empty": "目前没有正在进行的对局，请稍后再来查看。",
+    "watch_cta": "观看",
+    "vs": "对"
+  }
+}

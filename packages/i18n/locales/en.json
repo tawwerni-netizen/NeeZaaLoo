@@ -1,0 +1,640 @@
+{
+  "nav": {
+    "play": "Play",
+    "rank": "Rank",
+    "tournament": "Tournament",
+    "learn": "Learn",
+    "wallet": "Wallet",
+    "log_in": "Log in",
+    "log_out": "Log out",
+    "play_now": "Play now",
+    "home_aria_label": "Nizalo home",
+    "security": "Security",
+    "profile": "Profile",
+    "support": "Support",
+    "chat": "Chat",
+    "watch": "Watch"
+  },
+  "footer": {
+    "learn": "Learn",
+    "tournaments": "Tournaments",
+    "leaderboard": "Leaderboard",
+    "support": "Support",
+    "copyright": "© {year} Nizalo. Your duel. Your proof."
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Global skill competition",
+      "headline_line1": "Think you’re good?",
+      "headline_line2": "Prove it.",
+      "subhead": "Your duel. Your proof. Chess and Speed Math, decided by skill alone — matched fairly, scored honestly, never left to chance.",
+      "cta_primary": "Find an opponent",
+      "cta_secondary": "See how it works"
+    },
+    "games": {
+      "heading": "Choose your game",
+      "duration_label": "Duration",
+      "mode_label": "Mode",
+      "play_cta": "Play {name}",
+      "coming_soon": {
+        "title": "More games, coming",
+        "body": "Memory Grid, Pattern, Reaction, and Precision are being built on the same fair, server-authoritative foundation."
+      },
+      "chess": {
+        "description": "The original test of skill. Server-authoritative, every rule enforced, every game replayable.",
+        "duration": "5–15 min",
+        "mode": "1v1 · Ranked or free"
+      },
+      "speed_math": {
+        "description": "A shared 60-second clock. Same questions, same instant — decided by speed and accuracy alone.",
+        "duration": "60 sec",
+        "mode": "1v1 · Ranked or free"
+      }
+    },
+    "how": {
+      "heading": "How it works",
+      "steps": {
+        "try": {
+          "title": "Try",
+          "body": "Pick a game. Play one duel — no commitment, no deposit."
+        },
+        "compete": {
+          "title": "Compete",
+          "body": "Matched against someone at your level, server-verified, start to finish."
+        },
+        "improve": {
+          "title": "Improve",
+          "body": "Every result shows what to work on, not just whether you won."
+        },
+        "climb": {
+          "title": "Climb",
+          "body": "Your rating and Global Skill Score move with every game you play."
+        },
+        "win": {
+          "title": "Win",
+          "body": "Rank up, qualify for tournaments, and where permitted — compete for real prizes."
+        }
+      }
+    }
+  },
+  "common": {
+    "game_names": {
+      "chess": "Chess",
+      "speed_math": "Speed Math"
+    },
+    "unknown_game": "Unknown game."
+  },
+  "auth": {
+    "register": {
+      "title": "Create your account",
+      "subtitle": "One duel is enough to see what you can do.",
+      "password_label": "Password",
+      "submit": "Create account",
+      "submitting": "Creating account…",
+      "switch_prompt": "Already have an account?",
+      "switch_cta": "Log in",
+      "nickname_label": "Nickname"
+    },
+    "login": {
+      "title": "Log in",
+      "subtitle": "Your duel is waiting.",
+      "password_label": "Password",
+      "submit": "Log in",
+      "submitting": "Logging in…",
+      "switch_prompt": "New here?",
+      "switch_cta": "Create an account",
+      "nickname_label": "Nickname",
+      "google_cta": "Continue with Google",
+      "email_code_cta": "Email me a 6-character code",
+      "forgot_password_cta": "Forgot password?",
+      "or_divider": "or"
+    },
+    "errors": {
+      "weak_password": "That password is too easy to guess. Use at least 10 characters, avoiding common words.",
+      "handle_taken": "That handle is already taken. Try another.",
+      "bad_credentials": "Incorrect handle or password.",
+      "locked_out": "Too many attempts. Try again in a few minutes.",
+      "totp_required": "Enter your authenticator code to continue.",
+      "totp_invalid": "That code didn’t work. Check your authenticator and try again.",
+      "network_error": "Couldn’t reach the server. Check your connection and try again.",
+      "generic": "Something went wrong. Try again.",
+      "link_required": "An account with this email already exists. Log in, then connect Google from Security settings.",
+      "subject_already_linked": "This Google account is already connected to another Nizalo account.",
+      "already_linked": "Your account is already connected to a different Google account.",
+      "last_auth_method": "Create a password before disconnecting Google, so you don't lose access to your account.",
+      "not_linked": "Google isn't connected to your account.",
+      "credential_already_set": "You already have a password. Use “Change password” instead.",
+      "google_login_unavailable": "Google sign-in isn't available right now. Try another method.",
+      "provider_error": "Something went wrong with Google sign-in. Try again.",
+      "bad_state": "This sign-in link is invalid or has expired. Try again.",
+      "google_denied": "You cancelled Google sign-in. No changes were made.",
+      "invalid_shape": "Nicknames must be 3-24 characters: letters, numbers, underscore or hyphen only.",
+      "reserved": "That nickname isn't available.",
+      "prohibited": "That nickname isn't allowed.",
+      "taken": "That nickname is already taken. Try another.",
+      "cooldown": "You can change your nickname again soon, but not just yet.",
+      "too_long": "That bio is too long.",
+      "too_large": "That image is too large. Try a smaller file.",
+      "invalid_image": "That doesn't look like a valid image. Try a PNG, JPEG or WEBP file.",
+      "not_owned": "You don't own that badge yet.",
+      "cannot_report_self": "You can't report your own content."
+    },
+    "email_code": {
+      "title": "Log in with a code",
+      "subtitle": "We'll email you a one-time code.",
+      "email_label": "Email",
+      "request_cta": "Send code",
+      "requesting": "Sending…",
+      "sent_message": "If that address is eligible, a code was sent. Check your inbox.",
+      "code_label": "6-character code",
+      "totp_label": "Authenticator code (if enabled)",
+      "verify_cta": "Log in",
+      "verifying": "Logging in…",
+      "back_to_password": "Log in with a password instead"
+    },
+    "forgot_password": {
+      "title": "Reset your password",
+      "subtitle": "We'll email you a code to reset it.",
+      "email_label": "Email",
+      "request_cta": "Send reset code",
+      "requesting": "Sending…",
+      "sent_message": "If that address has an account, a reset code was sent.",
+      "code_label": "Reset code",
+      "new_password_label": "New password",
+      "confirm_cta": "Reset password",
+      "confirming": "Resetting…",
+      "success_message": "Your password has been reset. You can now log in.",
+      "back_to_login": "Back to log in"
+    },
+    "google": {
+      "completing": "Finishing sign-in…",
+      "totp_label": "Authenticator code",
+      "totp_cta": "Continue",
+      "link_required_title": "Account already exists",
+      "link_required_cta": "Go to log in",
+      "linked_title": "Google connected",
+      "linked_body": "Your Google account is now connected.",
+      "link_failed_title": "Couldn't connect Google",
+      "denied_title": "Sign-in cancelled",
+      "invalid_title": "Something went wrong",
+      "error_title": "Couldn't sign in with Google",
+      "unavailable_title": "Google sign-in unavailable",
+      "continue_cta": "Continue to Nizalo"
+    },
+    "security": {
+      "title": "Security",
+      "subtitle": "Manage how you sign in to Nizalo.",
+      "password_label": "Password",
+      "password_set": "Enabled",
+      "password_not_set": "Not set",
+      "email_label": "Email",
+      "email_verified": "Verified",
+      "email_unverified": "Unverified",
+      "email_not_set": "Not set",
+      "google_label": "Google",
+      "google_connected": "Connected",
+      "google_not_connected": "Not connected",
+      "totp_label": "Two-Factor Authentication",
+      "totp_enabled": "Enabled",
+      "totp_disabled": "Disabled",
+      "connect_google_cta": "Connect",
+      "disconnect_google_cta": "Disconnect",
+      "set_password_cta": "Set password",
+      "change_password_cta": "Change password",
+      "set_password_title": "Create your Nizalo password",
+      "change_password_title": "Change password",
+      "password_field_label": "New password",
+      "save_password_cta": "Save password",
+      "saving_password": "Saving…",
+      "password_saved": "Password saved.",
+      "need_password_before_disconnect_title": "Create a password first",
+      "need_password_before_disconnect_body": "Create a Nizalo password before disconnecting Google, so you don't lose access to your account.",
+      "confirm_disconnect_title": "Disconnect Google?",
+      "confirm_disconnect_body": "You'll need your Nizalo password to log in from now on.",
+      "confirm_disconnect_cta": "Disconnect",
+      "cancel_cta": "Cancel",
+      "disconnected_message": "Google disconnected.",
+      "step_up_password_label": "Confirm your password",
+      "step_up_totp_label": "Authenticator code",
+      "step_up_cta": "Confirm"
+    }
+  },
+  "play": {
+    "select": {
+      "heading": "Select your game",
+      "duration_label": "Duration",
+      "style_label": "Style",
+      "mode_label": "Mode",
+      "eligibility_label": "Eligibility",
+      "cta": "Find an opponent →",
+      "eligibility_free": "Free",
+      "difficulty_deep": "Deep",
+      "difficulty_fast": "Fast"
+    },
+    "continue": "Continue",
+    "back": "Back",
+    "mode": {
+      "heading": "Choose how to play",
+      "vs_computer": { "title": "Vs Computer", "description": "Practice against an AI opponent" },
+      "friend": { "title": "Play a Friend", "description": "Challenge someone by nickname" },
+      "competitive": { "title": "Competitive", "description": "Ranked matchmaking against your skill level" },
+      "tournament": { "title": "Tournament", "description": "Compete in a bracket for a prize" }
+    },
+    "difficulty": {
+      "heading": "Choose a difficulty"
+    },
+    "stake": {
+      "heading": "Choose your stake",
+      "free_only": "Free only",
+      "free_only_note": "Cash stakes aren't available for this game yet."
+    },
+    "challenge": {
+      "heading": "Challenge a friend",
+      "nickname_label": "Opponent nickname",
+      "nickname_placeholder": "Enter a nickname",
+      "send": "Send challenge",
+      "sending": "Sending…",
+      "sent": "Challenge sent — waiting for {handle} to respond.",
+      "incoming_heading": "Incoming challenges",
+      "outgoing_heading": "Sent challenges",
+      "accept": "Accept",
+      "decline": "Decline",
+      "cancel": "Cancel",
+      "empty_incoming": "No incoming challenges.",
+      "empty_outgoing": "No challenges sent.",
+      "from": "{handle} challenged you",
+      "waiting_for": "Waiting for {handle}",
+      "error_unknown_opponent": "No player with that nickname.",
+      "error_self": "You can't challenge yourself.",
+      "error_already_pending": "You already have a pending challenge with {handle}.",
+      "error_generic": "Couldn't send the challenge. Try again."
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "play_now": "Play now",
+    "global_skill": {
+      "title": "Global Skill Score",
+      "empty": "Play 10 rated games in any one game to establish a score.",
+      "view_breakdown": "View full breakdown →",
+      "percentile": "{value}% percentile"
+    },
+    "recent": {
+      "title": "Recent games",
+      "empty": "No games yet. Your history will show up here.",
+      "full_history": "Full history →"
+    },
+    "tournaments": {
+      "title": "Tournaments",
+      "empty": "See what’s open for registration.",
+      "browse": "Browse tournaments →"
+    }
+  },
+  "matchmaking": {
+    "joining_queue": "Joining the {game} queue…",
+    "finding_1": "Finding your opponent…",
+    "finding_2": "Matching your skill level…",
+    "finding_3": "Preparing your duel…",
+    "cancel": "Cancel",
+    "you": "You",
+    "opponent": "Opponent",
+    "vs": "VS",
+    "go": "GO",
+    "join_error": "Couldn’t join the queue. Try again."
+  },
+  "game": {
+    "connected": "● Connected",
+    "connecting": "○ Connecting…",
+    "reconnecting": "○ Reconnecting…",
+    "resign": "Resign",
+    "playing_as": "Playing as {handle}",
+    "result_pending_note": "The full result screen (rating change, next duel) is the next piece to build here.",
+    "spectating": "Spectating",
+    "watching_as": "Watching as {handle}",
+    "your_turn": "Your move",
+    "opponent_turn": "Opponent's move",
+    "in_check": "Check",
+    "offer_draw": "Offer draw",
+    "draw_offer_sent": "Draw offer sent",
+    "draw_offer_received": "{handle} offers a draw",
+    "accept_draw": "Accept",
+    "decline_draw": "Decline",
+    "resign_confirm_title": "Resign this game?",
+    "resign_confirm_body": "This counts as a loss and cannot be undone.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "promote_title": "Choose a piece",
+    "promote_queen": "Queen",
+    "promote_rook": "Rook",
+    "promote_bishop": "Bishop",
+    "promote_knight": "Knight",
+    "result_win": "You won",
+    "result_loss": "You lost",
+    "result_draw": "Draw",
+    "reason": {
+      "CHECKMATE": "Checkmate",
+      "STALEMATE": "Stalemate",
+      "FIFTY_MOVE": "Fifty-move rule",
+      "THREEFOLD_REPETITION": "Threefold repetition",
+      "INSUFFICIENT_MATERIAL": "Insufficient material",
+      "RESIGNATION": "Resignation",
+      "TIMEOUT": "Timeout",
+      "DRAW_AGREED": "Draw agreed"
+    },
+    "rematch": "Rematch",
+    "new_opponent": "New opponent",
+    "review": "Review game",
+    "exp_gained": "+{amount} XP",
+    "rating_change_up": "Rating +{amount}",
+    "rating_change_down": "Rating {amount}",
+    "level_up": "Level {level}",
+    "opponent_disconnected": "Opponent disconnected — their clock keeps running",
+    "opponent_reconnected": "Opponent reconnected",
+    "you_disconnected": "Connection lost — reconnecting",
+    "vs_computer": "Vs Computer",
+    "difficulty": {
+      "EASY": "Easy",
+      "MEDIUM": "Medium",
+      "HARD": "Hard",
+      "EXPERT": "Expert"
+    },
+    "move_history": "Moves",
+    "achievement": {
+      "FIRST_WIN": { "title": "First Win!", "description": "You won your first duel." },
+      "FIRST_TOURNAMENT": { "title": "Tournament Debut", "description": "You completed your first tournament." }
+    }
+  },
+  "settings": {
+    "language": "Language"
+  },
+  "tournamentsPage": {
+    "heading": "Tournaments",
+    "empty": "No tournaments open for registration right now.",
+    "entry_free": "Free",
+    "entry_fee": "{amount} {asset}",
+    "registered_count": "{count}/{capacity} registered",
+    "starts_at": "Starts {date}",
+    "view": "View →",
+    "back": "← All tournaments",
+    "format": {
+      "SINGLE_ELIMINATION": "Single elimination",
+      "SWISS": "Swiss"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "REGISTRATION_OPEN": "Registration open",
+      "REGISTRATION_CLOSED": "Registration closed",
+      "IN_PROGRESS": "In progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "register": "Register",
+    "registering": "Registering…",
+    "registered": "You're registered",
+    "withdraw": "Withdraw",
+    "your_match": "Play your match →",
+    "standings_heading": "Standings",
+    "standings_rank": "Rank",
+    "standings_player": "Player",
+    "standings_points": "Points",
+    "standings_record": "W-L-D",
+    "error_at_capacity": "This tournament is full.",
+    "error_not_open": "Registration is closed.",
+    "error_already_registered": "You're already registered.",
+    "error_generic": "Something went wrong. Try again.",
+    "not_found": "Tournament not found."
+  },
+  "meta": {
+    "title": "Nizalo — Your duel. Your proof.",
+    "description": "A global skill-based 1v1 competition platform. Chess, Speed Math, and more. Prove your skill, climb the ranks."
+  },
+  "email": {
+    "common": {
+      "footer": "Nizalo — Your duel. Your proof.",
+      "support_note": "Questions? Contact us any time at info@nizalo.com."
+    },
+    "welcome": {
+      "subject": "Welcome to Nizalo, {nickname}",
+      "heading": "Welcome to Nizalo",
+      "body": "Your account is ready. Nizalo is a global skill-based competition platform — no luck, no chance, just proof of skill.",
+      "nav_note": "From your dashboard: find a duel under Play, check the leaderboard under Rank, browse live Tournaments, or read more under Learn.",
+      "cta": "Play now"
+    },
+    "verification": {
+      "subject": "Verify your Nizalo email",
+      "heading": "Confirm your email address",
+      "body": "Enter this code in Nizalo to confirm {email} is yours:",
+      "expires_note": "This code expires in {minutes} minutes and can only be used once.",
+      "ignore_note": "If you didn’t request this, you can safely ignore this email."
+    },
+    "login_code": {
+      "subject": "Your Nizalo login code",
+      "heading": "Your Nizalo login code",
+      "body": "Enter this code to log in:",
+      "expires_note": "This code expires in {minutes} minutes and can only be used once.",
+      "ignore_note": "If you didn’t request this, you can safely ignore this email."
+    },
+    "password_reset": {
+      "subject": "Reset your Nizalo password",
+      "heading": "Password reset requested",
+      "body": "Enter this code in Nizalo to reset your password:",
+      "expires_note": "This code expires in {minutes} minutes and can only be used once.",
+      "ignore_note": "If you did not request a password reset, you can safely ignore this email."
+    },
+    "password_reset_confirmation": {
+      "subject": "Your Nizalo password was changed",
+      "heading": "Your password was changed",
+      "body": "Your Nizalo password was changed successfully.",
+      "warning": "If you did not perform this action, contact support immediately."
+    },
+    "ticket_common": {
+      "subject_label": "Ticket",
+      "view_cta": "View ticket"
+    },
+    "ticket_created": {
+      "subject": "We've received your support request",
+      "heading": "Your support ticket was created",
+      "body": "Thanks for reaching out. Our support team will review your request and get back to you soon."
+    },
+    "ticket_staff_replied": {
+      "subject": "New reply on your Nizalo support ticket",
+      "heading": "You have a new reply",
+      "body": "Our support team replied to your ticket. Sign in to read the full message and respond."
+    },
+    "ticket_waiting_for_user": {
+      "subject": "We need a bit more information from you",
+      "heading": "We're waiting to hear back from you",
+      "body": "Our support team needs more information to continue helping with your ticket."
+    },
+    "ticket_resolved": {
+      "subject": "Your support ticket has been resolved",
+      "heading": "Your ticket was resolved",
+      "body": "We've marked your support ticket as resolved. If you still need help, just reply and we'll reopen it."
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "edit_cta": "Edit profile",
+    "view_profile_cta": "View profile",
+    "level_label": "Level",
+    "exp_label": "EXP",
+    "global_skill_label": "Global Skill",
+    "bio_label": "Bio",
+    "no_bio": "No bio yet.",
+    "ratings_title": "Game Ratings",
+    "no_ratings": "No ratings yet -- play a game to get started.",
+    "stats_title": "Statistics",
+    "games_label": "Games",
+    "wins_label": "Wins",
+    "losses_label": "Losses",
+    "win_rate_label": "Win Rate",
+    "achievements_title": "Achievements",
+    "no_achievements": "No achievements yet.",
+    "badges_title": "Badges",
+    "no_badges": "No badges yet.",
+    "member_since_label": "Member since",
+    "nickname_label": "Nickname",
+    "save_cta": "Save changes",
+    "saving": "Saving…",
+    "cancel_cta": "Cancel",
+    "change_avatar_cta": "Change photo",
+    "uploading_avatar": "Uploading…",
+    "saved_message": "Profile saved.",
+    "report_cta": "Report",
+    "report_title": "Report this profile",
+    "report_reason_label": "Reason (optional)",
+    "report_submit_cta": "Submit report",
+    "reported_message": "Thanks, your report was submitted.",
+    "not_found": "This player could not be found.",
+    "achievements_catalog": {
+      "FIRST_WIN": "First Win",
+      "FIRST_TOURNAMENT": "First Tournament"
+    }
+  },
+  "support": {
+    "title": "Support",
+    "my_tickets_title": "My Tickets",
+    "new_ticket_cta": "New ticket",
+    "no_tickets": "You have no support tickets yet.",
+    "back_to_list": "Back to My Tickets",
+    "created_label": "Created",
+    "updated_label": "Updated",
+    "category_label": "Category",
+    "status": {
+      "OPEN": "Open",
+      "TRIAGED": "Triaged",
+      "ASSIGNED": "Assigned",
+      "IN_PROGRESS": "In progress",
+      "WAITING_FOR_USER": "Waiting for your reply",
+      "ESCALATED": "Escalated",
+      "RESOLVED": "Resolved",
+      "CLOSED": "Closed"
+    },
+    "categories": {
+      "ACCOUNT": "Account",
+      "LOGIN": "Login trouble",
+      "PASSWORD": "Password",
+      "DEPOSIT_PENDING": "Deposit pending",
+      "WITHDRAWAL_PENDING": "Withdrawal pending",
+      "WITHDRAWAL_FAILED": "Withdrawal failed",
+      "MISSING_FUNDS": "Missing funds",
+      "MATCH_PROBLEM": "Match problem",
+      "TOURNAMENT_PROBLEM": "Tournament problem",
+      "ANTI_CHEAT": "Report cheating",
+      "TECHNICAL": "Technical issue",
+      "ABUSE_REPORT": "Report abuse",
+      "OTHER": "Something else"
+    },
+    "new": {
+      "title": "New support ticket",
+      "category_label": "What do you need help with?",
+      "category_placeholder": "Select a category",
+      "reference_id_label": "Reference ID",
+      "reference_id_hint": "The id of the deposit, withdrawal, match, or tournament this is about.",
+      "subject_label": "Subject",
+      "subject_placeholder": "A short summary of the issue",
+      "description_label": "Describe the issue",
+      "description_placeholder": "Give us as much detail as you can.",
+      "secrets_warning": "Never include your password, login code, authenticator (TOTP) code, OAuth token, private keys, or wallet recovery phrase. Our staff will never ask you for these.",
+      "submit_cta": "Submit ticket",
+      "submitting": "Submitting…",
+      "cancel_cta": "Cancel"
+    },
+    "duplicate_notice": "You already have an open ticket for this issue.",
+    "view_existing_cta": "View existing ticket",
+    "detail": {
+      "conversation_title": "Conversation",
+      "reply_placeholder": "Type your message…",
+      "send_cta": "Send",
+      "sending": "Sending…",
+      "you_label": "You",
+      "support_label": "Support",
+      "closed_notice": "This ticket is closed. Start a new ticket if you still need help.",
+      "reopened_notice": "Your ticket has been reopened.",
+      "no_messages": "No messages yet."
+    },
+    "errors": {
+      "invalid_category": "Please choose a category.",
+      "invalid_subject": "Please enter a subject between 1 and 200 characters.",
+      "invalid_content": "Please enter a message.",
+      "reference_required": "Please enter a reference id for this category.",
+      "reference_not_found": "We couldn't find that reference, or it doesn't belong to your account.",
+      "duplicate_open_ticket": "You already have an open ticket for this issue.",
+      "ticket_closed": "This ticket is closed.",
+      "not_found": "This ticket could not be found.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "game_report_cta": "Report a problem with this match"
+  },
+  "chat": {
+    "global_title": "Global Chat",
+    "match_title": "Match Chat",
+    "placeholder": "Write a message…",
+    "send_cta": "Send",
+    "connecting": "Connecting…",
+    "reconnecting": "Reconnecting…",
+    "empty": "No messages yet. Say hello!",
+    "removed_message": "This message was removed.",
+    "report_cta": "Report",
+    "report_title": "Report this message",
+    "report_category_label": "Reason",
+    "report_category_placeholder": "Select a reason",
+    "report_reason_label": "Additional details (optional)",
+    "report_submit_cta": "Submit report",
+    "report_submitted": "Thanks, your report was submitted.",
+    "block_cta": "Block",
+    "block_confirm_title": "Block {nickname}?",
+    "block_confirm_body": "You will no longer see messages from this player in chat.",
+    "block_confirm_cta": "Block",
+    "cancel_cta": "Cancel",
+    "categories": {
+      "ABUSE": "Abuse",
+      "HARASSMENT": "Harassment",
+      "SPAM": "Spam",
+      "SCAM": "Scam",
+      "THREATS": "Threats",
+      "INAPPROPRIATE_CONTENT": "Inappropriate content",
+      "OTHER": "Other"
+    },
+    "errors": {
+      "MUTED": "You have been temporarily muted and cannot send messages right now.",
+      "RATE_LIMITED": "You're sending messages too quickly. Please slow down.",
+      "DUPLICATE_MESSAGE": "You already sent that message.",
+      "NOT_SUBSCRIBED": "Reconnecting to chat, please try again in a moment.",
+      "EMPTY": "Please enter a message.",
+      "TOO_LONG": "Your message is too long.",
+      "CONTROL_CHARS": "Your message contains characters that are not allowed.",
+      "generic": "Your message could not be sent. Please try again.",
+      "SPECTATORS_DISABLED": "Spectating is not available for this match.",
+      "POST_GAME_CLOSED": "This chat is closed now that the match has ended."
+    },
+    "spectator_title": "Spectator Chat"
+  },
+  "watch": {
+    "title": "Watch Live",
+    "subtitle": "Live matches you can spectate right now.",
+    "empty": "No live matches right now. Check back soon.",
+    "watch_cta": "Watch",
+    "vs": "vs"
+  }
+}

@@ -1,0 +1,34 @@
+.footer {
+  border-top: 1px solid var(--nz-line);
+  padding-block: var(--nz-space-10);
+  margin-top: var(--nz-space-16);
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nz-space-8);
+}
+
+.links {
+  display: flex;
+  gap: var(--nz-space-6);
+  flex: 1;
+}
+
+.links a {
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  text-decoration: none;
+}
+
+.links a:hover {
+  color: var(--nz-text);
+}
+
+.copy {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+  margin: 0;
+}

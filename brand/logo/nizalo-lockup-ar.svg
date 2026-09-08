@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 96" width="512" height="96" role="img" aria-label="نزالو">
+  <title>Nizalo Arabic lockup</title>
+  <!-- PRODUCTION NOTE: convert the text element below to outlines before shipping.
+       Live text depends on the font being present on the rendering machine. -->
+  <g transform="translate(416 0)">
+    <path d="M8 8h18v80H8z" fill="#F2F4F7"/>
+    <path d="M70 8h18v80H70z" fill="#F2F4F7"/>
+    <path d="M26 8 70 66v22L26 30z" fill="#FF5A2B"/>
+  </g>
+  <text x="380" y="66" text-anchor="end" direction="rtl"
+        font-family="IBM Plex Sans Arabic, Tajawal, Cairo, sans-serif"
+        font-size="72" font-weight="600" fill="#F2F4F7">نزالو</text>
+</svg>

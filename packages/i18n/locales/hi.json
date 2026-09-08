@@ -1,0 +1,640 @@
+{
+  "nav": {
+    "play": "खेलें",
+    "rank": "रैंक",
+    "tournament": "टूर्नामेंट",
+    "learn": "जानें",
+    "wallet": "वॉलेट",
+    "log_in": "लॉग इन करें",
+    "log_out": "लॉग आउट करें",
+    "play_now": "अभी खेलें",
+    "home_aria_label": "Nizalo होम",
+    "security": "सुरक्षा",
+    "profile": "प्रोफ़ाइल",
+    "support": "सहायता",
+    "chat": "चैट",
+    "watch": "देखें"
+  },
+  "footer": {
+    "learn": "जानें",
+    "tournaments": "टूर्नामेंट",
+    "leaderboard": "लीडरबोर्ड",
+    "support": "सहायता",
+    "copyright": "© {year} Nizalo. आपकी भिड़ंत। आपका प्रमाण।"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "वैश्विक कौशल प्रतियोगिता",
+      "headline_line1": "खुद को अच्छा समझते हैं?",
+      "headline_line2": "साबित करें।",
+      "subhead": "आपकी भिड़ंत। आपका प्रमाण। शतरंज और स्पीड मैथ, सिर्फ़ कौशल से तय — निष्पक्ष मुक़ाबला, ईमानदार स्कोर, कभी संयोग पर नहीं।",
+      "cta_primary": "प्रतिद्वंद्वी खोजें",
+      "cta_secondary": "देखें यह कैसे काम करता है"
+    },
+    "games": {
+      "heading": "अपना खेल चुनें",
+      "duration_label": "अवधि",
+      "mode_label": "मोड",
+      "play_cta": "{name} खेलें",
+      "coming_soon": {
+        "title": "और खेल, जल्द ही",
+        "body": "मेमोरी ग्रिड, पैटर्न, रिएक्शन और प्रिसिज़न उसी निष्पक्ष, सर्वर-आधारित नींव पर बनाए जा रहे हैं।"
+      },
+      "chess": {
+        "description": "कौशल की मूल परीक्षा। पूरी तरह सर्वर-नियंत्रित, हर नियम लागू, हर खेल फिर से देखा जा सकता है।",
+        "duration": "5–15 मिनट",
+        "mode": "1v1 · रैंक या फ्री"
+      },
+      "speed_math": {
+        "description": "साझा 60-सेकंड की घड़ी। वही सवाल, वही पल — सिर्फ़ गति और सटीकता से तय।",
+        "duration": "60 सेकंड",
+        "mode": "1v1 · रैंक या फ्री"
+      }
+    },
+    "how": {
+      "heading": "यह कैसे काम करता है",
+      "steps": {
+        "try": {
+          "title": "आज़माएं",
+          "body": "एक खेल चुनें। एक भिड़ंत खेलें — कोई प्रतिबद्धता नहीं, कोई जमा राशि नहीं।"
+        },
+        "compete": {
+          "title": "मुक़ाबला करें",
+          "body": "आपके स्तर के किसी खिलाड़ी से मुक़ाबला, शुरू से अंत तक सर्वर-सत्यापित।"
+        },
+        "improve": {
+          "title": "सुधारें",
+          "body": "हर नतीजा बताता है कि किस पर काम करना है, सिर्फ़ जीत-हार नहीं।"
+        },
+        "climb": {
+          "title": "आगे बढ़ें",
+          "body": "हर खेल के साथ आपकी रेटिंग और ग्लोबल स्किल स्कोर बदलते हैं।"
+        },
+        "win": {
+          "title": "जीतें",
+          "body": "रैंक बढ़ाएं, टूर्नामेंट के लिए क्वालीफाई करें, और जहाँ अनुमति हो — असली इनाम के लिए मुक़ाबला करें।"
+        }
+      }
+    }
+  },
+  "common": {
+    "game_names": {
+      "chess": "शतरंज",
+      "speed_math": "स्पीड मैथ"
+    },
+    "unknown_game": "अज्ञात खेल।"
+  },
+  "auth": {
+    "register": {
+      "title": "अपना खाता बनाएं",
+      "subtitle": "यह दिखाने के लिए एक भिड़ंत ही काफ़ी है कि आप क्या कर सकते हैं।",
+      "password_label": "पासवर्ड",
+      "submit": "खाता बनाएं",
+      "submitting": "खाता बनाया जा रहा है…",
+      "switch_prompt": "पहले से खाता है?",
+      "switch_cta": "लॉग इन करें",
+      "nickname_label": "उपनाम"
+    },
+    "login": {
+      "title": "लॉग इन करें",
+      "subtitle": "आपकी भिड़ंत इंतज़ार कर रही है।",
+      "password_label": "पासवर्ड",
+      "submit": "लॉग इन करें",
+      "submitting": "लॉग इन हो रहा है…",
+      "switch_prompt": "यहाँ नए हैं?",
+      "switch_cta": "खाता बनाएं",
+      "nickname_label": "उपनाम",
+      "google_cta": "Google से जारी रखें",
+      "email_code_cta": "मुझे 6-अक्षर का कोड ईमेल करें",
+      "forgot_password_cta": "पासवर्ड भूल गए?",
+      "or_divider": "या"
+    },
+    "errors": {
+      "weak_password": "यह पासवर्ड आसानी से अंदाज़ा लगाया जा सकता है। कम से कम 10 अक्षर इस्तेमाल करें, आम शब्दों से बचें।",
+      "handle_taken": "यह हैंडल पहले से लिया जा चुका है। कोई और आज़माएं।",
+      "bad_credentials": "गलत हैंडल या पासवर्ड।",
+      "locked_out": "बहुत ज़्यादा प्रयास। कुछ मिनट बाद फिर कोशिश करें।",
+      "totp_required": "जारी रखने के लिए अपना ऑथेंटिकेटर कोड डालें।",
+      "totp_invalid": "वह कोड काम नहीं आया। अपना ऑथेंटिकेटर जांचें और फिर कोशिश करें।",
+      "network_error": "सर्वर तक नहीं पहुँच सके। अपना कनेक्शन जांचें और फिर कोशिश करें।",
+      "generic": "कुछ गड़बड़ हो गई। फिर कोशिश करें।",
+      "link_required": "इस ईमेल से पहले से एक खाता मौजूद है। लॉग इन करें, फिर सुरक्षा सेटिंग्स से Google कनेक्ट करें।",
+      "subject_already_linked": "यह Google खाता पहले से किसी अन्य Nizalo खाते से जुड़ा है।",
+      "already_linked": "आपका खाता पहले से किसी दूसरे Google खाते से जुड़ा है।",
+      "last_auth_method": "Google डिस्कनेक्ट करने से पहले पासवर्ड बनाएं, ताकि आप अपने खाते से बाहर न हों।",
+      "not_linked": "आपका खाता Google से जुड़ा नहीं है।",
+      "credential_already_set": "आपके पास पहले से पासवर्ड है। इसके बजाय “पासवर्ड बदलें” का उपयोग करें।",
+      "google_login_unavailable": "Google साइन-इन अभी उपलब्ध नहीं है। कोई अन्य तरीका आज़माएं।",
+      "provider_error": "Google साइन-इन में कुछ गड़बड़ हुई। फिर से प्रयास करें।",
+      "bad_state": "यह साइन-इन लिंक अमान्य है या समाप्त हो चुका है। फिर से प्रयास करें।",
+      "google_denied": "आपने Google साइन-इन रद्द कर दिया। कोई बदलाव नहीं किया गया।",
+      "invalid_shape": "उपनाम 3-24 वर्णों का होना चाहिए: केवल अक्षर, अंक, अंडरस्कोर या हाइफ़न।",
+      "reserved": "वह उपनाम उपलब्ध नहीं है।",
+      "prohibited": "उस उपनाम की अनुमति नहीं है।",
+      "taken": "वह उपनाम पहले से लिया जा चुका है। कोई और आज़माएं।",
+      "cooldown": "आप अपना उपनाम जल्द ही फिर से बदल सकते हैं, लेकिन अभी नहीं।",
+      "too_long": "यह बायो बहुत लंबा है।",
+      "too_large": "वह छवि बहुत बड़ी है। कोई छोटी फ़ाइल आज़माएं।",
+      "invalid_image": "यह मान्य छवि नहीं लगती। PNG, JPEG या WEBP फ़ाइल आज़माएं।",
+      "not_owned": "आपके पास अभी वह बैज नहीं है।",
+      "cannot_report_self": "आप अपनी खुद की सामग्री की रिपोर्ट नहीं कर सकते।"
+    },
+    "email_code": {
+      "title": "कोड से लॉग इन करें",
+      "subtitle": "हम आपको एक बार का कोड ईमेल करेंगे।",
+      "email_label": "ईमेल",
+      "request_cta": "कोड भेजें",
+      "requesting": "भेजा जा रहा है…",
+      "sent_message": "यदि वह पता योग्य है, तो एक कोड भेजा गया है। अपना इनबॉक्स देखें।",
+      "code_label": "6-अक्षर का कोड",
+      "totp_label": "प्रमाणक कोड (यदि सक्षम है)",
+      "verify_cta": "लॉग इन करें",
+      "verifying": "लॉग इन हो रहा है…",
+      "back_to_password": "इसके बजाय पासवर्ड से लॉग इन करें"
+    },
+    "forgot_password": {
+      "title": "अपना पासवर्ड रीसेट करें",
+      "subtitle": "हम आपको इसे रीसेट करने के लिए एक कोड ईमेल करेंगे।",
+      "email_label": "ईमेल",
+      "request_cta": "रीसेट कोड भेजें",
+      "requesting": "भेजा जा रहा है…",
+      "sent_message": "यदि उस पते पर कोई खाता है, तो एक रीसेट कोड भेजा गया है।",
+      "code_label": "रीसेट कोड",
+      "new_password_label": "नया पासवर्ड",
+      "confirm_cta": "पासवर्ड रीसेट करें",
+      "confirming": "रीसेट हो रहा है…",
+      "success_message": "आपका पासवर्ड रीसेट हो गया है। अब आप लॉग इन कर सकते हैं।",
+      "back_to_login": "लॉग इन पर वापस जाएं"
+    },
+    "google": {
+      "completing": "साइन-इन पूरा हो रहा है…",
+      "totp_label": "प्रमाणक कोड",
+      "totp_cta": "जारी रखें",
+      "link_required_title": "खाता पहले से मौजूद है",
+      "link_required_cta": "लॉग इन पर जाएं",
+      "linked_title": "Google कनेक्ट हो गया",
+      "linked_body": "आपका Google खाता अब कनेक्ट हो गया है।",
+      "link_failed_title": "Google कनेक्ट नहीं हो सका",
+      "denied_title": "साइन-इन रद्द किया गया",
+      "invalid_title": "कुछ गड़बड़ हो गई",
+      "error_title": "Google से साइन इन नहीं हो सका",
+      "unavailable_title": "Google साइन-इन अनुपलब्ध",
+      "continue_cta": "Nizalo पर जारी रखें"
+    },
+    "security": {
+      "title": "सुरक्षा",
+      "subtitle": "Nizalo में साइन इन करने का तरीका प्रबंधित करें।",
+      "password_label": "पासवर्ड",
+      "password_set": "सक्षम",
+      "password_not_set": "सेट नहीं",
+      "email_label": "ईमेल",
+      "email_verified": "सत्यापित",
+      "email_unverified": "असत्यापित",
+      "email_not_set": "सेट नहीं",
+      "google_label": "Google",
+      "google_connected": "कनेक्ट है",
+      "google_not_connected": "कनेक्ट नहीं",
+      "totp_label": "दो-चरणीय प्रमाणीकरण",
+      "totp_enabled": "सक्षम",
+      "totp_disabled": "अक्षम",
+      "connect_google_cta": "कनेक्ट करें",
+      "disconnect_google_cta": "डिस्कनेक्ट करें",
+      "set_password_cta": "पासवर्ड सेट करें",
+      "change_password_cta": "पासवर्ड बदलें",
+      "set_password_title": "अपना Nizalo पासवर्ड बनाएं",
+      "change_password_title": "पासवर्ड बदलें",
+      "password_field_label": "नया पासवर्ड",
+      "save_password_cta": "पासवर्ड सहेजें",
+      "saving_password": "सहेजा जा रहा है…",
+      "password_saved": "पासवर्ड सहेजा गया।",
+      "need_password_before_disconnect_title": "पहले पासवर्ड बनाएं",
+      "need_password_before_disconnect_body": "Google डिस्कनेक्ट करने से पहले एक Nizalo पासवर्ड बनाएं, ताकि आप अपने खाते तक पहुंच न खोएं।",
+      "confirm_disconnect_title": "Google डिस्कनेक्ट करें?",
+      "confirm_disconnect_body": "अब से आपको लॉग इन करने के लिए अपने Nizalo पासवर्ड की आवश्यकता होगी।",
+      "confirm_disconnect_cta": "डिस्कनेक्ट करें",
+      "cancel_cta": "रद्द करें",
+      "disconnected_message": "Google डिस्कनेक्ट हो गया।",
+      "step_up_password_label": "अपने पासवर्ड की पुष्टि करें",
+      "step_up_totp_label": "प्रमाणक कोड",
+      "step_up_cta": "पुष्टि करें"
+    }
+  },
+  "play": {
+    "select": {
+      "heading": "अपना खेल चुनें",
+      "duration_label": "अवधि",
+      "style_label": "शैली",
+      "mode_label": "मोड",
+      "eligibility_label": "पात्रता",
+      "cta": "प्रतिद्वंद्वी खोजें →",
+      "eligibility_free": "मुफ़्त",
+      "difficulty_deep": "गहन",
+      "difficulty_fast": "तेज़"
+    },
+    "continue": "जारी रखें",
+    "back": "वापस",
+    "mode": {
+      "heading": "खेलने का तरीका चुनें",
+      "vs_computer": { "title": "कंप्यूटर से खेलें", "description": "AI प्रतिद्वंद्वी के खिलाफ अभ्यास करें" },
+      "friend": { "title": "दोस्त को चुनौती दें", "description": "उपनाम से किसी को चुनौती दें" },
+      "competitive": { "title": "प्रतिस्पर्धी", "description": "आपके स्तर के अनुसार रैंक्ड मैचमेकिंग" },
+      "tournament": { "title": "टूर्नामेंट", "description": "इनाम के लिए ब्रैकेट में प्रतिस्पर्धा करें" }
+    },
+    "difficulty": {
+      "heading": "कठिनाई चुनें"
+    },
+    "stake": {
+      "heading": "अपनी स्टेक चुनें",
+      "free_only": "केवल मुफ़्त",
+      "free_only_note": "इस खेल के लिए नकद स्टेक अभी उपलब्ध नहीं हैं।"
+    },
+    "challenge": {
+      "heading": "दोस्त को चुनौती दें",
+      "nickname_label": "प्रतिद्वंद्वी का उपनाम",
+      "nickname_placeholder": "उपनाम दर्ज करें",
+      "send": "चुनौती भेजें",
+      "sending": "भेजा जा रहा है…",
+      "sent": "चुनौती भेज दी गई — {handle} की प्रतिक्रिया का इंतज़ार है।",
+      "incoming_heading": "प्राप्त चुनौतियाँ",
+      "outgoing_heading": "भेजी गई चुनौतियाँ",
+      "accept": "स्वीकार करें",
+      "decline": "अस्वीकार करें",
+      "cancel": "रद्द करें",
+      "empty_incoming": "कोई प्राप्त चुनौती नहीं।",
+      "empty_outgoing": "कोई चुनौती नहीं भेजी गई।",
+      "from": "{handle} ने आपको चुनौती दी",
+      "waiting_for": "{handle} की प्रतीक्षा",
+      "error_unknown_opponent": "इस उपनाम वाला कोई खिलाड़ी नहीं मिला।",
+      "error_self": "आप खुद को चुनौती नहीं दे सकते।",
+      "error_already_pending": "{handle} के साथ आपकी पहले से एक लंबित चुनौती है।",
+      "error_generic": "चुनौती नहीं भेजी जा सकी। फिर कोशिश करें।"
+    }
+  },
+  "dashboard": {
+    "welcome": "वापसी पर स्वागत है",
+    "play_now": "अभी खेलें",
+    "global_skill": {
+      "title": "ग्लोबल स्किल स्कोर",
+      "empty": "स्कोर तय करने के लिए किसी एक खेल में 10 रैंक वाले मैच खेलें।",
+      "view_breakdown": "पूरा विवरण देखें →",
+      "percentile": "{value}% पर्सेंटाइल"
+    },
+    "recent": {
+      "title": "हाल के खेल",
+      "empty": "अभी तक कोई खेल नहीं। आपका इतिहास यहाँ दिखेगा।",
+      "full_history": "पूरा इतिहास →"
+    },
+    "tournaments": {
+      "title": "टूर्नामेंट",
+      "empty": "देखें कि पंजीकरण के लिए क्या खुला है।",
+      "browse": "टूर्नामेंट देखें →"
+    }
+  },
+  "matchmaking": {
+    "joining_queue": "{game} कतार में शामिल हो रहे हैं…",
+    "finding_1": "आपका प्रतिद्वंद्वी खोजा जा रहा है…",
+    "finding_2": "आपके कौशल स्तर से मिलान किया जा रहा है…",
+    "finding_3": "आपकी भिड़ंत तैयार की जा रही है…",
+    "cancel": "रद्द करें",
+    "you": "आप",
+    "opponent": "प्रतिद्वंद्वी",
+    "vs": "बनाम",
+    "go": "शुरू",
+    "join_error": "कतार में शामिल नहीं हो सके। फिर कोशिश करें।"
+  },
+  "game": {
+    "connected": "● जुड़ा हुआ",
+    "connecting": "○ जोड़ा जा रहा है…",
+    "reconnecting": "○ फिर से जोड़ा जा रहा है…",
+    "resign": "हार मानें",
+    "playing_as": "{handle} के रूप में खेल रहे हैं",
+    "result_pending_note": "पूरी नतीजा स्क्रीन (रेटिंग बदलाव, अगली भिड़ंत) यहाँ बनाया जाने वाला अगला हिस्सा है।",
+    "spectating": "दर्शक के रूप में देख रहे हैं",
+    "watching_as": "{handle} के रूप में देख रहे हैं",
+    "your_turn": "आपकी चाल",
+    "opponent_turn": "प्रतिद्वंद्वी की चाल",
+    "in_check": "शह",
+    "offer_draw": "ड्रॉ का प्रस्ताव",
+    "draw_offer_sent": "ड्रॉ का प्रस्ताव भेजा गया",
+    "draw_offer_received": "{handle} ड्रॉ का प्रस्ताव दे रहे हैं",
+    "accept_draw": "स्वीकार करें",
+    "decline_draw": "अस्वीकार करें",
+    "resign_confirm_title": "क्या आप हार मानना चाहते हैं?",
+    "resign_confirm_body": "इसे हार माना जाएगा और इसे वापस नहीं लिया जा सकता।",
+    "confirm": "पुष्टि करें",
+    "cancel": "रद्द करें",
+    "promote_title": "मोहरा चुनें",
+    "promote_queen": "रानी",
+    "promote_rook": "हाथी (रुख)",
+    "promote_bishop": "ऊँट",
+    "promote_knight": "घोड़ा",
+    "result_win": "आप जीत गए",
+    "result_loss": "आप हार गए",
+    "result_draw": "ड्रॉ",
+    "reason": {
+      "CHECKMATE": "शह और मात",
+      "STALEMATE": "स्टेलमेट",
+      "FIFTY_MOVE": "पचास-चाल नियम",
+      "THREEFOLD_REPETITION": "तीन बार पुनरावृत्ति",
+      "INSUFFICIENT_MATERIAL": "अपर्याप्त मोहरे",
+      "RESIGNATION": "आत्मसमर्पण",
+      "TIMEOUT": "समय समाप्त",
+      "DRAW_AGREED": "ड्रॉ पर सहमति"
+    },
+    "rematch": "फिर से खेलें",
+    "new_opponent": "नया प्रतिद्वंद्वी",
+    "review": "गेम की समीक्षा",
+    "exp_gained": "+{amount} XP",
+    "rating_change_up": "रेटिंग +{amount}",
+    "rating_change_down": "रेटिंग {amount}",
+    "level_up": "स्तर {level}",
+    "opponent_disconnected": "प्रतिद्वंद्वी का कनेक्शन टूटा — उनकी घड़ी चल रही है",
+    "opponent_reconnected": "प्रतिद्वंद्वी फिर से जुड़ गए",
+    "you_disconnected": "कनेक्शन टूट गया — फिर से जोड़ा जा रहा है",
+    "vs_computer": "कंप्यूटर के विरुद्ध",
+    "difficulty": {
+      "EASY": "आसान",
+      "MEDIUM": "मध्यम",
+      "HARD": "कठिन",
+      "EXPERT": "विशेषज्ञ"
+    },
+    "move_history": "चालें",
+    "achievement": {
+      "FIRST_WIN": { "title": "पहली जीत!", "description": "आपने अपना पहला मुक़ाबला जीता।" },
+      "FIRST_TOURNAMENT": { "title": "टूर्नामेंट पदार्पण", "description": "आपने अपना पहला टूर्नामेंट पूरा किया।" }
+    }
+  },
+  "settings": {
+    "language": "भाषा"
+  },
+  "tournamentsPage": {
+    "heading": "टूर्नामेंट",
+    "empty": "अभी पंजीकरण के लिए कोई टूर्नामेंट खुला नहीं है।",
+    "entry_free": "मुफ़्त",
+    "entry_fee": "{amount} {asset}",
+    "registered_count": "{count}/{capacity} पंजीकृत",
+    "starts_at": "शुरू होगा {date}",
+    "view": "देखें →",
+    "back": "← सभी टूर्नामेंट",
+    "format": {
+      "SINGLE_ELIMINATION": "सिंगल एलिमिनेशन",
+      "SWISS": "स्विस"
+    },
+    "status": {
+      "DRAFT": "ड्राफ़्ट",
+      "REGISTRATION_OPEN": "पंजीकरण खुला है",
+      "REGISTRATION_CLOSED": "पंजीकरण बंद है",
+      "IN_PROGRESS": "जारी है",
+      "COMPLETED": "समाप्त",
+      "CANCELLED": "रद्द"
+    },
+    "register": "पंजीकरण करें",
+    "registering": "पंजीकरण हो रहा है…",
+    "registered": "आप पंजीकृत हैं",
+    "withdraw": "वापस लें",
+    "your_match": "अपना मुक़ाबला खेलें →",
+    "standings_heading": "स्टैंडिंग",
+    "standings_rank": "रैंक",
+    "standings_player": "खिलाड़ी",
+    "standings_points": "अंक",
+    "standings_record": "जीत-हार-ड्रॉ",
+    "error_at_capacity": "यह टूर्नामेंट भर चुका है।",
+    "error_not_open": "पंजीकरण बंद हो चुका है।",
+    "error_already_registered": "आप पहले से ही पंजीकृत हैं।",
+    "error_generic": "कुछ गड़बड़ हो गई। फिर कोशिश करें।",
+    "not_found": "टूर्नामेंट नहीं मिला।"
+  },
+  "meta": {
+    "title": "Nizalo — आपकी भिड़ंत। आपका प्रमाण।",
+    "description": "कौशल पर आधारित एक वैश्विक 1v1 प्रतियोगिता मंच। शतरंज, स्पीड मैथ, और भी बहुत कुछ। अपना कौशल साबित करें, रैंक में आगे बढ़ें।"
+  },
+  "email": {
+    "common": {
+      "footer": "Nizalo — आपकी भिड़ंत। आपका प्रमाण।",
+      "support_note": "सवाल हैं? किसी भी समय info@nizalo.com पर हमसे संपर्क करें।"
+    },
+    "welcome": {
+      "subject": "Nizalo में आपका स्वागत है, {nickname}",
+      "heading": "Nizalo में आपका स्वागत है",
+      "body": "आपका खाता तैयार है। Nizalo एक वैश्विक कौशल-आधारित प्रतियोगिता मंच है — कोई भाग्य नहीं, कोई संयोग नहीं, सिर्फ़ कौशल का प्रमाण।",
+      "nav_note": "अपने डैशबोर्ड से: Play में भिड़ंत खोजें, Rank में लीडरबोर्ड देखें, Tournaments में लाइव टूर्नामेंट देखें, या Learn में और जानें।",
+      "cta": "अभी खेलें"
+    },
+    "verification": {
+      "subject": "अपना Nizalo ईमेल सत्यापित करें",
+      "heading": "अपना ईमेल पता पुष्ट करें",
+      "body": "यह पुष्टि करने के लिए कि {email} आपका है, Nizalo में यह कोड डालें:",
+      "expires_note": "यह कोड {minutes} मिनट में समाप्त हो जाएगा और केवल एक बार इस्तेमाल किया जा सकता है।",
+      "ignore_note": "अगर आपने यह अनुरोध नहीं किया, तो आप इस ईमेल को नज़रअंदाज़ कर सकते हैं।"
+    },
+    "login_code": {
+      "subject": "आपका Nizalo लॉगिन कोड",
+      "heading": "आपका Nizalo लॉगिन कोड",
+      "body": "लॉग इन करने के लिए यह कोड डालें:",
+      "expires_note": "यह कोड {minutes} मिनट में समाप्त हो जाएगा और केवल एक बार इस्तेमाल किया जा सकता है।",
+      "ignore_note": "अगर आपने यह अनुरोध नहीं किया, तो आप इस ईमेल को नज़रअंदाज़ कर सकते हैं।"
+    },
+    "password_reset": {
+      "subject": "अपना Nizalo पासवर्ड रीसेट करें",
+      "heading": "पासवर्ड रीसेट का अनुरोध किया गया",
+      "body": "अपना पासवर्ड रीसेट करने के लिए Nizalo में यह कोड डालें:",
+      "expires_note": "यह कोड {minutes} मिनट में समाप्त हो जाएगा और केवल एक बार इस्तेमाल किया जा सकता है।",
+      "ignore_note": "अगर आपने पासवर्ड रीसेट का अनुरोध नहीं किया, तो आप इस ईमेल को नज़रअंदाज़ कर सकते हैं।"
+    },
+    "password_reset_confirmation": {
+      "subject": "आपका Nizalo पासवर्ड बदल दिया गया है",
+      "heading": "आपका पासवर्ड बदल दिया गया",
+      "body": "आपका Nizalo पासवर्ड सफलतापूर्वक बदल दिया गया है।",
+      "warning": "अगर यह आपने नहीं किया, तो तुरंत सहायता से संपर्क करें।"
+    },
+    "ticket_common": {
+      "subject_label": "टिकट",
+      "view_cta": "टिकट देखें"
+    },
+    "ticket_created": {
+      "subject": "हमें आपका सहायता अनुरोध मिल गया है",
+      "heading": "आपका सहायता टिकट बनाया गया",
+      "body": "संपर्क करने के लिए धन्यवाद। हमारी सहायता टीम आपके अनुरोध की समीक्षा करेगी और जल्द ही जवाब देगी।"
+    },
+    "ticket_staff_replied": {
+      "subject": "आपके Nizalo सहायता टिकट पर नया जवाब",
+      "heading": "आपके लिए एक नया जवाब है",
+      "body": "हमारी सहायता टीम ने आपके टिकट का जवाब दिया है। पूरा संदेश पढ़ने और जवाब देने के लिए साइन इन करें।"
+    },
+    "ticket_waiting_for_user": {
+      "subject": "हमें आपसे थोड़ी और जानकारी चाहिए",
+      "heading": "हम आपके जवाब का इंतज़ार कर रहे हैं",
+      "body": "आपके टिकट में आगे मदद करने के लिए हमारी सहायता टीम को अधिक जानकारी चाहिए।"
+    },
+    "ticket_resolved": {
+      "subject": "आपका सहायता टिकट हल कर दिया गया है",
+      "heading": "आपका टिकट हल हो गया",
+      "body": "हमने आपके सहायता टिकट को हल के रूप में चिह्नित कर दिया है। अगर अभी भी मदद चाहिए, तो बस जवाब दें और हम इसे फिर से खोल देंगे।"
+    }
+  },
+  "profile": {
+    "title": "प्रोफ़ाइल",
+    "edit_cta": "प्रोफ़ाइल संपादित करें",
+    "view_profile_cta": "प्रोफ़ाइल देखें",
+    "level_label": "स्तर",
+    "exp_label": "EXP",
+    "global_skill_label": "ग्लोबल स्किल",
+    "bio_label": "बायो",
+    "no_bio": "अभी तक कोई बायो नहीं।",
+    "ratings_title": "गेम रेटिंग",
+    "no_ratings": "अभी कोई रेटिंग नहीं -- शुरू करने के लिए एक गेम खेलें।",
+    "stats_title": "आंकड़े",
+    "games_label": "गेम्स",
+    "wins_label": "जीत",
+    "losses_label": "हार",
+    "win_rate_label": "जीत दर",
+    "achievements_title": "उपलब्धियां",
+    "no_achievements": "अभी तक कोई उपलब्धि नहीं।",
+    "badges_title": "बैज",
+    "no_badges": "अभी तक कोई बैज नहीं।",
+    "member_since_label": "सदस्य बने",
+    "nickname_label": "उपनाम",
+    "save_cta": "बदलाव सहेजें",
+    "saving": "सहेजा जा रहा है…",
+    "cancel_cta": "रद्द करें",
+    "change_avatar_cta": "फ़ोटो बदलें",
+    "uploading_avatar": "अपलोड हो रहा है…",
+    "saved_message": "प्रोफ़ाइल सहेजी गई।",
+    "report_cta": "रिपोर्ट करें",
+    "report_title": "इस प्रोफ़ाइल की रिपोर्ट करें",
+    "report_reason_label": "कारण (वैकल्पिक)",
+    "report_submit_cta": "रिपोर्ट सबमिट करें",
+    "reported_message": "धन्यवाद, आपकी रिपोर्ट सबमिट कर दी गई है।",
+    "not_found": "यह खिलाड़ी नहीं मिला।",
+    "achievements_catalog": {
+      "FIRST_WIN": "पहली जीत",
+      "FIRST_TOURNAMENT": "पहला टूर्नामेंट"
+    }
+  },
+  "support": {
+    "title": "सहायता",
+    "my_tickets_title": "मेरे टिकट",
+    "new_ticket_cta": "नया टिकट",
+    "no_tickets": "आपके पास अभी तक कोई सहायता टिकट नहीं है।",
+    "back_to_list": "मेरे टिकट पर वापस जाएं",
+    "created_label": "बनाया गया",
+    "updated_label": "अपडेट किया गया",
+    "category_label": "श्रेणी",
+    "status": {
+      "OPEN": "खुला",
+      "TRIAGED": "जांचा गया",
+      "ASSIGNED": "सौंपा गया",
+      "IN_PROGRESS": "प्रगति में",
+      "WAITING_FOR_USER": "आपके जवाब का इंतज़ार",
+      "ESCALATED": "एस्केलेटेड",
+      "RESOLVED": "हल किया गया",
+      "CLOSED": "बंद"
+    },
+    "categories": {
+      "ACCOUNT": "खाता",
+      "LOGIN": "लॉगिन समस्या",
+      "PASSWORD": "पासवर्ड",
+      "DEPOSIT_PENDING": "जमा लंबित",
+      "WITHDRAWAL_PENDING": "निकासी लंबित",
+      "WITHDRAWAL_FAILED": "निकासी विफल",
+      "MISSING_FUNDS": "राशि गायब",
+      "MATCH_PROBLEM": "मैच समस्या",
+      "TOURNAMENT_PROBLEM": "टूर्नामेंट समस्या",
+      "ANTI_CHEAT": "धोखाधड़ी की रिपोर्ट करें",
+      "TECHNICAL": "तकनीकी समस्या",
+      "ABUSE_REPORT": "दुर्व्यवहार की रिपोर्ट करें",
+      "OTHER": "अन्य समस्या"
+    },
+    "new": {
+      "title": "नया सहायता टिकट",
+      "category_label": "आपको किस चीज़ में मदद चाहिए?",
+      "category_placeholder": "एक श्रेणी चुनें",
+      "reference_id_label": "संदर्भ आईडी",
+      "reference_id_hint": "जमा, निकासी, मैच या टूर्नामेंट की आईडी जिससे यह संबंधित है।",
+      "subject_label": "विषय",
+      "subject_placeholder": "समस्या का संक्षिप्त सारांश",
+      "description_label": "समस्या का वर्णन करें",
+      "description_placeholder": "जितना हो सके उतना विवरण दें।",
+      "secrets_warning": "कभी भी अपना पासवर्ड, लॉगिन कोड, ऑथेंटिकेटर (TOTP) कोड, OAuth टोकन, निजी कुंजियां, या वॉलेट रिकवरी फ़्रेज़ न दें। हमारी टीम आपसे कभी यह नहीं मांगेगी।",
+      "submit_cta": "टिकट सबमिट करें",
+      "submitting": "सबमिट हो रहा है…",
+      "cancel_cta": "रद्द करें"
+    },
+    "duplicate_notice": "इस समस्या के लिए आपके पास पहले से ही एक खुला टिकट है।",
+    "view_existing_cta": "मौजूदा टिकट देखें",
+    "detail": {
+      "conversation_title": "बातचीत",
+      "reply_placeholder": "अपना संदेश टाइप करें…",
+      "send_cta": "भेजें",
+      "sending": "भेजा जा रहा है…",
+      "you_label": "आप",
+      "support_label": "सहायता टीम",
+      "closed_notice": "यह टिकट बंद है। यदि आपको अभी भी मदद चाहिए तो नया टिकट बनाएं।",
+      "reopened_notice": "आपका टिकट फिर से खोला गया है।",
+      "no_messages": "अभी तक कोई संदेश नहीं।"
+    },
+    "errors": {
+      "invalid_category": "कृपया एक श्रेणी चुनें।",
+      "invalid_subject": "कृपया 1 से 200 अक्षरों के बीच विषय दर्ज करें।",
+      "invalid_content": "कृपया एक संदेश दर्ज करें।",
+      "reference_required": "कृपया इस श्रेणी के लिए एक संदर्भ आईडी दर्ज करें।",
+      "reference_not_found": "हमें वह संदर्भ नहीं मिला, या यह आपके खाते से संबंधित नहीं है।",
+      "duplicate_open_ticket": "इस समस्या के लिए आपके पास पहले से ही एक खुला टिकट है।",
+      "ticket_closed": "यह टिकट बंद है।",
+      "not_found": "यह टिकट नहीं मिला।",
+      "generic": "कुछ गलत हो गया। कृपया फिर से प्रयास करें।"
+    },
+    "game_report_cta": "इस मैच में समस्या की रिपोर्ट करें"
+  },
+  "chat": {
+    "global_title": "ग्लोबल चैट",
+    "match_title": "मैच चैट",
+    "placeholder": "संदेश लिखें…",
+    "send_cta": "भेजें",
+    "connecting": "कनेक्ट हो रहा है…",
+    "reconnecting": "फिर से कनेक्ट हो रहा है…",
+    "empty": "अभी तक कोई संदेश नहीं। नमस्ते कहें!",
+    "removed_message": "यह संदेश हटा दिया गया है।",
+    "report_cta": "रिपोर्ट करें",
+    "report_title": "इस संदेश की रिपोर्ट करें",
+    "report_category_label": "कारण",
+    "report_category_placeholder": "एक कारण चुनें",
+    "report_reason_label": "अतिरिक्त विवरण (वैकल्पिक)",
+    "report_submit_cta": "रिपोर्ट सबमिट करें",
+    "report_submitted": "धन्यवाद, आपकी रिपोर्ट सबमिट कर दी गई है।",
+    "block_cta": "ब्लॉक करें",
+    "block_confirm_title": "{nickname} को ब्लॉक करें?",
+    "block_confirm_body": "अब आपको इस खिलाड़ी के चैट संदेश दिखाई नहीं देंगे।",
+    "block_confirm_cta": "ब्लॉक करें",
+    "cancel_cta": "रद्द करें",
+    "categories": {
+      "ABUSE": "दुर्व्यवहार",
+      "HARASSMENT": "उत्पीड़न",
+      "SPAM": "स्पैम",
+      "SCAM": "धोखाधड़ी",
+      "THREATS": "धमकियां",
+      "INAPPROPRIATE_CONTENT": "अनुचित सामग्री",
+      "OTHER": "अन्य"
+    },
+    "errors": {
+      "MUTED": "आपको अस्थायी रूप से म्यूट कर दिया गया है और आप अभी संदेश नहीं भेज सकते।",
+      "RATE_LIMITED": "आप बहुत तेज़ी से संदेश भेज रहे हैं। कृपया धीमे करें।",
+      "DUPLICATE_MESSAGE": "आप यह संदेश पहले ही भेज चुके हैं।",
+      "NOT_SUBSCRIBED": "चैट से फिर से जुड़ रहे हैं, कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+      "EMPTY": "कृपया एक संदेश दर्ज करें।",
+      "TOO_LONG": "आपका संदेश बहुत लंबा है।",
+      "CONTROL_CHARS": "आपके संदेश में अस्वीकृत वर्ण हैं।",
+      "generic": "आपका संदेश भेजा नहीं जा सका। कृपया फिर से प्रयास करें।",
+      "SPECTATORS_DISABLED": "इस मैच के लिए दर्शक सुविधा उपलब्ध नहीं है।",
+      "POST_GAME_CLOSED": "मैच समाप्त होने के बाद यह चैट बंद कर दी गई है।"
+    },
+    "spectator_title": "दर्शक चैट"
+  },
+  "watch": {
+    "title": "लाइव देखें",
+    "subtitle": "अभी देखे जा सकने वाले लाइव मैच।",
+    "empty": "अभी कोई लाइव मैच नहीं है। कृपया बाद में देखें।",
+    "watch_cta": "देखें",
+    "vs": "बनाम"
+  }
+}

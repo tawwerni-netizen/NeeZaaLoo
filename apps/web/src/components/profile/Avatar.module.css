@@ -1,0 +1,17 @@
+.avatar {
+  border-radius: var(--nz-radius-pill);
+  object-fit: cover;
+  background: var(--nz-surface-2);
+  flex-shrink: 0;
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  color: var(--nz-text-2);
+  font-weight: 700;
+  flex-shrink: 0;
+}

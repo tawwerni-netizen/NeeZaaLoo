@@ -1,0 +1,8 @@
+{
+  "name": "@nizalo/payments",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/payments.mjs",
+  "scripts": { "test": "node --test" }
+}

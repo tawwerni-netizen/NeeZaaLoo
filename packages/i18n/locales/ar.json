@@ -1,0 +1,640 @@
+{
+  "nav": {
+    "play": "العب",
+    "rank": "التصنيف",
+    "tournament": "البطولة",
+    "learn": "تعلّم",
+    "wallet": "المحفظة",
+    "log_in": "تسجيل الدخول",
+    "log_out": "تسجيل الخروج",
+    "play_now": "العب الآن",
+    "home_aria_label": "الصفحة الرئيسية لنزالو",
+    "security": "الأمان",
+    "profile": "الملف الشخصي",
+    "support": "الدعم",
+    "chat": "الدردشة",
+    "watch": "مشاهدة"
+  },
+  "footer": {
+    "learn": "تعلّم",
+    "tournaments": "البطولات",
+    "leaderboard": "لوحة الصدارة",
+    "support": "الدعم",
+    "copyright": "© {year} نزالو. نزالك. إثباتك."
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "منافسة عالمية على أساس المهارة",
+      "headline_line1": "تظن نفسك جيدًا؟",
+      "headline_line2": "أثبت ذلك.",
+      "subhead": "نزالك. إثباتك. الشطرنج والرياضيات السريعة، يحسمهما المهارة وحدها — مباراة عادلة، نتيجة صادقة، لا مكان للصدفة.",
+      "cta_primary": "ابحث عن خصم",
+      "cta_secondary": "شاهد كيف يعمل"
+    },
+    "games": {
+      "heading": "اختر لعبتك",
+      "duration_label": "المدة",
+      "mode_label": "النمط",
+      "play_cta": "العب {name}",
+      "coming_soon": {
+        "title": "ألعاب أخرى قريبًا",
+        "body": "شبكة الذاكرة والأنماط ورد الفعل والدقة قيد التطوير على نفس الأساس العادل الذي يديره الخادم."
+      },
+      "chess": {
+        "description": "الاختبار الأصلي للمهارة. يديره الخادم بالكامل، كل قاعدة مطبّقة، وكل مباراة قابلة لإعادة العرض.",
+        "duration": "٥–١٥ دقيقة",
+        "mode": "١ ضد ١ · مصنّف أو مجاني"
+      },
+      "speed_math": {
+        "description": "ساعة مشتركة مدتها ٦٠ ثانية. نفس الأسئلة، في نفس اللحظة — يحسمها السرعة والدقة فقط.",
+        "duration": "٦٠ ثانية",
+        "mode": "١ ضد ١ · مصنّف أو مجاني"
+      }
+    },
+    "how": {
+      "heading": "كيف يعمل",
+      "steps": {
+        "try": {
+          "title": "جرّب",
+          "body": "اختر لعبة. العب نزالًا واحدًا — بلا التزام وبلا إيداع."
+        },
+        "compete": {
+          "title": "نافس",
+          "body": "تُقابَل بلاعب في مستواك، يتحقق منه الخادم من البداية إلى النهاية."
+        },
+        "improve": {
+          "title": "تحسّن",
+          "body": "كل نتيجة تُظهر لك ما تحتاج للعمل عليه، لا مجرد الفوز أو الخسارة."
+        },
+        "climb": {
+          "title": "تصاعد",
+          "body": "تصنيفك ونقاط المهارة العالمية تتحركان مع كل مباراة تلعبها."
+        },
+        "win": {
+          "title": "افز",
+          "body": "ارتقِ في الترتيب، تأهّل للبطولات، وحيثما يُسمح — نافس على جوائز حقيقية."
+        }
+      }
+    }
+  },
+  "common": {
+    "game_names": {
+      "chess": "الشطرنج",
+      "speed_math": "الرياضيات السريعة"
+    },
+    "unknown_game": "لعبة غير معروفة."
+  },
+  "auth": {
+    "register": {
+      "title": "أنشئ حسابك",
+      "subtitle": "نزال واحد يكفي لتُظهر ما تستطيع فعله.",
+      "password_label": "كلمة المرور",
+      "submit": "إنشاء الحساب",
+      "submitting": "جارٍ إنشاء الحساب…",
+      "switch_prompt": "لديك حساب بالفعل؟",
+      "switch_cta": "تسجيل الدخول",
+      "nickname_label": "الاسم المستعار"
+    },
+    "login": {
+      "title": "تسجيل الدخول",
+      "subtitle": "نزالك في انتظارك.",
+      "password_label": "كلمة المرور",
+      "submit": "تسجيل الدخول",
+      "submitting": "جارٍ تسجيل الدخول…",
+      "switch_prompt": "جديد هنا؟",
+      "switch_cta": "أنشئ حسابًا",
+      "nickname_label": "الاسم المستعار",
+      "google_cta": "المتابعة عبر Google",
+      "email_code_cta": "أرسل لي رمزًا مكونًا من 6 أحرف",
+      "forgot_password_cta": "هل نسيت كلمة المرور؟",
+      "or_divider": "أو"
+    },
+    "errors": {
+      "weak_password": "كلمة المرور هذه سهلة التخمين. استخدم ١٠ أحرف على الأقل، وتجنّب الكلمات الشائعة.",
+      "handle_taken": "اسم المستخدم هذا مستخدَم بالفعل. جرّب اسمًا آخر.",
+      "bad_credentials": "اسم المستخدم أو كلمة المرور غير صحيحة.",
+      "locked_out": "محاولات كثيرة جدًا. حاول مرة أخرى بعد بضع دقائق.",
+      "totp_required": "أدخل رمز المصادقة للمتابعة.",
+      "totp_invalid": "هذا الرمز غير صحيح. تحقق من تطبيق المصادقة وحاول مجددًا.",
+      "network_error": "تعذّر الوصول إلى الخادم. تحقق من اتصالك وحاول مجددًا.",
+      "generic": "حدث خطأ ما. حاول مرة أخرى.",
+      "link_required": "يوجد حساب بالفعل بهذا البريد الإلكتروني. سجّل الدخول، ثم اربط Google من إعدادات الأمان.",
+      "subject_already_linked": "حساب Google هذا مرتبط بالفعل بحساب Nizalo آخر.",
+      "already_linked": "حسابك مرتبط بالفعل بحساب Google مختلف.",
+      "last_auth_method": "أنشئ كلمة مرور قبل فصل Google حتى لا تفقد الوصول إلى حسابك.",
+      "not_linked": "لم يتم ربط Google بحسابك.",
+      "credential_already_set": "لديك بالفعل كلمة مرور. استخدم “تغيير كلمة المرور” بدلاً من ذلك.",
+      "google_login_unavailable": "تسجيل الدخول عبر Google غير متاح الآن. جرّب طريقة أخرى.",
+      "provider_error": "حدث خطأ ما في تسجيل الدخول عبر Google. حاول مرة أخرى.",
+      "bad_state": "رابط تسجيل الدخول هذا غير صالح أو منتهي الصلاحية. حاول مرة أخرى.",
+      "google_denied": "لقد ألغيت تسجيل الدخول عبر Google. لم يتم إجراء أي تغييرات.",
+      "invalid_shape": "يجب أن يتكون اللقب من 3 إلى 24 حرفًا: أحرف وأرقام وشرطة سفلية أو شرطة فقط.",
+      "reserved": "هذا اللقب غير متاح.",
+      "prohibited": "هذا اللقب غير مسموح به.",
+      "taken": "هذا اللقب مُستخدم بالفعل. جرّب لقبًا آخر.",
+      "cooldown": "يمكنك تغيير لقبك مرة أخرى قريبًا، ولكن ليس الآن.",
+      "too_long": "هذه السيرة طويلة جدًا.",
+      "too_large": "هذه الصورة كبيرة جدًا. جرّب ملفًا أصغر.",
+      "invalid_image": "لا يبدو هذا صورة صالحة. جرّب ملف PNG أو JPEG أو WEBP.",
+      "not_owned": "أنت لا تملك هذا الشارة بعد.",
+      "cannot_report_self": "لا يمكنك الإبلاغ عن محتواك الخاص."
+    },
+    "email_code": {
+      "title": "تسجيل الدخول برمز",
+      "subtitle": "سنرسل لك رمزًا لمرة واحدة عبر البريد الإلكتروني.",
+      "email_label": "البريد الإلكتروني",
+      "request_cta": "إرسال الرمز",
+      "requesting": "جارٍ الإرسال…",
+      "sent_message": "إذا كان هذا العنوان مؤهلاً، فقد تم إرسال رمز. تحقق من بريدك الوارد.",
+      "code_label": "رمز مكوّن من 6 أحرف",
+      "totp_label": "رمز المصادقة (إن كان مفعّلاً)",
+      "verify_cta": "تسجيل الدخول",
+      "verifying": "جارٍ تسجيل الدخول…",
+      "back_to_password": "تسجيل الدخول بكلمة المرور بدلاً من ذلك"
+    },
+    "forgot_password": {
+      "title": "إعادة تعيين كلمة المرور",
+      "subtitle": "سنرسل لك رمزًا عبر البريد الإلكتروني لإعادة تعيينها.",
+      "email_label": "البريد الإلكتروني",
+      "request_cta": "إرسال رمز إعادة التعيين",
+      "requesting": "جارٍ الإرسال…",
+      "sent_message": "إذا كان لهذا العنوان حساب، فقد تم إرسال رمز إعادة التعيين.",
+      "code_label": "رمز إعادة التعيين",
+      "new_password_label": "كلمة المرور الجديدة",
+      "confirm_cta": "إعادة تعيين كلمة المرور",
+      "confirming": "جارٍ إعادة التعيين…",
+      "success_message": "تمت إعادة تعيين كلمة المرور. يمكنك الآن تسجيل الدخول.",
+      "back_to_login": "العودة لتسجيل الدخول"
+    },
+    "google": {
+      "completing": "جارٍ إنهاء تسجيل الدخول…",
+      "totp_label": "رمز المصادقة",
+      "totp_cta": "متابعة",
+      "link_required_title": "الحساب موجود بالفعل",
+      "link_required_cta": "الذهاب لتسجيل الدخول",
+      "linked_title": "تم ربط Google",
+      "linked_body": "تم الآن ربط حساب Google الخاص بك.",
+      "link_failed_title": "تعذّر ربط Google",
+      "denied_title": "تم إلغاء تسجيل الدخول",
+      "invalid_title": "حدث خطأ ما",
+      "error_title": "تعذّر تسجيل الدخول عبر Google",
+      "unavailable_title": "تسجيل الدخول عبر Google غير متاح",
+      "continue_cta": "المتابعة إلى Nizalo"
+    },
+    "security": {
+      "title": "الأمان",
+      "subtitle": "إدارة طريقة تسجيل دخولك إلى Nizalo.",
+      "password_label": "كلمة المرور",
+      "password_set": "مفعّلة",
+      "password_not_set": "غير معينة",
+      "email_label": "البريد الإلكتروني",
+      "email_verified": "تم التحقق",
+      "email_unverified": "غير موثّق",
+      "email_not_set": "غير معين",
+      "google_label": "Google",
+      "google_connected": "متصل",
+      "google_not_connected": "غير متصل",
+      "totp_label": "المصادقة الثنائية",
+      "totp_enabled": "مفعّلة",
+      "totp_disabled": "غير مفعّلة",
+      "connect_google_cta": "ربط",
+      "disconnect_google_cta": "فصل",
+      "set_password_cta": "تعيين كلمة مرور",
+      "change_password_cta": "تغيير كلمة المرور",
+      "set_password_title": "أنشئ كلمة مرور Nizalo الخاصة بك",
+      "change_password_title": "تغيير كلمة المرور",
+      "password_field_label": "كلمة المرور الجديدة",
+      "save_password_cta": "حفظ كلمة المرور",
+      "saving_password": "جارٍ الحفظ…",
+      "password_saved": "تم حفظ كلمة المرور.",
+      "need_password_before_disconnect_title": "أنشئ كلمة مرور أولاً",
+      "need_password_before_disconnect_body": "أنشئ كلمة مرور Nizalo قبل فصل Google حتى لا تفقد الوصول إلى حسابك.",
+      "confirm_disconnect_title": "هل تريد فصل Google؟",
+      "confirm_disconnect_body": "ستحتاج إلى كلمة مرور Nizalo لتسجيل الدخول من الآن فصاعدًا.",
+      "confirm_disconnect_cta": "فصل",
+      "cancel_cta": "إلغاء",
+      "disconnected_message": "تم فصل Google.",
+      "step_up_password_label": "أكّد كلمة المرور الخاصة بك",
+      "step_up_totp_label": "رمز المصادقة",
+      "step_up_cta": "تأكيد"
+    }
+  },
+  "play": {
+    "select": {
+      "heading": "اختر لعبتك",
+      "duration_label": "المدة",
+      "style_label": "الأسلوب",
+      "mode_label": "النمط",
+      "eligibility_label": "الأهلية",
+      "cta": "← ابحث عن خصم",
+      "eligibility_free": "مجاني",
+      "difficulty_deep": "عميق",
+      "difficulty_fast": "سريع"
+    },
+    "continue": "متابعة",
+    "back": "رجوع",
+    "mode": {
+      "heading": "اختر طريقة اللعب",
+      "vs_computer": { "title": "ضد الحاسوب", "description": "تدرّب ضد خصم يعمل بالذكاء الاصطناعي" },
+      "friend": { "title": "تحدَّ صديقًا", "description": "تحدَّ شخصًا باستخدام اسمه المستعار" },
+      "competitive": { "title": "تنافسي", "description": "مباريات مصنَّفة حسب مستوى مهارتك" },
+      "tournament": { "title": "بطولة", "description": "نافس في بطولة إقصائية على جائزة" }
+    },
+    "difficulty": {
+      "heading": "اختر مستوى الصعوبة"
+    },
+    "stake": {
+      "heading": "اختر الرهان",
+      "free_only": "مجاني فقط",
+      "free_only_note": "الرهانات النقدية غير متاحة لهذه اللعبة بعد."
+    },
+    "challenge": {
+      "heading": "تحدَّ صديقًا",
+      "nickname_label": "اسم الخصم المستعار",
+      "nickname_placeholder": "أدخل اسمًا مستعارًا",
+      "send": "إرسال التحدي",
+      "sending": "جارٍ الإرسال…",
+      "sent": "تم إرسال التحدي — بانتظار رد {handle}.",
+      "incoming_heading": "التحديات الواردة",
+      "outgoing_heading": "التحديات المُرسَلة",
+      "accept": "قبول",
+      "decline": "رفض",
+      "cancel": "إلغاء",
+      "empty_incoming": "لا توجد تحديات واردة.",
+      "empty_outgoing": "لم يتم إرسال أي تحدٍّ.",
+      "from": "تحدَّاك {handle}",
+      "waiting_for": "في انتظار {handle}",
+      "error_unknown_opponent": "لا يوجد لاعب بهذا الاسم المستعار.",
+      "error_self": "لا يمكنك تحدي نفسك.",
+      "error_already_pending": "لديك بالفعل تحدٍّ معلّق مع {handle}.",
+      "error_generic": "تعذّر إرسال التحدي. حاول مرة أخرى."
+    }
+  },
+  "dashboard": {
+    "welcome": "مرحبًا بعودتك",
+    "play_now": "العب الآن",
+    "global_skill": {
+      "title": "نقاط المهارة العالمية",
+      "empty": "العب ١٠ مباريات مصنّفة في أي لعبة واحدة لتحديد نقاطك.",
+      "view_breakdown": "← عرض التفاصيل الكاملة",
+      "percentile": "المئين {value}%"
+    },
+    "recent": {
+      "title": "المباريات الأخيرة",
+      "empty": "لا مباريات بعد. سيظهر سجلك هنا.",
+      "full_history": "← السجل الكامل"
+    },
+    "tournaments": {
+      "title": "البطولات",
+      "empty": "تصفّح البطولات المفتوحة للتسجيل.",
+      "browse": "← تصفّح البطولات"
+    }
+  },
+  "matchmaking": {
+    "joining_queue": "الانضمام إلى طابور {game}…",
+    "finding_1": "جارٍ البحث عن خصم…",
+    "finding_2": "جارٍ مطابقة مستوى مهارتك…",
+    "finding_3": "جارٍ تجهيز نزالك…",
+    "cancel": "إلغاء",
+    "you": "أنت",
+    "opponent": "الخصم",
+    "vs": "ضد",
+    "go": "انطلق",
+    "join_error": "تعذّر الانضمام إلى الطابور. حاول مرة أخرى."
+  },
+  "game": {
+    "connected": "● متصل",
+    "connecting": "○ جارٍ الاتصال…",
+    "reconnecting": "○ جارٍ إعادة الاتصال…",
+    "resign": "استسلام",
+    "playing_as": "تلعب باسم {handle}",
+    "result_pending_note": "شاشة النتيجة الكاملة (تغيّر التصنيف، النزال التالي) هي الجزء التالي المطلوب بناؤه هنا.",
+    "spectating": "وضع المشاهدة",
+    "watching_as": "تشاهد باسم {handle}",
+    "your_turn": "دورك",
+    "opponent_turn": "دور الخصم",
+    "in_check": "كش",
+    "offer_draw": "عرض تعادل",
+    "draw_offer_sent": "تم إرسال عرض التعادل",
+    "draw_offer_received": "{handle} يعرض التعادل",
+    "accept_draw": "قبول",
+    "decline_draw": "رفض",
+    "resign_confirm_title": "هل تريد الاستسلام في هذه المباراة؟",
+    "resign_confirm_body": "يُحتسب هذا خسارة ولا يمكن التراجع عنه.",
+    "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "promote_title": "اختر القطعة",
+    "promote_queen": "الوزير",
+    "promote_rook": "الرخ",
+    "promote_bishop": "الفيل",
+    "promote_knight": "الحصان",
+    "result_win": "لقد فزت",
+    "result_loss": "لقد خسرت",
+    "result_draw": "تعادل",
+    "reason": {
+      "CHECKMATE": "كش ملك",
+      "STALEMATE": "تعادل بالغياب عن حركة",
+      "FIFTY_MOVE": "قاعدة الخمسين نقلة",
+      "THREEFOLD_REPETITION": "تكرار الوضعية ثلاث مرات",
+      "INSUFFICIENT_MATERIAL": "قطع غير كافية",
+      "RESIGNATION": "استسلام",
+      "TIMEOUT": "انتهاء الوقت",
+      "DRAW_AGREED": "تعادل بالاتفاق"
+    },
+    "rematch": "مباراة أخرى",
+    "new_opponent": "خصم جديد",
+    "review": "مراجعة المباراة",
+    "exp_gained": "+{amount} نقطة خبرة",
+    "rating_change_up": "التصنيف +{amount}",
+    "rating_change_down": "التصنيف {amount}",
+    "level_up": "المستوى {level}",
+    "opponent_disconnected": "انقطع اتصال الخصم — ساعته ما زالت تعمل",
+    "opponent_reconnected": "أعاد الخصم الاتصال",
+    "you_disconnected": "انقطع الاتصال — جارٍ إعادة الاتصال",
+    "vs_computer": "ضد الحاسوب",
+    "difficulty": {
+      "EASY": "سهل",
+      "MEDIUM": "متوسط",
+      "HARD": "صعب",
+      "EXPERT": "خبير"
+    },
+    "move_history": "النقلات",
+    "achievement": {
+      "FIRST_WIN": { "title": "الفوز الأول!", "description": "فزت بأول مباراة لك." },
+      "FIRST_TOURNAMENT": { "title": "أول ظهور في بطولة", "description": "أكملت أول بطولة لك." }
+    }
+  },
+  "settings": {
+    "language": "اللغة"
+  },
+  "tournamentsPage": {
+    "heading": "البطولات",
+    "empty": "لا توجد بطولات مفتوحة للتسجيل حاليًا.",
+    "entry_free": "مجاني",
+    "entry_fee": "{amount} {asset}",
+    "registered_count": "{count}/{capacity} مسجَّل",
+    "starts_at": "تبدأ في {date}",
+    "view": "عرض ←",
+    "back": "→ كل البطولات",
+    "format": {
+      "SINGLE_ELIMINATION": "إقصاء مباشر",
+      "SWISS": "نظام سويسري"
+    },
+    "status": {
+      "DRAFT": "مسودة",
+      "REGISTRATION_OPEN": "التسجيل مفتوح",
+      "REGISTRATION_CLOSED": "التسجيل مغلق",
+      "IN_PROGRESS": "جارية",
+      "COMPLETED": "منتهية",
+      "CANCELLED": "ملغاة"
+    },
+    "register": "سجّل",
+    "registering": "جارٍ التسجيل…",
+    "registered": "أنت مسجَّل",
+    "withdraw": "انسحاب",
+    "your_match": "العب مباراتك ←",
+    "standings_heading": "الترتيب",
+    "standings_rank": "المركز",
+    "standings_player": "اللاعب",
+    "standings_points": "النقاط",
+    "standings_record": "فوز-خسارة-تعادل",
+    "error_at_capacity": "هذه البطولة مكتملة العدد.",
+    "error_not_open": "التسجيل مغلق.",
+    "error_already_registered": "أنت مسجَّل بالفعل.",
+    "error_generic": "حدث خطأ ما. حاول مرة أخرى.",
+    "not_found": "لم يتم العثور على البطولة."
+  },
+  "meta": {
+    "title": "نزالو — نزالك. إثباتك.",
+    "description": "منصة عالمية للمنافسة الفردية على أساس المهارة. الشطرنج والرياضيات السريعة وأكثر. أثبت مهارتك وارتقِ في الترتيب."
+  },
+  "email": {
+    "common": {
+      "footer": "نزالو — نزالك. إثباتك.",
+      "support_note": "لديك أسئلة؟ تواصل معنا في أي وقت على info@nizalo.com."
+    },
+    "welcome": {
+      "subject": "مرحبًا بك في نزالو، {nickname}",
+      "heading": "مرحبًا بك في نزالو",
+      "body": "حسابك جاهز الآن. نزالو منصة عالمية للمنافسة على أساس المهارة — لا حظ، لا صدفة، فقط إثبات للمهارة.",
+      "nav_note": "من لوحة التحكم الخاصة بك: ابحث عن نزال ضمن «العب»، تحقق من الترتيب ضمن «التصنيف»، تصفّح البطولات المباشرة ضمن «البطولة»، أو اقرأ المزيد ضمن «تعلّم».",
+      "cta": "العب الآن"
+    },
+    "verification": {
+      "subject": "تحقق من بريدك الإلكتروني في نزالو",
+      "heading": "أكّد عنوان بريدك الإلكتروني",
+      "body": "أدخل هذا الرمز في نزالو لتأكيد أن {email} هو بريدك الإلكتروني:",
+      "expires_note": "تنتهي صلاحية هذا الرمز خلال {minutes} دقيقة، ويمكن استخدامه مرة واحدة فقط.",
+      "ignore_note": "إذا لم تطلب هذا، يمكنك تجاهل هذه الرسالة بأمان."
+    },
+    "login_code": {
+      "subject": "رمز تسجيل الدخول إلى نزالو",
+      "heading": "رمز تسجيل الدخول إلى نزالو",
+      "body": "أدخل هذا الرمز لتسجيل الدخول:",
+      "expires_note": "تنتهي صلاحية هذا الرمز خلال {minutes} دقيقة، ويمكن استخدامه مرة واحدة فقط.",
+      "ignore_note": "إذا لم تطلب هذا، يمكنك تجاهل هذه الرسالة بأمان."
+    },
+    "password_reset": {
+      "subject": "إعادة تعيين كلمة مرور نزالو الخاصة بك",
+      "heading": "تم طلب إعادة تعيين كلمة المرور",
+      "body": "أدخل هذا الرمز في نزالو لإعادة تعيين كلمة المرور الخاصة بك:",
+      "expires_note": "تنتهي صلاحية هذا الرمز خلال {minutes} دقيقة، ويمكن استخدامه مرة واحدة فقط.",
+      "ignore_note": "إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة بأمان."
+    },
+    "password_reset_confirmation": {
+      "subject": "تم تغيير كلمة مرور نزالو الخاصة بك",
+      "heading": "تم تغيير كلمة المرور الخاصة بك",
+      "body": "تم تغيير كلمة مرور نزالو الخاصة بك بنجاح.",
+      "warning": "إذا لم تقم بهذا الإجراء، فيرجى التواصل مع الدعم فورًا."
+    },
+    "ticket_common": {
+      "subject_label": "التذكرة",
+      "view_cta": "عرض التذكرة"
+    },
+    "ticket_created": {
+      "subject": "لقد استلمنا طلب الدعم الخاص بك",
+      "heading": "تم إنشاء تذكرة الدعم الخاصة بك",
+      "body": "شكرًا لتواصلك معنا. سيقوم فريق الدعم لدينا بمراجعة طلبك والرد عليك قريبًا."
+    },
+    "ticket_staff_replied": {
+      "subject": "رد جديد على تذكرة الدعم الخاصة بك في نزالو",
+      "heading": "لديك رد جديد",
+      "body": "قام فريق الدعم لدينا بالرد على تذكرتك. سجّل الدخول لقراءة الرسالة كاملة والرد عليها."
+    },
+    "ticket_waiting_for_user": {
+      "subject": "نحتاج إلى مزيد من المعلومات منك",
+      "heading": "بانتظار ردك",
+      "body": "يحتاج فريق الدعم لدينا إلى مزيد من المعلومات لمواصلة مساعدتك في تذكرتك."
+    },
+    "ticket_resolved": {
+      "subject": "تم حل تذكرة الدعم الخاصة بك",
+      "heading": "تم حل تذكرتك",
+      "body": "لقد قمنا بوضع علامة على تذكرة الدعم الخاصة بك كمحلولة. إذا كنت لا تزال بحاجة إلى مساعدة، فقط قم بالرد وسنعيد فتحها."
+    }
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "edit_cta": "تعديل الملف الشخصي",
+    "view_profile_cta": "عرض الملف الشخصي",
+    "level_label": "المستوى",
+    "exp_label": "نقاط الخبرة",
+    "global_skill_label": "المهارة العالمية",
+    "bio_label": "نبذة",
+    "no_bio": "لا توجد نبذة بعد.",
+    "ratings_title": "تصنيفات الألعاب",
+    "no_ratings": "لا توجد تصنيفات بعد — العب مباراة للبدء.",
+    "stats_title": "الإحصائيات",
+    "games_label": "المباريات",
+    "wins_label": "الانتصارات",
+    "losses_label": "الهزائم",
+    "win_rate_label": "معدل الفوز",
+    "achievements_title": "الإنجازات",
+    "no_achievements": "لا توجد إنجازات بعد.",
+    "badges_title": "الشارات",
+    "no_badges": "لا توجد شارات بعد.",
+    "member_since_label": "عضو منذ",
+    "nickname_label": "اللقب",
+    "save_cta": "حفظ التغييرات",
+    "saving": "جارٍ الحفظ…",
+    "cancel_cta": "إلغاء",
+    "change_avatar_cta": "تغيير الصورة",
+    "uploading_avatar": "جارٍ الرفع…",
+    "saved_message": "تم حفظ الملف الشخصي.",
+    "report_cta": "إبلاغ",
+    "report_title": "الإبلاغ عن هذا الملف",
+    "report_reason_label": "السبب (اختياري)",
+    "report_submit_cta": "إرسال البلاغ",
+    "reported_message": "شكرًا، تم إرسال بلاغك.",
+    "not_found": "تعذر العثور على هذا اللاعب.",
+    "achievements_catalog": {
+      "FIRST_WIN": "الفوز الأول",
+      "FIRST_TOURNAMENT": "أول بطولة"
+    }
+  },
+  "support": {
+    "title": "الدعم",
+    "my_tickets_title": "تذاكري",
+    "new_ticket_cta": "تذكرة جديدة",
+    "no_tickets": "ليس لديك أي تذاكر دعم حتى الآن.",
+    "back_to_list": "العودة إلى تذاكري",
+    "created_label": "تاريخ الإنشاء",
+    "updated_label": "آخر تحديث",
+    "category_label": "الفئة",
+    "status": {
+      "OPEN": "مفتوحة",
+      "TRIAGED": "تم الفرز",
+      "ASSIGNED": "معيّنة",
+      "IN_PROGRESS": "قيد المعالجة",
+      "WAITING_FOR_USER": "بانتظار ردك",
+      "ESCALATED": "تم التصعيد",
+      "RESOLVED": "تم الحل",
+      "CLOSED": "مغلقة"
+    },
+    "categories": {
+      "ACCOUNT": "الحساب",
+      "LOGIN": "مشكلة تسجيل الدخول",
+      "PASSWORD": "كلمة المرور",
+      "DEPOSIT_PENDING": "إيداع معلّق",
+      "WITHDRAWAL_PENDING": "سحب معلّق",
+      "WITHDRAWAL_FAILED": "فشل السحب",
+      "MISSING_FUNDS": "أموال مفقودة",
+      "MATCH_PROBLEM": "مشكلة في المباراة",
+      "TOURNAMENT_PROBLEM": "مشكلة في البطولة",
+      "ANTI_CHEAT": "الإبلاغ عن الغش",
+      "TECHNICAL": "مشكلة تقنية",
+      "ABUSE_REPORT": "الإبلاغ عن إساءة",
+      "OTHER": "مسألة أخرى"
+    },
+    "new": {
+      "title": "تذكرة دعم جديدة",
+      "category_label": "بماذا تحتاج إلى مساعدة؟",
+      "category_placeholder": "اختر فئة",
+      "reference_id_label": "رقم المرجع",
+      "reference_id_hint": "معرّف الإيداع أو السحب أو المباراة أو البطولة المتعلقة بهذا الأمر.",
+      "subject_label": "الموضوع",
+      "subject_placeholder": "ملخص قصير للمشكلة",
+      "description_label": "صف المشكلة",
+      "description_placeholder": "أعطنا أكبر قدر ممكن من التفاصيل.",
+      "secrets_warning": "لا تدرج أبدًا كلمة مرورك، أو رمز تسجيل الدخول، أو رمز المصادقة (TOTP)، أو رمز OAuth، أو مفاتيحك الخاصة، أو عبارة استرداد المحفظة. لن يطلب منك فريقنا هذه المعلومات أبدًا.",
+      "submit_cta": "إرسال التذكرة",
+      "submitting": "جارٍ الإرسال…",
+      "cancel_cta": "إلغاء"
+    },
+    "duplicate_notice": "لديك بالفعل تذكرة مفتوحة لهذه المشكلة.",
+    "view_existing_cta": "عرض التذكرة الحالية",
+    "detail": {
+      "conversation_title": "المحادثة",
+      "reply_placeholder": "اكتب رسالتك…",
+      "send_cta": "إرسال",
+      "sending": "جارٍ الإرسال…",
+      "you_label": "أنت",
+      "support_label": "الدعم",
+      "closed_notice": "هذه التذكرة مغلقة. أنشئ تذكرة جديدة إذا كنت لا تزال بحاجة إلى مساعدة.",
+      "reopened_notice": "تمت إعادة فتح تذكرتك.",
+      "no_messages": "لا توجد رسائل بعد."
+    },
+    "errors": {
+      "invalid_category": "الرجاء اختيار فئة.",
+      "invalid_subject": "الرجاء إدخال موضوع من 1 إلى 200 حرف.",
+      "invalid_content": "الرجاء إدخال رسالة.",
+      "reference_required": "الرجاء إدخال رقم مرجعي لهذه الفئة.",
+      "reference_not_found": "لم نتمكن من العثور على هذا المرجع، أو أنه لا يخص حسابك.",
+      "duplicate_open_ticket": "لديك بالفعل تذكرة مفتوحة لهذه المشكلة.",
+      "ticket_closed": "هذه التذكرة مغلقة.",
+      "not_found": "تعذر العثور على هذه التذكرة.",
+      "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+    },
+    "game_report_cta": "الإبلاغ عن مشكلة في هذه المباراة"
+  },
+  "chat": {
+    "global_title": "الدردشة العامة",
+    "match_title": "دردشة المباراة",
+    "placeholder": "اكتب رسالة…",
+    "send_cta": "إرسال",
+    "connecting": "جارٍ الاتصال…",
+    "reconnecting": "جارٍ إعادة الاتصال…",
+    "empty": "لا توجد رسائل بعد. قل مرحبًا!",
+    "removed_message": "تمت إزالة هذه الرسالة.",
+    "report_cta": "الإبلاغ",
+    "report_title": "الإبلاغ عن هذه الرسالة",
+    "report_category_label": "السبب",
+    "report_category_placeholder": "اختر سببًا",
+    "report_reason_label": "تفاصيل إضافية (اختياري)",
+    "report_submit_cta": "إرسال البلاغ",
+    "report_submitted": "شكرًا، تم إرسال بلاغك.",
+    "block_cta": "حظر",
+    "block_confirm_title": "حظر {nickname}؟",
+    "block_confirm_body": "لن ترى بعد الآن رسائل هذا اللاعب في الدردشة.",
+    "block_confirm_cta": "حظر",
+    "cancel_cta": "إلغاء",
+    "categories": {
+      "ABUSE": "إساءة",
+      "HARASSMENT": "مضايقة",
+      "SPAM": "رسائل مزعجة",
+      "SCAM": "احتيال",
+      "THREATS": "تهديدات",
+      "INAPPROPRIATE_CONTENT": "محتوى غير لائق",
+      "OTHER": "أخرى"
+    },
+    "errors": {
+      "MUTED": "تم كتم صوتك مؤقتًا ولا يمكنك إرسال رسائل الآن.",
+      "RATE_LIMITED": "أنت ترسل الرسائل بسرعة كبيرة. يرجى التمهل.",
+      "DUPLICATE_MESSAGE": "لقد أرسلت هذه الرسالة بالفعل.",
+      "NOT_SUBSCRIBED": "جارٍ إعادة الاتصال بالدردشة، يرجى المحاولة مرة أخرى بعد قليل.",
+      "EMPTY": "الرجاء إدخال رسالة.",
+      "TOO_LONG": "رسالتك طويلة جدًا.",
+      "CONTROL_CHARS": "تحتوي رسالتك على أحرف غير مسموح بها.",
+      "generic": "تعذر إرسال رسالتك. يرجى المحاولة مرة أخرى.",
+      "SPECTATORS_DISABLED": "لا يمكن مشاهدة هذه المباراة.",
+      "POST_GAME_CLOSED": "أُغلقت هذه الدردشة بعد انتهاء المباراة."
+    },
+    "spectator_title": "دردشة المشاهدين"
+  },
+  "watch": {
+    "title": "شاهد البث المباشر",
+    "subtitle": "مباريات مباشرة يمكنك مشاهدتها الآن.",
+    "empty": "لا توجد مباريات مباشرة حاليًا. تحقق مرة أخرى قريبًا.",
+    "watch_cta": "مشاهدة",
+    "vs": "ضد"
+  }
+}

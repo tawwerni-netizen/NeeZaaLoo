@@ -1,0 +1,156 @@
+/* Chess's table identity: marble on emerald felt -- see the Nizalo Table
+   System spec. Local, scoped custom properties rather than new global
+   tokens, since chess is (for now) the only table this system serves;
+   the shape (accent/ground/square/piece values) is exactly what the spec
+   describes a future game supplying nine of when it is that game's turn. */
+.wrap {
+  --board-ground: var(--nz-mat-emerald);
+  --board-light: var(--nz-mat-ivory);
+  --board-dark: #6b7a72;
+  --board-accent: #1f6f5c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: min(92vw, 560px);
+  aspect-ratio: 1 / 1;
+  border-radius: var(--nz-radius-md);
+  overflow: hidden;
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3));
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: var(--board-ground);
+}
+
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.square:disabled { cursor: default; }
+
+.light { background: var(--board-light); }
+.dark { background: var(--board-dark); }
+
+.selected {
+  box-shadow: inset 0 0 0 3px var(--board-accent);
+}
+
+.lastMove::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--board-accent);
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.inCheck {
+  box-shadow: inset 0 0 0 3px var(--nz-loss);
+}
+
+.piece {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(28px, 6vw, 44px);
+  line-height: 1;
+  user-select: none;
+  transition: transform var(--nz-dur-base) var(--nz-ease-settle);
+}
+
+.piece[data-colour="w"] {
+  color: #f4f1ea;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.piece[data-colour="b"] {
+  color: #14171c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 5px rgba(0, 0, 0, 0.55);
+}
+
+.moveHint {
+  position: absolute;
+  width: 26%;
+  height: 26%;
+  border-radius: 999px;
+  background: var(--board-accent);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.captureHint {
+  position: absolute;
+  inset: 8%;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 4px var(--nz-loss);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.promoOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 13, 16, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.promoCard {
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-8);
+  box-shadow: var(--nz-shadow-3);
+  text-align: center;
+}
+
+.promoTitle {
+  margin: 0 0 var(--nz-space-6);
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-lg);
+}
+
+.promoChoices {
+  display: flex;
+  gap: var(--nz-space-3);
+}
+
+.promoChoice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-2);
+  padding: var(--nz-space-4);
+  border-radius: var(--nz-radius-md);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-2);
+  cursor: pointer;
+  font-size: 32px;
+  color: var(--nz-text);
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.promoChoice:hover { border-color: var(--board-accent); }
+
+.promoLabel {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+}
+
+@media (max-width: 640px) {
+  .board { width: 94vw; }
+}

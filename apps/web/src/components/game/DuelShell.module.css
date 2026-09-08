@@ -1,0 +1,83 @@
+.statusBar {
+  display: flex;
+  justify-content: space-between;
+  padding-block: var(--nz-space-6);
+  font-size: var(--nz-text-sm);
+}
+
+.live { color: var(--nz-win); }
+.offline { color: var(--nz-text-3); }
+
+.statusGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+}
+
+.spectatorBadge {
+  display: inline-block;
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  background: var(--nz-surface-2);
+  color: var(--nz-text-2);
+}
+
+.playerLine {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-sm);
+  padding-block: var(--nz-space-8);
+}
+
+.chatSlot {
+  max-width: 480px;
+  margin: 0 auto var(--nz-space-8);
+}
+
+.drawBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  border-radius: var(--nz-radius-md);
+  background: var(--nz-accent-soft);
+  border: 1px solid var(--nz-accent-line);
+  margin-bottom: var(--nz-space-4);
+  font-size: var(--nz-text-sm);
+}
+
+.actionsRow {
+  display: flex;
+  gap: var(--nz-space-3);
+  justify-content: center;
+  padding-block: var(--nz-space-4);
+}
+
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 13, 16, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.confirmCard {
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-8);
+  box-shadow: var(--nz-shadow-3);
+  text-align: center;
+  max-width: 360px;
+}
+
+.confirmActions {
+  display: flex;
+  gap: var(--nz-space-3);
+  justify-content: center;
+}

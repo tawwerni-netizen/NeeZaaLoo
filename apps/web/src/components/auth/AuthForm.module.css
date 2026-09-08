@@ -1,0 +1,128 @@
+.wrap {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nz-space-8) var(--nz-space-4);
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-8);
+}
+
+.title {
+  font-size: var(--nz-text-2xl);
+  margin: 0 0 var(--nz-space-2);
+}
+
+.subtitle {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  margin: 0 0 var(--nz-space-6);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+  margin-bottom: var(--nz-space-4);
+}
+
+.field label {
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-2);
+}
+
+.field input {
+  font: inherit;
+  font-size: var(--nz-text-base);
+  padding: var(--nz-space-3);
+  border-radius: var(--nz-radius-md);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-bg);
+  color: var(--nz-text);
+}
+
+.field input:focus-visible {
+  outline: none;
+  box-shadow: var(--nz-focus);
+}
+
+.error {
+  color: var(--nz-loss);
+  font-size: var(--nz-text-sm);
+  margin: 0 0 var(--nz-space-4);
+}
+
+.submit {
+  width: 100%;
+  margin-top: var(--nz-space-2);
+}
+
+.switch {
+  margin-top: var(--nz-space-6);
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  text-align: center;
+}
+
+.switch a {
+  color: var(--nz-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.forgotLink {
+  margin-top: var(--nz-space-3);
+  font-size: var(--nz-text-sm);
+  text-align: end;
+}
+
+.forgotLink a {
+  color: var(--nz-text-2);
+  text-decoration: none;
+}
+
+.forgotLink a:hover {
+  color: var(--nz-accent);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  margin: var(--nz-space-6) 0;
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--nz-line);
+}
+
+.secondaryLink {
+  display: block;
+  text-align: center;
+  margin-top: var(--nz-space-4);
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  text-decoration: none;
+}
+
+.secondaryLink:hover {
+  color: var(--nz-accent);
+}

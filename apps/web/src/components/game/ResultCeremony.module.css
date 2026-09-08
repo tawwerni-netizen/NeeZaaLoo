@@ -1,0 +1,65 @@
+.card {
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-10);
+  text-align: center;
+}
+
+.title {
+  font-size: var(--nz-text-2xl);
+  margin: 0 0 var(--nz-space-4);
+}
+
+.reason {
+  color: var(--nz-text-2);
+  margin: 0 0 var(--nz-space-6);
+}
+
+.achievements {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-4) var(--nz-space-6);
+  margin: 0 0 var(--nz-space-6);
+}
+
+.achievement {
+  display: flex;
+  flex-direction: column;
+}
+
+.achievementTitle {
+  font-weight: 700;
+  font-size: var(--nz-text-lg);
+}
+
+.achievementDescription {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-sm);
+}
+
+.delta {
+  display: flex;
+  gap: var(--nz-space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0 0 var(--nz-space-6);
+  font-weight: 600;
+}
+
+.deltaItem {
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  font-size: var(--nz-text-sm);
+}
+
+.actions {
+  display: flex;
+  gap: var(--nz-space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}

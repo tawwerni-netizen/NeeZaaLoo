@@ -1,0 +1,40 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nz-space-2);
+  padding: var(--nz-space-3) var(--nz-space-6);
+  border-radius: var(--nz-radius-md);
+  border: 1px solid transparent;
+  font-family: var(--nz-font-ui);
+  font-weight: 600;
+  font-size: var(--nz-text-base);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: var(--nz-accent);
+  color: var(--nz-accent-contrast);
+  box-shadow: var(--nz-shadow-1);
+}
+
+.secondary {
+  background: var(--nz-surface-2);
+  color: var(--nz-text);
+  border-color: var(--nz-line);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--nz-text);
+}
+
+.ghost:hover {
+  background: var(--nz-surface-2);
+}

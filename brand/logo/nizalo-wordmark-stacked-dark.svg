@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 220" width="380" height="220" role="img" aria-label="Nizalo">
+  <title>Nizalo stacked lockup (for dark grounds)</title>
+  <defs><clipPath id="nzSt"><path d="M8 8h18l44 58V8h18v80H70L26 30v58H8z"/></clipPath></defs>
+  <g transform="translate(142 0)">
+    <rect width="96" height="96" rx="21" fill="#F2F4F7"/>
+    <g transform="translate(20 20) scale(0.5833)" clip-path="url(#nzSt)">
+      <rect x="6" y="6" width="84" height="84" fill="#0B0D10"/>
+      <path d="M22 2.727 74 71.273v22L22 24.727z" fill="#FF5A2B"/>
+    </g>
+  </g>
+  <g transform="translate(0 140)" fill="#F2F4F7">
+    <path d="M0 0h14l30 50V0h14v80H44L14 30v50H0z"/>
+    <path d="M74 0h14v80H74z"/>
+    <path d="M104 0h54v15l-33 51h33v14h-54V65l33-51h-33z"/>
+    <path fill-rule="evenodd" d="M174 80 194 0h22l20 80h-14l-4.5-18h-25L188 80zm31-64 8.5 36h-17z"/>
+    <path d="M252 0h14v66h36v14h-50z"/>
+    <path fill-rule="evenodd" d="M318 40a31 40 0 1 0 62 0 31 40 0 1 0-62 0m14 0a17 26 0 1 0 34 0 17 26 0 1 0-34 0"/>
+  </g>
+</svg>

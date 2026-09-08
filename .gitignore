@@ -1,0 +1,19 @@
+node_modules/
+dist/
+build/
+.next/
+.env
+.env.*
+!.env.example
+local.properties
+*.keystore
+*.jks
+*.log
+.DS_Store
+coverage/
+.gradle/
+
+# Locally generated dev-only keys (smoke tests / local runs). Never committed:
+# these are generated on demand by loadOrGenerateKey and are not production
+# credentials, but a tracked key file is a tracked key file.
+.smoke-*

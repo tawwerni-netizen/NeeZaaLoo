@@ -1,0 +1,308 @@
+/* ==========================================================================
+   NIZALO — Design tokens
+   Dark-first. Light theme is a full re-declaration, never a filter.
+
+   Usage: :root carries the light palette. Dark is applied both by the
+   `prefers-color-scheme` default and by an explicit [data-theme] stamp, so a
+   user toggle wins in both directions.
+   ========================================================================== */
+
+:root {
+  /* --- Brand constants (identical in every theme) --------------------- */
+  --nz-brand-orange: #FF5A2B;   /* Duel Orange — the canonical brand value */
+  --nz-brand-ink:    #0B0D10;   /* Ink */
+  --nz-brand-paper:  #F7F8FA;   /* Paper */
+
+  /* --- Game materials -------------------------------------------------
+     The ten-game catalogue is built as "one club, ten tables": the room
+     (app chrome) never changes, the TABLE does. These are materials, not
+     UI colours -- they belong to the board surface and its surround, and
+     never to a control. See BRAND_GUIDELINES §4.5.
+
+     Gold is the one that needs a rule rather than a value. It is
+     CEREMONIAL ONLY: it may mark a thing already earned (achievement,
+     badge, mastery crest, rank insignia, tournament trophy, victory
+     seal) and it may never appear on anything clickable, focusable, or
+     rendering a currency value. Casino gold decorates the wager; luxury
+     gold marks the achievement. That distinction is the whole licence
+     for using it at all -- see §4.5. Its theme-specific values live with
+     each palette below, because gold that clears contrast on Ink does
+     not clear it on Paper. */
+  --nz-mat-obsidian:  #0B0D10;   /* identical to Ink; named for board use */
+  --nz-mat-emerald:   #0E4A3C;   /* table felt */
+  --nz-mat-emerald-2: #14614E;   /* felt, lit edge */
+  --nz-mat-ivory:     #F2EDE3;   /* bone / shell / light piece material */
+
+  /* --- Typography ---------------------------------------------------- */
+  /* One superfamily carries Latin, Arabic and mono in a single voice; Archivo
+     supplies display presence and matches the wordmark geometry. */
+  --nz-font-display: "Archivo", "IBM Plex Sans", system-ui, sans-serif;
+  --nz-font-ui:      "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nz-font-arabic:  "IBM Plex Sans Arabic", "Tajawal", "Cairo", sans-serif;
+  --nz-font-num:     "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  --nz-text-xs:   12px;
+  --nz-text-sm:   13px;
+  --nz-text-base: 15px;
+  --nz-text-md:   17px;
+  --nz-text-lg:   20px;
+  --nz-text-xl:   24px;
+  --nz-text-2xl:  30px;
+  --nz-text-3xl:  38px;
+  --nz-text-4xl:  48px;
+  --nz-text-5xl:  62px;
+
+  --nz-leading-tight: 1.1;
+  --nz-leading-snug:  1.3;
+  --nz-leading-body:  1.55;
+
+  --nz-tracking-display: -0.02em;
+  --nz-tracking-tight:   -0.01em;
+  --nz-tracking-caps:     0.08em;
+
+  /* --- Space (4px base) ---------------------------------------------- */
+  --nz-space-1: 4px;   --nz-space-2: 8px;   --nz-space-3: 12px;
+  --nz-space-4: 16px;  --nz-space-5: 20px;  --nz-space-6: 24px;
+  --nz-space-8: 32px;  --nz-space-10: 40px; --nz-space-12: 48px;
+  --nz-space-16: 64px; --nz-space-20: 80px; --nz-space-24: 96px;
+
+  /* --- Radius --------------------------------------------------------- */
+  --nz-radius-sm:  6px;
+  --nz-radius-md:  10px;
+  --nz-radius-lg:  14px;
+  --nz-radius-xl:  20px;
+  --nz-radius-2xl: 28px;
+  --nz-radius-pill: 999px;
+
+  /* --- Motion --------------------------------------------------------- */
+  --nz-dur-instant: 90ms;    /* state echo: press, toggle */
+  --nz-dur-fast:    140ms;   /* default UI transition */
+  --nz-dur-base:    200ms;   /* entrance, reveal */
+  --nz-dur-slow:    320ms;   /* rare: full-surface change */
+  --nz-ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --nz-ease-inout:  cubic-bezier(0.65, 0, 0.35, 1);
+  --nz-ease-snap:   cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Ceremony tiers. These sit ABOVE the 320ms ceiling the rest of the
+     system obeys, and they are deliberately fenced: 320ms is right for
+     CONFIRMING an action, but a moment the player actually earned -- a
+     first badge, a tournament win -- needs long enough to be witnessed.
+     Permitted ONLY on the ceremony plane (result, achievement, badge,
+     level-up), ONLY after a server-confirmed result, and NEVER on a
+     money surface. Everything else stays at --nz-dur-slow or below. */
+  --nz-dur-ceremony:      480ms;
+  --nz-dur-ceremony-long: 720ms;   /* hard ceiling for the whole system */
+
+  /* A piece coming to rest, and heavy material (stone, wood) moving. */
+  --nz-ease-settle: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --nz-ease-weight: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ================= LIGHT THEME (default declaration) ================ */
+  --nz-bg:          #F7F8FA;
+  --nz-surface-1:   #FFFFFF;
+  --nz-surface-2:   #F0F2F5;
+  --nz-surface-3:   #E7EAEF;
+  --nz-line:        #E2E5EA;
+  --nz-line-strong: #C9CFD8;
+
+  --nz-text:        #0B0D10;
+  --nz-text-2:      #545B66;
+  --nz-text-3:      #767E8A;
+  --nz-text-inverse:#F2F4F7;
+
+  --nz-accent:          #CC3A14;  /* deepened so white text clears AA */
+  --nz-accent-hover:    #B53311;
+  --nz-accent-press:    #9E2C0E;
+  --nz-accent-contrast: #FFFFFF;
+  --nz-accent-soft:     rgba(204, 58, 20, 0.10);
+  --nz-accent-line:     rgba(204, 58, 20, 0.32);
+
+  --nz-win:   #157F4A;
+  --nz-loss:  #C2282D;
+  --nz-draw:  #6B727E;
+  --nz-warn:  #9A6100;
+  --nz-info:  #1D4ED8;
+
+  /* Gold deepens on Paper: #C6A867 is 2.2:1 here and fails as text, so
+     the light theme carries a darkened value and a separate ink value
+     that clears AA. Never use --nz-mat-gold for text. */
+  --nz-mat-gold:      #96793F;
+  --nz-mat-gold-ink:  #6E5726;
+  --nz-mat-gold-line: rgba(150, 121, 63, 0.38);
+
+  --nz-shadow-1: 0 1px 2px rgba(11, 13, 16, 0.06), 0 1px 1px rgba(11, 13, 16, 0.04);
+  --nz-shadow-2: 0 4px 12px rgba(11, 13, 16, 0.08);
+  --nz-shadow-3: 0 12px 32px rgba(11, 13, 16, 0.12);
+  /* A board sits ON its table, not in the page. Deeper than shadow-3. */
+  --nz-elev-board: 0 18px 48px rgba(11, 13, 16, 0.18);
+
+  --nz-focus: 0 0 0 2px var(--nz-bg), 0 0 0 4px var(--nz-accent);
+
+  color-scheme: light;
+}
+
+/* ===================== DARK THEME ===================== */
+/* System default, unless the user explicitly chose light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --nz-bg:          #0B0D10;
+    --nz-surface-1:   #14171C;
+    --nz-surface-2:   #1C2027;
+    --nz-surface-3:   #252A33;
+    --nz-line:        #2B313A;
+    --nz-line-strong: #3A424E;
+
+    --nz-text:        #F2F4F7;
+    --nz-text-2:      #9BA3AF;
+    --nz-text-3:      #6B727E;
+    --nz-text-inverse:#0B0D10;
+
+    --nz-accent:          #FF5A2B;
+    --nz-accent-hover:    #FF7248;
+    --nz-accent-press:    #E8441A;
+    --nz-accent-contrast: #0B0D10;
+    --nz-accent-soft:     rgba(255, 90, 43, 0.14);
+    --nz-accent-line:     rgba(255, 90, 43, 0.38);
+
+    --nz-win:   #2FBF71;
+    --nz-loss:  #E5484D;
+    --nz-draw:  #8B93A1;
+    --nz-warn:  #F5A524;
+    --nz-info:  #3B82F6;
+
+    --nz-mat-gold:      #C6A867;
+    --nz-mat-gold-ink:  #D4B879;
+    --nz-mat-gold-line: rgba(198, 168, 103, 0.38);
+
+    --nz-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --nz-shadow-2: 0 4px 14px rgba(0, 0, 0, 0.55);
+    --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.6);
+    --nz-elev-board: 0 18px 48px rgba(0, 0, 0, 0.42);
+
+    color-scheme: dark;
+  }
+}
+
+/* Explicit toggle wins over the system in both directions. */
+:root[data-theme="dark"] {
+  --nz-bg:          #0B0D10;
+  --nz-surface-1:   #14171C;
+  --nz-surface-2:   #1C2027;
+  --nz-surface-3:   #252A33;
+  --nz-line:        #2B313A;
+  --nz-line-strong: #3A424E;
+
+  --nz-text:        #F2F4F7;
+  --nz-text-2:      #9BA3AF;
+  --nz-text-3:      #6B727E;
+  --nz-text-inverse:#0B0D10;
+
+  --nz-accent:          #FF5A2B;
+  --nz-accent-hover:    #FF7248;
+  --nz-accent-press:    #E8441A;
+  --nz-accent-contrast: #0B0D10;
+  --nz-accent-soft:     rgba(255, 90, 43, 0.14);
+  --nz-accent-line:     rgba(255, 90, 43, 0.38);
+
+  --nz-win:   #2FBF71;
+  --nz-loss:  #E5484D;
+  --nz-draw:  #8B93A1;
+  --nz-warn:  #F5A524;
+  --nz-info:  #3B82F6;
+
+  --nz-mat-gold:      #C6A867;
+  --nz-mat-gold-ink:  #D4B879;
+  --nz-mat-gold-line: rgba(198, 168, 103, 0.38);
+
+  --nz-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --nz-shadow-2: 0 4px 14px rgba(0, 0, 0, 0.55);
+  --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --nz-elev-board: 0 18px 48px rgba(0, 0, 0, 0.42);
+
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   Money and clock surfaces.
+   Rule: numbers that represent money, time, or rating are ALWAYS tabular.
+   A balance that reflows as digits change reads as unstable, and financial
+   UI must read as calm. This is a brand rule, not a preference.
+   ========================================================================== */
+.nz-num,
+.nz-clock,
+.nz-money,
+.nz-rating {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: 0;
+}
+
+/* Money is never coloured green to celebrate, or red to alarm.
+   Colour on money means one thing only: direction of a ledger movement. */
+.nz-money--credit { color: var(--nz-text); }
+.nz-money--debit  { color: var(--nz-text); }
+.nz-money--locked { color: var(--nz-text-2); }
+
+/* Result colour applies to GAME outcomes, never to balances. */
+.nz-result--win  { color: var(--nz-win); }
+.nz-result--loss { color: var(--nz-loss); }
+.nz-result--draw { color: var(--nz-draw); }
+
+/* ==========================================================================
+   Ceremonial gold.
+   Rule: gold marks a thing ALREADY EARNED. It may never appear on anything
+   clickable, focusable, or rendering a currency value.
+
+   This is the entire licence for gold existing in a brand that explicitly
+   rejected it (§4.1: "gold reads casino"). Casino gold decorates the
+   WAGER -- gold spin buttons, gold coin drops, gold deposit prompts, all
+   applied BEFORE you act, to make you act. Luxury gold marks the
+   ACHIEVEMENT -- a hallmark, a foil seal, an engraved trophy plate,
+   applied AFTER, because you earned it. Same pigment, opposite ethics.
+
+   Legitimate: achievement crest · badge · mastery tier · rank insignia ·
+   tournament trophy · victory seal.
+   Illegitimate, always: any button · any link · any input · any balance,
+   stake, prize figure or fee · any pre-action surface.
+   ========================================================================== */
+.nz-earned      { color: var(--nz-mat-gold-ink); }
+.nz-earned-foil { border-color: var(--nz-mat-gold-line); }
+
+/* The rule above, made mechanical: gold must not survive on an interactive
+   element even if one is authored by mistake. This is a guard, not a
+   style -- if it ever visibly fires, the markup is wrong. */
+a.nz-earned, button.nz-earned, [role="button"].nz-earned,
+input.nz-earned, select.nz-earned, textarea.nz-earned,
+.nz-money.nz-earned, .nz-earned [href], .nz-earned button {
+  color: var(--nz-text);
+}
+
+/* ==========================================================================
+   RTL. Arabic is a first-class layout direction, not a retrofit.
+   ========================================================================== */
+[dir="rtl"] {
+  --nz-font-ui: var(--nz-font-arabic);
+  --nz-font-display: var(--nz-font-arabic);
+  --nz-tracking-display: 0;   /* Arabic must never be letter-spaced */
+  --nz-tracking-tight: 0;
+  --nz-tracking-caps: 0;
+}
+
+/* Latin numerals stay LTR inside Arabic text. */
+[dir="rtl"] .nz-num,
+[dir="rtl"] .nz-clock,
+[dir="rtl"] .nz-money { direction: ltr; unicode-bidi: embed; }
+
+/* ==========================================================================
+   Reduced motion is honoured everywhere. Motion is confirmation, never
+   decoration, so removing it must never remove meaning.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

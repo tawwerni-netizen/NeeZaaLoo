@@ -1,0 +1,11 @@
+.heading {
+  font-size: var(--nz-text-2xl);
+  padding-block: var(--nz-space-10) var(--nz-space-8);
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nz-space-4);
+  padding-bottom: var(--nz-space-16);
+}

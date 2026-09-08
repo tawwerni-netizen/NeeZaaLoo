@@ -1,0 +1,112 @@
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--nz-space-8) var(--nz-space-4);
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nz-space-4);
+  margin-bottom: var(--nz-space-6);
+}
+
+.title {
+  font-size: var(--nz-text-2xl);
+  margin: 0 0 var(--nz-space-1);
+}
+
+.subtitle {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  margin: 0;
+}
+
+.card {
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-5);
+  margin-bottom: var(--nz-space-4);
+  background: var(--nz-surface-1);
+}
+
+.empty {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  margin: 0;
+}
+
+.matchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-4);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-4);
+  margin-bottom: var(--nz-space-3);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.matchRow:hover {
+  border-color: var(--nz-line-strong);
+}
+
+.matchPlayers {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  min-width: 0;
+}
+
+.playerChip {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  min-width: 0;
+}
+
+.playerHandle {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerBadge {
+  flex-shrink: 0;
+}
+
+.playerRating {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs);
+  flex-shrink: 0;
+}
+
+.vs {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  flex-shrink: 0;
+}
+
+.watchCta {
+  flex-shrink: 0;
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  background: var(--nz-accent-soft);
+  color: var(--nz-accent);
+}
+
+@media (max-width: 640px) {
+  .matchRow { flex-direction: column; align-items: stretch; }
+  .matchPlayers { flex-wrap: wrap; }
+}

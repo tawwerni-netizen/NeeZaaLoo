@@ -1,0 +1,39 @@
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  padding: var(--nz-space-3);
+  border-radius: var(--nz-radius-md);
+  background: var(--nz-surface-1);
+  text-decoration: none;
+  color: inherit;
+  max-width: 280px;
+}
+
+.info {
+  min-width: 0;
+}
+
+.nickname {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  display: flex;
+  gap: var(--nz-space-2);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+}
+
+.badge {
+  font-size: var(--nz-text-base);
+}
+
+.link {
+  margin-top: var(--nz-space-1);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-accent);
+}
