@@ -99,6 +99,73 @@ async function main() {
   console.log(`[package-standalone] server entrypoint: ${serverJsPath}`);
   console.log(`[package-standalone] copied ${staticSrc} -> ${staticDest}`);
   console.log(`[package-standalone] copied ${publicSrc} -> ${publicDest}`);
+
+  await packageForHostinger({ appRoot, serverJsPath, standaloneRoot });
+}
+
+/**
+ * Hostinger's Next.js deployment preset validates the ROOT of the configured
+ * Output Directory for a standalone server.js -- confirmed empirically by a
+ * real staging deployment against Output Directory: apps/web/.next/standalone,
+ * which still failed with "Next.js build produced no standalone server or
+ * static output" even though a working server.js exists two levels down, at
+ * .next/standalone/apps/web/server.js (the nesting is a direct consequence
+ * of outputFileTracingRoot pointing at the monorepo root above). This
+ * flattens that nested layout into a single directory Hostinger's preset can
+ * discover: server.js at the artifact root, with node_modules/.next/public
+ * as its direct siblings, matching the non-monorepo standalone shape Next's
+ * own docs describe.
+ *
+ * Confirmed by a manual flattening test (node <flattened>/server.js, then a
+ * real HTTP request) that this is safe to relocate: server.js derives its
+ * own __dirname from import.meta.url (not a path baked in at build time),
+ * calls process.chdir(__dirname), and resolves `require('next')` via
+ * module.createRequire(import.meta.url) -- which walks up node_modules
+ * directories starting from server.js's OWN location, not from whatever
+ * directory the process happened to be launched from. The same test also
+ * showed that the app root's own generated package.json (declaring
+ * "type": "module", copied here from Next's own standalone trace output,
+ * not written by this script) has to travel with server.js -- without it,
+ * Node has no package.json in any parent directory declaring ESM and fails
+ * immediately with "Cannot use import statement outside a module".
+ */
+async function packageForHostinger({ appRoot, serverJsPath, standaloneRoot }) {
+  const hostingerRoot = path.join(webDir, ".next", "hostinger");
+  const nodeModulesSrc = path.join(standaloneRoot, "node_modules");
+  const appPackageJsonSrc = path.join(appRoot, "package.json");
+  const appNextSrc = path.join(appRoot, ".next");
+  const appPublicSrc = path.join(appRoot, "public");
+
+  for (const [label, p] of [
+    ["traced node_modules", nodeModulesSrc],
+    ["app package.json", appPackageJsonSrc],
+    ["app .next", appNextSrc],
+    ["app public", appPublicSrc],
+  ]) {
+    if (!(await exists(p))) {
+      throw new Error(`[hostinger packaging] Expected ${label} not found: ${p}`);
+    }
+  }
+
+  // Rebuild from scratch every run -- the only way to guarantee a file
+  // removed from a source directory doesn't linger as a stale leftover in
+  // the flattened artifact from an earlier build.
+  await rm(hostingerRoot, { recursive: true, force: true });
+  await cp(serverJsPath, path.join(hostingerRoot, "server.js"));
+  await cp(appPackageJsonSrc, path.join(hostingerRoot, "package.json"));
+  await cp(nodeModulesSrc, path.join(hostingerRoot, "node_modules"), { recursive: true });
+  await cp(appNextSrc, path.join(hostingerRoot, ".next"), { recursive: true });
+  await cp(appPublicSrc, path.join(hostingerRoot, "public"), { recursive: true });
+
+  const flattenedServerJs = path.join(hostingerRoot, "server.js");
+  if (!(await exists(flattenedServerJs))) {
+    throw new Error(
+      `[hostinger packaging] server.js missing at flattened artifact root after copy: ${flattenedServerJs}`
+    );
+  }
+
+  console.log(`[package-standalone] Hostinger artifact: ${hostingerRoot}`);
+  console.log(`[package-standalone] Hostinger server.js: ${flattenedServerJs}`);
 }
 
 main().catch((err) => {
