@@ -1,0 +1,102 @@
+.wrap {
+  max-width: 720px;
+  padding-block: var(--nz-space-8) var(--nz-space-16);
+}
+
+.heading {
+  font-size: var(--nz-text-2xl);
+  margin: 0 0 var(--nz-space-2);
+}
+
+.subtitle {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  margin: 0 0 var(--nz-space-6);
+}
+
+.scoreCard {
+  display: flex;
+  align-items: baseline;
+  gap: var(--nz-space-3);
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-6);
+  margin-bottom: var(--nz-space-6);
+}
+
+.scoreValue {
+  font-size: var(--nz-text-4xl, 2.5rem);
+  font-weight: 700;
+}
+
+.scoreScale {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-sm);
+}
+
+.empty {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--nz-text-sm);
+}
+
+.table th {
+  text-align: end;
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  padding: var(--nz-space-2) var(--nz-space-3);
+  border-bottom: 1px solid var(--nz-line);
+}
+
+.table th:first-child, .table td:first-child {
+  text-align: start;
+}
+
+.table td {
+  text-align: end;
+  padding: var(--nz-space-2) var(--nz-space-3);
+  border-bottom: 1px solid var(--nz-line);
+}
+
+.cappedNote {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs);
+}
+
+.breadthNote {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  margin-top: var(--nz-space-4);
+}
+
+.methodology {
+  margin-top: var(--nz-space-8);
+  padding-top: var(--nz-space-6);
+  border-top: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+}
+
+.methodologyTitle {
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+  margin: 0 0 var(--nz-space-3);
+}
+
+.methodology p {
+  margin: 0 0 var(--nz-space-3);
+}

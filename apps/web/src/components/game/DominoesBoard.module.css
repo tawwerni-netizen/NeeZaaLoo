@@ -1,0 +1,191 @@
+/* Dominoes' own identity: a felt table (this game's own material -- see
+   packages/tokens/tokens.css's own "Game materials" section) under ivory
+   tiles with real pip geometry, never a flat glyph. Per the platform's own
+   "every game belongs to Nizalo, no two games look identical" rule, and
+   the brief's own "premium table experience, physical-feeling pieces,
+   clean tile interaction". */
+.wrap {
+  --tile-face: var(--nz-mat-ivory);
+  --tile-pip: var(--nz-mat-obsidian);
+  --tile-divider: rgba(11, 13, 16, 0.28);
+  --table-felt: var(--nz-mat-emerald);
+  --table-felt-2: var(--nz-mat-emerald-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+  width: 100%;
+}
+
+.opponentRow {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+}
+
+.handCountLabel {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+  letter-spacing: var(--nz-tracking-caps);
+  text-transform: uppercase;
+}
+
+.opponentTiles {
+  display: flex;
+  gap: 3px;
+}
+
+.tileBack {
+  width: 14px;
+  height: 22px;
+  border-radius: 3px;
+  background: linear-gradient(155deg, var(--nz-mat-obsidian), #23272e);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.table {
+  width: 100%;
+  border-radius: var(--nz-radius-xl);
+  background:
+    radial-gradient(120% 140% at 50% -10%, var(--table-felt-2) 0%, var(--table-felt) 55%, #0a2b22 100%);
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3)), inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+  padding: var(--nz-space-6) var(--nz-space-4);
+}
+
+.lineViewport {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--nz-space-8) var(--nz-space-2);
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 64px;
+  width: max-content;
+  margin-inline: auto;
+}
+
+.emptyHint {
+  font-size: var(--nz-text-sm);
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  padding-inline: var(--nz-space-4);
+}
+
+.endZone {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  min-width: 56px;
+  padding-inline: var(--nz-space-3);
+  border-radius: var(--nz-radius-md);
+  border: 2px dashed var(--nz-accent);
+  background: var(--nz-accent-soft);
+  color: var(--nz-accent);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  cursor: pointer;
+  animation: pulse 1.1s var(--nz-ease-inout) infinite;
+}
+
+.endLeft { left: var(--nz-space-2); }
+.endRight { right: var(--nz-space-2); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+.tile {
+  display: flex;
+  align-items: stretch;
+  border-radius: 6px;
+  background: linear-gradient(160deg, var(--tile-face), #e4ddca);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25), 0 4px 8px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.tile-sm { width: 36px; height: 60px; }
+.tile-md { width: 44px; height: 76px; }
+.tile-lg { width: 52px; height: 92px; }
+
+.half {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10%;
+}
+
+.divider {
+  width: 2px;
+  background: var(--tile-divider);
+  margin-block: 12%;
+}
+
+.pips {
+  width: 100%;
+  height: 100%;
+}
+
+.pips circle {
+  fill: var(--tile-pip);
+}
+
+.faded {
+  opacity: 0.4;
+  filter: grayscale(0.4);
+}
+
+.glow {
+  box-shadow: 0 0 0 3px var(--nz-accent), 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.handRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--nz-space-2);
+  padding: var(--nz-space-2);
+  width: 100%;
+}
+
+.handTile {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.handTile:disabled { cursor: default; }
+
+.passButton {
+  padding: var(--nz-space-2) var(--nz-space-6);
+  border-radius: var(--nz-radius-pill);
+  border: 1px solid var(--nz-line-strong);
+  background: var(--nz-surface-2);
+  color: var(--nz-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.passButton:hover {
+  background: var(--nz-surface-3);
+}
+
+@media (max-width: 640px) {
+  .tile-lg { width: 44px; height: 78px; }
+  .tile-md { width: 38px; height: 66px; }
+  .table { padding: var(--nz-space-4) var(--nz-space-2); }
+}

@@ -18,6 +18,8 @@
  */
 import { randomUUID } from "node:crypto";
 import { DEFAULT_SPAWNERS } from "./spawn.mjs";
+import { configForDifficulty as speedMathConfigForDifficulty } from "../../game-speed-math/src/plugin.mjs";
+import { resolveTimeControl } from "../../duel-engine/src/time-profiles.mjs";
 
 export const VsComputerError = Object.freeze({
   UNSUPPORTED_GAME: "UNSUPPORTED_GAME",
@@ -29,25 +31,59 @@ export const Difficulty = Object.freeze({
 });
 
 // Only a game with a REAL registered AI adapter may be played this way.
-// Today that is exactly chess (packages/game-chess/src/ai.mjs) -- adding a
-// second game here without a matching adapter would create a duel no bot
+// Adding a game here without a matching adapter wired into
+// apps/gateway|worker's own aiAdapters map would create a duel no bot
 // ever moves in, silently expiring on time instead of erroring loudly.
-const AI_SUPPORTED_GAMES = new Set(["chess"]);
+const AI_SUPPORTED_GAMES = new Set([
+  "chess", "checkers", "connect-four", "xo", "speed-math", "dominoes", "backgammon",
+  "seega", "reversi", "gomoku",
+]);
+
+/**
+ * Most games' difficulty only changes how well the BOT plays -- the
+ * position/board itself is the same fixed starting point regardless of
+ * who you're playing (a chess opening, an empty checkers/XO/Connect Four
+ * board). Speed Math is the one launch game where difficulty changes the
+ * CONTENT itself (see game-speed-math/src/plugin.mjs's own "CHALLENGE
+ * RULES" section) -- harder operations, larger operands -- and needs a
+ * matching round length, not the ALTERNATING default clock. This is the
+ * one place that distinction is resolved, explicitly, rather than
+ * quietly baked into the generic zero-argument spawner every ordinary
+ * ticket-paired duel also calls.
+ */
+function resolveChallengeFor(gameId, difficulty, spawned, requestedTimeControl) {
+  if (gameId === "speed-math") {
+    const config = speedMathConfigForDifficulty(difficulty);
+    return {
+      initialState: { seed: spawned.seed, config },
+      timeControl: { durationMs: config.durationMs },
+    };
+  }
+  return { initialState: spawned.initialState, timeControl: requestedTimeControl };
+}
 
 export function createVsComputerService(db) {
   return {
     async createDuel({
-      gameId, playerId, difficulty, timeControl = { initialMs: 300_000, incrementMs: 0 },
+      gameId, playerId, difficulty, timeControl,
     }) {
       if (!AI_SUPPORTED_GAMES.has(gameId)) {
         return { ok: false, reason: VsComputerError.UNSUPPORTED_GAME };
       }
+      // A per-game safe default, never chess's clock borrowed for every
+      // game -- see time-profiles.mjs. A caller (there is none in this
+      // codebase today) may still pass its own `timeControl`; Speed Math
+      // overrides it unconditionally just below regardless, since its
+      // difficulty already decides round length on its own.
+      timeControl ??= resolveTimeControl(gameId);
       if (!Object.values(Difficulty).includes(difficulty)) {
         return { ok: false, reason: VsComputerError.UNKNOWN_DIFFICULTY };
       }
 
       const spawn = DEFAULT_SPAWNERS[gameId];
-      const { initialState, seed } = spawn();
+      const spawned = spawn();
+      const { initialState, timeControl: resolvedTimeControl } =
+        resolveChallengeFor(gameId, difficulty, spawned, timeControl);
       const botId = `ai-${difficulty.toLowerCase()}`;
       const duelId = `vc_${randomUUID()}`;
 
@@ -60,7 +96,7 @@ export function createVsComputerService(db) {
             tier, stake_minor, initial_state, seed, time_control, status, is_vs_computer)
          VALUES ($1,$2,$3,$4,$5,$6,'FREE'::entry_tier,0,$7::jsonb,$8,$9::jsonb,'READY'::duel_status,TRUE)`,
         [duelId, gameId, pluginVersion, `vs-computer:${duelId}`, playerId, botId,
-          JSON.stringify(initialState), seed, JSON.stringify(timeControl)]
+          JSON.stringify(initialState), spawned.seed, JSON.stringify(resolvedTimeControl)]
       );
       return { ok: true, duelId, botId };
     },

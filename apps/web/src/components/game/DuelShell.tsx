@@ -21,7 +21,7 @@ import { useDuelSocket } from "@/lib/use-duel-socket";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { useProgressionSnapshot } from "@/lib/use-progression-snapshot";
-import { ChatWindow } from "@/components/chat/ChatWindow";
+import { ChatDrawer } from "@/components/chat/ChatDrawer";
 import { PlayerStrip } from "@/components/game/PlayerStrip";
 import { ResultCeremony } from "@/components/game/ResultCeremony";
 import { getGame } from "@/lib/games";
@@ -57,11 +57,42 @@ export function DuelShell({ duelId }: { duelId: string }) {
 
   const view = latest && typeof latest === "object" && "view" in latest ? (latest as { view: unknown }).view : null;
   const clock = latest && typeof latest === "object" && "clock" in latest
-    ? (latest as { clock: { remaining?: number[]; toMove?: number } }).clock
+    ? (latest as { clock: { model?: string; remaining?: number[]; toMove?: number; remainingMs?: number } }).clock
     : null;
-  const completed = latest?.t === "COMPLETED";
-  const result = completed ? String((latest as { result?: unknown }).result) : null;
-  const reason = completed ? String((latest as { reason?: unknown }).reason) : null;
+  // A SHARED clock (Speed Math -- see packages/duel-engine/src/clock.mjs's
+  // own header on why this is a genuinely different object, not an
+  // ALTERNATING clock with a flag) has no `toMove` and no per-seat
+  // `remaining` array at all -- only one flat `remainingMs` for the whole
+  // race. Reading `clock.toMove`/`clock.remaining[...]` against it is not
+  // "no data yet", it is comparing against `undefined` forever, which
+  // silently made every SIMULTANEOUS game's board permanently un-playable
+  // (canMove never true) and its clock strips permanently blank.
+  const isSharedClock = clock?.model === "SHARED";
+  // A live COMPLETED push (`t === "COMPLETED"`) is only ever seen by a
+  // client that was connected at the moment the duel ended. A fresh page
+  // load or a reconnect instead gets gateway.mjs's own `stateFor()` --
+  // always `t: "STATE"`, even for a duel that finished long ago -- with
+  // the result carried in its `status`/`outcome` fields instead. Checking
+  // only `t === "COMPLETED"` silently kept rendering the board (with
+  // working Resign/Offer Draw buttons) for an already-decided game
+  // forever, since that duel will never again emit a live COMPLETED
+  // event -- this is what actually makes "reconnect to a finished match"
+  // show the result instead of a dead board.
+  const stateStatus = latest?.t === "STATE" ? (latest as { status?: unknown }).status : null;
+  const stateOutcome = latest?.t === "STATE"
+    ? (latest as { outcome?: { result?: unknown; reason?: unknown } | null }).outcome
+    : null;
+  const completed = latest?.t === "COMPLETED" || stateStatus === "COMPLETED";
+  const result = latest?.t === "COMPLETED"
+    ? String((latest as { result?: unknown }).result)
+    : stateStatus === "COMPLETED" && stateOutcome
+    ? String(stateOutcome.result)
+    : null;
+  const reason = latest?.t === "COMPLETED"
+    ? String((latest as { reason?: unknown }).reason)
+    : stateStatus === "COMPLETED" && stateOutcome
+    ? String(stateOutcome.reason)
+    : null;
 
   const isSpectator = seat === null;
   const mySeat = typeof seat === "number" ? (seat as 0 | 1) : null;
@@ -94,8 +125,8 @@ export function DuelShell({ duelId }: { duelId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [players, opponentSeat]);
 
-  const canMove = !isSpectator && !completed && connected
-    && mySeat !== null && clock?.toMove === mySeat;
+  const canMove = !isSpectator && !completed && connected && mySeat !== null
+    && (isSharedClock ? true : clock?.toMove === mySeat);
 
   const lastMove = useMemo(() => {
     if (latest?.t !== "EVENT" || (latest as { type?: string }).type !== "INTENT_ACCEPTED") return null;
@@ -160,8 +191,8 @@ export function DuelShell({ duelId }: { duelId: string }) {
           {players && opponentSeat !== null && (
             <PlayerStrip
               playerId={players[opponentSeat] ?? ""}
-              active={clock?.toMove === opponentSeat}
-              remainingMs={clock?.remaining?.[opponentSeat] ?? null}
+              active={isSharedClock ? true : clock?.toMove === opponentSeat}
+              remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[opponentSeat] ?? null}
               flagged={false}
             />
           )}
@@ -177,8 +208,8 @@ export function DuelShell({ duelId }: { duelId: string }) {
           {players && mySeat !== null && (
             <PlayerStrip
               playerId={players[mySeat] ?? ""}
-              active={clock?.toMove === mySeat}
-              remainingMs={clock?.remaining?.[mySeat] ?? null}
+              active={isSharedClock ? true : clock?.toMove === mySeat}
+              remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[mySeat] ?? null}
               flagged={false}
             />
           )}
@@ -213,11 +244,9 @@ export function DuelShell({ duelId }: { duelId: string }) {
         {isSpectator ? t("game.watching_as", { handle: player?.handle ?? "" }) : t("game.playing_as", { handle: player?.handle ?? "" })}
       </p>
 
-      <div className={styles.chatSlot}>
-        {seat === undefined ? null : isSpectator
-          ? <ChatWindow channel="SPECTATOR" duelId={duelId} />
-          : <ChatWindow channel="MATCH" duelId={duelId} />}
-      </div>
+      {seat !== undefined && (
+        <ChatDrawer channelKind={isSpectator ? "SPECTATOR" : "MATCH"} duelId={duelId} />
+      )}
     </main>
   );
 }

@@ -98,7 +98,10 @@ describe("rake arithmetic", () => {
   });
 
   test("an out-of-range rake is refused, mirroring the DB constraint", () => {
-    assert.throws(() => computeRake(100n, { rakeBps: 2001 }), /out of bounds/);
+    // The approved band is 10%-25% (1000-2500 bps), or exactly 0 -- see
+    // rake.mjs's own header and db/migrations/0035_rake_ladder.sql.
+    assert.throws(() => computeRake(100n, { rakeBps: 2501 }), /out of bounds/);
+    assert.throws(() => computeRake(100n, { rakeBps: 500 }), /out of bounds/, "a sub-band value is not 'in range' just because it is less than 2500");
     assert.throws(() => computeRake(100n, { rakeBps: -1 }), /out of bounds/);
   });
 
@@ -402,7 +405,7 @@ describe("the economy rules engine", () => {
     );
   });
 
-  test("rake above the 20% ceiling is refused", async () => {
+  test("rake above the 25% ceiling is refused", async () => {
     const { db } = await fresh();
     await assert.rejects(
       () => db.query(
@@ -429,13 +432,13 @@ describe("the economy rules engine", () => {
     const { db, svc } = await fresh();
     await db.query(
       `INSERT INTO economy_rule (id,version,game_id,tier,rake_bps,effective_from,created_by,approved_by,reason)
-       VALUES ('chess-vip',1,'chess','CASH',800,'2026-01-01T00:00:00Z','a','b','VIP band for chess')`
+       VALUES ('chess-vip',1,'chess','CASH',1250,'2026-01-01T00:00:00Z','a','b','VIP band for chess')`
     );
     await svc.reserve("d1");
     await complete(db, "1-0");
     const res = await svc.settle("d1");
     assert.equal(res.rule.id, "chess-vip");
-    assert.equal(res.rakeMinor, "1600000", "8% of a 20 USDT pot is 1.6 USDT");
+    assert.equal(res.rakeMinor, "2500000", "12.5% of a 20 USDT pot is 2.5 USDT");
   });
 
   test("a duel is priced by the rule in force when it ENDED, not today's", async () => {

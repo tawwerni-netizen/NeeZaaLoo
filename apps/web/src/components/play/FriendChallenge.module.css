@@ -52,3 +52,19 @@
   display: flex;
   gap: var(--nz-space-2);
 }
+
+.stakeTag {
+  margin-inline-start: var(--nz-space-2);
+  padding: 2px var(--nz-space-2);
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-accent-soft);
+  color: var(--nz-accent);
+  font-size: var(--nz-text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-sm);
+}

@@ -46,8 +46,8 @@ async function duel(id, seat0, seat1, { status = "COMPLETED", result = "1-0" } =
 
 async function tournamentPairing(id, tournamentId, seat0, seat1) {
   await db.query(
-    `INSERT INTO tournament (id, game_id, format, capacity, time_control, registration_closes_at)
-     VALUES ($1,'chess','SINGLE_ELIMINATION',8,'{}'::jsonb, now() + interval '1 day')`,
+    `INSERT INTO tournament (id, game_id, format, capacity, time_control, registration_closes_at, ruleset_version)
+     VALUES ($1,'chess','SINGLE_ELIMINATION',8,'{}'::jsonb, now() + interval '1 day', 1)`,
     [tournamentId]
   );
   await db.query(

@@ -6,9 +6,57 @@
   margin-top: var(--nz-space-8);
 }
 
+.headingRow {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  padding-top: var(--nz-space-4);
+}
+
+.gameName {
+  font-size: var(--nz-text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+}
+
+.statusPill {
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  background: var(--nz-surface-2);
+  color: var(--nz-text-2);
+}
+
+.status_REGISTRATION {
+  background: var(--nz-accent-soft);
+  color: var(--nz-accent);
+}
+
+.status_LIVE {
+  background: color-mix(in srgb, var(--nz-loss) 16%, transparent);
+  color: var(--nz-loss);
+}
+
+.status_FINALS {
+  background: color-mix(in srgb, var(--nz-warn) 18%, transparent);
+  color: var(--nz-warn);
+}
+
 .heading {
   font-size: var(--nz-text-2xl);
-  padding-block: var(--nz-space-4) var(--nz-space-4);
+  padding-block: var(--nz-space-2) var(--nz-space-2);
+}
+
+.description {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  max-width: 60ch;
+  padding-bottom: var(--nz-space-4);
 }
 
 .metaRow {
@@ -46,6 +94,77 @@
 .error {
   color: var(--nz-loss);
   font-size: var(--nz-text-sm);
+}
+
+.bracket {
+  padding-bottom: var(--nz-space-10);
+}
+
+.sectionHeading {
+  font-size: var(--nz-text-lg);
+  margin-bottom: var(--nz-space-4);
+}
+
+.round {
+  margin-bottom: var(--nz-space-5);
+}
+
+.roundLabel {
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+  margin-bottom: var(--nz-space-2);
+}
+
+.pairingList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+}
+
+.pairingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-3);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  font-size: var(--nz-text-sm);
+}
+
+.pairingPlayers {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  min-width: 0;
+}
+
+.pairingVs {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+}
+
+.pairingResult {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs);
+  flex-shrink: 0;
+}
+
+.watchLink {
+  flex-shrink: 0;
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  background: color-mix(in srgb, var(--nz-loss) 16%, transparent);
+  color: var(--nz-loss);
+  text-decoration: none;
 }
 
 .standings {

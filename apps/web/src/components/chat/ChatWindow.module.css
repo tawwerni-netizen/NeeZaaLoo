@@ -5,7 +5,11 @@
   border: 1px solid var(--nz-line);
   border-radius: var(--nz-radius-lg);
   background: var(--nz-surface-1);
-  height: 480px;
+  /* A caller that needs a different size (ChatDrawer, sizing itself as a
+     floating panel or a mobile bottom sheet) sets --chat-window-height on
+     an ancestor; the standalone /chat page sets none and keeps this
+     original fixed height. */
+  height: var(--chat-window-height, 480px);
   overflow: hidden;
 }
 
@@ -29,6 +33,13 @@
 .status {
   font-size: var(--nz-text-xs);
   color: var(--nz-text-3);
+}
+
+/* With the title hidden (ChatDrawer already shows it in its own bar), the
+   status dot is the header row's only child -- push it to the same end
+   `justify-content: space-between` would have placed it at otherwise. */
+.statusAlone {
+  margin-inline-start: auto;
 }
 
 .statusLive::before {
@@ -59,6 +70,22 @@
 .row {
   display: flex;
   gap: var(--nz-space-3);
+}
+
+.systemRow {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--nz-space-1);
+}
+
+.systemLabel {
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+  background: var(--nz-surface-2);
+  border-radius: var(--nz-radius-pill);
+  padding: 2px var(--nz-space-3);
 }
 
 .bubble {

@@ -13,14 +13,20 @@
 /** ALTERNATING: add 1-3 to a running total; first to reach the target wins. */
 export const TARGET = 10;
 
-export function makeCounterPlugin({ emitMilestones = false } = {}) {
+export function makeCounterPlugin({ emitMilestones = false, firstMover = 0 } = {}) {
   return {
     id: "counter",
     version: 1,
     turnModel: "ALTERNATING",
 
+    // `turn` here is a real launch-plugin convention (every ALTERNATING
+    // plugin's own project()/applyIntent read `state.turn`) -- exposed on
+    // this fixture, defaulting to seat 0 like every existing launch game,
+    // so a test can construct the one case none of them do: a game whose
+    // own opening leader is seat 1 (see createClock's own header on why
+    // that case matters).
     createChallenge(seed, config = {}) {
-      return { state: { total: 0, lastSeat: null }, publicSeed: null };
+      return { state: { total: 0, lastSeat: null, turn: firstMover }, publicSeed: null };
     },
 
     rehydrate(initial) {

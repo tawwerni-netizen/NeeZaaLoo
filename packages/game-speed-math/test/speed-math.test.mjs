@@ -7,7 +7,7 @@
  */
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { SpeedMathPlugin, DEFAULT_CONFIG } from "../src/plugin.mjs";
+import { SpeedMathPlugin, DEFAULT_CONFIG, DIFFICULTY_CONFIG, Difficulty, configForDifficulty } from "../src/plugin.mjs";
 import { ChessPlugin } from "../../game-chess/src/plugin.mjs";
 import {
   createDuel, start, runIntent, resign, claimTimeout, registerPlugin,
@@ -305,6 +305,59 @@ describe("automation signals", () => {
       }
     }
   });
+
+  test("a sustained inhuman answer rate raises PERFORMANCE_ANOMALY, distinct from a single impossible answer", () => {
+    // Every individual gap stays at or above the 220ms IMPOSSIBLE_INPUT
+    // floor (so that check never fires), but the SUSTAINED average across
+    // 20 answers in a row is still far below what a human keeps up.
+    const gaps = [240, 265, 225, 270, 250, 260, 230, 275, 245, 255, 235, 268, 242, 258, 228, 272, 248, 262, 238, 266];
+    const d = timedRun(gaps);
+    const signals = SpeedMathPlugin.fairPlaySignals(d.state, { seat: 0 });
+    assert.ok(!signals.some((s) => s.kind === "IMPOSSIBLE_INPUT"), "no single answer was under the 220ms floor");
+    const anomaly = signals.find((s) => s.kind === "PERFORMANCE_ANOMALY");
+    assert.ok(anomaly, "a sustained ~250ms/answer pace over 20 answers is not human-sustainable");
+    assert.equal(anomaly.observedValue.samples, 19); // the first answer has no prior answer to measure a gap from
+  });
+
+  test("flat near-perfect accuracy across easy and hard operations raises ACCURACY", () => {
+    const hardConfig = { ...CONFIG, operations: ["+", "-", "*", "/"], multiplyMax: 12, questionCount: 60 };
+    const d = createDuel({
+      duelId: "sm-accuracy", plugin: SpeedMathPlugin, players: ["alice", "bob"],
+      seed: "seed-accuracy-mix", config: hardConfig, timeControl: { durationMs: hardConfig.durationMs }, now: 0,
+    });
+    const live = start(d, 0);
+    let t = 0;
+    // Answer every question correctly, regardless of operation -- a
+    // human's accuracy would normally drop on the harder ones.
+    for (let i = 0; i < hardConfig.questionCount; i++) {
+      play(live, 0, correctAnswer(live, 0), (t += 900));
+    }
+    const signals = SpeedMathPlugin.fairPlaySignals(live.state, { seat: 0 });
+    const accuracy = signals.find((s) => s.kind === "ACCURACY");
+    assert.ok(accuracy, "100% accuracy on both simple and harder operations must raise a challenge-consistency signal");
+    assert.equal(accuracy.observedValue.simpleAccuracy, 1);
+    assert.equal(accuracy.observedValue.harderAccuracy, 1);
+  });
+
+  test("a human-shaped accuracy drop on harder operations raises nothing", () => {
+    const hardConfig = { ...CONFIG, operations: ["+", "-", "*", "/"], multiplyMax: 12, questionCount: 60 };
+    const d = createDuel({
+      duelId: "sm-human-accuracy", plugin: SpeedMathPlugin, players: ["alice", "bob"],
+      seed: "seed-accuracy-human", config: hardConfig, timeControl: { durationMs: hardConfig.durationMs }, now: 0,
+    });
+    const live = start(d, 0);
+    let t = 0;
+    for (let i = 0; i < hardConfig.questionCount; i++) {
+      const p = live.state.progress[0];
+      const q = live.state.questions[p.index];
+      // Get the harder operations wrong roughly a third of the time --
+      // exactly the accuracy DROP a real human's would show.
+      const wrong = (q.op === "*" || q.op === "/") && i % 3 === 0;
+      play(live, 0, wrong ? q.answer + 1 : q.answer, (t += 900));
+    }
+    const signals = SpeedMathPlugin.fairPlaySignals(live.state, { seat: 0 });
+    assert.ok(!signals.some((s) => s.kind === "ACCURACY"), "a real accuracy drop on harder operations must not be flagged");
+  });
 });
 
 describe("replay stores the seed, not the questions", () => {
@@ -387,5 +440,55 @@ describe("the plugin boundary held", () => {
     const last = play(d, 1, correctAnswer(d, 1), 1600);
     assert.equal(last.completed, true);
     assert.equal(d.status, DuelState.COMPLETED);
+  });
+});
+
+describe("difficulty tiers (Nizalo Speed Math Challenge Rules v1)", () => {
+  test("MEDIUM (or no difficulty at all) reproduces plain DEFAULT_CONFIG exactly", () => {
+    assert.deepEqual(configForDifficulty(Difficulty.MEDIUM), DEFAULT_CONFIG);
+    assert.deepEqual(configForDifficulty(undefined), DEFAULT_CONFIG);
+    assert.deepEqual(configForDifficulty("not-a-real-tier"), DEFAULT_CONFIG);
+  });
+
+  test("EASY never generates multiplication or division", () => {
+    const cfg = configForDifficulty(Difficulty.EASY, { questionCount: 100 });
+    const { state } = SpeedMathPlugin.createChallenge("seed-easy", cfg);
+    for (const q of state.questions) assert.ok(["+", "-"].includes(q.op));
+  });
+
+  test("only HARD and EXPERT ever generate division", () => {
+    for (const tier of [Difficulty.EASY, Difficulty.MEDIUM]) {
+      const cfg = configForDifficulty(tier, { questionCount: 100 });
+      const { state } = SpeedMathPlugin.createChallenge(`seed-${tier}`, cfg);
+      assert.ok(!state.questions.some((q) => q.op === "/"), `${tier} must never generate division`);
+    }
+    for (const tier of [Difficulty.HARD, Difficulty.EXPERT]) {
+      assert.ok(DIFFICULTY_CONFIG[tier].operations.includes("/"));
+    }
+  });
+
+  test("division questions always have a clean integer answer, and the dividend equals divisor times quotient", () => {
+    const cfg = configForDifficulty(Difficulty.HARD, { questionCount: 200 });
+    const { state } = SpeedMathPlugin.createChallenge("seed-division", cfg);
+    const divisions = state.questions.filter((q) => q.op === "/");
+    assert.ok(divisions.length > 0, "200 HARD questions should include at least one division");
+    for (const q of divisions) {
+      assert.ok(Number.isInteger(q.answer));
+      assert.equal(q.b * q.answer, q.a, "dividend must equal divisor x quotient exactly");
+    }
+  });
+
+  test("subtraction never produces a negative answer, at any tier", () => {
+    for (const tier of Object.values(Difficulty)) {
+      const cfg = configForDifficulty(tier, { questionCount: 100 });
+      const { state } = SpeedMathPlugin.createChallenge(`seed-sub-${tier}`, cfg);
+      for (const q of state.questions.filter((x) => x.op === "-")) {
+        assert.ok(q.answer >= 0, `${tier} subtraction produced a negative answer: ${q.a}-${q.b}`);
+      }
+    }
+  });
+
+  test("EXPERT reaches larger operands than EASY", () => {
+    assert.ok(DIFFICULTY_CONFIG[Difficulty.EXPERT].maxOperand > DIFFICULTY_CONFIG[Difficulty.EASY].maxOperand);
   });
 });

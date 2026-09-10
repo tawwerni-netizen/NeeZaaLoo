@@ -7,6 +7,13 @@
  * structured intent -- every real move such a game's client sent was refused
  * before it ever reached the plugin. See the end-to-end Speed Math test for
  * how this was found.
+ *
+ * The same class of bug recurred for Connect Four (a bare number -- a
+ * column index -- deliberately the simplest possible intent shape; see
+ * packages/game-connect-four/src/plugin.mjs's own header) and was found
+ * the same way: a real game's every real move refused at the transport
+ * layer before ever reaching its plugin. Widened again here, the same
+ * way it was widened for Speed Math.
  */
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
@@ -38,12 +45,16 @@ describe("parseClientFrame: intent shape", () => {
     assert.equal(r.code, ErrorCode.BAD_FRAME);
   });
 
-  test("a bare number or boolean intent is refused", () => {
-    for (const bad of [42, true]) {
-      const r = parseClientFrame(frame({ t: ClientMsg.INTENT, duelId: "d1", intent: bad }));
-      assert.equal(r.ok, false, `intent=${JSON.stringify(bad)} should be refused`);
-      assert.equal(r.code, ErrorCode.BAD_FRAME);
-    }
+  test("a bare finite number intent (connect four) is accepted", () => {
+    const r = parseClientFrame(frame({ t: ClientMsg.INTENT, duelId: "d1", intent: 3 }));
+    assert.equal(r.ok, true);
+    assert.equal(r.msg.intent, 3);
+  });
+
+  test("a bare boolean intent is refused -- no plugin has ever needed one", () => {
+    const r = parseClientFrame(frame({ t: ClientMsg.INTENT, duelId: "d1", intent: true }));
+    assert.equal(r.ok, false);
+    assert.equal(r.code, ErrorCode.BAD_FRAME);
   });
 
   test("token, duelId and as are still string-only", () => {

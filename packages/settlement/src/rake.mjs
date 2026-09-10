@@ -24,9 +24,12 @@ export function computeRake(potMinor, rule) {
   if (potMinor < 0n) throw new RangeError("potMinor cannot be negative");
 
   const bps = BigInt(rule.rakeBps);
-  if (bps < 0n || bps > 2000n) {
-    // Mirrors the economy_rule_rake_sane constraint. If these ever disagree,
-    // the application is the one that is wrong.
+  // Mirrors economy_rule_rake_sane (db/migrations/0035_rake_ladder.sql)
+  // exactly: either zero (a rule that charges nothing) or inside the
+  // documented 10%-25% competitive band. If these two ever disagree, the
+  // application is the one that is wrong.
+  const valid = bps === 0n || (bps >= 1000n && bps <= 2500n);
+  if (!valid) {
     throw new RangeError(`rakeBps out of bounds: ${rule.rakeBps}`);
   }
 

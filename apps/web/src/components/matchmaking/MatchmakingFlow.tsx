@@ -27,6 +27,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import { Countdown } from "@/components/game/Countdown";
+import type { StakeChoice } from "@/components/play/StakeSelect";
 import styles from "./MatchmakingFlow.module.css";
 
 type Ticket = { id: string; game_id: string; status: string; duel_id: string | null; enqueued_at: string } | null;
@@ -35,7 +36,7 @@ type OpponentInfo = { id: string; handle: string };
 
 const GAME_NAME_KEY: Record<string, string> = { chess: "chess", "speed-math": "speed_math" };
 
-export function MatchmakingFlow({ gameId }: { gameId: string }) {
+export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: StakeChoice }) {
   const { player } = useAuth();
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -54,7 +55,10 @@ export function MatchmakingFlow({ gameId }: { gameId: string }) {
     cancelledRef.current = false;
     (async () => {
       try {
-        await post("/v1/matchmaking/tickets", { gameId });
+        await post("/v1/matchmaking/tickets", {
+          gameId,
+          ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor } : {}),
+        });
         if (!cancelledRef.current) setPhase("waiting");
       } catch (e) {
         if (e instanceof ApiError && e.code === "ALREADY_QUEUED") {

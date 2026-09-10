@@ -76,9 +76,7 @@ describe("instrument: against a REAL service, not a fixture built to fit it", ()
   async function freshDb() {
     const db = await PGlite.create();
     await migrate(db);
-    await db.query(
-      "INSERT INTO game (id, display_name, plugin_version, is_live) VALUES ('speed-math','Speed Math',1,TRUE)"
-    );
+    // speed-math's own row already exists from migration 0029.
     for (const p of ["ply1", "ply2"]) await db.query("INSERT INTO player (id, handle) VALUES ($1,$1)", [p]);
     return db;
   }

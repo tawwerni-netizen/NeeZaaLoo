@@ -43,6 +43,63 @@
   flex-wrap: wrap;
 }
 
+.featured {
+  margin-block-start: var(--nz-space-10);
+}
+
+.featuredLabel {
+  display: block;
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  letter-spacing: var(--nz-tracking-caps);
+  text-transform: uppercase;
+  color: var(--nz-text-3);
+  margin-block-end: var(--nz-space-3);
+}
+
+.featuredList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nz-space-2);
+}
+
+.featuredChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px 6px 6px;
+  border-radius: var(--nz-radius-pill);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-1);
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out),
+              color var(--nz-dur-fast) var(--nz-ease-out),
+              transform var(--nz-dur-fast) var(--nz-ease-out);
+}
+.featuredChip:hover {
+  border-color: var(--nz-accent-line);
+  color: var(--nz-text);
+  transform: translateY(-1px);
+}
+
+.featuredGlyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--nz-surface-3);
+  color: var(--nz-text);
+  font-family: var(--nz-font-display);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .visual {
   display: flex;
   justify-content: center;

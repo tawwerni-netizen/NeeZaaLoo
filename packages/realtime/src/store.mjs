@@ -12,7 +12,7 @@
  *      recovery is wrong, replay verification is wrong, and the audit tests
  *      catch it.
  */
-import { DuelState } from "../../duel-engine/src/duel.mjs";
+import { DuelState, deriveSequenceState } from "../../duel-engine/src/duel.mjs";
 import { sharedRemaining } from "../../duel-engine/src/clock.mjs";
 
 export function createDuelStore(db, { emit = () => {} } = {}) {
@@ -221,6 +221,11 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
           payload: e.payload,
           serverTimeMs: Number(e.server_time_ms),
         })),
+        // Sequence admission (A5): derived fresh from the SAME event rows
+        // just replayed into `state` above, never a second stored copy --
+        // see deriveSequenceState's own header for why this can never
+        // drift from the log it's computed from.
+        seq: deriveSequenceState(events.map((e) => ({ type: e.type, payload: e.payload }))),
         startedAt: cs.startedAtMs ?? 0,
         outcome: row.result
           ? { result: row.result, reason: row.termination_reason }

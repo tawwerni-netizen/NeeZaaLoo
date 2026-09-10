@@ -29,6 +29,12 @@ export const EXP_AMOUNTS = Object.freeze({
   GAME_WON: 25,
   TOURNAMENT_PARTICIPATION: 50,
   ACHIEVEMENT: 100,
+  // Healthy-streak milestones (packages/engagement/src/streaks.mjs) --
+  // larger for a longer run, but still a fixed, disclosed number rather
+  // than anything resembling a jackpot.
+  STREAK_3: 20,
+  STREAK_7: 50,
+  STREAK_30: 200,
 });
 
 export function createExpService(db, { now = () => Date.now() } = {}) {

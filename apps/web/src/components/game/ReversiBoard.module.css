@@ -1,0 +1,86 @@
+/* Reversi's own identity: clean, strategic, high-contrast, premium --
+   deliberately the coldest, most minimal board on the platform. No felt,
+   no wood, no ornament: a near-black board, a crisp grid, and pure
+   high-contrast discs. Local, scoped custom properties, same pattern as
+   every other game's own board CSS. */
+.wrap {
+  --board-ground: #16181C;
+  --grid-line: #262A31;
+  --disc-a: #0B0D10;
+  --disc-a-hi: #34383F;
+  --disc-b: #F7F8FA;
+  --disc-b-hi: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+}
+
+.board {
+  perspective: 600px;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 1px;
+  width: min(92vw, 520px);
+  aspect-ratio: 1 / 1;
+  background: var(--grid-line);
+  border-radius: var(--nz-radius-md);
+  overflow: hidden;
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3)), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 8%;
+  background: var(--board-ground);
+  cursor: pointer;
+  font: inherit;
+  transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.cell:disabled { cursor: default; }
+
+.legal:not(:disabled):hover {
+  background: #1D2027;
+}
+
+.hint {
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: var(--nz-accent);
+  opacity: 0.55;
+}
+
+.disc {
+  width: 84%;
+  height: 84%;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5), inset 0 -2px 4px rgba(0, 0, 0, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.18);
+}
+
+.discA { background: radial-gradient(circle at 35% 30%, var(--disc-a-hi), var(--disc-a) 70%); }
+.discB { background: radial-gradient(circle at 35% 30%, var(--disc-b-hi), var(--disc-b) 70%); }
+
+.passButton {
+  padding: var(--nz-space-2) var(--nz-space-6);
+  border-radius: var(--nz-radius-pill);
+  border: 1px solid var(--nz-line-strong);
+  background: var(--nz-surface-2);
+  color: var(--nz-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.passButton:hover { background: var(--nz-surface-3); }
+
+@media (max-width: 640px) {
+  .board { width: 94vw; }
+}

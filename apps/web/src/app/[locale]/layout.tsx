@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Archivo, IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { IncomingChallengeWatcher } from "@/components/play/IncomingChallengeWatcher";
+import { AuthPopupProvider } from "@/lib/auth-popup-context";
+import { AuthPopup, AuthPopupAutoOpen } from "@/components/auth/AuthPopup";
 import { I18nProvider } from "@/lib/i18n/context";
 import { SUPPORTED_LOCALE_CODES, DEFAULT_LOCALE, directionFor, isSupportedLocale } from "@/lib/i18n/locale";
 import { RESOURCES } from "@/lib/i18n/resources";
@@ -61,7 +64,14 @@ export default async function LocaleLayout({
     <html lang={locale} dir={dir} className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} ${plexArabic.variable}`}>
       <body>
         <I18nProvider locale={locale}>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <AuthPopupProvider>
+              {children}
+              <IncomingChallengeWatcher />
+              <AuthPopupAutoOpen />
+              <AuthPopup />
+            </AuthPopupProvider>
+          </AuthProvider>
         </I18nProvider>
       </body>
     </html>

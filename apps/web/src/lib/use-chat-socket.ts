@@ -54,8 +54,23 @@ export function useChatChannel(spec: ChannelSpec) {
         const r = await get<ChatHistoryResponse>(historyPath);
         if (cancelled) return;
         const ordered = [...r.messages].reverse(); // service returns newest-first
-        setMessages(ordered);
-        lastSeenIdRef.current = ordered.length ? ordered[ordered.length - 1]!.id : null;
+        // System events (MATCH_STARTED today) are a SEPARATE, unbounded read
+        // (see server.mjs's own comment) merged into the SAME visual
+        // timeline here by timestamp -- chat_message's own id-based
+        // pagination is never touched by this, since these never page.
+        const systemRows: ChatMessage[] = (r.systemEvents ?? []).map((e, i) => ({
+          id: `sys_${i}_${e.createdAt}`,
+          channelId: r.channelId ?? "",
+          senderId: "", nickname: "", avatarUrl: null, badge: null, content: null, removed: false,
+          createdAt: e.createdAt,
+          system: { eventType: e.eventType },
+        }));
+        const merged = [...ordered, ...systemRows].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        setMessages(merged);
+        const lastReal = ordered.length ? ordered[ordered.length - 1]!.id : null;
+        lastSeenIdRef.current = lastReal;
       } catch {
         // A failed initial load is not fatal -- the socket may still connect
         // and deliver new messages; the customer simply starts from "now".

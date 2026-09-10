@@ -1,0 +1,332 @@
+.wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--nz-space-8) var(--nz-space-4) var(--nz-space-16);
+}
+
+.title {
+  font-size: var(--nz-text-2xl);
+  margin: 0 0 var(--nz-space-2);
+}
+
+.subtitle {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  margin: 0 0 var(--nz-space-8);
+  max-width: 60ch;
+}
+
+.section {
+  margin-bottom: var(--nz-space-10);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--nz-space-3);
+  margin-bottom: var(--nz-space-3);
+}
+
+.sectionTitle {
+  font-size: var(--nz-text-md);
+  font-weight: 600;
+  margin: 0;
+}
+
+.sectionNote {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs);
+  margin: 0;
+}
+
+.notice {
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-4) var(--nz-space-5);
+  background: var(--nz-surface-1);
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+}
+
+.errorNotice {
+  composes: notice;
+  border-color: var(--nz-loss);
+  color: var(--nz-loss);
+  background: color-mix(in srgb, var(--nz-loss) 8%, var(--nz-surface-1));
+}
+
+/* --- Global controls ------------------------------------------------- */
+
+.controlGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--nz-space-3);
+}
+
+.controlCard {
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  background: var(--nz-surface-1);
+  padding: var(--nz-space-4) var(--nz-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-3);
+}
+
+.controlLabel {
+  font-weight: 600;
+}
+
+.controlMeta {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs);
+}
+
+.controlFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-2);
+}
+
+.emergencyRow {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  margin-top: var(--nz-space-3);
+  padding-top: var(--nz-space-3);
+  border-top: 1px solid var(--nz-line);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+}
+
+/* --- Rail cards -------------------------------------------------------- */
+
+.railList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-4);
+}
+
+.railCard {
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  background: var(--nz-surface-1);
+  overflow: hidden;
+}
+
+.railHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-3);
+  padding: var(--nz-space-4) var(--nz-space-5);
+  border-bottom: 1px solid var(--nz-line);
+  flex-wrap: wrap;
+}
+
+.railName {
+  display: flex;
+  align-items: baseline;
+  gap: var(--nz-space-2);
+}
+
+.railAsset {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-lg);
+  font-weight: 600;
+}
+
+.railNetwork {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+}
+
+.badgeRow {
+  display: flex;
+  gap: var(--nz-space-2);
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  letter-spacing: var(--nz-tracking-caps);
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge-active   { color: var(--nz-win);  background: color-mix(in srgb, var(--nz-win) 14%, transparent); }
+.badge-degraded { color: var(--nz-warn); background: color-mix(in srgb, var(--nz-warn) 16%, transparent); }
+.badge-paused   { color: var(--nz-warn); background: color-mix(in srgb, var(--nz-warn) 16%, transparent); }
+.badge-disabled { color: var(--nz-text-3); background: var(--nz-surface-2); }
+.badge-emergency{ color: var(--nz-loss); background: color-mix(in srgb, var(--nz-loss) 16%, transparent); }
+.badge-unknown  { color: var(--nz-info); background: color-mix(in srgb, var(--nz-info) 14%, transparent); }
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--nz-space-4);
+  padding: var(--nz-space-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fieldLabel {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+}
+
+.fieldValue {
+  font-size: var(--nz-text-sm);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--nz-font-num);
+}
+
+.fieldValueProse {
+  font-size: var(--nz-text-sm);
+  font-family: var(--nz-font-ui);
+}
+
+.railActions {
+  display: flex;
+  gap: var(--nz-space-2);
+  padding: 0 var(--nz-space-5) var(--nz-space-5);
+  flex-wrap: wrap;
+}
+
+.historyList {
+  list-style: none;
+  margin: 0;
+  padding: var(--nz-space-4) var(--nz-space-5);
+  border-top: 1px solid var(--nz-line);
+  background: var(--nz-surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-3);
+}
+
+.historyEntry {
+  font-size: var(--nz-text-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.historyField {
+  font-weight: 600;
+  font-family: var(--nz-font-num);
+}
+
+.historyMeta {
+  color: var(--nz-text-3);
+}
+
+.historyEmpty {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+  padding: var(--nz-space-4) var(--nz-space-5);
+  border-top: 1px solid var(--nz-line);
+}
+
+/* --- Forms -------------------------------------------------------------- */
+
+.panel {
+  border-top: 1px solid var(--nz-line);
+  padding: var(--nz-space-5);
+  background: var(--nz-surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-4);
+}
+
+.panelTitle {
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  margin: 0;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: var(--nz-space-3);
+}
+
+.checkGrid {
+  display: flex;
+  gap: var(--nz-space-5);
+  flex-wrap: wrap;
+}
+
+.checkField {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  font-size: var(--nz-text-sm);
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.formField label {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+}
+
+.formField input,
+.formField select {
+  font: inherit;
+  font-size: var(--nz-text-sm);
+  padding: var(--nz-space-2) var(--nz-space-3);
+  border: 1px solid var(--nz-line-strong);
+  border-radius: var(--nz-radius-sm);
+  background: var(--nz-surface-1);
+  color: var(--nz-text);
+}
+
+.formField input:focus-visible,
+.formField select:focus-visible {
+  outline: none;
+  box-shadow: var(--nz-focus);
+}
+
+.panelActions {
+  display: flex;
+  gap: var(--nz-space-3);
+  align-items: center;
+}
+
+.error {
+  color: var(--nz-loss);
+  font-size: var(--nz-text-sm);
+  margin: 0;
+}
+
+.message {
+  color: var(--nz-win);
+  font-size: var(--nz-text-sm);
+  margin: 0;
+}

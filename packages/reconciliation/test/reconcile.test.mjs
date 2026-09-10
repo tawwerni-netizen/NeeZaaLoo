@@ -15,6 +15,8 @@ import { migrate } from "../../ledger/src/migrate.mjs";
 import { createReconciliationService, RunOutcome } from "../src/reconcile.mjs";
 import { createPaymentService } from "../../payments/src/payments.mjs";
 import { ProviderPaymentState, ProviderPayoutState } from "../../payments/src/provider.mjs";
+import { createDuel, start, runIntent } from "../../duel-engine/src/duel.mjs";
+import { ChessPlugin } from "../../game-chess/src/plugin.mjs";
 
 const USDT = 1_000_000n;
 const u = (n) => (BigInt(n) * USDT).toString();
@@ -240,8 +242,8 @@ describe("provider reconciliation: deposits", () => {
     const db = await fresh();
     await player(db, "alice");
     await pendingDeposit(db);
-    const chain = { async getIncoming() {
-      return { txHash: "0xok", outputIndex: 0, amountMinor: u(10), asset: "USDT", network: "TRON", address: "Taddr", confirmations: 30 };
+    const chain = { async verifyIncoming({ network }) {
+      return { outcome: "VERIFIED", txHash: "0xok", outputIndex: 0, amountRaw: u(10), asset: "USDT", network, confirmations: 30 };
     } };
     const paymentSvc = createPaymentService(db, { provider: fakeProvider(async () => ({ state: ProviderPaymentState.CONFIRMED })), chain });
     const provider = { id: "sandbox", getPayment: async () => ({ state: ProviderPaymentState.CONFIRMED }) };
@@ -257,7 +259,7 @@ describe("provider reconciliation: deposits", () => {
     const db = await fresh();
     await player(db, "alice");
     await pendingDeposit(db);
-    const chain = { async getIncoming() { return null; } };
+    const chain = { async verifyIncoming() { return { outcome: "NOT_FOUND" }; } };
     const paymentSvc = createPaymentService(db, { provider: {}, chain });
     const provider = { getPayment: async () => ({ state: ProviderPaymentState.CONFIRMED }) };
     const svc = createReconciliationService(db, { paymentSvc, provider });
@@ -272,7 +274,7 @@ describe("provider reconciliation: deposits", () => {
     const db = await fresh();
     await player(db, "alice");
     await pendingDeposit(db);
-    const paymentSvc = createPaymentService(db, { provider: {}, chain: { async getIncoming() { return null; } } });
+    const paymentSvc = createPaymentService(db, { provider: {}, chain: { async verifyIncoming() { return { outcome: "NOT_FOUND" }; } } });
     const provider = { getPayment: async () => ({ state: ProviderPaymentState.FAILED }) };
     const svc = createReconciliationService(db, { paymentSvc, provider });
 
@@ -285,7 +287,7 @@ describe("provider reconciliation: deposits", () => {
     const db = await fresh();
     await player(db, "alice");
     await pendingDeposit(db, { status: "QUARANTINED" });
-    const paymentSvc = createPaymentService(db, { provider: {}, chain: { async getIncoming() { return null; } } });
+    const paymentSvc = createPaymentService(db, { provider: {}, chain: { async verifyIncoming() { return { outcome: "NOT_FOUND" }; } } });
     const provider = { getPayment: async () => ({ state: ProviderPaymentState.FAILED }) };
     const svc = createReconciliationService(db, { paymentSvc, provider });
     const result = await svc.runProviderDeposits();
@@ -334,7 +336,20 @@ describe("provider reconciliation: withdrawals", () => {
     await processingWithdrawal(db);
     const paymentSvc = createPaymentService(db, {
       provider: { id: "sandbox", getPayout: async () => ({ state: ProviderPayoutState.CONFIRMED, txHash: "0xabc" }) },
-      chain: {},
+      // The provider's CONFIRMED claim alone never completes a payout --
+      // reconcile() only advances on Nizalo's OWN chain read (the outbound
+      // mirror of the deposit rule), so this test's chain double has to
+      // actually answer VERIFIED, exactly like a real BlockchainProvider
+      // would for a payout that genuinely landed.
+      chain: {
+        async verifyTransfer({ txHash, expectedNetwork, expectedRecipient, requiredConfirmations }) {
+          return {
+            outcome: "VERIFIED", txHash, network: expectedNetwork, asset: "USDT",
+            to: expectedRecipient, from: "Tplatformcustody00000000000000000",
+            amountRaw: "0", blockNumber: 999, confirmations: requiredConfirmations ?? 20,
+          };
+        },
+      },
     });
     const provider = { getPayout: async () => ({ state: ProviderPayoutState.CONFIRMED, txHash: "0xabc" }) };
     const svc = createReconciliationService(db, { paymentSvc, provider });
@@ -409,9 +424,9 @@ describe("prize SLA", () => {
   async function makeTournament(db, id, { completedMinutesAgo = 90, settled = false } = {}) {
     await db.query(
       `INSERT INTO tournament (id, game_id, format, status, capacity, min_players,
-                               time_control, registration_closes_at, completed_at)
+                               time_control, registration_closes_at, completed_at, ruleset_version)
        VALUES ($1,'chess','SINGLE_ELIMINATION','COMPLETED',4,2,'{}'::jsonb,
-               now() - interval '1 day', now() - ($2 || ' minutes')::interval)`,
+               now() - interval '1 day', now() - ($2 || ' minutes')::interval, 1)`,
       [id, String(completedMinutesAgo)]
     );
     if (settled) {
@@ -438,6 +453,103 @@ describe("prize SLA", () => {
     await makeTournament(db, "t2", { completedMinutesAgo: 90, settled: true });
     const svc = createReconciliationService(db);
     const result = await svc.runPrizeSla({ slaMinutes: 60 });
+    assert.equal(result.checked, 0);
+  });
+});
+
+describe("replay verification (F-11: nothing independently re-derived a paid duel's result before this)", () => {
+  const plugins = new Map([["chess", ChessPlugin]]);
+  const TC = { initialMs: 300000, incrementMs: 0 };
+
+  /**
+   * Plays real Fool's Mate (1.f3 e5 2.g4 Qh4#) through the actual engine --
+   * runIntent(), the exact function a live game uses -- so `duel.outcome`
+   * is a genuine, rules-derived result: black wins by checkmate ("0-1").
+   * Persists the duel row and its real duel_event log, but lets the caller
+   * claim any result on the ROW -- this is what lets one test claim the
+   * true result (no mismatch) and another claim a fabricated one (caught).
+   */
+  async function makeCashDuel(db, id, { claimedResult, claimedReason } = {}) {
+    await player(db, `${id}-white`);
+    await player(db, `${id}-black`);
+    const duel = start(createDuel({
+      duelId: id, plugin: ChessPlugin, players: [`${id}-white`, `${id}-black`],
+      seed: null, config: {}, timeControl: TC,
+    }), 0);
+    let atMs = 1000;
+    for (const [seat, uci] of [[0, "f2f3"], [1, "e7e5"], [0, "g2g4"], [1, "d8h4"]]) {
+      const res = runIntent(duel, ChessPlugin, { playerId: duel.players[seat], intent: uci }, atMs);
+      assert.equal(res.ok !== false, true, `Fool's Mate setup move ${uci} was rejected: ${JSON.stringify(res)}`);
+      atMs += 1000;
+    }
+    assert.ok(duel.outcome, "Fool's Mate must have actually produced a real, engine-derived outcome");
+
+    await db.query(
+      `INSERT INTO duel (id, game_id, plugin_version, pairing_key, seat_0, seat_1, tier,
+                         stake_minor, asset, initial_state, seed, time_control, clock_state,
+                         status, result, termination_reason, completed_at)
+       VALUES ($1,'chess',1,$1,$2,$3,'CASH',$4,'USDT',$5::jsonb,NULL,$6::jsonb,'{}'::jsonb,
+               'COMPLETED',$7,$8, now())`,
+      [
+        id, `${id}-white`, `${id}-black`, u(100),
+        JSON.stringify(ChessPlugin.matchmakingDefaults(null, {}).initialState),
+        JSON.stringify(TC),
+        claimedResult ?? duel.outcome.result, claimedReason ?? duel.outcome.reason,
+      ]
+    );
+    for (const ev of duel.events) {
+      await db.query(
+        `INSERT INTO duel_event (duel_id, seq, type, payload, server_time_ms) VALUES ($1,$2,$3,$4::jsonb,$5)`,
+        [id, ev.seq, ev.type, JSON.stringify(ev.payload), ev.serverTimeMs]
+      );
+    }
+    return duel.outcome;
+  }
+
+  test("a settled cash duel whose recorded result matches what the engine actually derives opens no case", async () => {
+    const db = await fresh();
+    await makeCashDuel(db, "duel-honest");
+    const svc = createReconciliationService(db, { plugins });
+    const result = await svc.runReplayVerification();
+    assert.equal(result.checked, 1);
+    assert.equal(result.casesOpened, 0);
+  });
+
+  test("F-11: a settled cash duel whose recorded result was FABRICATED -- disagreeing with its own real move history -- is caught, not paid unchecked", async () => {
+    const db = await fresh();
+    // Fool's Mate is black's win ("0-1") no matter what the row claims --
+    // this simulates exactly what a plugin bug or a compromised plugin
+    // release could produce: the SAME real moves, a DIFFERENT claimed winner.
+    await makeCashDuel(db, "duel-fabricated", { claimedResult: "1-0", claimedReason: "RESIGNATION" });
+
+    const svc = createReconciliationService(db, { plugins });
+    const result = await svc.runReplayVerification();
+    assert.equal(result.checked, 1);
+    assert.equal(result.casesOpened, 1);
+    const cases = await svc.listOpenCases();
+    assert.equal(cases[0].category, "REPLAY_MISMATCH");
+    assert.equal(cases[0].severity, "CRITICAL");
+    assert.equal(cases[0].subject_id, "duel-fabricated");
+  });
+
+  test("runReplayVerification refuses to run without plugins", async () => {
+    const db = await fresh();
+    const svc = createReconciliationService(db);
+    await assert.rejects(() => svc.runReplayVerification(), /requires plugins/);
+  });
+
+  test("a VS_COMPUTER or FREE duel is never checked -- there is no real-money payout to protect", async () => {
+    const db = await fresh();
+    await player(db, "solo-a");
+    await player(db, "solo-b");
+    await db.query(
+      `INSERT INTO duel (id, game_id, plugin_version, pairing_key, seat_0, seat_1, tier,
+                         initial_state, time_control, clock_state, status, result, termination_reason, completed_at)
+       VALUES ('duel-free','chess',1,'duel-free','solo-a','solo-b','FREE','{}'::jsonb,'{}'::jsonb,'{}'::jsonb,
+               'COMPLETED','1-0','RESIGNATION', now())`
+    );
+    const svc = createReconciliationService(db, { plugins });
+    const result = await svc.runReplayVerification();
     assert.equal(result.checked, 0);
   });
 });
@@ -516,7 +628,7 @@ describe("runAll", () => {
     const kinds = results.map((r) => r.kind);
     assert.deepEqual(kinds, [
       "L1_LEDGER_DRIFT", "SOLVENCY", "STUCK_DEPOSITS", "STUCK_WITHDRAWALS",
-      "SETTLEMENT_SLA", "PRIZE_SLA",
+      "SETTLEMENT_SLA", "PRIZE_SLA", "EVIDENCE_CLEANUP",
     ]);
     assert.ok(results.every((r) => r.outcome === RunOutcome.COMPLETED));
   });

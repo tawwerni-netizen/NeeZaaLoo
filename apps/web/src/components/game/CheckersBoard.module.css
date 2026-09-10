@@ -1,0 +1,133 @@
+/* Checkers' own table identity: burnished walnut and ivory maple, red and
+   ebony discs -- distinct from chess's emerald felt, per the platform's
+   own "every game belongs to Nizalo, no two games look identical" rule.
+   Local, scoped custom properties, same pattern as ChessBoard.module.css. */
+.wrap {
+  --board-light: #E8D9BC;
+  --board-dark: #5B3A29;
+  --board-accent: #B5651D;
+  --piece-seat0: #A32626;
+  --piece-seat0-shade: #6E1414;
+  --piece-seat1: #1C1B19;
+  --piece-seat1-shade: #000000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: min(92vw, 560px);
+  aspect-ratio: 1 / 1;
+  border-radius: var(--nz-radius-md);
+  overflow: hidden;
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3));
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  background: var(--board-dark);
+}
+
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 0;
+  font: inherit;
+  transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.square:disabled { cursor: default; }
+.dark { background: var(--board-dark); cursor: pointer; }
+.light { background: var(--board-light); }
+
+.selected {
+  box-shadow: inset 0 0 0 3px var(--board-accent);
+}
+
+.lastMove::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--board-accent);
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.piece {
+  position: relative;
+  z-index: 1;
+  width: 76%;
+  height: 76%;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--nz-dur-base) var(--nz-ease-settle);
+}
+
+.piece[data-seat="0"] {
+  background: radial-gradient(circle at 35% 30%, var(--piece-seat0) 0%, var(--piece-seat0-shade) 100%);
+  box-shadow: 0 3px 0 var(--piece-seat0-shade), 0 5px 8px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+}
+
+.piece[data-seat="1"] {
+  background: radial-gradient(circle at 35% 30%, #38352F 0%, var(--piece-seat1-shade) 100%);
+  box-shadow: 0 3px 0 var(--piece-seat1-shade), 0 5px 8px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+
+.king.piece {
+  animation: crownIn var(--nz-dur-ceremony, 480ms) var(--nz-ease-settle);
+}
+
+.crown {
+  font-size: clamp(16px, 3.4vw, 24px);
+  color: var(--nz-mat-gold, #C6A867);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  line-height: 1;
+}
+
+@keyframes crownIn {
+  0% { transform: scale(0.7) rotate(-8deg); }
+  60% { transform: scale(1.15) rotate(4deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.captureFlash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, var(--nz-loss) 0%, transparent 70%);
+  animation: captureFlash var(--nz-dur-slow, 320ms) var(--nz-ease-out) forwards;
+  pointer-events: none;
+}
+
+@keyframes captureFlash {
+  0% { opacity: 0.85; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+
+.moveHint {
+  position: absolute;
+  width: 26%;
+  height: 26%;
+  border-radius: 999px;
+  background: var(--board-accent);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.captureHint {
+  position: absolute;
+  inset: 10%;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 4px var(--nz-loss);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .board { width: 94vw; }
+}

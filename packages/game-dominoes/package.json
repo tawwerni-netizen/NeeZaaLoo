@@ -1,0 +1,8 @@
+{
+  "name": "@nizalo/game-dominoes",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/dominoes.mjs",
+  "scripts": { "test": "node --test" }
+}

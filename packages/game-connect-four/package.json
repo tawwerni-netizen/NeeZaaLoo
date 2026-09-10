@@ -1,0 +1,8 @@
+{
+  "name": "@nizalo/game-connect-four",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/connect-four.mjs",
+  "scripts": { "test": "node --test" }
+}

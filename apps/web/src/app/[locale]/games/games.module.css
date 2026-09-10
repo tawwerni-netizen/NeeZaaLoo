@@ -1,0 +1,149 @@
+.head {
+  padding-block: var(--nz-space-12) var(--nz-space-6);
+  max-width: 60ch;
+}
+
+.heading {
+  font-size: var(--nz-text-3xl);
+  margin: 0 0 var(--nz-space-3);
+}
+
+.subhead {
+  font-size: var(--nz-text-lg);
+  color: var(--nz-text-2);
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  gap: var(--nz-space-2);
+  margin-block-end: var(--nz-space-8);
+}
+
+.filter, .filterActive {
+  padding: 7px 16px;
+  border-radius: var(--nz-radius-pill);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-1);
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out),
+              color var(--nz-dur-fast) var(--nz-ease-out),
+              background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+.filter:hover { border-color: var(--nz-line-strong); color: var(--nz-text); }
+
+.filterActive {
+  background: var(--nz-accent);
+  border-color: var(--nz-accent);
+  color: var(--nz-accent-contrast);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--nz-space-5);
+  padding-bottom: var(--nz-space-16);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-3);
+  padding: var(--nz-space-6);
+  border-radius: var(--nz-radius-lg);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-1);
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out), transform var(--nz-dur-fast) var(--nz-ease-out);
+}
+.card:hover { border-color: var(--nz-accent-line); transform: translateY(-2px); }
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-2);
+}
+
+.cardTitle {
+  font-size: var(--nz-text-lg);
+  margin: 0;
+}
+
+.cardTitleLink {
+  color: inherit;
+  text-decoration: none;
+}
+.cardTitleLink:hover { color: var(--nz-accent); }
+
+.turnTag {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: var(--nz-tracking-caps);
+  text-transform: uppercase;
+  color: var(--nz-text-3);
+  border: 1px solid var(--nz-line-strong);
+  border-radius: var(--nz-radius-pill);
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+
+.cardBody {
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  line-height: var(--nz-leading-snug);
+  margin: 0;
+  flex: 1;
+}
+
+.meta {
+  display: flex;
+  gap: var(--nz-space-6);
+  margin: 0;
+}
+
+.meta div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meta dt {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+}
+
+.meta dd {
+  margin: 0;
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+}
+
+.difficulties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.difficultyBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--nz-text-2);
+  background: var(--nz-surface-2);
+  border-radius: var(--nz-radius-sm);
+  padding: 3px 8px;
+}
+
+.cta {
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  color: var(--nz-accent);
+  text-decoration: none;
+  margin-block-start: var(--nz-space-1);
+}
+.cta:hover { text-decoration: underline; }

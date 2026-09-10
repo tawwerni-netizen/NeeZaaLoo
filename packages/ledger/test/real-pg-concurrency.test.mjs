@@ -26,30 +26,18 @@ import { randomUUID, createHmac } from "node:crypto";
 import pg from "pg";
 import { createPgAdapter } from "../src/pg-adapter.mjs";
 import { migrate } from "../src/migrate.mjs";
+import { provisionRealPgDatabase } from "../test-support/real-pg-db.mjs";
 import { createSettlementService } from "../../settlement/src/settle.mjs";
 import { createPaymentService } from "../../payments/src/payments.mjs";
 import { createLeaseManager } from "../../realtime/src/lease.mjs";
 
 const { Client } = pg;
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/skill_platform_test";
+const { reachable, reachabilityError, TEST_DATABASE_URL, drop } = await provisionRealPgDatabase();
 
 const USDT = 1_000_000n;
 const u = (n) => (BigInt(n) * USDT).toString();
 const GOOD_ADDR = "T" + "9".repeat(33);
-
-let reachable = true;
-let reachabilityError = null;
-try {
-  const probe = new Client({ connectionString: TEST_DATABASE_URL });
-  await probe.connect();
-  await probe.query("SELECT 1");
-  await probe.end();
-} catch (e) {
-  reachable = false;
-  reachabilityError = e;
-}
 
 /** One genuinely independent connection. Each caller gets its OWN socket. */
 async function connection() {
@@ -145,7 +133,7 @@ describe("A2: real PostgreSQL concurrency", { skip: reachable ? false : `Postgre
     );
   });
 
-  after(async () => { await admin.end(); });
+  after(async () => { await admin.end(); await drop(); });
 
   test("PostgreSQL version and connection sanity", async () => {
     const r = await admin.query("SELECT version()");
@@ -274,8 +262,8 @@ describe("A2: real PostgreSQL concurrency", { skip: reachable ? false : `Postgre
     // persistent database across test runs, and deposit.observed_tx_hash is
     // unique -- a fixed literal here collided with itself on any re-run.
     const txHash = `0x${randomUUID().replace(/-/g, "")}`;
-    const chain = { async getIncoming() {
-      return { txHash, outputIndex: 0, amountMinor: u(50), asset: "USDT", network: "TRON", address, confirmations: 30 };
+    const chain = { async verifyIncoming({ network }) {
+      return { outcome: "VERIFIED", txHash, outputIndex: 0, amountRaw: u(50), asset: "USDT", network, confirmations: 30 };
     } };
     const svcB = createPaymentService(B.db, { provider, chain });
     const svcA2 = createPaymentService(A.db, { provider, chain });
@@ -315,8 +303,8 @@ describe("A2: real PostgreSQL concurrency", { skip: reachable ? false : `Postgre
     );
     // Same reason as test 4 above: unique per run, not a fixed literal.
     const txHash = `0x${randomUUID().replace(/-/g, "")}`;
-    const chain = { async getIncoming() {
-      return { txHash, outputIndex: 0, amountMinor: u(30), asset: "USDT", network: "TRON", address, confirmations: 30 };
+    const chain = { async verifyIncoming({ network }) {
+      return { outcome: "VERIFIED", txHash, outputIndex: 0, amountRaw: u(30), asset: "USDT", network, confirmations: 30 };
     } };
 
     const A = await connection();
@@ -386,9 +374,13 @@ describe("A2: real PostgreSQL concurrency", { skip: reachable ? false : `Postgre
     // a real, persistent database across test runs, not a fresh PGlite
     // instance per process, so a fixed literal here collided with itself on
     // every re-run. Randomised like withdrawalId above, for the same reason.
+    // confirmed_block_number/confirmations are what complete() now REQUIRES
+    // (withdrawal_completed_has_evidence, 0040) -- a CONFIRMED row with
+    // neither is exactly the "provider said so, we never actually looked"
+    // shape the real chain-verification requirement exists to forbid.
     await admin.query(
-      `INSERT INTO withdrawal (id, player_id, asset, network, destination, amount_minor, status, tx_hash, lock_tx_id)
-       VALUES ($1,$2,'USDT','TRON',$3,$4,'CONFIRMED'::withdrawal_status,$5,$6)`,
+      `INSERT INTO withdrawal (id, player_id, asset, network, destination, amount_minor, status, tx_hash, lock_tx_id, confirmed_block_number, confirmations)
+       VALUES ($1,$2,'USDT','TRON',$3,$4,'CONFIRMED'::withdrawal_status,$5,$6,12345,30)`,
       [withdrawalId, alice, GOOD_ADDR, u(100), `0x${randomUUID().replace(/-/g, "")}`, locked.rows[0].transaction_id]
     );
 

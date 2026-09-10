@@ -79,6 +79,11 @@ export const ErrorCode = {
   // durably recording the result. The client must reconnect to find whoever
   // holds the duel now; nothing this instance says about it is current.
   STALE_OWNER: "STALE_OWNER",
+  // Session binding (A5): this player is (re)binding a seat faster than
+  // the reconnect-grace budget allows. Bounded, not permanent -- the
+  // token bucket refills; a genuinely flaky connection simply waits a
+  // moment and rejoins.
+  RECONNECT_LIMITED: "RECONNECT_LIMITED",
 };
 
 /**
@@ -90,7 +95,13 @@ const SHAPES = {
   [ClientMsg.AUTH]:   { required: ["t", "token"], optional: [] },
   [ClientMsg.JOIN]:   { required: ["t", "duelId"], optional: ["as"] },
   [ClientMsg.LEAVE]:  { required: ["t", "duelId"], optional: [] },
-  [ClientMsg.INTENT]: { required: ["t", "duelId", "intent"], optional: ["cseq"] },
+  // `nonce`/`baseVersion` (A5): optional on the WIRE so an older or
+  // narrowly-scoped client frame is never simply refused outright, but
+  // see duel-engine's own runIntent() header for why a real client always
+  // sends both -- their absence exempts an intent from sequence
+  // admission (stale/duplicate/replay rejection) entirely, it does not
+  // relax anything else this protocol already refuses.
+  [ClientMsg.INTENT]: { required: ["t", "duelId", "intent"], optional: ["cseq", "nonce", "baseVersion"] },
   [ClientMsg.RESIGN]: { required: ["t", "duelId"], optional: [] },
   [ClientMsg.DRAW_OFFER]:   { required: ["t", "duelId"], optional: [] },
   [ClientMsg.DRAW_ACCEPT]:  { required: ["t", "duelId"], optional: [] },
@@ -139,10 +150,19 @@ export function parseClientFrame(raw) {
   // Types: token/duelId/as are always short strings. `intent` is the one
   // field whose shape is the game plugin's business, not the protocol's --
   // chess sends a string ("e2e4"), Speed Math sends a plain object
-  // ({answer: 19}), and a future game may need its own shape again. The
-  // protocol only bounds what an intent can never be: not an array, not a
-  // nested structure a plugin didn't ask for, not something that couldn't
-  // have come from JSON in the first place.
+  // ({answer: 19}), Connect Four sends a bare number (a column index --
+  // see packages/game-connect-four/src/plugin.mjs's own header on why
+  // that is deliberately the simplest possible intent shape, not an
+  // oversight), and a future game may need its own shape again. This is
+  // the SAME widening this file already made once, for Speed Math (see
+  // this test suite's own header) -- a fixed enumeration of "every shape
+  // a game has needed so far" breaks the next game with a real need for a
+  // new one, and there was never a security reason a JSON number is any
+  // less safe here than a JSON string. The protocol only bounds what an
+  // intent can never be: not an array, not a nested structure a plugin
+  // didn't ask for, not something that couldn't have come from JSON in
+  // the first place, and not a boolean (still refused -- no plugin has
+  // ever needed one, so there is nothing yet to widen for).
   for (const key of ["token", "duelId", "as", "channel", "channelId", "content", "clientMessageId"]) {
     if (key in msg && typeof msg[key] !== "string") {
       return { ok: false, code: ErrorCode.BAD_FRAME, detail: `${key} must be a string` };
@@ -152,13 +172,20 @@ export function parseClientFrame(raw) {
     const intent = msg.intent;
     const validShape =
       typeof intent === "string" ||
+      (typeof intent === "number" && Number.isFinite(intent)) ||
       (typeof intent === "object" && intent !== null && !Array.isArray(intent));
     if (!validShape) {
-      return { ok: false, code: ErrorCode.BAD_FRAME, detail: "intent must be a string or a plain object" };
+      return { ok: false, code: ErrorCode.BAD_FRAME, detail: "intent must be a string, a finite number, or a plain object" };
     }
   }
   if ("cseq" in msg && !Number.isInteger(msg.cseq)) {
     return { ok: false, code: ErrorCode.BAD_FRAME, detail: "cseq must be an integer" };
+  }
+  if ("nonce" in msg && (!Number.isInteger(msg.nonce) || msg.nonce < 0)) {
+    return { ok: false, code: ErrorCode.BAD_FRAME, detail: "nonce must be a non-negative integer" };
+  }
+  if ("baseVersion" in msg && (!Number.isInteger(msg.baseVersion) || msg.baseVersion < 0)) {
+    return { ok: false, code: ErrorCode.BAD_FRAME, detail: "baseVersion must be a non-negative integer" };
   }
 
   return { ok: true, msg };

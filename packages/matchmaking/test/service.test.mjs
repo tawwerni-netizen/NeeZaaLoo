@@ -16,9 +16,7 @@ const TC = JSON.stringify({ initialMs: 300000 });
 async function fresh(players = ["ply1", "ply2", "ply3"]) {
   const db = await PGlite.create();
   await migrate(db);
-  await db.query(
-    "INSERT INTO game (id, display_name, plugin_version, is_live) VALUES ('speed-math','Speed Math',1,TRUE)"
-  );
+  // speed-math's own row already exists from migration 0029.
   for (const p of players) await db.query("INSERT INTO player (id, handle) VALUES ($1,$1)", [p]);
   return { db, mm: createMatchmakingService(db) };
 }

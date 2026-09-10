@@ -3,7 +3,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { use } from "react";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/Button";
+import { LocaleLink } from "@/components/LocaleLink";
 import { Avatar } from "@/components/profile/Avatar";
 import { badgeIcon } from "@/components/profile/badge-icons";
 import { useI18n } from "@/lib/i18n/context";
@@ -33,16 +35,18 @@ function PublicProfileContent({ nickname }: { nickname: string }) {
   }, [nickname]);
 
   if (notFound) {
-    return <><Header /><div className={styles.wrap}><p className={styles.empty}>{t("profile.not_found")}</p></div></>;
+    return <><Header /><div className={styles.wrap}><p className={styles.empty}>{t("profile.not_found")}</p></div><Footer /></>;
   }
-  if (!profile) return <><Header /><div className={styles.wrap} /></>;
+  if (!profile) return <><Header /><div className={styles.wrap} /><Footer /></>;
 
   return (
     <>
       <Header />
       <div className={styles.wrap}>
         <div className={styles.header}>
-          <Avatar nickname={profile.nickname} avatarUrl={profile.avatarUrl} size={88} />
+          <span className={`${styles.avatarFrame} ${profile.selectedFrame ? styles[`frame_${profile.selectedFrame}`] ?? "" : ""}`}>
+            <Avatar nickname={profile.nickname} avatarUrl={profile.avatarUrl} size={88} />
+          </span>
           <div className={styles.identity}>
             <h1 className={styles.nickname}>
               {profile.nickname} {profile.selectedBadge && <span>{badgeIcon(profile.selectedBadge)}</span>}
@@ -68,12 +72,29 @@ function PublicProfileContent({ nickname }: { nickname: string }) {
           {profile.ratings.length === 0 ? (
             <p className={styles.empty}>{t("profile.no_ratings")}</p>
           ) : (
-            profile.ratings.map((r) => (
-              <div key={r.gameId} className={styles.ratingRow}>
-                <span>{r.displayName}</span>
-                <span className={`nz-num ${styles.ratingValue}`}>{Math.round(r.rating)}</span>
-              </div>
-            ))
+            profile.ratings.map((r) => {
+              const m = profile.mastery.find((mm) => mm.gameId === r.gameId);
+              const peak = profile.highestRatings[r.gameId];
+              return (
+                <div key={r.gameId} className={styles.ratingRow}>
+                  <span className={styles.ratingGameName}>
+                    {r.displayName}
+                    {m && <span className={styles.masteryPill}>{t(`profile.mastery_level.${m.level}`)}</span>}
+                  </span>
+                  <span className={styles.ratingNumbers}>
+                    {peak != null && peak > r.rating && (
+                      <span className={styles.peakRating}>{t("profile.highest_rating_label")} {Math.round(peak)}</span>
+                    )}
+                    <span className={`nz-num ${styles.ratingValue}`}>{Math.round(r.rating)}</span>
+                    {/* Spectator discovery, closing the loop: LIVE MATCH -> WATCH
+                        -> VIEW PLAYER -> SEE GAME RATING -> TRY GAME -> PLAY. */}
+                    <LocaleLink href={`/play/${r.gameId}`} className={styles.tryGameLink}>
+                      {t("profile.try_game_cta")}
+                    </LocaleLink>
+                  </span>
+                </div>
+              );
+            })
           )}
         </div>
 
@@ -84,6 +105,8 @@ function PublicProfileContent({ nickname }: { nickname: string }) {
             <div><div className={`nz-num ${styles.statValue}`}>{profile.stats.wins}</div><div className={styles.statLabel}>{t("profile.wins_label")}</div></div>
             <div><div className={`nz-num ${styles.statValue}`}>{profile.stats.losses}</div><div className={styles.statLabel}>{t("profile.losses_label")}</div></div>
             <div><div className={`nz-num ${styles.statValue}`}>{profile.stats.games === 0 ? "—" : `${Math.round((profile.stats.wins / profile.stats.games) * 100)}%`}</div><div className={styles.statLabel}>{t("profile.win_rate_label")}</div></div>
+            <div><div className={`nz-num ${styles.statValue}`}>{profile.tournaments.played}</div><div className={styles.statLabel}>{t("profile.tournaments_played_label")}</div></div>
+            <div><div className={`nz-num ${styles.statValue}`}>{profile.tournaments.won}</div><div className={styles.statLabel}>{t("profile.tournaments_won_label")}</div></div>
           </div>
         </div>
 
@@ -115,6 +138,7 @@ function PublicProfileContent({ nickname }: { nickname: string }) {
           {t("profile.member_since_label")} {new Date(profile.memberSince).toLocaleDateString()}
         </p>
       </div>
+      <Footer />
     </>
   );
 }

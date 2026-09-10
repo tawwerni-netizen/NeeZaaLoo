@@ -18,29 +18,17 @@ import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { createPgAdapter } from "../../ledger/src/pg-adapter.mjs";
 import { migrate } from "../../ledger/src/migrate.mjs";
+import { provisionRealPgDatabase } from "../../ledger/test-support/real-pg-db.mjs";
 import { createAuthService } from "../src/service.mjs";
 import { createOAuthIdentityService } from "../src/oauth-identity.mjs";
 
 const { Client } = pg;
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/skill_platform_test";
+const { reachable, reachabilityError, TEST_DATABASE_URL, drop } = await provisionRealPgDatabase();
 
 const SIGNING_KEY = Buffer.alloc(32, 41);
 const ENCRYPTION_KEY = Buffer.alloc(32, 42);
 const FAST_ARGON = { algorithm: 2, memoryCost: 1024, timeCost: 1, parallelism: 1 };
-
-let reachable = true;
-let reachabilityError = null;
-try {
-  const probe = new Client({ connectionString: TEST_DATABASE_URL });
-  await probe.connect();
-  await probe.query("SELECT 1");
-  await probe.end();
-} catch (e) {
-  reachable = false;
-  reachabilityError = e;
-}
 
 async function connection() {
   const client = new Client({ connectionString: TEST_DATABASE_URL });
@@ -64,7 +52,7 @@ describe(
       await migrate(admin.db);
     });
 
-    after(async () => { await admin.client.end(); });
+    after(async () => { await admin.client.end(); await drop(); });
 
     test("two DIFFERENT players simultaneously linking the SAME Google subject: exactly one wins", async () => {
       const subject = `sub-race-${randomUUID()}`;

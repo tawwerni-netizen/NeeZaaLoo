@@ -14,10 +14,12 @@
  * as readily as a chess one.
  */
 import { randomUUID } from "node:crypto";
+import { isValidStakeMinor } from "./stakes.mjs";
 
 export const MatchmakingError = {
   ALREADY_QUEUED: "ALREADY_QUEUED",
   UNKNOWN_GAME: "UNKNOWN_GAME",
+  INVALID_STAKE: "INVALID_STAKE",
 };
 
 export function createMatchmakingService(db, { now = () => Date.now() } = {}) {
@@ -32,6 +34,16 @@ export function createMatchmakingService(db, { now = () => Date.now() } = {}) {
       playerId, gameId, mode = "standard", tier = "FREE", stakeMinor = 0n,
       ratingX100, timeControl, ttlSeconds = 60,
     }) {
+      // RANDOM OPPONENT, Competitive: the UI offers only the fixed preset
+      // ladder, but this is the actual enforcement -- a client that is
+      // compromised, stale, or simply wrong about the ladder can never
+      // queue a stake this platform does not recognise. FREE is exempt:
+      // its only legal stake is exactly 0, checked structurally by the
+      // tier itself (mm_pair/duel's own CASH-has-stake shape), not by the
+      // competitive ladder.
+      if (tier === "CASH" && !isValidStakeMinor(stakeMinor)) {
+        return { ok: false, reason: MatchmakingError.INVALID_STAKE };
+      }
       try {
         const r = await db.query(
           `INSERT INTO matchmaking_ticket

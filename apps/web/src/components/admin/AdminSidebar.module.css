@@ -1,0 +1,220 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 252px;
+  flex: none;
+  height: 100vh;
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--nz-mat-obsidian);
+  border-inline-end: 1px solid rgba(242, 237, 227, 0.08);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 20px 18px;
+  position: relative;
+}
+
+/* The one deliberately ceremonial touch: a thin champagne-gold hairline
+   under the brand mark only -- never on a control, a link, or a value.
+   See tokens.css's own rule on gold: earned/ceremonial surfaces only. */
+.brand::after {
+  content: "";
+  position: absolute;
+  inset-inline: 20px;
+  inset-block-end: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--nz-mat-gold) 55%, transparent),
+    transparent 70%
+  );
+}
+[dir="rtl"] .brand::after {
+  background: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--nz-mat-gold) 55%, transparent),
+    transparent 70%
+  );
+}
+
+.brandMark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: var(--nz-radius-md);
+  background: linear-gradient(155deg, var(--nz-mat-emerald-2), var(--nz-mat-emerald));
+  color: var(--nz-mat-ivory);
+  font-family: var(--nz-font-display);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brandName {
+  font-family: var(--nz-font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--nz-mat-ivory);
+  letter-spacing: -0.01em;
+}
+
+.brandSub {
+  font-size: 11px;
+  color: var(--nz-text-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nav {
+  flex: 1;
+  padding: 8px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.groupLabel {
+  font-family: var(--nz-font-ui);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--nz-text-3);
+  padding: 6px 10px 6px;
+}
+
+.navItem,
+.navItemDisabled {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 10px;
+  border-radius: var(--nz-radius-md);
+  font-family: var(--nz-font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  border-inline-start: 2px solid transparent;
+  transition: background-color var(--nz-dur-fast) var(--nz-ease-out),
+              color var(--nz-dur-fast) var(--nz-ease-out),
+              border-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.navItem {
+  color: rgba(242, 237, 227, 0.72);
+}
+
+.navItem:hover {
+  background: rgba(242, 237, 227, 0.06);
+  color: var(--nz-mat-ivory);
+}
+
+.navItemActive {
+  background: color-mix(in srgb, var(--nz-mat-emerald-2) 22%, transparent);
+  color: var(--nz-mat-ivory);
+  border-inline-start-color: var(--nz-mat-emerald-2);
+}
+
+.navItemDisabled {
+  color: rgba(242, 237, 227, 0.32);
+  cursor: default;
+}
+
+.navIcon {
+  flex: none;
+  opacity: 0.9;
+}
+
+.soon {
+  margin-inline-start: auto;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(242, 237, 227, 0.28);
+  border: 1px solid rgba(242, 237, 227, 0.16);
+  border-radius: var(--nz-radius-pill);
+  padding: 1px 6px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-block-start: 1px solid rgba(242, 237, 227, 0.08);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--nz-surface-2);
+  color: var(--nz-mat-ivory);
+  font-family: var(--nz-font-display);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.footerText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.footerName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nz-mat-ivory);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.footerRole {
+  font-size: 11px;
+  color: var(--nz-text-3);
+}
+
+@media (max-width: 960px) {
+  .sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 40;
+    transform: translateX(-100%);
+    transition: transform var(--nz-dur-base) var(--nz-ease-out);
+    box-shadow: var(--nz-shadow-3);
+  }
+  [dir="rtl"] .sidebar {
+    transform: translateX(100%);
+  }
+  .sidebar[data-open="true"] {
+    transform: translateX(0);
+  }
+}

@@ -1,0 +1,113 @@
+/* Seega's own identity: heritage-inspired luxury expressed as ABSTRACT
+   geometric pattern -- the real, celebrated decorative language of the
+   region (girih-style lattice line work) -- never a literal cultural
+   scene, figure, or prop. Warm stone and brass tones, carved-stone
+   pieces. Per the brief's own "culturally respectful, no stereotypes or
+   cheap decorative elements": the pattern here is structural (a frame),
+   not a costume. Note: this never uses --nz-mat-gold -- every surface
+   here is part of an active, clickable board; the brass tone below is
+   its own separate, non-ceremonial value for exactly that reason. */
+.wrap {
+  --stone-light: #E4D4B8;
+  --stone-dark: #8A6F4E;
+  --board-ground: #C9B48C;
+  --lattice-line: rgba(90, 66, 32, 0.16);
+  --brass: #A9793D;
+  --piece-a: #2B2622;
+  --piece-a-hi: #4A4038;
+  --piece-b: #F3ECDB;
+  --piece-b-hi: #FFFDF6;
+  display: flex;
+  justify-content: center;
+}
+
+.frame {
+  position: relative;
+  padding: var(--nz-space-6);
+  border-radius: var(--nz-radius-xl);
+  background:
+    repeating-linear-gradient(45deg, var(--lattice-line) 0 2px, transparent 2px 22px),
+    repeating-linear-gradient(-45deg, var(--lattice-line) 0 2px, transparent 2px 22px),
+    linear-gradient(160deg, #5C4322, #3C2C17);
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3)), inset 0 0 0 2px rgba(169, 121, 61, 0.4);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 2px;
+  width: min(86vw, 420px);
+  aspect-ratio: 1 / 1;
+  background: var(--brass);
+  border-radius: var(--nz-radius-md);
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 10%;
+  background: var(--board-ground);
+  cursor: pointer;
+  font: inherit;
+  transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.cell:disabled { cursor: default; }
+.cell:not(:disabled):hover { background: var(--stone-light); }
+
+.center {
+  background: var(--stone-dark);
+}
+
+.centerMark {
+  width: 26%;
+  height: 26%;
+  background: var(--brass);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  opacity: 0.55;
+}
+
+.placeable {
+  background: color-mix(in srgb, var(--board-ground) 70%, var(--brass) 30%);
+}
+
+.destination::after {
+  content: "";
+  position: absolute;
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: var(--nz-accent);
+  opacity: 0.7;
+  animation: pulse 1.1s var(--nz-ease-inout) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.55; }
+  50% { transform: scale(1.2); opacity: 0.85; }
+}
+
+.selected {
+  box-shadow: inset 0 0 0 3px var(--nz-accent);
+}
+
+.piece {
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.4), inset 0 -3px 5px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+.pieceA { background: radial-gradient(circle at 35% 30%, var(--piece-a-hi), var(--piece-a) 65%); }
+.pieceB { background: radial-gradient(circle at 35% 30%, var(--piece-b-hi), var(--piece-b) 65%); }
+
+@media (max-width: 640px) {
+  .board { width: 90vw; }
+  .frame { padding: var(--nz-space-4); }
+}

@@ -1,0 +1,62 @@
+.section {
+  padding-block: var(--nz-space-16);
+  border-top: 1px solid var(--nz-line);
+  background: var(--nz-surface-1);
+}
+
+.head {
+  max-width: 60ch;
+  margin: 0 auto var(--nz-space-10);
+  text-align: center;
+}
+
+.heading {
+  font-size: var(--nz-text-2xl);
+  margin: 0 0 var(--nz-space-3);
+}
+
+.body {
+  font-size: var(--nz-text-md);
+  color: var(--nz-text-2);
+  margin: 0;
+}
+
+.points {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--nz-space-6);
+  margin-block-end: var(--nz-space-8);
+}
+
+.point {
+  padding: var(--nz-space-5);
+  border-radius: var(--nz-radius-lg);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-bg);
+}
+
+.pointTitle {
+  font-size: var(--nz-text-md);
+  margin: 0 0 6px;
+}
+
+.pointBody {
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  line-height: var(--nz-leading-snug);
+  margin: 0;
+}
+
+.cta {
+  display: block;
+  text-align: center;
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  color: var(--nz-accent);
+  text-decoration: none;
+}
+.cta:hover { text-decoration: underline; }
+
+@media (max-width: 860px) {
+  .points { grid-template-columns: 1fr; }
+}

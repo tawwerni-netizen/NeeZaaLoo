@@ -25,6 +25,7 @@ import { createLeaseManager } from "../../../packages/realtime/src/lease.mjs";
 import { createGateway } from "../../../packages/realtime/src/gateway.mjs";
 import { createPgBus } from "../../../packages/realtime/src/bus.mjs";
 import { sweepUnclaimableDuels } from "../../../packages/realtime/src/claim-sweep.mjs";
+import { createFairPlayEngine } from "../../../packages/fairplay/src/engine.mjs";
 import { createChannelService } from "../../../packages/chat/src/channels.mjs";
 import { createModerationService } from "../../../packages/chat/src/moderation.mjs";
 import { createBlockService } from "../../../packages/chat/src/blocks.mjs";
@@ -32,6 +33,23 @@ import { createMessageService } from "../../../packages/chat/src/messages.mjs";
 import { ChessPlugin } from "../../../packages/game-chess/src/plugin.mjs";
 import { createChessAiAdapter } from "../../../packages/game-chess/src/ai.mjs";
 import { SpeedMathPlugin } from "../../../packages/game-speed-math/src/plugin.mjs";
+import { createSpeedMathAiAdapter } from "../../../packages/game-speed-math/src/ai.mjs";
+import { CheckersPlugin } from "../../../packages/game-checkers/src/plugin.mjs";
+import { createCheckersAiAdapter } from "../../../packages/game-checkers/src/ai.mjs";
+import { ConnectFourPlugin } from "../../../packages/game-connect-four/src/plugin.mjs";
+import { createConnectFourAiAdapter } from "../../../packages/game-connect-four/src/ai.mjs";
+import { XOPlugin } from "../../../packages/game-xo/src/plugin.mjs";
+import { createXoAiAdapter } from "../../../packages/game-xo/src/ai.mjs";
+import { DominoesPlugin } from "../../../packages/game-dominoes/src/plugin.mjs";
+import { createDominoesAiAdapter } from "../../../packages/game-dominoes/src/ai.mjs";
+import { BackgammonPlugin } from "../../../packages/game-backgammon/src/plugin.mjs";
+import { createBackgammonAiAdapter } from "../../../packages/game-backgammon/src/ai.mjs";
+import { SeegaPlugin } from "../../../packages/game-seega/src/plugin.mjs";
+import { createSeegaAiAdapter } from "../../../packages/game-seega/src/ai.mjs";
+import { ReversiPlugin } from "../../../packages/game-reversi/src/plugin.mjs";
+import { createReversiAiAdapter } from "../../../packages/game-reversi/src/ai.mjs";
+import { GomokuPlugin } from "../../../packages/game-gomoku/src/plugin.mjs";
+import { createGomokuAiAdapter } from "../../../packages/game-gomoku/src/ai.mjs";
 import {
   createLogger, createMetricsRegistry, createConsoleSink, createStructuredLogSink,
 } from "../../../packages/observability/src/index.mjs";
@@ -56,8 +74,18 @@ async function main() {
 
   const auth = createAuthService(db, { signingKey, encryptionKey });
   const store = createDuelStore(db, { emit: logger.emit });
+  // The SAME Fair Play Engine the API process's admin/case-review surface
+  // already talks to -- this process only ever adds evidence to it
+  // (recordFromCompletedDuel/recordReplayedAction/recordConcurrentSeat),
+  // never a second, parallel anti-cheat system.
+  const fairPlay = createFairPlayEngine(db);
   const lease = createLeaseManager(db, { leaseMs: Number(process.env.LEASE_MS || 15000) });
-  const plugins = new Map([["chess", ChessPlugin], ["speed-math", SpeedMathPlugin]]);
+  const plugins = new Map([
+    ["chess", ChessPlugin], ["speed-math", SpeedMathPlugin],
+    ["checkers", CheckersPlugin], ["connect-four", ConnectFourPlugin],
+    ["xo", XOPlugin], ["dominoes", DominoesPlugin], ["backgammon", BackgammonPlugin],
+    ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin],
+  ]);
   const ownerId = workerIdentity();
 
   const duels = new Map();
@@ -108,7 +136,7 @@ async function main() {
   });
 
   const gw = createGateway({
-    auth, duels, plugins, store, lease, ownerId,
+    auth, duels, plugins, store, lease, ownerId, fairPlay,
     port: Number(process.env.WS_PORT || 3010),
     host: process.env.HOST || "0.0.0.0",
     rateLimit: { capacity: Number(process.env.RATE_LIMIT_CAPACITY || 60), refillPerSecond: Number(process.env.RATE_LIMIT_REFILL || 10) },
@@ -136,7 +164,18 @@ async function main() {
     // simply never receives a bot move (see vs-computer.mjs's own
     // AI_SUPPORTED_GAMES guard, which refuses to create one in the first
     // place).
-    aiAdapters: new Map([["chess", createChessAiAdapter()]]),
+    aiAdapters: new Map([
+      ["chess", createChessAiAdapter()],
+      ["checkers", createCheckersAiAdapter()],
+      ["connect-four", createConnectFourAiAdapter()],
+      ["xo", createXoAiAdapter()],
+      ["speed-math", createSpeedMathAiAdapter()],
+      ["dominoes", createDominoesAiAdapter()],
+      ["backgammon", createBackgammonAiAdapter()],
+      ["seega", createSeegaAiAdapter()],
+      ["reversi", createReversiAiAdapter()],
+      ["gomoku", createGomokuAiAdapter()],
+    ]),
   });
 
   const claimSweepWorker = createTickLoop(() => sweepUnclaimableDuels(db, gw), {

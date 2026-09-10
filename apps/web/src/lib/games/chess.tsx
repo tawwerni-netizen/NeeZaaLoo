@@ -26,11 +26,18 @@ type ChessView = {
 function ChessBoardAdapter({ view, lastMove, mySeat, canMove, onMove }: BoardProps) {
   const v = (view ?? {}) as ChessView;
   if (!v.fen) return null;
+  // `lastMove` is the raw intent DuelShell forwards -- for chess that is
+  // the UCI string itself (e.g. "e2e4"), never a {from,to} object; parsing
+  // it here (rather than casting it, which silently produced `undefined`
+  // for both fields and left the last-move highlight permanently dark)
+  // is this game's own job, per BoardProps.lastMove's own `unknown` type.
+  const uci = typeof lastMove === "string" ? lastMove : null;
+  const parsedLastMove = uci ? { from: uci.slice(0, 2), to: uci.slice(2, 4) } : null;
   return (
     <ChessBoard
       fen={v.fen}
       legalMoves={v.legalMoves ?? []}
-      lastMove={lastMove as { from: string; to: string } | null}
+      lastMove={parsedLastMove}
       inCheck={Boolean(v.inCheck)}
       mySeat={mySeat}
       canMove={canMove}

@@ -16,14 +16,57 @@
  * Both players receive the IDENTICAL question set, generated from a seed the
  * client never receives. That is what makes the contest fair and what makes
  * "predict the next question" impossible rather than merely difficult.
+ *
+ * ============================================================================
+ * CHALLENGE RULES: Nizalo Speed Math Challenge Rules v1
+ * ============================================================================
+ * Four difficulty tiers, each a fixed, versioned operand/operation profile
+ * (DIFFICULTY_CONFIG below) rather than anything adaptive to how a player is
+ * doing -- adaptive difficulty would make two players' "same" duel not
+ * actually comparable, which is disqualifying for a rated, fair contest.
+ *
+ *   EASY   -- addition and subtraction only, operands up to 10.
+ *   MEDIUM -- adds multiplication, operands up to 20 (multiplicands up to 12)
+ *             -- this tier is also DEFAULT_CONFIG, unchanged from before
+ *             difficulty tiers existed, so every duel created before this
+ *             version keeps replaying identically.
+ *   HARD   -- adds division, operands up to 30 (multiplicands up to 15).
+ *   EXPERT -- operands up to 50 (multiplicands up to 20).
+ *
+ * Division questions are always constructed backward from a clean integer
+ * quotient (divisor x quotient = dividend) -- there is no fractional or
+ * rounded answer at any tier, ever. Subtraction stays non-negative at every
+ * tier, for the same reason (a negative answer tests typing conventions,
+ * not arithmetic).
  */
+
+export const Difficulty = Object.freeze({
+  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT",
+});
 
 export const DEFAULT_CONFIG = {
   durationMs: 60_000,
   questionCount: 60,     // more than anyone finishes; running out is not the goal
   operations: ["+", "-", "*"],
   maxOperand: 20,
+  multiplyMax: 12,
 };
+
+/** One fixed, versioned profile per tier -- see this file's own header. */
+export const DIFFICULTY_CONFIG = Object.freeze({
+  [Difficulty.EASY]:   { operations: ["+", "-"],           maxOperand: 10, multiplyMax: 8 },
+  [Difficulty.MEDIUM]: { operations: ["+", "-", "*"],      maxOperand: 20, multiplyMax: 12 },
+  [Difficulty.HARD]:   { operations: ["+", "-", "*", "/"], maxOperand: 30, multiplyMax: 15 },
+  [Difficulty.EXPERT]: { operations: ["+", "-", "*", "/"], maxOperand: 50, multiplyMax: 20 },
+});
+
+/** Merge a named difficulty's profile into a config -- MEDIUM (or no
+ * difficulty at all) reproduces plain DEFAULT_CONFIG exactly, so every
+ * duel created before difficulty tiers existed keeps replaying identically. */
+export function configForDifficulty(difficulty, overrides = {}) {
+  const tier = DIFFICULTY_CONFIG[difficulty] ?? DIFFICULTY_CONFIG[Difficulty.MEDIUM];
+  return { ...DEFAULT_CONFIG, ...tier, ...overrides };
+}
 
 /**
  * Deterministic PRNG (mulberry32) over a hashed seed.
@@ -50,16 +93,33 @@ function generateQuestions(seed, config) {
   const rnd = rngFrom(seed);
   const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
   const between = (lo, hi) => lo + Math.floor(rnd() * (hi - lo + 1));
+  const multiplyMax = config.multiplyMax ?? 12;
 
   const questions = [];
   for (let i = 0; i < config.questionCount; i++) {
     const op = pick(config.operations);
     let a = between(2, config.maxOperand);
     let b = between(2, config.maxOperand);
-    // Subtraction stays non-negative: negative answers test typing, not arithmetic.
-    if (op === "-" && b > a) [a, b] = [b, a];
-    if (op === "*") { a = between(2, 12); b = between(2, 12); }
-    const answer = op === "+" ? a + b : op === "-" ? a - b : a * b;
+    let answer;
+    if (op === "-") {
+      // Subtraction stays non-negative: a negative answer tests typing
+      // conventions, not arithmetic.
+      if (b > a) [a, b] = [b, a];
+      answer = a - b;
+    } else if (op === "*") {
+      a = between(2, multiplyMax);
+      b = between(2, multiplyMax);
+      answer = a * b;
+    } else if (op === "/") {
+      // Built backward from a clean integer quotient -- see this file's
+      // own "CHALLENGE RULES" header: there is never a fractional or
+      // rounded answer, at any tier.
+      b = between(2, multiplyMax);
+      answer = between(2, multiplyMax);
+      a = b * answer;
+    } else {
+      answer = a + b;
+    }
     questions.push({ a, b, op, answer });
   }
   return questions;
@@ -200,11 +260,37 @@ export const SpeedMathPlugin = {
   /**
    * Automation signals. Speed Math is trivially scriptable given screen access,
    * so the defence is not "can they see it" but "does a human produce this".
+   *
+   * Four independent signal KINDS, deliberately -- the Fair Play Engine's own
+   * noisy-OR scoring (packages/fairplay/src/engine.mjs) rewards independent
+   * kinds of evidence and does not stack repetitions of one kind, so a real
+   * finding here is one that shows up more than one way:
+   *   - IMPOSSIBLE_INPUT: any single answer faster than human reaction time.
+   *   - AUTOMATION: metronomic timing across all answers (low variance).
+   *   - PERFORMANCE_ANOMALY: a SUSTAINED answer rate across the whole
+   *     session that no human keeps up regardless of per-answer variance --
+   *     a script that pads each answer with slightly different (but still
+   *     inhumanly short) delays would dodge AUTOMATION's variance check and
+   *     IMPOSSIBLE_INPUT's per-answer floor both, but not this.
+   *   - ACCURACY: near-perfect correctness that does not degrade on harder
+   *     operations the way real human accuracy does -- "challenge
+   *     consistency" in the literal sense: a genuine human's accuracy is
+   *     NOT consistent across question difficulty, so a script's IS.
+   *
+   * What is deliberately NOT reimplemented here as a signal: server
+   * timestamps and session integrity are not statistical evidence to
+   * weigh, they are structural guarantees enforced elsewhere and already
+   * unconditional -- `ctx.serverTimeMs` is the only clock this plugin
+   * ever reads (a client cannot supply or influence a timestamp at all),
+   * and duplicate/replayed submissions are refused by NO_QUESTIONS_LEFT
+   * before ever reaching this method. Fabricating a "signal" for a
+   * condition that cannot occur would be detection theatre, not defence.
    */
   fairPlaySignals(state, history = {}) {
     const signals = [];
     const seat = history.seat ?? 0;
-    const times = state.progress[seat].times.map((t) => t.ms).filter((m) => m !== null);
+    const rawTimes = state.progress[seat].times;
+    const times = rawTimes.map((t) => t.ms).filter((m) => m !== null);
     if (times.length < 8) return signals;
 
     // A response faster than human perception-plus-motor time is not a fast
@@ -242,6 +328,70 @@ export const SpeedMathPlugin = {
           `questions differ in difficulty.`,
         detectorVersion: 1,
       });
+    }
+
+    // Sustained throughput across the WHOLE session -- distinct from both
+    // checks above: a script that varies each individual delay (dodging
+    // AUTOMATION) while keeping every one of them just above 220ms
+    // (dodging IMPOSSIBLE_INPUT) still cannot sustain a rate no human
+    // keeps up for this many answers in a row.
+    const sustainedMeanMs = times.reduce((a, b) => a + b, 0) / times.length;
+    if (times.length >= 15 && sustainedMeanMs < 280) {
+      signals.push({
+        id: "speed_math.sustained_throughput",
+        kind: "PERFORMANCE_ANOMALY",
+        strength: Math.min(1, (280 - sustainedMeanMs) / 280),
+        confidence: Math.min(1, times.length / 40),
+        observedValue: { meanMs: Number(sustainedMeanMs.toFixed(1)), samples: times.length },
+        baseline: { humanSustainableMeanMs: 280 },
+        explanation:
+          `Averaged ${sustainedMeanMs.toFixed(0)}ms per answer across ${times.length} ` +
+          `answers in a row. Even a fast human cannot sustain read-compute-type ` +
+          `at this rate for this long without individual answers ever slowing down.`,
+        detectorVersion: 1,
+      });
+    }
+
+    // Challenge consistency: real human accuracy DEGRADES on harder
+    // operations (division and multiplication cost more attention than
+    // addition); a script's does not. Compare per-operation accuracy only
+    // when at least two operations were actually seen with enough samples
+    // each to compare.
+    const answers = state.answers[seat];
+    const byOp = new Map();
+    for (let k = 0; k < answers.length; k++) {
+      const q = state.questions[answers[k].i];
+      if (!q) continue;
+      const bucket = byOp.get(q.op) ?? { correct: 0, total: 0 };
+      bucket.total++;
+      if (answers[k].correct) bucket.correct++;
+      byOp.set(q.op, bucket);
+    }
+    const simple = byOp.get("+");
+    const hard = ["*", "/"].map((op) => byOp.get(op)).filter((b) => b && b.total >= 5);
+    if (simple && simple.total >= 5 && hard.length > 0) {
+      const simpleAcc = simple.correct / simple.total;
+      const hardAcc = hard.reduce((a, b) => a + b.correct / b.total, 0) / hard.length;
+      const hardSamples = hard.reduce((a, b) => a + b.total, 0);
+      if (simpleAcc >= 0.97 && hardAcc >= 0.97) {
+        signals.push({
+          id: "speed_math.flat_accuracy_across_difficulty",
+          kind: "ACCURACY",
+          strength: Math.min(1, (simpleAcc + hardAcc) / 2 - 0.5),
+          confidence: Math.min(1, (simple.total + hardSamples) / 30),
+          observedValue: {
+            simpleAccuracy: Number(simpleAcc.toFixed(3)), simpleSamples: simple.total,
+            harderAccuracy: Number(hardAcc.toFixed(3)), harderSamples: hardSamples,
+          },
+          baseline: { expectedAccuracyDropOnHarderOps: true },
+          explanation:
+            `${(simpleAcc * 100).toFixed(0)}% accuracy on addition and ` +
+            `${(hardAcc * 100).toFixed(0)}% on multiplication/division across ` +
+            `${simple.total + hardSamples} answers -- human accuracy normally drops on ` +
+            `harder operations; near-identical near-perfect accuracy across both does not.`,
+          detectorVersion: 1,
+        });
+      }
     }
 
     return signals;

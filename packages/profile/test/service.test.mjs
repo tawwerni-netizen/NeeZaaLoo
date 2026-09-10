@@ -7,7 +7,10 @@ import { createNicknameService } from "../src/nickname.mjs";
 import { createExpService } from "../src/exp.mjs";
 import { createAchievementService } from "../src/achievements.mjs";
 import { createBadgeService, BadgeSource } from "../src/badges.mjs";
+import { createFrameService } from "../src/frames.mjs";
 import { createMockAvatarStorage } from "../src/avatar-storage.mjs";
+import { createMasteryService } from "../../mastery/src/service.mjs";
+import { createStreakService } from "../../engagement/src/streaks.mjs";
 import { createProfileService, ProfileError } from "../src/service.mjs";
 import { BioError } from "../src/bio.mjs";
 import { NicknameError } from "../src/nickname.mjs";
@@ -26,10 +29,14 @@ before(async () => {
   exp = createExpService(db, { now: () => CLOCK });
   achievements = createAchievementService(db, { now: () => CLOCK });
   badges = createBadgeService(db, { now: () => CLOCK });
+  const frames = createFrameService(db, { now: () => CLOCK });
   avatarStorage = createMockAvatarStorage();
   const globalSkill = createGlobalSkillService(db);
+  const masteryService = createMasteryService(db);
+  const streakService = createStreakService(db);
   profile = createProfileService(db, {
-    nicknameService, expService: exp, achievementService: achievements, badgeService: badges, avatarStorage, globalSkill,
+    nicknameService, expService: exp, achievementService: achievements, badgeService: badges,
+    frameService: frames, avatarStorage, globalSkill, masteryService, streakService,
     now: () => CLOCK,
   });
 });

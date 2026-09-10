@@ -21,6 +21,10 @@ import styles from "./play.module.css";
 
 const PRESENTATION: Record<string, { key: string; difficulty: "deep" | "fast" }> = {
   chess: { key: "chess", difficulty: "deep" },
+  checkers: { key: "checkers", difficulty: "deep" },
+  "connect-four": { key: "connect_four", difficulty: "fast" },
+  xo: { key: "xo", difficulty: "fast" },
+  "speed-math": { key: "speed_math", difficulty: "fast" },
 };
 
 export default function PlaySelectPage() {

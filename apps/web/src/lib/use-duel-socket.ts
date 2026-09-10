@@ -44,6 +44,15 @@ export function useDuelSocket(duelId: string) {
   const socketRef = useRef<WebSocket | null>(null);
   const everConnectedRef = useRef(false);
   const closedByUsRef = useRef(false);
+  // Sequence admission (see packages/realtime/src/protocol.mjs's own
+  // nonce/baseVersion fields): the event count this client has actually
+  // seen, and this seat's own last-accepted action number -- both refs,
+  // not state, because sendIntent needs the CURRENT value synchronously,
+  // not whatever React last rendered with. Reseeded from the server's own
+  // STATE on every join/reconnect (never carried over from a stale local
+  // guess), and advanced from every EVENT after that.
+  const versionRef = useRef(0);
+  const nonceRef = useRef(0);
 
   useEffect(() => {
     everConnectedRef.current = false;
@@ -72,11 +81,14 @@ export function useDuelSocket(duelId: string) {
         } else if (msg.t === "STATE") {
           setSeat((msg.seat as number | null | undefined) ?? null);
           setDrawOfferBy((msg.drawOfferBy as number | null | undefined) ?? null);
+          versionRef.current = (msg.version as number | undefined) ?? 0;
+          nonceRef.current = (msg.nonce as number | null | undefined) ?? 0;
         } else if (msg.t === "EVENT") {
           const type = msg.type as string;
           const payload = msg.payload as { seat?: number } | undefined;
           if (type === "DRAW_OFFERED") setDrawOfferBy(payload?.seat ?? null);
           else if (type === "DRAW_DECLINED" || type === "INTENT_ACCEPTED") setDrawOfferBy(null);
+          if (typeof msg.version === "number") versionRef.current = msg.version;
         }
       };
       ws.onclose = () => {
@@ -99,7 +111,16 @@ export function useDuelSocket(duelId: string) {
   }, [duelId]);
 
   function sendIntent(intent: unknown, cseq?: number) {
-    socketRef.current?.send(JSON.stringify({ t: "INTENT", duelId, intent, cseq }));
+    // A fresh nonce for every call: the server treats an OLD nonce as a
+    // replay the instant a newer one has been accepted, so a genuinely
+    // new decision must always claim the next number, never resend a
+    // prior one. `baseVersion` is whatever this client last actually saw
+    // -- a stale one (this client is behind) is refused and resynced
+    // rather than applied against a board it never looked at.
+    nonceRef.current += 1;
+    socketRef.current?.send(JSON.stringify({
+      t: "INTENT", duelId, intent, cseq, nonce: nonceRef.current, baseVersion: versionRef.current,
+    }));
   }
 
   function resign() {

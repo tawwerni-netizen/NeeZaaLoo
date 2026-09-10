@@ -1,11 +1,13 @@
 /**
  * The Profile read/update surface -- the one place that assembles a
  * player's public competitive identity (nickname, bio, avatar, EXP,
- * level, Global Skill, per-game ratings, win/loss stats, achievements,
- * badges) from every domain that owns a piece of it. This module reads
- * from `packages/global-skill` and the existing `rating`/`duel` tables
- * rather than recomputing any of that -- Global Skill and Glicko ratings
- * are reused exactly as they already exist, never reimplemented here.
+ * level, Global Skill, per-game ratings and mastery, win/loss stats,
+ * streak, achievements, badges, frames, tournament record) from every
+ * domain that owns a piece of it. This module reads
+ * from `packages/global-skill`, `packages/mastery`, `packages/engagement`
+ * and the existing `rating`/`duel`/`rating_change` tables rather than
+ * recomputing any of that -- every one of those stays the single source
+ * of truth it already was, never reimplemented here.
  *
  * `ownProfile()` and `publicProfileFor()` return the SAME shape
  * deliberately: nothing in a player's own profile view is more sensitive
@@ -26,6 +28,7 @@ export const ProfileError = Object.freeze({
 
 export function createProfileService(db, {
   nicknameService, expService, achievementService, badgeService, avatarStorage, globalSkill,
+  masteryService, streakService, frameService,
   now = () => Date.now(),
 }) {
   async function computeStats(playerId) {
@@ -62,6 +65,27 @@ export function createProfileService(db, {
     }));
   }
 
+  /** Peak rating ever reached, per game -- derived from the SAME
+   * append-only `rating_change` audit trail settlement already writes,
+   * never a separate "high score" column that could drift from it. */
+  async function highestRatings(playerId) {
+    const r = await db.query(
+      `SELECT game_id, MAX(rating_after_x100) AS peak FROM rating_change
+        WHERE player_id = $1 GROUP BY game_id`,
+      [playerId]
+    );
+    return Object.fromEntries(r.rows.map((row) => [row.game_id, row.peak / 100]));
+  }
+
+  async function tournamentStats(playerId) {
+    const r = await db.query(
+      `SELECT count(*)::int AS played, count(*) FILTER (WHERE rank = 1)::int AS won
+         FROM tournament_settlement WHERE player_id = $1`,
+      [playerId]
+    );
+    return r.rows[0];
+  }
+
   /**
    * Nicknames can change (see nickname.mjs's cooldown/uniqueness rules) --
    * `id` never does. A URL built from a CURRENT nickname (a shared link, a
@@ -87,18 +111,26 @@ export function createProfileService(db, {
 
   async function publicProfileFor(playerId) {
     const p = await db.query(
-      "SELECT id, handle, bio, avatar_key, selected_badge_code, created_at FROM player WHERE id = $1", [playerId]
+      "SELECT id, handle, bio, avatar_key, selected_badge_code, selected_frame_code, created_at FROM player WHERE id = $1", [playerId]
     );
     if (!p.rows.length) return null;
     const row = p.rows[0];
 
-    const [totalExp, achievements, badges, stats, ratings, skill] = await Promise.all([
+    const [
+      totalExp, achievements, badges, frames, stats, ratings, skill,
+      mastery, streak, peakRatings, tournaments,
+    ] = await Promise.all([
       expService.totalFor(playerId),
       achievementService.listFor(playerId),
       badgeService.listFor(playerId),
+      frameService.listFor(playerId),
       computeStats(playerId),
       gameRatings(playerId),
       globalSkill.scoreFor(playerId),
+      masteryService.masteryFor(playerId),
+      streakService.streakFor(playerId),
+      highestRatings(playerId),
+      tournamentStats(playerId),
     ]);
 
     return {
@@ -107,12 +139,18 @@ export function createProfileService(db, {
       bio: row.bio,
       avatarUrl: avatarStorage.getPublicUrl(row.avatar_key),
       selectedBadge: row.selected_badge_code,
+      selectedFrame: row.selected_frame_code,
       exp: expProgress(totalExp),
       globalSkill: skill.score,
       ratings,
       stats,
+      mastery,
+      streak,
+      highestRatings: peakRatings,
+      tournaments,
       achievements: achievements.map((a) => a.achievement_code),
       badges: badges.map((b) => ({ code: b.badge_code, source: b.source })),
+      frames: frames.map((f) => f.frame_code),
       memberSince: row.created_at,
     };
   }

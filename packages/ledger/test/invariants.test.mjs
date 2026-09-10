@@ -268,7 +268,11 @@ describe("I5 — adjustments are accountable", () => {
 describe("structural guards", () => {
   test("an entry cannot name an asset its account does not hold", async () => {
     const db = await fresh();
-    await db.query(`INSERT INTO asset (code, minor_units) VALUES ('USDC', 6)`);
+    // is_pegged defaults TRUE (0037_stablecoin_valuation.sql), which then
+    // requires a peg_asset -- this fixture only needs a second, otherwise
+    // unrelated asset code to prove the composite FK, so it declares USDC
+    // unpegged rather than asserting anything about its real-world peg.
+    await db.query(`INSERT INTO asset (code, minor_units, is_pegged) VALUES ('USDC', 6, FALSE)`);
     await rejects(
       () =>
         db.query(

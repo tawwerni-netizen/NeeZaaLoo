@@ -1,0 +1,21 @@
+-- =============================================================================
+-- 0041_rail_emergency_hold.sql
+--
+-- The Admin Payment & Stablecoin Control Center's fifth UI state:
+-- EMERGENCY HOLD, stronger than an ordinary ADMIN_PAUSED. The distinction is
+-- real, not cosmetic: ADMIN_PAUSED is routine operational maintenance (an
+-- admin scheduling downtime, say); EMERGENCY_HOLD is an incident response --
+-- both currently produce the same mechanical effect (deposits and
+-- withdrawals both blocked for new operations), but they are recorded, and
+-- must read, differently, and a future change to what EMERGENCY_HOLD does
+-- (e.g. also pausing free play on the affected asset) must not have to hunt
+-- for every place ADMIN_PAUSED already meant "regular pause".
+--
+-- Unlike the withdrawal_status/deposit_status rewrites in earlier
+-- migrations, payment_rail.status has no CHECK constraint enumerating
+-- literal values and no partial index filtering on one -- ALTER TYPE ...
+-- ADD VALUE is sufficient here; the heavier drop-and-rebuild technique
+-- exists for when values are being RENAMED or REMOVED, not added.
+-- =============================================================================
+
+ALTER TYPE rail_status ADD VALUE 'EMERGENCY_HOLD';

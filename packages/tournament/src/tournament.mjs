@@ -14,9 +14,10 @@
  * and the one-time pool settlement at the end.
  */
 import { randomUUID } from "node:crypto";
-import { createDuel } from "../../duel-engine/src/duel.mjs";
 import { computeRake } from "../../settlement/src/rake.mjs";
 import { buildFirstRound, buildNextRound, buildSwissRound, nextPow2 } from "./pairing.mjs";
+import { DEFAULT_SPAWNERS } from "../../matchmaking/src/spawn.mjs";
+import { EXP_AMOUNTS } from "../../profile/src/exp.mjs";
 
 export const TournamentError = {
   NOT_FOUND: "NOT_FOUND",
@@ -29,6 +30,8 @@ export const TournamentError = {
   NOT_LIVE: "NOT_LIVE",
   ROUND_NOT_COMPLETE: "ROUND_NOT_COMPLETE",
   ALREADY_SETTLED: "ALREADY_SETTLED",
+  NOT_ELIGIBLE: "NOT_ELIGIBLE",
+  NO_ECONOMY_RULE: "NO_ECONOMY_RULE",
 };
 
 export function createTournamentService(db, { now = () => Date.now() } = {}) {
@@ -38,30 +41,145 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
       gameId, format, tier = "FREE", entryFeeMinor = 0n, asset = null,
       capacity, minPlayers = 2, timeControl, swissRounds = null,
       registrationClosesAt, prizeStructure = [], createdBy,
+      title = null, description = null, eligibility = {}, visibility = "PUBLIC",
+      scheduledStartsAt = null,
     }) {
       const id = `trn_${randomUUID()}`;
-      await db.query(
-        `INSERT INTO tournament
-           (id, game_id, format, tier, entry_fee_minor, asset, capacity, min_players,
-            time_control, swiss_rounds, registration_closes_at, prize_structure, created_by)
-         VALUES ($1,$2,$3::tournament_format,$4::entry_tier,$5,$6,$7,$8,$9::jsonb,$10,$11,$12::jsonb,$13)`,
-        [id, gameId, format, tier, String(entryFeeMinor), asset, capacity, minPlayers,
-         JSON.stringify(timeControl), swissRounds, registrationClosesAt,
-         JSON.stringify(prizeStructure), createdBy ?? null]
-      );
+      // Snapshotted here, not read live at round-creation time: a tournament
+      // advertised under one ruleset at signup must play every round of a
+      // multi-day event under that SAME ruleset, even if the game's own
+      // plugin_version is bumped mid-event.
+      const gameRow = await db.query("SELECT plugin_version FROM game WHERE id=$1", [gameId]);
+      const rulesetVersion = gameRow.rows[0]?.plugin_version ?? 1;
+      if (tier === "CASH") {
+        // A CASH tournament's pool fee is priced NOW, at creation, and frozen
+        // -- exactly like a duel via mm_pair() (see 0036_fee_snapshot.sql's
+        // own header). Without this, settlePrizes() would have to re-resolve
+        // the rule when the pool is finally distributed, which could be days
+        // after registration closed, and an admin rate change in between
+        // would silently reprice every entrant's already-collected fee.
+        const priced = await db.query(
+          `SELECT * FROM economy_resolve($1,'CASH'::entry_tier, now(), $2)`,
+          [gameId, id]
+        );
+        if (!priced.rows.length) {
+          // A CASH tournament that cannot be priced must not be created at
+          // all -- exactly the same refusal mm_pair() makes for a CASH duel.
+          return { ok: false, reason: TournamentError.NO_ECONOMY_RULE };
+        }
+        const r = priced.rows[0];
+        await db.query(
+          `INSERT INTO tournament
+             (id, game_id, format, tier, entry_fee_minor, asset, capacity, min_players,
+              time_control, swiss_rounds, registration_closes_at, prize_structure, created_by,
+              title, description, ruleset_version, eligibility, visibility, scheduled_starts_at,
+              priced_rake_bps, priced_economy_rule_id, priced_economy_rule_version,
+              priced_min_rake_minor, priced_max_rake_minor, priced_at)
+           VALUES ($1,$2,$3::tournament_format,$4::entry_tier,$5,$6,$7,$8,$9::jsonb,$10,$11,$12::jsonb,$13,
+                   $14,$15,$16,$17::jsonb,$18,$19,$20,$21,$22,$23,$24,now())`,
+          [id, gameId, format, tier, String(entryFeeMinor), asset, capacity, minPlayers,
+           JSON.stringify(timeControl), swissRounds, registrationClosesAt,
+           JSON.stringify(prizeStructure), createdBy ?? null,
+           title, description, rulesetVersion, JSON.stringify(eligibility), visibility, scheduledStartsAt,
+           r.rake_bps, r.rule_id, r.rule_version, r.min_rake_minor, r.max_rake_minor]
+        );
+      } else {
+        await db.query(
+          `INSERT INTO tournament
+             (id, game_id, format, tier, entry_fee_minor, asset, capacity, min_players,
+              time_control, swiss_rounds, registration_closes_at, prize_structure, created_by,
+              title, description, ruleset_version, eligibility, visibility, scheduled_starts_at)
+           VALUES ($1,$2,$3::tournament_format,$4::entry_tier,$5,$6,$7,$8,$9::jsonb,$10,$11,$12::jsonb,$13,
+                   $14,$15,$16,$17::jsonb,$18,$19)`,
+          [id, gameId, format, tier, String(entryFeeMinor), asset, capacity, minPlayers,
+           JSON.stringify(timeControl), swissRounds, registrationClosesAt,
+           JSON.stringify(prizeStructure), createdBy ?? null,
+           title, description, rulesetVersion, JSON.stringify(eligibility), visibility, scheduledStartsAt]
+        );
+      }
       await audit(db, id, "CREATED", "SYSTEM", null, { format, tier, capacity });
       return { ok: true, tournamentId: id };
     },
 
+    /** DRAFT -> SCHEDULED: the admin has set a target start time, but registration is not open yet. */
+    async schedule(tournamentId) {
+      const r = await db.query(
+        `UPDATE tournament SET status='SCHEDULED'::tournament_status
+          WHERE id=$1 AND status='DRAFT' RETURNING id`,
+        [tournamentId]
+      );
+      if (!r.rows.length) return { ok: false, reason: TournamentError.WRONG_STATUS };
+      await audit(db, tournamentId, "SCHEDULED", "SYSTEM");
+      return { ok: true };
+    },
+
     async openRegistration(tournamentId) {
       const r = await db.query(
-        `UPDATE tournament SET status='REGISTRATION_OPEN'::tournament_status
-          WHERE id=$1 AND status='DRAFT' RETURNING id`,
+        `UPDATE tournament SET status='REGISTRATION'::tournament_status
+          WHERE id=$1 AND status IN ('DRAFT','SCHEDULED') RETURNING id`,
         [tournamentId]
       );
       if (!r.rows.length) return { ok: false, reason: TournamentError.WRONG_STATUS };
       await audit(db, tournamentId, "REGISTRATION_OPENED", "SYSTEM");
       return { ok: true };
+    },
+
+    /**
+     * Cancel before play has started. Allowed from DRAFT, SCHEDULED, or
+     * REGISTRATION only -- once a single pairing has gone LIVE, cancelling
+     * would strand a duel mid-play, so the caller must use forfeits instead.
+     * Refunds every locked CASH entry fee in full, same as withdraw().
+     */
+    async cancel(tournamentId, { reason = "CANCELLED_BY_ADMIN" } = {}) {
+      return db.transaction(async (tx) => {
+        const t = await tx.query(
+          `SELECT status, tier, entry_fee_minor::text AS fee, asset FROM tournament WHERE id=$1 FOR UPDATE`,
+          [tournamentId]
+        );
+        if (!t.rows.length) return { ok: false, reason: TournamentError.NOT_FOUND };
+        const tour = t.rows[0];
+        if (!["DRAFT", "SCHEDULED", "REGISTRATION"].includes(tour.status)) {
+          return { ok: false, reason: TournamentError.WRONG_STATUS };
+        }
+
+        const regs = await tx.query(
+          `SELECT player_id, entry_tx_id FROM tournament_registration
+            WHERE tournament_id=$1 AND status='REGISTERED' FOR UPDATE`,
+          [tournamentId]
+        );
+        for (const reg of regs.rows) {
+          if (reg.entry_tx_id) {
+            await tx.query(
+              `SELECT ledger_post($1,'TOURNAMENT_REFUND','SYSTEM',NULL,$2::jsonb,$3,'tournament cancelled','tournament',$4)`,
+              [`tournament:${tournamentId}:refund:${reg.player_id}`,
+               JSON.stringify([
+                 { account: `user:${reg.player_id}:locked`, amount: tour.fee },
+                 { account: `user:${reg.player_id}:available`, amount: "-" + tour.fee },
+               ]),
+               tour.asset, tournamentId]
+            );
+          }
+          await tx.query(
+            `UPDATE tournament_registration SET status='WITHDRAWN'::registration_status, withdrawn_at=now()
+              WHERE tournament_id=$1 AND player_id=$2`,
+            [tournamentId, reg.player_id]
+          );
+          await notify(tx, reg.player_id, "TOURNAMENT_CANCELLED",
+            "Tournament cancelled", "A tournament you registered for was cancelled. Any entry fee has been refunded.",
+            { tournamentId });
+        }
+
+        await tx.query(
+          `UPDATE tournament SET status='CANCELLED'::tournament_status WHERE id=$1`,
+          [tournamentId]
+        );
+        await tx.query(
+          `INSERT INTO tournament_event (tournament_id, event, actor_type, detail)
+           VALUES ($1,'CANCELLED','SYSTEM',$2::jsonb)`,
+          [tournamentId, JSON.stringify({ reason, refunded: regs.rows.length })]
+        );
+        return { ok: true, refunded: regs.rows.length };
+      });
     },
 
     /**
@@ -75,12 +193,20 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
     async register({ tournamentId, playerId, ratingX100 }) {
       return db.transaction(async (tx) => {
         const t = await tx.query(
-          `SELECT tier, entry_fee_minor::text AS fee, asset, status FROM tournament
+          `SELECT tier, entry_fee_minor::text AS fee, asset, status, eligibility FROM tournament
             WHERE id=$1 FOR UPDATE`,
           [tournamentId]
         );
         if (!t.rows.length) return { ok: false, reason: TournamentError.NOT_FOUND };
         const tour = t.rows[0];
+
+        const elig = tour.eligibility ?? {};
+        if (elig.minRatingX100 != null && ratingX100 < elig.minRatingX100) {
+          return { ok: false, reason: TournamentError.NOT_ELIGIBLE };
+        }
+        if (elig.maxRatingX100 != null && ratingX100 > elig.maxRatingX100) {
+          return { ok: false, reason: TournamentError.NOT_ELIGIBLE };
+        }
 
         const existing = await tx.query(
           `SELECT status FROM tournament_registration WHERE tournament_id=$1 AND player_id=$2`,
@@ -140,7 +266,7 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
       return db.transaction(async (tx) => {
         const t = await tx.query("SELECT status FROM tournament WHERE id=$1 FOR UPDATE", [tournamentId]);
         if (!t.rows.length) return { ok: false, reason: TournamentError.NOT_FOUND };
-        if (!["REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(t.rows[0].status)) {
+        if (t.rows[0].status !== "REGISTRATION") {
           return { ok: false, reason: TournamentError.WRONG_STATUS };
         }
         const reg = await tx.query(
@@ -180,13 +306,13 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
     async start(tournamentId) {
       return db.transaction(async (tx) => {
         const t = await tx.query(
-          `SELECT format, game_id, time_control, swiss_rounds, min_players, status
+          `SELECT format, game_id, time_control, swiss_rounds, min_players, status, ruleset_version
              FROM tournament WHERE id=$1 FOR UPDATE`,
           [tournamentId]
         );
         if (!t.rows.length) return { ok: false, reason: TournamentError.NOT_FOUND };
         const tour = t.rows[0];
-        if (!["REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(tour.status)) {
+        if (tour.status !== "REGISTRATION") {
           return { ok: false, reason: TournamentError.WRONG_STATUS };
         }
 
@@ -207,7 +333,7 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
           : Math.log2(nextPow2(players.length));
 
         await tx.query(
-          `UPDATE tournament SET status='IN_PROGRESS'::tournament_status, starts_at=now() WHERE id=$1`,
+          `UPDATE tournament SET status='LIVE'::tournament_status, starts_at=now() WHERE id=$1`,
           [tournamentId]
         );
 
@@ -218,7 +344,7 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
               new Set(), new Set()
             );
 
-        await createRound(tx, tournamentId, 1, firstRoundPairings, tour.game_id, tour.time_control);
+        await createRound(tx, tournamentId, 1, firstRoundPairings, tour.game_id, tour.time_control, tour.ruleset_version);
 
         await tx.query(
           `INSERT INTO tournament_event (tournament_id, event, actor_type, detail)
@@ -313,13 +439,19 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
     async advance(tournamentId) {
       return db.transaction(async (tx) => {
         const t = await tx.query(
-          `SELECT format, game_id, time_control, swiss_rounds, status
+          `SELECT format, game_id, time_control, swiss_rounds, status, ruleset_version
              FROM tournament WHERE id=$1 FOR UPDATE`,
           [tournamentId]
         );
         if (!t.rows.length) return { ok: false, reason: TournamentError.NOT_FOUND };
         const tour = t.rows[0];
-        if (tour.status !== "IN_PROGRESS") return { ok: false, reason: TournamentError.WRONG_STATUS };
+        // FINALS is set below, mid-flow, the moment the round about to be
+        // created is the last one -- so a SECOND advance() call (the one
+        // that actually decides the final and finishes the tournament) is
+        // made while status is already FINALS, not LIVE. Both are valid.
+        if (!["LIVE", "FINALS"].includes(tour.status)) {
+          return { ok: false, reason: TournamentError.WRONG_STATUS };
+        }
 
         const curRound = await tx.query(
           `SELECT round_number FROM tournament_round WHERE tournament_id=$1
@@ -362,13 +494,22 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
             winner: winnerOf(p, ratingOf),
           }));
           const nextPairings = buildNextRound(winners);
-          await createRound(tx, tournamentId, roundNumber + 1, nextPairings, tour.game_id, tour.time_control);
+          // Exactly one pairing next round means it decides the whole
+          // bracket -- the FINALS phase, shown to spectators before the
+          // final match itself has been played.
+          if (nextPairings.length === 1) {
+            await tx.query(`UPDATE tournament SET status='FINALS'::tournament_status WHERE id=$1`, [tournamentId]);
+          }
+          await createRound(tx, tournamentId, roundNumber + 1, nextPairings, tour.game_id, tour.time_control, tour.ruleset_version);
           return { ok: true, round: roundNumber + 1, pairings: nextPairings.length };
         }
 
         // SWISS
         if (roundNumber >= tour.swiss_rounds) {
           return finishTournament(tx, tournamentId);
+        }
+        if (roundNumber + 1 === tour.swiss_rounds) {
+          await tx.query(`UPDATE tournament SET status='FINALS'::tournament_status WHERE id=$1`, [tournamentId]);
         }
 
         const standings = await tx.query(
@@ -395,7 +536,7 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
         // with a NULL seat instead of a real player.
         const swissInput = standings.rows.map((r) => ({ playerId: r.player_id, points: r.points }));
         const nextPairings = buildSwissRound(swissInput, playedPairs, hadBye);
-        await createRound(tx, tournamentId, roundNumber + 1, nextPairings, tour.game_id, tour.time_control);
+        await createRound(tx, tournamentId, roundNumber + 1, nextPairings, tour.game_id, tour.time_control, tour.ruleset_version);
         return { ok: true, round: roundNumber + 1, pairings: nextPairings.length };
       });
     },
@@ -419,18 +560,27 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
     async settlePrizes(tournamentId) {
       return db.transaction(async (tx) => {
         const t = await tx.query(
-          `SELECT tier, entry_fee_minor::text AS fee, asset, game_id, prize_structure, status
+          `SELECT tier, entry_fee_minor::text AS fee, asset, game_id, prize_structure, status,
+                  priced_rake_bps, priced_min_rake_minor::text AS priced_min_rake_minor,
+                  priced_max_rake_minor::text AS priced_max_rake_minor
              FROM tournament WHERE id=$1 FOR UPDATE`,
           [tournamentId]
         );
         if (!t.rows.length) return { ok: false, reason: TournamentError.NOT_FOUND };
         const tour = t.rows[0];
+        // Idempotency check FIRST, matching settlement.settle()'s own
+        // pattern: settling twice is a successful no-op, not a refusal --
+        // status alone answers it here since settlePrizes() is the only
+        // path that ever sets SETTLED.
+        if (tour.status === "SETTLED") {
+          return { ok: true, reason: TournamentError.ALREADY_SETTLED };
+        }
         if (tour.status !== "COMPLETED") return { ok: false, reason: TournamentError.WRONG_STATUS };
 
         const already = await tx.query(
           `SELECT count(*)::int c FROM tournament_settlement WHERE tournament_id=$1`, [tournamentId]
         );
-        if (already.rows[0].c > 0) return { ok: false, reason: TournamentError.ALREADY_SETTLED };
+        if (already.rows[0].c > 0) return { ok: true, reason: TournamentError.ALREADY_SETTLED };
 
         // Query through `tx`, not the public svc.standings() helper -- that
         // helper runs on the outer `db`, and issuing a query on a second
@@ -455,8 +605,14 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
                VALUES ($1,$2,$3,0)`,
               [tournamentId, s.player_id, s.rank]
             );
+            if (s.rank === 1) await grantTournamentChampion(tx, s.player_id);
+            await notify(tx, s.player_id, "TOURNAMENT_SETTLED",
+              "Tournament results are final", `You finished rank ${s.rank}.`, { tournamentId, rank: s.rank });
           }
-          await tx.query(`UPDATE tournament SET completed_at = COALESCE(completed_at, now()) WHERE id=$1`, [tournamentId]);
+          await tx.query(
+            `UPDATE tournament SET completed_at = COALESCE(completed_at, now()), status='SETTLED'::tournament_status WHERE id=$1`,
+            [tournamentId]
+          );
           return { ok: true, distributed: "0", entrants: standings.length };
         }
 
@@ -467,11 +623,31 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
         const fee = BigInt(tour.fee);
         const pot = fee * BigInt(entrants.rows.length);
 
-        const rule = await tx.query(
-          `SELECT * FROM economy_resolve($1,'CASH'::entry_tier, now(), $2)`,
-          [tour.game_id, tournamentId]
-        );
-        const priced = rule.rows[0] ?? { rake_bps: 1000, min_rake_minor: "0", max_rake_minor: null };
+        let priced;
+        if (tour.priced_rake_bps !== null && tour.priced_rake_bps !== undefined) {
+          // The normal case for anything created after
+          // db/migrations/0036_fee_snapshot.sql: the pool fee was resolved
+          // and frozen at tournament CREATION time. Reading it here, rather
+          // than resolving economy_resolve() with now(), is what stops an
+          // admin rate change made after registration closed (or even after
+          // the final round finished) from repricing a pool that already
+          // collected every entrant's fee under a different rule.
+          priced = {
+            rake_bps: tour.priced_rake_bps,
+            min_rake_minor: tour.priced_min_rake_minor ?? "0",
+            max_rake_minor: tour.priced_max_rake_minor,
+          };
+        } else {
+          // Legacy fallback ONLY: a tournament created before creation-time
+          // pricing existed, or inserted directly by a test fixture. The
+          // real production path (svc.create()) always carries a snapshot
+          // for a CASH tournament, so this branch never runs there.
+          const rule = await tx.query(
+            `SELECT * FROM economy_resolve($1,'CASH'::entry_tier, now(), $2)`,
+            [tour.game_id, tournamentId]
+          );
+          priced = rule.rows[0] ?? { rake_bps: 1000, min_rake_minor: "0", max_rake_minor: null };
+        }
         const { rakeMinor } = computeRake(pot, {
           rakeBps: priced.rake_bps,
           minRakeMinor: priced.min_rake_minor ?? 0,
@@ -511,11 +687,18 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
 
         for (const s of standings) {
           const prize = prizes.find((p) => p.rank === s.rank);
+          const prizeMinor = prize?.minor ?? 0n;
           await tx.query(
             `INSERT INTO tournament_settlement (tournament_id, player_id, rank, prize_minor, settlement_tx_id)
              VALUES ($1,$2,$3,$4,$5)`,
-            [tournamentId, s.player_id, s.rank, (prize?.minor ?? 0n).toString(), txId]
+            [tournamentId, s.player_id, s.rank, prizeMinor.toString(), txId]
           );
+          if (s.rank === 1) await grantTournamentChampion(tx, s.player_id);
+          const body = prizeMinor > 0n
+            ? `You finished rank ${s.rank} and won a prize.`
+            : `You finished rank ${s.rank}.`;
+          await notify(tx, s.player_id, "TOURNAMENT_SETTLED", "Tournament results are final", body,
+            { tournamentId, rank: s.rank, prizeMinor: prizeMinor.toString() });
         }
 
         await tx.query(
@@ -523,6 +706,7 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
            VALUES ($1,'SETTLED','SYSTEM',$2::jsonb)`,
           [tournamentId, JSON.stringify({ pot: pot.toString(), rake: actualRake.toString() })]
         );
+        await tx.query(`UPDATE tournament SET status='SETTLED'::tournament_status WHERE id=$1`, [tournamentId]);
 
         return { ok: true, distributed: distributable.toString(), rake: actualRake.toString(), entrants: standings.length };
       });
@@ -531,14 +715,12 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
 
   return svc;
 
-  async function createRound(tx, tournamentId, roundNumber, pairings, gameId, timeControl) {
+  async function createRound(tx, tournamentId, roundNumber, pairings, gameId, timeControl, pluginVersion) {
     await tx.query(
       `INSERT INTO tournament_round (tournament_id, round_number, status, started_at)
        VALUES ($1,$2,'IN_PROGRESS'::round_status, now())`,
       [tournamentId, roundNumber]
     );
-    const gameRow = await tx.query("SELECT plugin_version FROM game WHERE id=$1", [gameId]);
-    const pluginVersion = gameRow.rows[0]?.plugin_version ?? 1;
 
     for (const p of pairings) {
       const pairingId = `pr_${randomUUID()}`;
@@ -554,14 +736,19 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
       }
 
       const duelId = `duel_${randomUUID()}`;
+      // The SAME spawner map matchmaking's own dispatch worker uses for a
+      // fresh duel of this game -- a tournament pairing is not a special
+      // case for whichever plugin ends up playing it.
+      const spawn = DEFAULT_SPAWNERS[gameId];
+      const { initialState, seed } = spawn ? spawn() : { initialState: {}, seed: null };
       // A tournament pairing's duel is FREE tier: no per-match stake. The
       // pool was already collected once at registration.
       await tx.query(
         `INSERT INTO duel (id, game_id, plugin_version, pairing_key, seat_0, seat_1,
-                           tier, stake_minor, initial_state, time_control, status)
-         VALUES ($1,$2,$3,$4,$5,$6,'FREE',0,$7::jsonb,$8::jsonb,'READY'::duel_status)`,
+                           tier, stake_minor, initial_state, seed, time_control, status)
+         VALUES ($1,$2,$3,$4,$5,$6,'FREE',0,$7::jsonb,$8,$9::jsonb,'READY'::duel_status)`,
         [duelId, gameId, pluginVersion, `tournament:${tournamentId}:r${roundNumber}:s${p.slot}`,
-         p.seat0, p.seat1, JSON.stringify(initialStateFor(gameId)), JSON.stringify(timeControl)]
+         p.seat0, p.seat1, JSON.stringify(initialState), seed, JSON.stringify(timeControl)]
       );
       await tx.query(
         `INSERT INTO tournament_pairing
@@ -569,7 +756,51 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
          VALUES ($1,$2,$3,$4,$5,$6,$7,'LIVE'::pairing_status)`,
         [pairingId, tournamentId, roundNumber, p.slot, p.seat0, p.seat1, duelId]
       );
+      for (const playerId of [p.seat0, p.seat1]) {
+        await notify(tx, playerId, "MATCH_READY", "Your match is ready",
+          `Round ${roundNumber} has begun -- your opponent is waiting.`,
+          { tournamentId, roundNumber, pairingId, duelId });
+      }
     }
+  }
+
+  async function notify(tx, playerId, type, title, body, data = {}) {
+    await tx.query(
+      `INSERT INTO notification (id, player_id, type, title, body, data)
+       VALUES ($1,$2,$3,$4,$5,$6::jsonb)`,
+      [`ntf_${randomUUID()}`, playerId, type, title, body, JSON.stringify(data)]
+    );
+  }
+
+  /**
+   * TOURNAMENT_CHAMPION: rank 1 in ANY settled tournament, FREE or CASH --
+   * a real, disclosed result either way, independent of whether prize
+   * money moved. Every write here goes through the SAME `tx` this whole
+   * settlement transaction is already running on, via plain SQL rather
+   * than the achievements/badges service objects, for the identical
+   * self-deadlock reason settlePrizes() itself already documents (a
+   * service bound to a different connection cannot be called from inside
+   * this open transaction under PGlite's single physical connection).
+   */
+  async function grantTournamentChampion(tx, playerId) {
+    const inserted = await tx.query(
+      `INSERT INTO player_achievement (player_id, achievement_code) VALUES ($1,'TOURNAMENT_CHAMPION')
+         ON CONFLICT (player_id, achievement_code) DO NOTHING
+       RETURNING achievement_code`,
+      [playerId]
+    );
+    if (!inserted.rows.length) return;
+    await tx.query(
+      `INSERT INTO player_badge (player_id, badge_code, source) VALUES ($1,'TOURNAMENT_CHAMPION','ACHIEVEMENT'::badge_source)
+         ON CONFLICT (player_id, badge_code) DO NOTHING`,
+      [playerId]
+    );
+    await tx.query(
+      `INSERT INTO exp_event (id, player_id, event_type, source, amount, dedupe_key, created_at)
+       VALUES ($1,$2,'ACHIEVEMENT','TOURNAMENT_CHAMPION',$3,$4,now())
+       ON CONFLICT (dedupe_key) DO NOTHING`,
+      [`xp_${randomUUID()}`, playerId, EXP_AMOUNTS.ACHIEVEMENT, `achievement:${playerId}:TOURNAMENT_CHAMPION`]
+    );
   }
 
   async function finishTournament(tx, tournamentId) {
@@ -596,12 +827,6 @@ function winnerOf(pairing, ratingOf) {
   const a = ratingOf.get(pairing.seat_0) ?? 0;
   const b = ratingOf.get(pairing.seat_1) ?? 0;
   return a >= b ? pairing.seat_0 : pairing.seat_1;
-}
-
-/** Placeholder initial state per game until wired to each plugin's createChallenge. */
-function initialStateFor(gameId) {
-  if (gameId === "chess") return { fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" };
-  return { seed: randomUUID() };
 }
 
 async function recomputeStandings(tx, tournamentId, format) {

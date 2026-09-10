@@ -6,8 +6,12 @@
  * authoritative RESULT. This is the ONE place that turns a result into a
  * reward, by calling the ALREADY-BUILT, independently-idempotent
  * primitives in packages/profile (exp.mjs, achievements.mjs, badges.mjs)
- * -- this file adds no new idempotency mechanism of its own for the
- * awards themselves, only the sweep-scheduling marker described below.
+ * and packages/engagement (streaks.mjs) -- this file adds no new
+ * idempotency mechanism of its own for the awards themselves, only the
+ * sweep-scheduling marker described below. Mastery-tier achievements
+ * (packages/mastery) are checked here too, since "a real duel just
+ * finished" is also the only moment a player's standing rating could
+ * have crossed a new mastery threshold.
  *
  * SOURCE OF TRUTH (directive #2): the only two "did this really happen"
  * signals this file will ever read are `duel.status = 'SETTLED'` and
@@ -57,7 +61,21 @@ export const ProgressionEventType = Object.freeze({
   GAME_COMPLETED: "GAME_COMPLETED",
   GAME_WON: "GAME_WON",
   TOURNAMENT_PARTICIPATION: "TOURNAMENT_PARTICIPATION",
+  ACHIEVEMENT: "ACHIEVEMENT",
 });
+
+/** Mastery level -> the one achievement code it unlocks, account-wide
+ * ("in ANY game", see migration 0034's own header) -- checked on every
+ * real duel for BOTH seats, since mastery reflects standing rating data
+ * rather than this specific match's outcome. */
+const MASTERY_ACHIEVEMENTS = Object.freeze({
+  ADVANCED: "MASTERY_ADVANCED_ANY",
+  EXPERT: "MASTERY_EXPERT_ANY",
+  MASTER: "MASTERY_MASTER_ANY",
+});
+
+/** Distinct games with at least one real win required for MULTI_GAME_CHAMPION. */
+const MULTI_GAME_CHAMPION_THRESHOLD = 5;
 
 export const DuelProgressionResult = Object.freeze({
   NOT_FOUND: "NOT_FOUND",
@@ -69,7 +87,7 @@ export const TournamentProgressionResult = Object.freeze({
   NOT_ELIGIBLE: "NOT_ELIGIBLE",
 });
 
-export function createProgressionService(db, { exp, achievements, badges, now = () => Date.now() }) {
+export function createProgressionService(db, { exp, achievements, badges, mastery, streaks, now = () => Date.now() }) {
   /**
    * Process ONE duel's completion. Safe to call any number of times for
    * the same duelId, from any number of concurrent callers -- every
@@ -81,7 +99,7 @@ export function createProgressionService(db, { exp, achievements, badges, now = 
    */
   async function processDuelCompletion(duelId) {
     const r = await db.query(
-      `SELECT seat_0, seat_1, result, status, progression_processed_at, is_vs_computer
+      `SELECT seat_0, seat_1, result, status, progression_processed_at, is_vs_computer, game_id
          FROM duel WHERE id = $1`,
       [duelId]
     );
@@ -100,6 +118,14 @@ export function createProgressionService(db, { exp, achievements, badges, now = 
     if (duel.progression_processed_at) {
       return { ok: true, alreadyProcessed: true };
     }
+
+    // Healthy-streak credit: unlike EXP/achievements below, this counts
+    // EVERY settled duel, VS_COMPUTER included (see packages/engagement's
+    // own header for why a streak is not farmable the way EXP is, and why
+    // that makes "showed up and played anything today" the more honest
+    // signal for return behavior).
+    await streaks.recordActivity(duel.seat_0);
+    await streaks.recordActivity(duel.seat_1);
 
     // VS_COMPUTER awards nothing -- the simplest rule that cannot be
     // farmed (an Easy bot beaten on repeat could otherwise mint EXP and
@@ -122,7 +148,7 @@ export function createProgressionService(db, { exp, achievements, badges, now = 
     // disagree about who won a game.
     const winnerId = !isDraw ? (duel.result === "1-0" ? duel.seat_0 : duel.seat_1) : null;
 
-    const awarded = { completed: [], won: null, firstWin: false };
+    const awarded = { completed: [], won: null, firstWin: false, mastery: [], multiGameChampion: null };
 
     // GAME_COMPLETED: both participants, win/loss/draw alike -- directive
     // #5's policy, deliberately simple: showing up and finishing a real,
@@ -163,6 +189,49 @@ export function createProgressionService(db, { exp, achievements, badges, now = 
         // of achievements," which is not the policy this slice
         // implements (directive #10: "Achievement -> Badge award").
         await badges.award(winnerId, "FIRST_WIN", BadgeSource.ACHIEVEMENT);
+      }
+    }
+
+    // Mastery-tier achievements: BOTH seats, since crossing a mastery
+    // threshold is a fact about standing rating/games data, not about
+    // whether this particular match was won. See packages/mastery's own
+    // header for why the level itself is never stored -- only the
+    // one-time "first time reaching this tier, in any game" unlock is.
+    for (const playerId of players) {
+      const m = await mastery.masteryForGame(playerId, duel.game_id);
+      const achCode = m && MASTERY_ACHIEVEMENTS[m.level];
+      if (!achCode) continue;
+      const achRes = await achievements.award(playerId, achCode);
+      if (achRes.ok && achRes.awarded) {
+        awarded.mastery.push({ playerId, level: m.level });
+        await badges.award(playerId, achCode, BadgeSource.ACHIEVEMENT);
+        await exp.award({
+          playerId, eventType: ProgressionEventType.ACHIEVEMENT, source: achCode,
+          amount: EXP_AMOUNTS.ACHIEVEMENT, dedupeKey: `achievement:${playerId}:${achCode}`,
+        });
+      }
+    }
+
+    // MULTI_GAME_CHAMPION: real wins (this same expression, reused) in
+    // enough DIFFERENT games -- checked only for this duel's winner, the
+    // only player whose distinct-wins count could have just changed.
+    if (winnerId) {
+      const distinct = await db.query(
+        `SELECT count(DISTINCT game_id)::int c FROM duel
+          WHERE ((seat_0=$1 AND result='1-0') OR (seat_1=$1 AND result='0-1'))
+            AND status IN ('COMPLETED','SETTLED')`,
+        [winnerId]
+      );
+      if (distinct.rows[0].c >= MULTI_GAME_CHAMPION_THRESHOLD) {
+        const achRes = await achievements.award(winnerId, "MULTI_GAME_CHAMPION");
+        if (achRes.ok && achRes.awarded) {
+          awarded.multiGameChampion = winnerId;
+          await badges.award(winnerId, "MULTI_GAME_CHAMPION", BadgeSource.ACHIEVEMENT);
+          await exp.award({
+            playerId: winnerId, eventType: ProgressionEventType.ACHIEVEMENT, source: "MULTI_GAME_CHAMPION",
+            amount: EXP_AMOUNTS.ACHIEVEMENT, dedupeKey: `achievement:${winnerId}:MULTI_GAME_CHAMPION`,
+          });
+        }
       }
     }
 
@@ -211,7 +280,11 @@ export function createProgressionService(db, { exp, achievements, badges, now = 
     );
     if (!t.rows.length) return { ok: false, reason: TournamentProgressionResult.NOT_FOUND };
     const tour = t.rows[0];
-    if (tour.status !== "COMPLETED") {
+    // settlePrizes() moves status straight to SETTLED in the same
+    // transaction that writes the settlement rows -- a real tournament is
+    // never observed sitting at COMPLETED once settlement rows exist, so
+    // both statuses must be accepted here (matches the sweep's own query).
+    if (!["COMPLETED", "SETTLED"].includes(tour.status)) {
       return { ok: false, reason: TournamentProgressionResult.NOT_ELIGIBLE, status: tour.status };
     }
     if (tour.progression_processed_at) return { ok: true, alreadyProcessed: true };
@@ -253,7 +326,7 @@ export function createProgressionService(db, { exp, achievements, badges, now = 
   async function tournamentProgressionDue({ limit = 50 } = {}) {
     const due = await db.query(
       `SELECT t.id FROM tournament t
-        WHERE t.status = 'COMPLETED' AND t.progression_processed_at IS NULL
+        WHERE t.status IN ('COMPLETED', 'SETTLED') AND t.progression_processed_at IS NULL
           AND EXISTS (SELECT 1 FROM tournament_settlement ts WHERE ts.tournament_id = t.id)
         ORDER BY t.completed_at
         LIMIT $1`,

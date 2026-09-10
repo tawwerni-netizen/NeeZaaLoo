@@ -1,0 +1,99 @@
+/* Connect Four's own table identity: the one game in this launch that
+   gets to be genuinely vibrant -- a deep, premium blue tray (not neon,
+   not a toy-plastic primary blue) with two clean token colours, one of
+   them the platform's own accent red. Per the platform's own "every game
+   belongs to Nizalo, no two games look identical" rule. */
+.wrap {
+  --frame-blue: #1B4B8C;
+  --frame-blue-dark: #123A6E;
+  --hole-tray: rgba(11, 13, 16, 0.28);
+  --token-seat0: #F4C430;
+  --token-seat0-shade: #C79A0E;
+  --token-seat1: var(--nz-accent);
+  --token-seat1-shade: var(--nz-accent-press);
+  display: flex;
+  justify-content: center;
+}
+
+.frame {
+  background: linear-gradient(180deg, var(--frame-blue) 0%, var(--frame-blue-dark) 100%);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-4);
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3)), inset 0 2px 0 rgba(255, 255, 255, 0.12);
+  width: min(94vw, 560px);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2%;
+  aspect-ratio: 7 / 6;
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 6%;
+  cursor: pointer;
+  font: inherit;
+}
+
+.cell:disabled { cursor: default; }
+
+.hole {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--hole-tray);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.token {
+  position: absolute;
+  inset: 6%;
+  border-radius: 999px;
+  display: block;
+}
+
+.token[data-seat="0"] {
+  background: radial-gradient(circle at 35% 30%, #FFE066 0%, var(--token-seat0) 55%, var(--token-seat0-shade) 100%);
+  box-shadow: 0 2px 0 var(--token-seat0-shade), 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+.token[data-seat="1"] {
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--token-seat1) 60%, white) 0%, var(--token-seat1) 55%, var(--token-seat1-shade) 100%);
+  box-shadow: 0 2px 0 var(--token-seat1-shade), 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+.token.winning {
+  animation: winPulse 900ms var(--nz-ease-settle) infinite;
+}
+
+@keyframes winPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5), 0 2px 0 rgba(0, 0, 0, 0.25); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0), 0 2px 0 rgba(0, 0, 0, 0.25); }
+}
+
+.previewToken {
+  position: absolute;
+  inset: 6%;
+  border-radius: 999px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.previewToken[data-seat="0"] { background: var(--token-seat0); }
+.previewToken[data-seat="1"] { background: var(--token-seat1); }
+
+@media (max-width: 640px) {
+  .frame { width: 96vw; }
+}

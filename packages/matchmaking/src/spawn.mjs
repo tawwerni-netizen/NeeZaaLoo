@@ -33,4 +33,38 @@ export const DEFAULT_SPAWNERS = {
     const seed = randomUUID();
     return { initialState: { seed, config: {} }, seed };
   },
+
+  // Checkers, Connect Four and XO all always start from the same fixed
+  // position -- no per-duel randomness to persist, exactly like chess's
+  // own entry above (see each plugin's own matchmakingDefaults()).
+  checkers: () => ({ initialState: {}, seed: null }),
+  "connect-four": () => ({ initialState: {}, seed: null }),
+  xo: () => ({ initialState: {}, seed: null }),
+
+  // Dominoes and Backgammon are the second and third games (after Speed
+  // Math) whose starting position is NOT fixed: Dominoes deals a private
+  // hand to each player, and Backgammon's opening leader and first roll
+  // both come from the server's own dice. Both are generated from this
+  // seed -- see each plugin's own header on why that must never be
+  // Math.random -- and the seed itself must never be predictable or
+  // reused, exactly like Speed Math's own entry above.
+  dominoes: () => {
+    const seed = randomUUID();
+    return { initialState: { seed }, seed };
+  },
+  backgammon: () => {
+    const seed = randomUUID();
+    return { initialState: { seed }, seed };
+  },
+
+  // Seega and Reversi both always start from the same fixed position (an
+  // empty board for Seega's own placement phase; the standard four-disc
+  // opening for Reversi) -- no per-duel randomness, exactly like
+  // checkers/Connect Four/XO's own entries above.
+  seega: () => ({ initialState: {}, seed: null }),
+  reversi: () => ({ initialState: {}, seed: null }),
+
+  // Gomoku always starts from the same empty board -- no per-duel
+  // randomness, exactly like XO's own entry above.
+  gomoku: () => ({ initialState: {}, seed: null }),
 };

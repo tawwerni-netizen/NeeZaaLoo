@@ -1,0 +1,176 @@
+/* Floating, never in normal document flow -- the whole point is that the
+   board underneath never resizes because of this. */
+
+.toggle {
+  position: fixed;
+  right: var(--nz-space-6);
+  bottom: var(--nz-space-6);
+  width: 52px;
+  height: 52px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-accent);
+  color: var(--nz-accent-contrast);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--nz-shadow-3);
+  cursor: pointer;
+  z-index: 40;
+}
+
+.toggle:hover {
+  background: var(--nz-accent-hover);
+}
+
+.toggleBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-loss);
+  color: #fff;
+  font-size: var(--nz-text-xs);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--nz-bg);
+}
+
+.panel {
+  position: fixed;
+  right: var(--nz-space-6);
+  bottom: var(--nz-space-6);
+  width: 360px;
+  height: 560px;
+  max-height: calc(100dvh - var(--nz-space-8));
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  box-shadow: var(--nz-shadow-3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 40;
+}
+
+.minimized {
+  composes: panel;
+  height: auto;
+  max-height: none;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-2);
+  padding: var(--nz-space-2) var(--nz-space-2) var(--nz-space-2) var(--nz-space-4);
+  border-bottom: 1px solid var(--nz-line);
+  flex-shrink: 0;
+}
+
+.minimized .bar {
+  border-bottom: none;
+}
+
+.barTitleButton {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  background: none;
+  border: none;
+  padding: var(--nz-space-1) 0;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.barTitle {
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barBadge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-loss);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.barActions {
+  display: flex;
+  gap: var(--nz-space-1);
+  flex-shrink: 0;
+}
+
+.barButton {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nz-radius-sm);
+  background: none;
+  border: none;
+  color: var(--nz-text-2);
+  cursor: pointer;
+}
+
+.barButton:hover {
+  background: var(--nz-surface-2);
+  color: var(--nz-text);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.body > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Mobile: bottom sheet, full-screen overlay while open ---------------- */
+@media (max-width: 640px) {
+  .toggle {
+    right: var(--nz-space-4);
+    bottom: var(--nz-space-4);
+  }
+
+  .panel {
+    inset: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .minimized {
+    inset: auto 0 0 0;
+    width: 100%;
+    height: auto;
+    border-radius: var(--nz-radius-lg) var(--nz-radius-lg) 0 0;
+  }
+}

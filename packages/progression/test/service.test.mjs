@@ -5,9 +5,11 @@ import { migrate } from "../../ledger/src/migrate.mjs";
 import { createExpService } from "../../profile/src/exp.mjs";
 import { createAchievementService } from "../../profile/src/achievements.mjs";
 import { createBadgeService } from "../../profile/src/badges.mjs";
+import { createMasteryService } from "../../mastery/src/service.mjs";
+import { createStreakService } from "../../engagement/src/streaks.mjs";
 import { createProgressionService, DuelProgressionResult, TournamentProgressionResult } from "../src/service.mjs";
 
-let db, exp, achievements, badges, progression;
+let db, exp, achievements, badges, mastery, streaks, progression;
 let CLOCK = Date.now();
 
 async function player(id) {
@@ -28,9 +30,9 @@ async function duel(id, seat0, seat1, { status = "LIVE", result = null, isVsComp
 
 async function tournament(id, { status = "DRAFT" } = {}) {
   await db.query(
-    `INSERT INTO tournament (id, game_id, format, status, capacity, time_control, registration_closes_at, completed_at)
+    `INSERT INTO tournament (id, game_id, format, status, capacity, time_control, registration_closes_at, completed_at, ruleset_version)
      VALUES ($1,'chess','SINGLE_ELIMINATION',$2::tournament_status,4,'{}'::jsonb,now(),
-             CASE WHEN $2 = 'COMPLETED' THEN now() ELSE NULL END)`,
+             CASE WHEN $2 IN ('COMPLETED','SETTLED') THEN now() ELSE NULL END, 1)`,
     [id, status]
   );
 }
@@ -48,7 +50,9 @@ before(async () => {
   exp = createExpService(db, { now: () => CLOCK });
   achievements = createAchievementService(db, { now: () => CLOCK });
   badges = createBadgeService(db, { now: () => CLOCK });
-  progression = createProgressionService(db, { exp, achievements, badges, now: () => CLOCK });
+  mastery = createMasteryService(db);
+  streaks = createStreakService(db);
+  progression = createProgressionService(db, { exp, achievements, badges, mastery, streaks, now: () => CLOCK });
 });
 
 after(async () => { await db.close?.(); });
@@ -234,7 +238,7 @@ describe("processTournamentCompletion", () => {
   });
 
   test("a tournament not yet COMPLETED is not eligible", async () => {
-    await tournament("pt-1", { status: "IN_PROGRESS" });
+    await tournament("pt-1", { status: "LIVE" });
     const r = await progression.processTournamentCompletion("pt-1");
     assert.equal(r.ok, false);
     assert.equal(r.reason, TournamentProgressionResult.NOT_ELIGIBLE);
@@ -311,5 +315,28 @@ describe("tournamentProgressionDue -- the sweep", () => {
     const ids = results.map((r) => r.tournamentId);
     assert.ok(ids.includes("pt-sw1"));
     assert.ok(!ids.includes("pt-sw2"), "a tournament with unsettled prizes must not appear in the sweep at all");
+  });
+
+  test("a real tournament.settlePrizes() flow leaves status SETTLED, not COMPLETED -- the sweep must still find it", async () => {
+    // Regression: tournament.mjs's settlePrizes() moves status straight to
+    // SETTLED in the SAME transaction that writes the settlement rows, so a
+    // real tournament is never observed at COMPLETED with settlement rows
+    // already present. A sweep query (or processTournamentCompletion's own
+    // gate) that only recognizes COMPLETED would silently never process any
+    // tournament that ever actually got settled through the real code path.
+    await player("tsw3a"); await player("tsw3b");
+    await tournament("pt-sw3", { status: "SETTLED" });
+    await tournamentSettlement("pt-sw3", "tsw3a", 1);
+    await tournamentSettlement("pt-sw3", "tsw3b", 2);
+
+    const direct = await progression.processTournamentCompletion("pt-sw3");
+    assert.equal(direct.ok, true, JSON.stringify(direct));
+
+    await player("tsw4a"); await player("tsw4b");
+    await tournament("pt-sw4", { status: "SETTLED" });
+    await tournamentSettlement("pt-sw4", "tsw4a", 1);
+    await tournamentSettlement("pt-sw4", "tsw4b", 2);
+    const results = await progression.tournamentProgressionDue({ limit: 10 });
+    assert.ok(results.map((r) => r.tournamentId).includes("pt-sw4"));
   });
 });

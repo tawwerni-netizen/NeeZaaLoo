@@ -13,26 +13,33 @@
     "profile": "Perfil",
     "support": "Soporte",
     "chat": "Chat",
-    "watch": "Ver"
+    "watch": "Ver",
+    "games": "Juegos",
+    "tournaments": "Torneos",
+    "create_account": "Crear cuenta",
+    "download_app": "Descargar app",
+    "menu_aria_label": "Menú"
   },
   "footer": {
     "learn": "Aprender",
     "tournaments": "Torneos",
     "leaderboard": "Clasificación",
     "support": "Soporte",
-    "copyright": "© {year} Nizalo. Tu duelo. Tu prueba."
+    "copyright": "© {year} Nizalo. Tu duelo. Tu prueba.",
+    "fair_play": "Juego limpio"
   },
   "home": {
     "hero": {
-      "eyebrow": "Competición global de habilidad",
-      "headline_line1": "¿Crees que eres bueno?",
-      "headline_line2": "Demuéstralo.",
-      "subhead": "Tu duelo. Tu prueba. Ajedrez y Matemática Rápida, decididos solo por habilidad — emparejados con justicia, puntuados con honestidad, nunca al azar.",
-      "cta_primary": "Buscar rival",
-      "cta_secondary": "Ver cómo funciona"
+      "eyebrow": "La habilidad decide. Nada más.",
+      "headline_line1": "DEMUESTRA. JUEGA.",
+      "headline_line2": "GANA.",
+      "subhead": "Diez juegos con autoridad del servidor. Rivales reales, emparejados con justicia. Gana premios en competiciones de habilidad elegibles, donde esté permitido.",
+      "cta_primary": "Jugar ahora",
+      "cta_secondary": "Ver en vivo",
+      "featured_heading": "Destacados hoy"
     },
     "games": {
-      "heading": "Elige tu juego",
+      "heading": "10 juegos, una base justa",
       "duration_label": "Duración",
       "mode_label": "Modo",
       "play_cta": "Jugar {name}",
@@ -48,6 +55,46 @@
       "speed_math": {
         "description": "Un reloj compartido de 60 segundos. Las mismas preguntas, el mismo instante — decidido solo por velocidad y precisión.",
         "duration": "60 seg",
+        "mode": "1v1 · Clasificatoria o libre"
+      },
+      "checkers": {
+        "description": "Damas americanas, reglas estándar. Capturas obligatorias, saltos múltiples forzados, sin atajos.",
+        "duration": "10–20 min",
+        "mode": "1v1 · Clasificatoria o libre"
+      },
+      "connect_four": {
+        "description": "Suelta tu ficha, bloquea la línea. Cuatro en raya en el tablero estándar de 7x6.",
+        "duration": "3–8 min",
+        "mode": "1v1 · Clasificatoria o libre"
+      },
+      "xo": {
+        "description": "El duelo más rápido de la plataforma. Tres en raya gana — con juego perfecto siempre es empate.",
+        "duration": "1–3 min",
+        "mode": "1v1 · Clasificatoria o libre"
+      },
+      "dominoes": {
+        "description": "Dominó de bloque doble-seis. Lee ambos extremos, juega primero tus fichas más pesadas y no te quedes con puntos en la mano.",
+        "duration": "10–20 min",
+        "mode": "1v1 · Clasificatoria o libre"
+      },
+      "backgammon": {
+        "description": "Tira los dados, avanza y saca tus fichas. Cada dado lo lanza el servidor — capturas, la barra y la salida de fichas, todo verificado al pie de la letra.",
+        "duration": "15–30 min",
+        "mode": "1v1 · Clasificatoria o libre"
+      },
+      "seega": {
+        "description": "Coloca tus fichas y después cierra el centro. Flanquea una ficha enemiga entre dos tuyas para capturarla.",
+        "duration": "10–20 min",
+        "mode": "1v1 · Clasificatoria o libre"
+      },
+      "reversi": {
+        "description": "Flanquea una línea de fichas del rival y todas cambian a tu color. Gana quien tenga más fichas cuando el tablero se cierra.",
+        "duration": "10–20 min",
+        "mode": "1v1 · Clasificatoria o libre"
+      },
+      "gomoku": {
+        "description": "Cinco fichas en línea — recta, diagonal, en cualquier parte del tablero — antes que tu rival.",
+        "duration": "10–20 min",
         "mode": "1v1 · Clasificatoria o libre"
       }
     },
@@ -75,12 +122,72 @@
           "body": "Sube de rango, clasifica para torneos y, donde esté permitido, compite por premios reales."
         }
       }
+    },
+    "tournaments": {
+      "heading": "Próximos torneos",
+      "empty": "No hay torneos programados por ahora — vuelve pronto.",
+      "view_all": "Ver todos los torneos →"
+    },
+    "liveArena": {
+      "heading": "Arena en vivo",
+      "subhead": "Partidas reales, en curso ahora mismo.",
+      "empty": "No hay partidas en vivo justo ahora — el tablero cambia rápido, vuelve a revisar en un minuto.",
+      "view_all": "Abrir Arena en vivo →"
+    },
+    "rank": {
+      "heading": "Rango global",
+      "body": "Cada juego alimenta un único Puntaje de Habilidad Global — un número real, basado en percentiles, que se mueve con cada resultado. Mira exactamente dónde estás frente a los demás.",
+      "cta": "Ver la clasificación →"
+    },
+    "mastery": {
+      "heading": "Tu maestría",
+      "body": "Sigue tu progreso real por juego — precisión, rachas e hitos ganados jugando de verdad, nunca regalados.",
+      "cta": "Ver tu maestría →"
+    },
+    "dailyChallenge": {
+      "heading": "Desafío diario",
+      "body": "Un objetivo real y nuevo cada día. Complétalo jugando normalmente — sin grindeo aparte, sin compras.",
+      "cta": "Desafío de hoy →"
+    },
+    "friendChallenge": {
+      "heading": "Desafío a un amigo",
+      "body": "Reta a un rival concreto por su apodo. Recibe una invitación real y con tiempo límite — si la acepta, la partida empieza al instante.",
+      "cta": "Desafiar a un amigo →"
+    },
+    "learn": {
+      "heading": "Aprende",
+      "body": "Reglas, puntuación, y cómo funciona realmente la equidad del lado del servidor — para cada uno de los diez juegos.",
+      "cta": "Leer las guías →"
+    },
+    "download": {
+      "heading": "Descarga la app",
+      "body": "Una app nativa está en camino. Mientras tanto, Nizalo funciona con todas sus funciones en cualquier navegador moderno, en escritorio o móvil.",
+      "badge": "Próximamente"
+    },
+    "trust": {
+      "heading": "Confianza y juego limpio",
+      "body": "El servidor decide cada resultado — nunca el cliente. Cada partida puede reproducirse y verificarse de forma independiente. Los fondos en revisión se retienen, nunca se confiscan, hasta que una persona lo aprueba.",
+      "cta": "Leer la política de juego limpio →",
+      "point_server": "Autoridad del servidor",
+      "point_server_body": "El cliente nunca puede afirmar un resultado, un puntaje o una lectura del reloj — solo el servidor lo hace.",
+      "point_verify": "Verificable de forma independiente",
+      "point_verify_body": "Cualquier partida terminada puede reproducirse desde sus propios movimientos registrados y comprobarse contra el resultado.",
+      "point_human": "Revisión humana para el dinero",
+      "point_human_body": "Ninguna acción automática restringe fondos o una cuenta por una sola señal débil — siempre decide una persona."
     }
   },
   "common": {
     "game_names": {
       "chess": "Ajedrez",
-      "speed_math": "Matemática Rápida"
+      "speed_math": "Matemática Rápida",
+      "checkers": "Damas",
+      "connect_four": "Conecta 4",
+      "xo": "Tres en Raya",
+      "dominoes": "Dominó",
+      "backgammon": "Backgammón",
+      "seega": "Seega",
+      "reversi": "Reversi",
+      "gomoku": "Gomoku"
     },
     "unknown_game": "Juego desconocido."
   },
@@ -235,10 +342,22 @@
     "back": "Atrás",
     "mode": {
       "heading": "Elige cómo jugar",
-      "vs_computer": { "title": "Contra la computadora", "description": "Practica contra un oponente de IA" },
-      "friend": { "title": "Desafiar a un amigo", "description": "Desafía a alguien por su apodo" },
-      "competitive": { "title": "Competitivo", "description": "Emparejamiento clasificado según tu nivel" },
-      "tournament": { "title": "Torneo", "description": "Compite en un cuadro por un premio" }
+      "vs_computer": {
+        "title": "Contra la computadora",
+        "description": "Practica contra un oponente de IA"
+      },
+      "friend": {
+        "title": "Desafiar a un amigo",
+        "description": "Desafía a alguien por su apodo"
+      },
+      "random_opponent": {
+        "title": "Oponente aleatorio",
+        "description": "Emparejamiento clasificado según tu nivel"
+      },
+      "tournament": {
+        "title": "Torneo",
+        "description": "Compite en un cuadro por un premio"
+      }
     },
     "difficulty": {
       "heading": "Elige una dificultad"
@@ -246,7 +365,11 @@
     "stake": {
       "heading": "Elige tu apuesta",
       "free_only": "Solo gratis",
-      "free_only_note": "Las apuestas en efectivo aún no están disponibles para este juego."
+      "free_only_note": "Las apuestas en efectivo aún no están disponibles para este juego.",
+      "free_title": "Gratis",
+      "free_description": "Sin apuesta — solo la partida.",
+      "competitive_title": "Competitivo",
+      "competitive_description": "Juega por una apuesta real, liberada solo al ganar la partida."
     },
     "challenge": {
       "heading": "Desafiar a un amigo",
@@ -264,10 +387,18 @@
       "empty_outgoing": "No hay desafíos enviados.",
       "from": "{handle} te ha desafiado",
       "waiting_for": "Esperando a {handle}",
+      "more_waiting": "{count} más en espera",
       "error_unknown_opponent": "No hay ningún jugador con ese apodo.",
       "error_self": "No puedes desafiarte a ti mismo.",
       "error_already_pending": "Ya tienes un desafío pendiente con {handle}.",
-      "error_generic": "No se pudo enviar el desafío. Inténtalo de nuevo."
+      "error_blocked": "No puedes desafiar a este jugador.",
+      "error_invalid_stake": "Esa cantidad de apuesta no está disponible.",
+      "error_generic": "No se pudo enviar el desafío. Inténtalo de nuevo.",
+      "mode_free": "Partida gratuita",
+      "mode_competitive_stake": "Competitivo — ${amount}",
+      "popup_title": "{handle} te ha desafiado",
+      "meta_game": "Juego",
+      "meta_mode": "Modo"
     }
   },
   "dashboard": {
@@ -339,7 +470,23 @@
       "INSUFFICIENT_MATERIAL": "Material insuficiente",
       "RESIGNATION": "Rendición",
       "TIMEOUT": "Tiempo agotado",
-      "DRAW_AGREED": "Tablas acordadas"
+      "DRAW_AGREED": "Tablas acordadas",
+      "NO_LEGAL_MOVES": "Sin movimientos legales",
+      "FORTY_MOVE_RULE": "Regla de los cuarenta movimientos",
+      "FOUR_IN_A_ROW": "Cuatro en raya",
+      "BOARD_FULL": "Tablero lleno",
+      "LINE_COMPLETE": "Línea completada",
+      "ALL_ANSWERED": "Todas las preguntas respondidas",
+      "TIME_EXPIRED": "Se acabó el tiempo",
+      "ALL_ANSWERED_TIEBREAK_TIME": "Todas las preguntas respondidas — decidido por velocidad",
+      "TIME_EXPIRED_TIEBREAK_TIME": "Se acabó el tiempo — decidido por velocidad",
+      "DOMINO_OUT": "Dominó completo",
+      "BLOCKED": "Bloqueado",
+      "BEAR_OFF_ALL": "Sacó todas las fichas",
+      "GAMMON": "Gammon",
+      "BACKGAMMON": "Backgammon",
+      "ALL_CAPTURED": "Todas las fichas capturadas",
+      "FIVE_IN_A_ROW": "Cinco en línea"
     },
     "rematch": "Revancha",
     "new_opponent": "Nuevo rival",
@@ -360,8 +507,31 @@
     },
     "move_history": "Jugadas",
     "achievement": {
-      "FIRST_WIN": { "title": "¡Primera victoria!", "description": "Ganaste tu primer duelo." },
-      "FIRST_TOURNAMENT": { "title": "Debut en torneo", "description": "Completaste tu primer torneo." }
+      "FIRST_WIN": {
+        "title": "¡Primera victoria!",
+        "description": "Ganaste tu primer duelo."
+      },
+      "FIRST_TOURNAMENT": {
+        "title": "Debut en torneo",
+        "description": "Completaste tu primer torneo."
+      }
+    },
+    "speed_math": {
+      "answer_label": "Tu respuesta",
+      "answered": "Respondidas"
+    },
+    "dominoes": {
+      "tiles_left": "{count} fichas restantes",
+      "empty_line": "Juega cualquier ficha para abrir",
+      "play_here": "Jugar aquí",
+      "pass": "Pasar"
+    },
+    "backgammon": {
+      "bar": "Barra",
+      "borne_off": "Fichas fuera"
+    },
+    "reversi": {
+      "pass": "Pasar"
     }
   },
   "settings": {
@@ -382,11 +552,13 @@
     },
     "status": {
       "DRAFT": "Borrador",
-      "REGISTRATION_OPEN": "Inscripción abierta",
-      "REGISTRATION_CLOSED": "Inscripción cerrada",
-      "IN_PROGRESS": "En curso",
       "COMPLETED": "Finalizado",
-      "CANCELLED": "Cancelado"
+      "CANCELLED": "Cancelado",
+      "SCHEDULED": "Programado",
+      "REGISTRATION": "Inscripción abierta",
+      "LIVE": "En vivo",
+      "FINALS": "Final",
+      "SETTLED": "Liquidado"
     },
     "register": "Inscribirse",
     "registering": "Inscribiendo…",
@@ -402,7 +574,13 @@
     "error_not_open": "La inscripción está cerrada.",
     "error_already_registered": "Ya estás inscrito.",
     "error_generic": "Algo salió mal. Inténtalo de nuevo.",
-    "not_found": "Torneo no encontrado."
+    "not_found": "Torneo no encontrado.",
+    "join": "Unirse",
+    "error_not_eligible": "No cumples los requisitos de elegibilidad para este torneo.",
+    "pairings_heading": "Cuadro",
+    "round_label": "Ronda {number}",
+    "bye": "Descanso",
+    "login_to_register": "Inicia sesión para inscribirte"
   },
   "meta": {
     "title": "Nizalo — Tu duelo. Tu prueba.",
@@ -508,8 +686,36 @@
     "not_found": "No se pudo encontrar a este jugador.",
     "achievements_catalog": {
       "FIRST_WIN": "Primera Victoria",
-      "FIRST_TOURNAMENT": "Primer Torneo"
-    }
+      "FIRST_TOURNAMENT": "Primer Torneo",
+      "TOURNAMENT_CHAMPION": "Campeón de Torneo",
+      "MASTERY_ADVANCED_ANY": "Maestría Avanzada",
+      "MASTERY_EXPERT_ANY": "Maestría Experta",
+      "MASTERY_MASTER_ANY": "Maestría Suprema",
+      "MULTI_GAME_CHAMPION": "Campeón Multijuego",
+      "STREAK_7": "Racha de 7 Días",
+      "STREAK_30": "Racha de 30 Días"
+    },
+    "mastery_title": "Maestría",
+    "mastery_level": {
+      "BEGINNER": "Principiante",
+      "INTERMEDIATE": "Intermedio",
+      "ADVANCED": "Avanzado",
+      "EXPERT": "Experto",
+      "MASTER": "Maestro"
+    },
+    "streak_title": "Racha",
+    "streak_current": "Racha de {count} días",
+    "streak_longest": "Récord: {count} días",
+    "streak_at_risk": "Juega hoy para mantener tu racha.",
+    "streak_none": "Juega hoy para empezar una racha.",
+    "highest_rating_label": "Máximo",
+    "tournaments_played_label": "Torneos",
+    "tournaments_won_label": "Títulos",
+    "frames_title": "Marcos",
+    "no_frames": "Aún no tienes marcos.",
+    "frame_select_cta": "Usar",
+    "frame_selected_cta": "En uso",
+    "try_game_cta": "Prueba este juego →"
   },
   "support": {
     "title": "Soporte",
@@ -628,13 +834,147 @@
       "SPECTATORS_DISABLED": "No se permite ver esta partida como espectador.",
       "POST_GAME_CLOSED": "Este chat está cerrado porque la partida ha terminado."
     },
-    "spectator_title": "Chat de espectadores"
+    "spectator_title": "Chat de espectadores",
+    "open_cta": "Abrir chat",
+    "open_with_unread_cta": "Abrir chat, {count} sin leer",
+    "expand_cta": "Expandir chat",
+    "minimize_cta": "Minimizar chat",
+    "close_cta": "Cerrar chat",
+    "system_event": {
+      "MATCH_STARTED": "La partida ha comenzado"
+    }
   },
   "watch": {
-    "title": "Ver en directo",
+    "title": "Arena en vivo",
     "subtitle": "Partidas en directo que puedes ver ahora mismo.",
     "empty": "No hay partidas en directo en este momento. Vuelve pronto.",
     "watch_cta": "Ver",
-    "vs": "contra"
+    "vs": "contra",
+    "live_badge": "En vivo",
+    "tournament_badge": "Partida de torneo",
+    "move_count": "{count} jugadas realizadas"
+  },
+  "dailyChallenges": {
+    "title": "Retos Diarios",
+    "subtitle": "Se reinician cada día. Nunca requieren depósito.",
+    "reward": "+{exp} EXP",
+    "completed_label": "Completado",
+    "metric": {
+      "WIN_FREE_MATCHES": "Gana {target} partidas gratuitas",
+      "PLAY_SPEED_MATH": "Juega {target} partidas de Matemática Rápida",
+      "PLAY_DIFFERENT_GAMES": "Juega {target} juegos distintos",
+      "PLAY_RATED_MATCH": "Juega una partida clasificatoria",
+      "FINISH_TRAINING": "Termina una partida de entrenamiento"
+    }
+  },
+  "recommendations": {
+    "title": "Prueba Algo Nuevo",
+    "strong_category": "Eres fuerte en juegos {category} — prueba {game}.",
+    "improving_related": "Estás mejorando rápido en {fromGame} — explora {game}.",
+    "category": {
+      "STRATEGY": "estratégicos",
+      "TACTICAL": "tácticos",
+      "PATTERN": "de patrones",
+      "SPEED": "de velocidad",
+      "PROBABILITY": "de probabilidad",
+      "DEEP": "profundos",
+      "ARITHMETIC": "aritméticos",
+      "FAST": "rápidos"
+    }
+  },
+  "rank": {
+    "heading": "Desglose de Habilidad Global",
+    "subtitle": "Cómo se construye realmente tu puntuación, juego por juego.",
+    "score_scale": "de 1000",
+    "empty": "Establece una clasificación en al menos un juego para ver tu desglose.",
+    "col_game": "Juego",
+    "col_percentile": "Percentil",
+    "col_weight": "Peso",
+    "col_contribution": "Puntos",
+    "capped_note": "(limitado)",
+    "breadth_note": "Jugar bien varios juegos añade un bono de amplitud de +{breadth}%, limitado para que ningún juego por sí solo pueda cargar tu puntuación.",
+    "methodology_title": "Cómo se calcula",
+    "methodology_body_1": "Solo cuentan para tu puntuación los juegos en los que hayas jugado al menos 10 partidas clasificadas y tu clasificación se haya estabilizado. Cada uno cuenta según el percentil entre otros jugadores establecidos de ese mismo juego -- no tu clasificación bruta -- para que Ajedrez y Matemática Rápida sean directamente comparables.",
+    "methodology_body_2": "El peso de cada juego depende de cuánto lo has jugado y de la confianza en esa clasificación, limitado al 35% para que ningún juego domine el total. Un pequeño bono premia la habilidad genuina repartida entre varios juegos."
+  },
+  "authPopup": {
+    "title": "Únete al duelo",
+    "subtitle": "Inicia sesión o crea una cuenta gratis para jugar.",
+    "sign_in": "Iniciar sesión",
+    "sign_in_body": "Ya tienes una cuenta.",
+    "create_account": "Crear cuenta",
+    "create_account_body": "Nuevo aquí — toma menos de un minuto.",
+    "google": "Continuar con Google",
+    "email_code": "Iniciar sesión con un código por correo",
+    "close_aria_label": "Cerrar",
+    "footnote": "Al continuar aceptas que esto es un juego de habilidad. Gana premios en competiciones de habilidad elegibles, donde esté permitido — nunca un ingreso garantizado."
+  },
+  "learnPage": {
+    "heading": "Aprende",
+    "subhead": "Cómo funciona Nizalo en realidad, y las reglas de cada juego.",
+    "how_heading": "Cómo se decide una partida",
+    "how_body": "Cada acción que realizas se envía al servidor como una solicitud, nunca como un hecho ya afirmado. Solo el servidor aplica las reglas, lleva el reloj y decide el resultado. Eso es lo que hace que una partida aquí sea reproducible y verificable de forma independiente — el resultado nunca depende de confiar en el dispositivo de ninguno de los jugadores.",
+    "games_heading": "Reglas, por juego",
+    "games_body": "Elige un juego para ver cómo se juega, se cronometra y se puntúa.",
+    "fair_heading": "Juego limpio, en breve",
+    "fair_body": "El tiempo y el comportamiento se revisan automáticamente, pero ninguna señal automatizada por sí sola restringe una cuenta o retiene fondos — esa decisión siempre pasa a una persona, con la evidencia delante.",
+    "fair_cta": "Leer la política completa de juego limpio →",
+    "cta_play": "Jugar {name} →"
+  },
+  "fairPlayPage": {
+    "heading": "Confianza y juego limpio",
+    "subhead": "Qué es lo que realmente mantiene una partida justa aquí — dicho con claridad, no en lenguaje de marketing.",
+    "server_heading": "El servidor es la única autoridad",
+    "server_body": "El dispositivo de un jugador solo puede enviar una solicitud — \"me gustaría jugar e4\" — nunca un hecho afirmado. La legalidad, el reloj, el puntaje y el resultado se deciden por completo en el servidor. No existe ningún mensaje que un cliente pueda enviar que afirme un resultado.",
+    "verify_heading": "Cada partida es verificable de forma independiente",
+    "verify_body": "Los movimientos reales y registrados de una partida terminada pueden reproducirse desde el inicio y comprobarse contra el resultado que se pagó. Es la misma comprobación que se usa internamente antes de resolver cualquier disputa — no depende de confiar en un valor de la base de datos.",
+    "review_heading": "Las decisiones sobre dinero nunca son totalmente automáticas",
+    "review_body": "El tiempo y el comportamiento se supervisan, pero ninguna señal automatizada por sí sola restringe una cuenta o retiene fondos. Un hallazgo estadístico siempre se envía a una persona para su revisión antes de tomar cualquier acción, y toda acción así puede apelarse ante un revisor distinto.",
+    "eligibility_heading": "Elegibilidad, dicha con honestidad",
+    "eligibility_body": "Cuando el juego competitivo implica una apuesta, la participación y cualquier premio resultante están sujetos a reglas de elegibilidad que varían según la región. Nizalo es un juego de habilidad — no una inversión, y nunca un ingreso garantizado.",
+    "contact_cta": "¿Preguntas? Contacta a Soporte →"
+  },
+  "gamesPage": {
+    "heading": "Juegos",
+    "subhead": "Diez juegos con autoridad del servidor. Elige uno para ver cómo se juega, o empieza directamente.",
+    "filter_all": "Todos",
+    "filter_turnbased": "Por turnos",
+    "filter_shared_clock": "Reloj compartido",
+    "turn_model_alternating": "Por turnos",
+    "turn_model_simultaneous": "Reloj compartido",
+    "play_cta": "Jugar {name} →"
+  },
+  "gameDetailsPage": {
+    "back_to_games": "← Todos los juegos",
+    "play_cta": "Jugar {name}",
+    "facts_heading": "Los datos",
+    "fact_turn_model": "Formato",
+    "fact_duration": "Duración típica",
+    "fact_mode": "Modo",
+    "fact_stakes": "Apuestas",
+    "stakes_free_only": "Solo gratis — las apuestas competitivas aún no están habilitadas para este juego.",
+    "stakes_enabled": "Gratis, o competitivo con una apuesta real donde sea elegible.",
+    "difficulty_heading": "Juega contra la computadora",
+    "difficulty_body": "Cuatro niveles de dificultad reales, cada uno un rival genuinamente distinto — nunca el mismo motor con un reloj más lento.",
+    "no_ai_body": "Este juego todavía no ofrece un rival de computadora — cada partida es contra un jugador real.",
+    "leaderboard_heading": "Mejores jugadores",
+    "leaderboard_signed_out": "Inicia sesión para ver la clasificación real y en vivo de este juego.",
+    "leaderboard_empty": "Todavía no se han jugado suficientes partidas clasificatorias para mostrar una clasificación.",
+    "leaderboard_games_played": "{count} clasificadas"
+  },
+  "walletPage": {
+    "heading": "Billetera",
+    "subhead": "Tu saldo real, directo del libro contable.",
+    "available_label": "Disponible",
+    "locked_label": "Bloqueado",
+    "available_note": "Listo para apostar o retirar.",
+    "locked_note": "Reservado por una partida en curso o un retiro pendiente.",
+    "deposit_cta": "Depositar",
+    "withdraw_cta": "Retirar",
+    "coming_soon_title": "Aún no disponible",
+    "coming_soon_body": "Los depósitos y retiros no están activos en esta versión. El saldo de arriba es real y estará listo en cuanto lo estén.",
+    "empty": "Sin actividad en la billetera todavía.",
+    "forbidden": "No se pudo cargar tu billetera.",
+    "error": "No se pudo cargar tu billetera ({code}). Intenta recargar."
   }
 }

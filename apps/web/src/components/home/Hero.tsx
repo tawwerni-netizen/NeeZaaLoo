@@ -21,7 +21,14 @@ import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
 import { transition } from "@/lib/motion";
 import { useI18n } from "@/lib/i18n/context";
+import { listGames } from "@/lib/games";
 import styles from "./Hero.module.css";
+
+// The above-the-fold "Featured games" strip -- a handful of the real
+// catalogue, not a separate/fabricated list. Kept short and compact on
+// purpose: the full ten-game grid already exists below the fold (10 GAMES),
+// so this strip's only job is a fast visual read, never a duplicate of it.
+const FEATURED_COUNT = 6;
 
 const stage = (index: number, reduceMotion: boolean | null) => ({
   initial: reduceMotion ? {} : { opacity: 0, y: 12 },
@@ -32,6 +39,7 @@ const stage = (index: number, reduceMotion: boolean | null) => ({
 export function Hero() {
   const reduceMotion = useReducedMotion();
   const { t } = useI18n();
+  const featured = listGames().slice(0, FEATURED_COUNT);
 
   return (
     <section className={styles.hero}>
@@ -52,10 +60,27 @@ export function Hero() {
             <LocaleLink href="/register">
               <Button variant="primary">{t("home.hero.cta_primary")}</Button>
             </LocaleLink>
-            <LocaleLink href="/learn">
+            <LocaleLink href="/watch">
               <Button variant="ghost">{t("home.hero.cta_secondary")}</Button>
             </LocaleLink>
           </motion.div>
+
+          {featured.length > 0 && (
+            <motion.div {...stage(4, reduceMotion)} className={styles.featured}>
+              <span className={styles.featuredLabel}>{t("home.hero.featured_heading")}</span>
+              <div className={styles.featuredList}>
+                {featured.map((game) => {
+                  const name = t(`common.game_names.${game.nameKey}`);
+                  return (
+                    <LocaleLink key={game.id} href={`/play/${game.id}`} className={styles.featuredChip}>
+                      <span className={styles.featuredGlyph} aria-hidden="true">{name.slice(0, 1)}</span>
+                      {name}
+                    </LocaleLink>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
         </div>
 
         <motion.div

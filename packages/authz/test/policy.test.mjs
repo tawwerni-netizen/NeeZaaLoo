@@ -103,15 +103,20 @@ describe("the capability grid", () => {
   // "control.global" above, for the same reason: the surface that assigns
   // privileges must not itself be assignable by anyone but the top role.
   const EXPECTED = {
-    SUPER_ADMIN: 27,
-    ADMIN: 14,
-    FINANCE_ADMIN: 11,
-    RISK_ADMIN: 12,
+    // +3 each for FINANCE_ADMIN/SUPER_ADMIN (rail.read, rail.manage,
+    // control.read), +2 for ADMIN/RISK_ADMIN/ANALYST/READ_ONLY (rail.read,
+    // control.read only -- rail.manage stays finance-and-super-admin-only,
+    // the same spread as economy.manage) since the Admin Payment &
+    // Stablecoin Control Center's own capabilities were added.
+    SUPER_ADMIN: 30,
+    ADMIN: 16,
+    FINANCE_ADMIN: 14,
+    RISK_ADMIN: 14,
     ANTI_CHEAT_MODERATOR: 6,
     CONTENT_MODERATOR: 2,
     SUPPORT: 3,
-    ANALYST: 3,
-    READ_ONLY: 5,
+    ANALYST: 5,
+    READ_ONLY: 7,
   };
 
   for (const [role, count] of Object.entries(EXPECTED)) {

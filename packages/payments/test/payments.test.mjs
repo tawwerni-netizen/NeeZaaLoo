@@ -22,9 +22,45 @@ const u = (n) => (BigInt(n) * USDT).toString();
 const ADDR = "TQ2GJmMHV9y5cMHfmvvKZaMPmGxxxxxxxx".slice(0, 34);
 const GOOD_ADDR = "T" + "9".repeat(33);
 
-/** A stub chain reader. This is what the provider is checked AGAINST. */
+/**
+ * A stub chain reader. This is what the provider is checked AGAINST --
+ * `incoming[address]` describes exactly what an independent, real
+ * BlockchainProvider (packages/chain/src/provider.mjs) would have
+ * ALREADY re-derived from a transaction's own raw event log: no `chain`
+ * consumer, including payments.mjs, ever sees anything less verified than
+ * this shape in production either.
+ */
 function fakeChain(incoming = {}) {
-  return { async getIncoming({ address }) { return incoming[address] ?? null; } };
+  return {
+    async verifyIncoming({ network, address, requiredConfirmations }) {
+      const observed = incoming[address];
+      if (!observed) return { outcome: "NOT_FOUND" };
+      if (observed.network !== network) return { outcome: "WRONG_NETWORK" };
+      if (observed.asset !== "USDT") return { outcome: "NO_TRANSFER_EVENT" };
+      const base = {
+        txHash: observed.txHash, outputIndex: observed.outputIndex ?? 0,
+        network: observed.network, asset: observed.asset,
+        from: observed.from ?? null, to: address, amountRaw: String(observed.amountMinor),
+        confirmations: observed.confirmations,
+      };
+      return observed.confirmations >= requiredConfirmations
+        ? { outcome: "VERIFIED", ...base }
+        : { outcome: "NOT_CONFIRMED", ...base };
+    },
+    // The OUTBOUND mirror of verifyIncoming(): what an independent
+    // BlockchainProvider would report for a payout that genuinely landed.
+    // Every withdrawal test in this file that expects COMPLETED depends on
+    // this -- exactly as it would in production, where reconcile() never
+    // advances BROADCASTED -> CONFIRMED without exactly this kind of answer.
+    async verifyTransfer({ txHash, expectedNetwork, expectedRecipient, requiredConfirmations }) {
+      if (expectedNetwork !== "TRON") return { outcome: "WRONG_NETWORK" };
+      return {
+        outcome: "VERIFIED", txHash, network: expectedNetwork, asset: "USDT",
+        to: expectedRecipient, from: "Tplatformcustody00000000000000000",
+        amountRaw: "0", blockNumber: 12345, confirmations: requiredConfirmations ?? 20,
+      };
+    },
+  };
 }
 
 async function fresh({ fund = 0, controls = {} } = {}) {
@@ -35,6 +71,16 @@ async function fresh({ fund = 0, controls = {} } = {}) {
   await db.query(
     `INSERT INTO admin_user (id,email,display_name,mfa_enrolled) VALUES
      ('fin-1','f1@n','F1',TRUE),('fin-2','f2@n','F2',TRUE)`
+  );
+  // Both hold the real FINANCE_ADMIN capability set (withdrawal.review,
+  // withdrawal.approve, ...) -- granted by EACH OTHER, since
+  // admin_role_grant_not_self forbids self-granting. This is what makes
+  // authorize() actually ALLOW the admin-action tests below, the same way
+  // a real deployment's role-grant flow would.
+  await db.query(
+    `INSERT INTO admin_role_grant (admin_id, role, granted_by, reason) VALUES
+     ('fin-1','FINANCE_ADMIN','fin-2','test setup'),
+     ('fin-2','FINANCE_ADMIN','fin-1','test setup')`
   );
   if (fund) {
     await db.query(`SELECT ledger_post('seed','DEPOSIT','SYSTEM',NULL,$1::jsonb)`, [
@@ -283,6 +329,190 @@ describe("deposits: a webhook never credits", () => {
       /deposit_one_credit_per_output|duplicate key/
     );
   });
+
+  test("F-6: a second deposit intent racing the SAME on-chain output as an already-credited one is ORPHANED, not an unhandled crash", async () => {
+    // Two intents sharing one address (a provider address reuse, or a
+    // shared house address with memos) both observe the SAME real transfer.
+    // The first legitimately credits it. verifyAndCredit() for the second
+    // must never throw deposit_one_credit_per_output up through
+    // ingestWebhook() as an unhandled exception -- it must recognise "this
+    // output already belongs to someone else's intent" and ORPHAN this
+    // deposit for a human, exactly like any other unattributable transfer.
+    const db = await fresh();
+    const provider = createSandboxProvider();
+    const SHARED_ADDR = "T" + "7".repeat(33);
+    const chain = fakeChain({
+      [SHARED_ADDR]: { network: "TRON", asset: "USDT", txHash: "0xshared", amountMinor: u(50), confirmations: 50 },
+    });
+    const svc = createPaymentService(db, { provider, chain });
+
+    await db.query("INSERT INTO player (id, handle) VALUES ('bob','bob') ON CONFLICT DO NOTHING");
+    await db.query("SELECT ledger_open_user_wallet('bob')");
+    await db.query(
+      `INSERT INTO deposit (id,player_id,asset,network,provider,provider_ref,address,status,expires_at)
+       VALUES ('dep-first','alice','USDT','TRON','sandbox','ref-first',$1,'AWAITING_PAYMENT', now()+interval '1 day')`,
+      [SHARED_ADDR]
+    );
+    await db.query(
+      `INSERT INTO deposit (id,player_id,asset,network,provider,provider_ref,address,status,expires_at)
+       VALUES ('dep-second','bob','USDT','TRON','sandbox','ref-second',$1,'AWAITING_PAYMENT', now()+interval '1 day')`,
+      [SHARED_ADDR]
+    );
+
+    const first = await svc.verifyAndCredit("ref-first");
+    assert.equal(first.credited, true);
+
+    const second = await svc.verifyAndCredit("ref-second");
+    assert.equal(second.credited, false);
+    assert.equal(second.reason, DepositError.OUTPUT_ALREADY_CLAIMED, "never an unhandled exception -- a real, named outcome");
+
+    const row = await db.query("SELECT status, observed_tx_hash, quarantine_reason FROM deposit WHERE id='dep-second'");
+    assert.equal(row.rows[0].status, "QUARANTINED");
+    assert.equal(row.rows[0].observed_tx_hash, "0xshared", "the real transfer it observed is recorded, not discarded");
+    assert.equal(row.rows[0].quarantine_reason, "OUTPUT_ALREADY_CLAIMED");
+
+    assert.equal(await natural(db, "user:alice:available"), u(50), "the legitimate first credit stands");
+    assert.equal(await natural(db, "user:bob:available"), "0", "the second player is never credited for someone else's output");
+
+    const ledgerTx = await db.query("SELECT count(*)::int c FROM ledger_transaction WHERE kind='DEPOSIT'");
+    assert.equal(ledgerTx.rows[0].c, 1, "exactly one deposit credit was ever posted, never two");
+  });
+
+});
+
+describe("the real blockchain verification layer's deposit flow", () => {
+  /** A chain stub that returns one fixed, discriminated outcome regardless of address. */
+  function fixedOutcomeChain(result) {
+    return { async verifyIncoming() { return result; } };
+  }
+
+  async function openDeposit(svc, db) {
+    const d = await svc.createDeposit({ playerId: "alice" });
+    const row = await db.query("SELECT address, provider_ref FROM deposit WHERE id=$1", [d.depositId]);
+    return { ...d, address: row.rows[0].address, providerRef: row.rows[0].provider_ref };
+  }
+
+  test("FAILED TX: a reverted on-chain transaction is never credited, and is not quarantined as if it were suspicious", async () => {
+    const db = await fresh();
+    const svc = createPaymentService(db, {
+      provider: createSandboxProvider(),
+      chain: fixedOutcomeChain({ outcome: "TX_FAILED", txHash: "0xreverted" }),
+    });
+    const dep = await openDeposit(svc, db);
+    const res = await svc.verifyAndCredit(dep.providerRef);
+    assert.equal(res.credited, false);
+    assert.equal(res.reason, DepositError.TX_FAILED);
+    const row = await db.query("SELECT status FROM deposit WHERE id=$1", [dep.depositId]);
+    assert.equal(row.rows[0].status, "AWAITING_PAYMENT", "unchanged -- a reverted tx is not evidence of anything suspicious about the intent itself");
+    assert.equal(await natural(db, "user:alice:available"), "0");
+  });
+
+  test("WRONG RECIPIENT: an independently-decoded transfer to a different address than expected is quarantined, never credited", async () => {
+    const db = await fresh();
+    const svc = createPaymentService(db, {
+      provider: createSandboxProvider(),
+      chain: fixedOutcomeChain({ outcome: "WRONG_RECIPIENT", observedRecipients: ["Tsomeoneelse"] }),
+    });
+    const dep = await openDeposit(svc, db);
+    const res = await svc.verifyAndCredit(dep.providerRef);
+    assert.equal(res.credited, false);
+    assert.equal(res.reason, "WRONG_DESTINATION");
+    const row = await db.query("SELECT status FROM deposit WHERE id=$1", [dep.depositId]);
+    assert.equal(row.rows[0].status, "QUARANTINED");
+  });
+
+  test("ORPHAN: a genuinely valid, confirmed transfer arrives for an intent that already expired -- real money, never auto-credited, never silently dropped", async () => {
+    const db = await fresh();
+    const svc = createPaymentService(db, { provider: createSandboxProvider(), chain: fakeChain() });
+    const dep = await openDeposit(svc, db);
+    // The intent expired before the chain transfer was ever seen.
+    await db.query(`UPDATE deposit SET status='EXPIRED' WHERE id=$1`, [dep.depositId]);
+
+    const late = createPaymentService(db, {
+      provider: createSandboxProvider(),
+      chain: fixedOutcomeChain({
+        outcome: "VERIFIED", txHash: "0xlate", network: "TRON", asset: "USDT",
+        from: "Tsender", to: dep.address, amountRaw: u(50), confirmations: 30,
+      }),
+    });
+    const res = await late.verifyAndCredit(dep.providerRef);
+    assert.equal(res.credited, false);
+    assert.equal(res.reason, DepositError.ORPHANED);
+    assert.equal(res.txHash, "0xlate");
+
+    const row = await db.query(
+      "SELECT status, observed_tx_hash, observed_amount_minor FROM deposit WHERE id=$1", [dep.depositId]
+    );
+    assert.equal(row.rows[0].status, "ORPHANED");
+    assert.equal(row.rows[0].observed_tx_hash, "0xlate", "the real transaction is on record, not discarded");
+    assert.equal(String(row.rows[0].observed_amount_minor), u(50));
+    assert.equal(await natural(db, "user:alice:available"), "0", "never auto-credited onto a dead intent");
+  });
+
+  test("an already-ORPHANED deposit is not re-processed or revived by a later verification pass", async () => {
+    const db = await fresh();
+    const svc = createPaymentService(db, { provider: createSandboxProvider(), chain: fakeChain() });
+    const dep = await openDeposit(svc, db);
+    await db.query(
+      `UPDATE deposit SET status='ORPHANED', observed_tx_hash='0xold' WHERE id=$1`, [dep.depositId]
+    );
+    const nothingNow = createPaymentService(db, { provider: createSandboxProvider(), chain: fakeChain() });
+    const res = await nothingNow.verifyAndCredit(dep.providerRef);
+    assert.equal(res.reason, "NOTHING_ON_CHAIN");
+    const row = await db.query("SELECT status FROM deposit WHERE id=$1", [dep.depositId]);
+    assert.equal(row.rows[0].status, "ORPHANED", "never revived back to AWAITING_PAYMENT");
+  });
+
+  test("PROVIDER UNAVAILABLE / RETRY: an RPC outage is PENDING/RETRYABLE, never a rejection and never a credit", async () => {
+    const db = await fresh();
+    const svc = createPaymentService(db, {
+      provider: createSandboxProvider(),
+      chain: fixedOutcomeChain({ outcome: "PROVIDER_UNAVAILABLE", error: new Error("simulated RPC outage") }),
+    });
+    const dep = await openDeposit(svc, db);
+
+    const res = await svc.verifyAndCredit(dep.providerRef);
+    assert.equal(res.credited, false);
+    assert.equal(res.reason, DepositError.PROVIDER_UNAVAILABLE);
+    assert.equal(res.retryable, true);
+
+    const row = await db.query(
+      "SELECT status, verification_attempts, last_verification_error FROM deposit WHERE id=$1", [dep.depositId]
+    );
+    assert.equal(row.rows[0].status, "AWAITING_PAYMENT", "unchanged by a mere network blip");
+    assert.equal(row.rows[0].verification_attempts, 1);
+    assert.match(row.rows[0].last_verification_error, /simulated RPC outage/);
+
+    // RETRY: calling again (as a worker's next tick would) increments the
+    // counter again -- and once the provider recovers, the SAME deposit
+    // proceeds normally, proving the outage left nothing behind that
+    // blocks a later real credit.
+    await svc.verifyAndCredit(dep.providerRef);
+    const again = await db.query("SELECT verification_attempts FROM deposit WHERE id=$1", [dep.depositId]);
+    assert.equal(again.rows[0].verification_attempts, 2);
+
+    const recovered = createPaymentService(db, {
+      provider: createSandboxProvider(),
+      chain: fakeChain({ [dep.address]: { txHash: "0xrecovered", amountMinor: u(75), asset: "USDT", network: "TRON", confirmations: 30 } }),
+    });
+    const finalResult = await recovered.verifyAndCredit(dep.providerRef);
+    assert.equal(finalResult.credited, true);
+    assert.equal(await natural(db, "user:alice:available"), u(75));
+  });
+
+  test("a chain reader that throws directly (rather than returning PROVIDER_UNAVAILABLE) is still never treated as a rejection", async () => {
+    const db = await fresh();
+    const svc = createPaymentService(db, {
+      provider: createSandboxProvider(),
+      chain: { async verifyIncoming() { throw new Error("reader bug: unhandled exception"); } },
+    });
+    const dep = await openDeposit(svc, db);
+    const res = await svc.verifyAndCredit(dep.providerRef);
+    assert.equal(res.reason, DepositError.PROVIDER_UNAVAILABLE);
+    assert.equal(res.retryable, true);
+    const row = await db.query("SELECT status FROM deposit WHERE id=$1", [dep.depositId]);
+    assert.equal(row.rows[0].status, "AWAITING_PAYMENT");
+  });
 });
 
 describe("withdrawals", () => {
@@ -307,6 +537,30 @@ describe("withdrawals", () => {
       );
     }
     return GOOD_ADDR;
+  }
+
+  /**
+   * Since the LAUNCH POSTURE fix below, assess() always routes to
+   * PENDING_REVIEW -- there is no size or risk score that skips human
+   * review. Every test that needs to reach APPROVED (to then process() a
+   * payout) goes through this real four-eyes ceremony: a second admin
+   * decides the SAME approval_request proposeApproval() would have
+   * created, and the original requester executes it -- exactly the
+   * production path, not a shortcut around it.
+   */
+  async function fourEyesApprove(db, svc, withdrawalId) {
+    const digest = await db.query("SELECT withdrawal_payload_digest($1) AS digest", [withdrawalId]);
+    const approvalId = `apr_${withdrawalId}`;
+    await db.query(
+      `INSERT INTO approval_request (id, action, subject_type, subject_id, payload, requested_by,
+                                     reason, status, decided_by, decided_at)
+       VALUES ($1,'admin.withdrawal.approve','withdrawal',$2,$3::jsonb,'fin-1','test approval',
+               'APPROVED','fin-2', now())`,
+      [approvalId, withdrawalId, JSON.stringify({ digest: digest.rows[0].digest })]
+    );
+    const res = await svc.approve(withdrawalId, { approvalRequestId: approvalId, adminId: "fin-1", stepUpVerified: true });
+    assert.equal(res.status, "APPROVED", `four-eyes approval unexpectedly failed: ${JSON.stringify(res)}`);
+    return res;
   }
 
   test("an address is time-locked when added", async () => {
@@ -368,19 +622,23 @@ describe("withdrawals", () => {
     assert.equal(await natural(db, "user:alice:available"), u(20));
   });
 
-  test("a small clean withdrawal is auto-approved; a large one goes to a human", async () => {
+  test("LAUNCH POSTURE: every withdrawal reaches a human, at any clean amount -- there is no auto-approval today", async () => {
+    // A security review found reviewThresholdMinor defaulting to 500 USDT,
+    // silently auto-approving every smaller, risk-clean withdrawal with no
+    // four-eyes and no human ever seeing it -- directly contradicting this
+    // module's own header ("above a threshold -- currently EVERY
+    // withdrawal -- a second human"). This is that claim, proven for real,
+    // across the full range from the minimum up to the platform maximum.
     const { db, svc } = await setup({ fund: 10_000 });
     await allowlisted(svc, db);
 
-    const small = await svc.request({
-      playerId: "alice", destination: GOOD_ADDR, amountMinor: u(10), authorised: true,
-    });
-    assert.equal((await svc.assess(small.withdrawalId)).status, "APPROVED");
-
-    const big = await svc.request({
-      playerId: "alice", destination: GOOD_ADDR, amountMinor: u(900), authorised: true,
-    });
-    assert.equal((await svc.assess(big.withdrawalId)).status, "PENDING_REVIEW");
+    for (const dollars of [10, 499, 500, 900, 2000]) {
+      const w = await svc.request({
+        playerId: "alice", destination: GOOD_ADDR, amountMinor: u(dollars), authorised: true,
+      });
+      const assessed = await svc.assess(w.withdrawalId);
+      assert.equal(assessed.status, "PENDING_REVIEW", `a $${dollars} withdrawal must reach a human, not auto-approve`);
+    }
   });
 
   test("a risky withdrawal goes to a human regardless of size", async () => {
@@ -402,17 +660,138 @@ describe("withdrawals", () => {
     });
     await svc.assess(w.withdrawalId);
 
-    assert.equal((await svc.approve(w.withdrawalId, { approvalRequestId: "nope" })).reason,
-      WithdrawalError.NEEDS_APPROVAL);
+    assert.equal(
+      (await svc.approve(w.withdrawalId, { approvalRequestId: "nope", adminId: "fin-1", stepUpVerified: true })).reason,
+      WithdrawalError.NEEDS_APPROVAL
+    );
 
+    // The digest must cover the SAME payload approve() will re-derive at
+    // execution time (G9) -- computed here through the same DB function
+    // proposeApproval() itself would call, not hand-typed, so this test
+    // fails loudly if the two ever disagree.
+    const digest = await db.query("SELECT withdrawal_payload_digest($1) AS digest", [w.withdrawalId]);
     await db.query(
-      `INSERT INTO approval_request (id, action, subject_type, subject_id, requested_by,
+      `INSERT INTO approval_request (id, action, subject_type, subject_id, payload, requested_by,
                                      reason, status, decided_by, decided_at)
-       VALUES ('ap1','admin.withdrawal.approve','withdrawal',$1,'fin-1','large payout',
+       VALUES ('ap1','admin.withdrawal.approve','withdrawal',$1,$2::jsonb,'fin-1','large payout',
                'APPROVED','fin-2', now())`,
+      [w.withdrawalId, JSON.stringify({ digest: digest.rows[0].digest })]
+    );
+    assert.equal(
+      (await svc.approve(w.withdrawalId, { approvalRequestId: "ap1", adminId: "fin-1", stepUpVerified: true })).status,
+      "APPROVED"
+    );
+  });
+
+  test("F-5: fee_minor is covered by the approval digest, and is immutable like amount/destination", async () => {
+    const { db, svc } = await setup({ fund: 10_000 });
+    await allowlisted(svc, db);
+    const w = await svc.request({
+      playerId: "alice", destination: GOOD_ADDR, amountMinor: u(900), authorised: true,
+    });
+    await svc.assess(w.withdrawalId);
+    const before = await db.query("SELECT withdrawal_payload_digest($1) AS digest", [w.withdrawalId]);
+
+    await assert.rejects(
+      () => db.query("UPDATE withdrawal SET fee_minor=$2 WHERE id=$1", [w.withdrawalId, u(400)]),
+      /fee are immutable/
+    );
+
+    const after = await db.query("SELECT withdrawal_payload_digest($1) AS digest", [w.withdrawalId]);
+    assert.equal(before.rows[0].digest, after.rows[0].digest, "the digest is unaffected because the change was refused outright");
+  });
+
+  test("an approval whose digest no longer matches the withdrawal is refused", async () => {
+    const { db, svc } = await setup({ fund: 10_000 });
+    await allowlisted(svc, db);
+    const w = await svc.request({
+      playerId: "alice", destination: GOOD_ADDR, amountMinor: u(900), authorised: true,
+    });
+    await svc.assess(w.withdrawalId);
+    await db.query(
+      `INSERT INTO approval_request (id, action, subject_type, subject_id, payload, requested_by,
+                                     reason, status, decided_by, decided_at)
+       VALUES ('ap-stale','admin.withdrawal.approve','withdrawal',$1,'{"digest":"deadbeef"}'::jsonb,
+               'fin-1','large payout','APPROVED','fin-2', now())`,
       [w.withdrawalId]
     );
-    assert.equal((await svc.approve(w.withdrawalId, { approvalRequestId: "ap1" })).status, "APPROVED");
+    const res = await svc.approve(w.withdrawalId, { approvalRequestId: "ap-stale", adminId: "fin-1", stepUpVerified: true });
+    assert.equal(res.reason, WithdrawalError.DIGEST_MISMATCH);
+  });
+
+  test("only the original requester may execute an approval they did not raise", async () => {
+    const { db, svc } = await setup({ fund: 10_000 });
+    await allowlisted(svc, db);
+    const w = await svc.request({
+      playerId: "alice", destination: GOOD_ADDR, amountMinor: u(900), authorised: true,
+    });
+    await svc.assess(w.withdrawalId);
+    const digest = await db.query("SELECT withdrawal_payload_digest($1) AS digest", [w.withdrawalId]);
+    await db.query(
+      `INSERT INTO approval_request (id, action, subject_type, subject_id, payload, requested_by,
+                                     reason, status, decided_by, decided_at)
+       VALUES ('ap2','admin.withdrawal.approve','withdrawal',$1,$2::jsonb,'fin-1','large payout',
+               'APPROVED','fin-2', now())`,
+      [w.withdrawalId, JSON.stringify({ digest: digest.rows[0].digest })]
+    );
+    // fin-2 decided it; fin-2 may not ALSO be the one who executes it.
+    const res = await svc.approve(w.withdrawalId, { approvalRequestId: "ap2", adminId: "fin-2", stepUpVerified: true });
+    assert.equal(res.reason, WithdrawalError.PERMISSION_DENIED);
+  });
+
+  test("an admin without the finance capability cannot approve, hold, or reject", async () => {
+    const { db, svc } = await setup({ fund: 10_000 });
+    await db.query(
+      `INSERT INTO admin_user (id,email,display_name,mfa_enrolled) VALUES ('supp-1','s1@n','S1',TRUE)`
+    );
+    await allowlisted(svc, db);
+    const w = await svc.request({
+      playerId: "alice", destination: GOOD_ADDR, amountMinor: u(900), authorised: true,
+    });
+    await svc.assess(w.withdrawalId);
+    const rejected = await svc.reject(w.withdrawalId, "no thanks", { adminId: "supp-1", stepUpVerified: true });
+    assert.equal(rejected.reason, WithdrawalError.PERMISSION_DENIED);
+    const held = await svc.hold(w.withdrawalId, { adminId: "supp-1" });
+    assert.equal(held.reason, WithdrawalError.PERMISSION_DENIED);
+  });
+
+  test("PLACE ON HOLD: defers a decision, and review can resume it", async () => {
+    const { db, svc } = await setup({ fund: 10_000 });
+    await allowlisted(svc, db);
+    const w = await svc.request({
+      playerId: "alice", destination: GOOD_ADDR, amountMinor: u(900), authorised: true,
+    });
+    await svc.assess(w.withdrawalId);
+
+    const held = await svc.hold(w.withdrawalId, { adminId: "fin-1", reason: "verifying destination" });
+    assert.equal(held.status, "ON_HOLD");
+    const row = await db.query("SELECT status, hold_reason FROM withdrawal WHERE id=$1", [w.withdrawalId]);
+    assert.equal(row.rows[0].status, "ON_HOLD");
+    assert.equal(row.rows[0].hold_reason, "verifying destination");
+
+    // A held withdrawal cannot be approved directly -- it must resume first.
+    assert.equal(
+      (await svc.approve(w.withdrawalId, { approvalRequestId: "whatever", adminId: "fin-1", stepUpVerified: true })).reason,
+      WithdrawalError.WRONG_STATE
+    );
+
+    const resumed = await svc.resumeFromHold(w.withdrawalId, { adminId: "fin-2" });
+    assert.equal(resumed.status, "PENDING_REVIEW");
+    const row2 = await db.query("SELECT hold_reason FROM withdrawal WHERE id=$1", [w.withdrawalId]);
+    assert.equal(row2.rows[0].hold_reason, null);
+  });
+
+  test("a withdrawal on hold can still be rejected outright", async () => {
+    const { db, svc } = await setup({ fund: 10_000 });
+    await allowlisted(svc, db);
+    const w = await svc.request({
+      playerId: "alice", destination: GOOD_ADDR, amountMinor: u(900), authorised: true,
+    });
+    await svc.assess(w.withdrawalId);
+    await svc.hold(w.withdrawalId, { adminId: "fin-1", reason: "checking" });
+    const rejected = await svc.reject(w.withdrawalId, "denied while on hold", { adminId: "fin-2", stepUpVerified: true });
+    assert.equal(rejected.status, "REJECTED");
+    assert.equal(await natural(db, "user:alice:available"), u(10_000));
   });
 
   test("the full happy path pays out once and the books balance", async () => {
@@ -422,6 +801,7 @@ describe("withdrawals", () => {
       playerId: "alice", destination: GOOD_ADDR, amountMinor: u(100), authorised: true,
     });
     await svc.assess(w.withdrawalId);
+    await fourEyesApprove(db, svc, w.withdrawalId);
     const processed = await svc.process(w.withdrawalId);
     assert.equal(processed.ok, true);
 
@@ -450,6 +830,7 @@ describe("withdrawals", () => {
       playerId: "alice", destination: GOOD_ADDR, amountMinor: u(100), authorised: true,
     });
     await svc.assess(w.withdrawalId);
+    await fourEyesApprove(db, svc, w.withdrawalId);
     const p = await svc.process(w.withdrawalId);
     const payout = provider._payouts.get(p.providerRef);
     payout.state = ProviderPayoutState.CONFIRMED;
@@ -473,6 +854,7 @@ describe("withdrawals", () => {
       playerId: "alice", destination: GOOD_ADDR, amountMinor: u(100), authorised: true,
     });
     await svc.assess(w.withdrawalId);
+    await fourEyesApprove(db, svc, w.withdrawalId);
     const first = await svc.process(w.withdrawalId);
     // A second process() is refused by state, but the provider itself is also
     // idempotent on the external id -- belt and braces on the one operation
@@ -492,6 +874,7 @@ describe("withdrawals", () => {
       playerId: "alice", destination: GOOD_ADDR, amountMinor: u(100), authorised: true,
     });
     await svc.assess(w.withdrawalId);
+    await fourEyesApprove(db, svc, w.withdrawalId);
     const p = await svc.process(w.withdrawalId);
     provider._payouts.get(p.providerRef).state = ProviderPayoutState.FAILED;
 
@@ -501,6 +884,109 @@ describe("withdrawals", () => {
     assert.equal(await natural(db, "user:alice:locked"), "0");
   });
 
+  describe("a provider claiming FAILED after a real broadcast is never trusted alone", () => {
+    // These reproduce the exact double-spend the security review's PROBE A
+    // demonstrated before the fix: a payout is genuinely broadcast (a
+    // tx_hash is recorded), and the provider LATER claims FAILED -- an
+    // outage, a bad status map, a compromised provider account, or a
+    // support-initiated cancel on their side. reconcile() must never
+    // release the hold on that claim alone; only its own independent
+    // chain.verifyTransfer() may say the payout is genuinely dead.
+    async function broadcastThenClaimFailed(chain) {
+      const db = await fresh({ fund: 1000 });
+      const provider = createSandboxProvider();
+      const svc = createPaymentService(db, { provider, chain });
+      await svc.addPayoutAddress({ playerId: "alice", address: GOOD_ADDR, label: "ledger" });
+      await db.query(`UPDATE payout_address SET added_at = now() - interval '48 hours', usable_from = now() - interval '24 hours'`);
+      const w = await svc.request({ playerId: "alice", destination: GOOD_ADDR, amountMinor: u(100), authorised: true });
+      await svc.assess(w.withdrawalId);
+      await fourEyesApprove(db, svc, w.withdrawalId);
+      const p = await svc.process(w.withdrawalId);
+      const payout = provider._payouts.get(p.providerRef);
+      // Recorded directly (a legal PROCESSING -> BROADCASTED transition, per
+      // withdrawal_transition_allowed()) rather than via reconcile(), so
+      // this fixture is not itself dependent on the chain double's
+      // behaviour -- every test below starts from the exact same
+      // "genuinely broadcast, real tx_hash on file" state and then supplies
+      // its OWN chain answer for what happens next.
+      await db.query(
+        `UPDATE withdrawal SET status='BROADCASTED'::withdrawal_status, tx_hash=$2 WHERE id=$1`,
+        [w.withdrawalId, "0xrealbroadcast"]
+      );
+      payout.state = ProviderPayoutState.FAILED;
+      return { db, svc, withdrawalId: w.withdrawalId };
+    }
+
+    test("chain says NOT_CONFIRMED (inconclusive) -- the hold stays locked, nothing is refunded", async () => {
+      const { db, svc, withdrawalId } = await broadcastThenClaimFailed({
+        async verifyTransfer() { return { outcome: "NOT_CONFIRMED", confirmations: 3 }; },
+      });
+      const res = await svc.reconcile(withdrawalId);
+      assert.equal(res.unchanged, true);
+      const row = await db.query("SELECT status FROM withdrawal WHERE id=$1", [withdrawalId]);
+      assert.equal(row.rows[0].status, "BROADCASTED", "never marked FAILED on the provider's word alone");
+      assert.equal(await natural(db, "user:alice:available"), u(900), "the withdrawn amount is NOT refunded -- it may already be on-chain");
+      assert.equal(await natural(db, "user:alice:locked"), u(100), "the hold is still in place");
+    });
+
+    test("chain independently confirms the transaction as VERIFIED -- the provider's FAILED claim is overridden, not trusted", async () => {
+      const { db, svc, withdrawalId } = await broadcastThenClaimFailed({
+        async verifyTransfer({ txHash, expectedRecipient, requiredConfirmations }) {
+          return { outcome: "VERIFIED", txHash, network: "TRON", asset: "USDT", to: expectedRecipient, amountRaw: "0", blockNumber: 1, confirmations: requiredConfirmations ?? 20 };
+        },
+      });
+      const res = await svc.reconcile(withdrawalId);
+      assert.equal(res.status, "COMPLETED", "a real, chain-confirmed payout completes despite the provider's own claim of failure");
+      assert.equal(await natural(db, "user:alice:available"), u(900));
+      assert.equal(await natural(db, "user:alice:locked"), "0");
+    });
+
+    test("chain confirms a genuine on-chain revert (TX_FAILED) -- only then is the hold released", async () => {
+      const { db, svc, withdrawalId } = await broadcastThenClaimFailed({
+        async verifyTransfer() { return { outcome: "TX_FAILED", blockNumber: 1 }; },
+      });
+      const res = await svc.reconcile(withdrawalId);
+      assert.equal(res.status, "FAILED");
+      assert.equal(await natural(db, "user:alice:available"), u(1000), "refunded because the chain itself proves the payout never landed");
+      assert.equal(await natural(db, "user:alice:locked"), "0");
+    });
+
+    test("no chain verifier configured at all -- FAILED-with-a-tx_hash is refused, not trusted", async () => {
+      const { db, svc, withdrawalId } = await broadcastThenClaimFailed({});
+      const res = await svc.reconcile(withdrawalId);
+      assert.equal(res.reason, "NO_CHAIN_VERIFIER");
+      const row = await db.query("SELECT status FROM withdrawal WHERE id=$1", [withdrawalId]);
+      assert.equal(row.rows[0].status, "BROADCASTED");
+      assert.equal(await natural(db, "user:alice:available"), u(900));
+    });
+  });
+
+  test("PROVIDER LOST STATE: an unrecognised payout reference reports UNKNOWN, never FAILED, and reconcile() touches nothing", async () => {
+    const db = await fresh({ fund: 1000 });
+    const provider = createSandboxProvider();
+    const chain = fakeChain();
+    const svc = createPaymentService(db, { provider, chain });
+    await svc.addPayoutAddress({ playerId: "alice", address: GOOD_ADDR, label: "ledger" });
+    await db.query(`UPDATE payout_address SET added_at = now() - interval '48 hours', usable_from = now() - interval '24 hours'`);
+    const w = await svc.request({ playerId: "alice", destination: GOOD_ADDR, amountMinor: u(100), authorised: true });
+    await svc.assess(w.withdrawalId);
+    await fourEyesApprove(db, svc, w.withdrawalId);
+    await svc.process(w.withdrawalId);
+
+    // Simulate a restart: a brand-new provider instance, no in-memory payout map.
+    const restartedProvider = createSandboxProvider();
+    const svcAfterRestart = createPaymentService(db, { provider: restartedProvider, chain });
+    const direct = await restartedProvider.getPayout("some-ref-nobody-restarted-with");
+    assert.equal(direct.state, ProviderPayoutState.UNKNOWN);
+
+    const res = await svcAfterRestart.reconcile(w.withdrawalId);
+    assert.equal(res.unchanged, true);
+    const row = await db.query("SELECT status FROM withdrawal WHERE id=$1", [w.withdrawalId]);
+    assert.equal(row.rows[0].status, "PROCESSING", "still exactly where it was -- UNKNOWN never mutates state");
+    assert.equal(await natural(db, "user:alice:available"), u(900), "not refunded on a lost reference");
+    assert.equal(await natural(db, "user:alice:locked"), u(100), "the hold survives a restart");
+  });
+
   test("rejecting returns the money before the state moves", async () => {
     const { db, svc } = await setup({ fund: 1000 });
     await allowlisted(svc, db);
@@ -508,7 +994,7 @@ describe("withdrawals", () => {
       playerId: "alice", destination: GOOD_ADDR, amountMinor: u(100), authorised: true,
     });
     await svc.assess(w.withdrawalId);
-    await svc.reject(w.withdrawalId, "risk review declined");
+    await svc.reject(w.withdrawalId, "risk review declined", { adminId: "fin-1", stepUpVerified: true });
     assert.equal(await natural(db, "user:alice:available"), u(1000));
     assert.equal(await natural(db, "user:alice:locked"), "0");
   });

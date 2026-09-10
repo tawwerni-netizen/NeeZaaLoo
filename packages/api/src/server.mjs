@@ -23,6 +23,7 @@ import { createRateLimiter, takeToken } from "../../realtime/src/protocol.mjs";
 import { createMatchmakingService, MatchmakingError } from "../../matchmaking/src/matchmaking.mjs";
 import { createVsComputerService } from "../../matchmaking/src/vs-computer.mjs";
 import { createChallengeService, ChallengeError } from "../../matchmaking/src/challenge.mjs";
+import { tryResolveTimeControl, DEFAULT_TIME_PROFILE } from "../../duel-engine/src/time-profiles.mjs";
 import { SUPPORTED_LOCALE_CODES, DEFAULT_LOCALE } from "../../i18n/src/locales.mjs";
 import { RbacError } from "../../authz/src/rbac.mjs";
 import { EmailIdentityError } from "../../auth/src/email-identity.mjs";
@@ -39,6 +40,7 @@ export function createApi({
   db, auth, settlement = null, tournament = null, globalSkill = null, reconciliation = null, rbac = null,
   emailIdentity = null, emailVerification = null, welcomeEmail = null, emailLoginCode = null, passwordReset = null,
   googleOAuth = null, profile = null, support = null, ticketNotifications = null, chat = null,
+  mastery = null, streaks = null, dailyChallenges = null, recommendations = null, frames = null,
   // Read-only admin visibility into EXP/achievements/badges (Slice 11,
   // directive #20) -- { exp, achievements, badges }, the SAME
   // packages/profile services `profile` above already wraps for the
@@ -46,6 +48,14 @@ export function createApi({
   // through this bundle's routes below -- see this file's own comment at
   // the route itself for why a manual-EXP-edit endpoint does not exist.
   progression = null,
+  // The Admin Payment & Stablecoin Control Center: `rails` is
+  // createRailService() (packages/payments/src/valuation.mjs), `railHealth`
+  // is createHealthService() (packages/payments/src/health.mjs). Both null
+  // by default like every other optional service bundle above -- a
+  // deployment that has not wired the chain reader yet still starts, and
+  // every /v1/admin/payments/* route below answers SERVICE_UNAVAILABLE
+  // rather than crashing.
+  rails = null, railHealth = null,
   // Where the browser is sent after the Google OAuth callback finishes --
   // a fixed, server-configured ORIGIN, never anything the request itself
   // supplies (see the callback route's own comment on why an
@@ -232,11 +242,20 @@ export function createApi({
     }
 
     const actor = await identify(req);
+    // Loaded once per request and reused: both the generic authorize() call
+    // below AND any handler that needs a second, finer-grained authorize()
+    // check (e.g. a competitive challenge/ticket re-checked against
+    // duel.play.cash on top of the route's own duel.play.free) read the
+    // SAME snapshot, rather than a second DB round-trip that could
+    // theoretically disagree with the first within one request.
+    const controls = await loadControls();
     const ctx = {
       params, body: parsed.body, query: url.searchParams, actor,
       ip: req.socket.remoteAddress, db, auth, settlement, tournament, globalSkill, reconciliation, rbac,
       emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
       googleOAuth, googleFrontendOrigin, profile, support, ticketNotifications, chat, progression, now,
+      mastery, streaks, dailyChallenges, recommendations, frames,
+      rails, railHealth, controls,
     };
 
     if (!route.anonymous && actor.type === "ANON") {
@@ -260,7 +279,7 @@ export function createApi({
         : effectiveActor,
       action: route.action,
       resource: route.owner ? { ownerId: route.owner(ctx) } : {},
-      controls: await loadControls(),
+      controls,
       // A four-eyes action is only ever backed by a REAL row from
       // approval_request, fetched here from the database -- never from
       // anything the client asserts about who approved it. The client
@@ -948,16 +967,33 @@ function buildRoutes() {
     // game-specific lives in this handler -- the same route seats a Speed
     // Math ticket exactly as it does a chess one.
     { method: "POST", path: "/v1/matchmaking/tickets", action: "duel.play.free",
-      handler: async ({ actor, body, db }) => {
+      handler: async ({ actor, body, db, controls }) => {
         const gameId = String(body.gameId ?? "chess");
         const mode = String(body.mode ?? "standard");
-        const timeControl = body.timeControl ?? { initialMs: 300000, incrementMs: 0 };
+        // The clock is a named profile, never a client-supplied object --
+        // see time-profiles.mjs. A request naming an unknown game or
+        // profile is refused outright rather than silently defaulted to
+        // chess's own clock.
+        const timeControl = tryResolveTimeControl(gameId, String(body.timeProfile ?? DEFAULT_TIME_PROFILE));
+        if (!timeControl) return { status: 400, body: errorBody("INVALID_TIME_PROFILE") };
+        // RANDOM OPPONENT: Free or Competitive. A competitive ticket is
+        // re-checked against `duel.play.cash` -- the control-gated
+        // permission behind PAUSE ALL REAL-MONEY PLAY -- on top of the
+        // base `duel.play.free` every ticket needs regardless of stake.
+        const tier = body.tier === "CASH" ? "CASH" : "FREE";
+        if (tier === "CASH") {
+          const decision = authorize({ actor, action: "duel.play.cash", controls });
+          if (decision.decision !== Decision.ALLOW) {
+            return { status: decision.reason === "CONTROL_DISABLED" ? 503 : 403, body: errorBody(decision.reason) };
+          }
+        }
         const rating = await db.query(
           "SELECT rating_x100 FROM rating WHERE player_id=$1 AND game_id=$2", [actor.id, gameId]
         );
         const mm = createMatchmakingService(db);
         const r = await mm.enqueue({
-          playerId: actor.id, gameId, mode, timeControl,
+          playerId: actor.id, gameId, mode, timeControl, tier,
+          stakeMinor: tier === "CASH" ? String(body.stakeMinor ?? "0") : "0",
           ratingX100: rating.rows[0]?.rating_x100 ?? 150000,
         });
         if (!r.ok) {
@@ -984,16 +1020,32 @@ function buildRoutes() {
 
     // PLAY WITH FRIEND -- a challenge to a specific, named opponent (see
     // challenge.mjs's own header for why this is a separate primitive from
-    // both matchmaking's pool and vs-computer's no-opponent case). Always
-    // FREE, exactly like vs-computer -- reuses the same permission.
+    // both matchmaking's pool and vs-computer's no-opponent case). Free or
+    // Competitive, exactly like RANDOM OPPONENT: a competitive request is
+    // re-checked against `duel.play.cash` (the SAME control-gated
+    // permission matchmaking's own cash pool answers to -- PAUSE ALL
+    // REAL-MONEY PLAY reaches this path too) before it is ever created,
+    // on top of the base `duel.play.free` every challenge needs regardless
+    // of stake.
     { method: "POST", path: "/v1/challenges", action: "duel.play.free",
-      handler: async ({ actor, body, db }) => {
+      handler: async ({ actor, body, db, chat, controls }) => {
         const gameId = String(body.gameId ?? "chess");
         const opponentNickname = String(body.opponentNickname ?? "");
-        const challenge = createChallengeService(db);
-        const r = await challenge.create({ gameId, challengerId: actor.id, opponentNickname });
+        const tier = body.tier === "CASH" ? "CASH" : "FREE";
+        if (tier === "CASH") {
+          const decision = authorize({ actor, action: "duel.play.cash", controls });
+          if (decision.decision !== Decision.ALLOW) {
+            return { status: decision.reason === "CONTROL_DISABLED" ? 503 : 403, body: errorBody(decision.reason) };
+          }
+        }
+        const challenge = createChallengeService(db, { channels: chat?.channels });
+        const r = await challenge.create({
+          gameId, challengerId: actor.id, opponentNickname, tier,
+          stakeMinor: tier === "CASH" ? String(body.stakeMinor ?? "0") : "0",
+        });
         if (!r.ok) {
-          const status = r.reason === ChallengeError.ALREADY_PENDING ? 409 : 400;
+          const status = r.reason === ChallengeError.ALREADY_PENDING ? 409
+            : r.reason === ChallengeError.BLOCKED ? 403 : 400;
           return { status, body: errorBody(r.reason) };
         }
         return { status: 201, body: { challengeId: r.challengeId, expiresAt: r.expiresAt } };
@@ -1009,8 +1061,8 @@ function buildRoutes() {
       } },
 
     { method: "POST", path: "/v1/challenges/:id/accept", action: "duel.play.free",
-      handler: async ({ actor, params, db }) => {
-        const challenge = createChallengeService(db);
+      handler: async ({ actor, params, db, chat }) => {
+        const challenge = createChallengeService(db, { channels: chat?.channels });
         const r = await challenge.accept(params.id, actor.id);
         if (!r.ok) {
           const status = r.reason === ChallengeError.NOT_FOUND ? 404
@@ -1072,14 +1124,15 @@ function buildRoutes() {
     // actually open. Registered BEFORE /v1/duels/:id below: the router
     // matches routes in registration order and both paths have the same
     // segment count, so "live" would otherwise be swallowed as a :id.
-    { method: "GET", path: "/v1/duels/live", action: "duel.spectate",
+    { method: "GET", path: "/v1/duels/live", action: "duel.spectate", anonymous: true,
       handler: async ({ db, query }) => {
         const limit = Math.min(Math.max(1, Number(query.get("limit")) || 20), 50);
         const r = await db.query(
-          `SELECT d.id, d.game_id, d.started_at,
+          `SELECT d.id, d.game_id, d.started_at, d.pairing_key,
                   pa.handle AS handle_0, pa.selected_badge_code AS badge_0,
                   pb.handle AS handle_1, pb.selected_badge_code AS badge_1,
-                  ra.rating_x100 AS rating_0, rb.rating_x100 AS rating_1
+                  ra.rating_x100 AS rating_0, rb.rating_x100 AS rating_1,
+                  (SELECT count(*)::int FROM duel_event de WHERE de.duel_id = d.id) AS move_count
              FROM duel d
              JOIN player pa ON pa.id = d.seat_0
              JOIN player pb ON pb.id = d.seat_1
@@ -1096,6 +1149,12 @@ function buildRoutes() {
               duelId: row.id,
               gameId: row.game_id,
               startedAt: row.started_at,
+              // A tournament pairing's duel is keyed "tournament:<id>:r<n>:s<slot>"
+              // (see tournament.mjs's createRound()) -- a real, safe signal the
+              // Live Arena can use to badge "TOURNAMENT MATCH" without exposing
+              // anything server-only.
+              isTournamentMatch: row.pairing_key?.startsWith("tournament:") ?? false,
+              moveCount: row.move_count,
               players: [
                 { handle: row.handle_0, badge: row.badge_0, ratingX100: row.rating_0 ?? null },
                 { handle: row.handle_1, badge: row.badge_1, ratingX100: row.rating_1 ?? null },
@@ -1210,7 +1269,7 @@ function buildRoutes() {
       } },
 
     { method: "GET", path: "/v1/duels/:id/chat/messages", action: "player.chat.match.read",
-      handler: async ({ params, actor, query, chat }) => {
+      handler: async ({ params, actor, query, chat, db }) => {
         const channel = await chat.channels.getOrCreateMatchChannel(params.id);
         const access = await chat.channels.canAccessChannel(channel, actor.id);
         if (!access.ok) return { status: chatErrorStatus(access.reason), body: errorBody(access.reason) };
@@ -1219,7 +1278,21 @@ function buildRoutes() {
           before: query.get("before") ?? undefined, after: query.get("after") ?? undefined,
           limit: query.get("limit") || undefined,
         });
-        return { body: { channelId: channel.id, messages: rows } };
+        // "Regardless of result, the chat timeline should show a system
+        // event": MATCH_STARTED (packages/matchmaking/src/challenge.mjs's
+        // own accept()) lives here, never mixed into chat_message's own
+        // pagination -- there are only ever one or two of these per match,
+        // so an unbounded read costs nothing and needs no cursor of its own.
+        const systemEvents = await db.query(
+          `SELECT event_type, detail, created_at FROM chat_system_event WHERE channel_id=$1 ORDER BY id`,
+          [channel.id]
+        );
+        return {
+          body: {
+            channelId: channel.id, messages: rows,
+            systemEvents: systemEvents.rows.map((r) => ({ eventType: r.event_type, detail: r.detail, createdAt: r.created_at })),
+          },
+        };
       } },
 
     // Spectator chat (Slice 10): the SAME shape as match chat's own route
@@ -1306,32 +1379,112 @@ function buildRoutes() {
         return { body: { entries: board.slice(0, limit) } };
       } },
 
+    // --- Notifications -----------------------------------------------------------
+    // In-app inbox only (see 0033_tournament_lifecycle_v2.sql's own header):
+    // a match is ready, a tournament was cancelled, or prizes settled.
+
+    { method: "GET", path: "/v1/me/notifications", action: "notification.read",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, db, query }) => {
+        const limit = Math.min(Number(query.get("limit") ?? 50) || 50, 100);
+        const unreadOnly = query.get("unread") === "true";
+        const r = await db.query(
+          `SELECT id, type, title, body, data, read_at, created_at FROM notification
+            WHERE player_id = $1 AND ($2::boolean IS FALSE OR read_at IS NULL)
+            ORDER BY created_at DESC LIMIT $3`,
+          [actor.id, unreadOnly, limit]
+        );
+        return { body: { notifications: r.rows } };
+      } },
+
+    { method: "POST", path: "/v1/me/notifications/:id/read", action: "notification.read",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, params, db }) => {
+        const r = await db.query(
+          `UPDATE notification SET read_at = now()
+            WHERE id = $1 AND player_id = $2 AND read_at IS NULL RETURNING id`,
+          [params.id, actor.id]
+        );
+        return { body: { ok: true, alreadyRead: r.rows.length === 0 } };
+      } },
+
+    // --- Daily challenges ----------------------------------------------------------
+    // No deposit, stake, or CASH-tier requirement anywhere in this catalog
+    // (see migration 0034's own header) -- every template's progress is
+    // recomputed from real signals on every read, never a client-reported
+    // count (see packages/engagement/src/daily-challenges.mjs).
+
+    { method: "GET", path: "/v1/me/daily-challenges", action: "player.daily_challenge.read",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, dailyChallenges }) => ({ body: { challenges: await dailyChallenges.myChallenges(actor.id) } }) },
+
+    // --- Cross-game discovery --------------------------------------------------
+    // Every reason is derived from the caller's OWN gameplay data (mastery,
+    // recent rating trend) -- never anything resembling a demographic or
+    // behavioral-profiling signal (see packages/engagement/src/
+    // recommendations.mjs's own header).
+
+    { method: "GET", path: "/v1/me/recommendations", action: "player.recommendation.read",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, recommendations }) => ({ body: { recommendations: await recommendations.recommendationsFor(actor.id) } }) },
+
+    // --- Badge / frame selection -----------------------------------------------
+    // Both cosmetics follow the identical "select one you already own"
+    // shape (packages/profile's badges.mjs/frames.mjs); `code: null` clears
+    // the current selection.
+
+    { method: "POST", path: "/v1/me/badge", action: "player.profile.update",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, body, progression }) => {
+        const r = await progression.badges.select(actor.id, body?.code ?? null);
+        return r.ok ? { body: r } : { status: 400, body: errorBody(r.reason) };
+      } },
+
+    { method: "POST", path: "/v1/me/frame", action: "player.profile.update",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, body, frames }) => {
+        const r = await frames.select(actor.id, body?.code ?? null);
+        return r.ok ? { body: r } : { status: 400, body: errorBody(r.reason) };
+      } },
+
     // --- Tournaments -------------------------------------------------------------
     // Every read here reflects rows the SERVER wrote (pairings, standings,
     // settlements). There is no field anywhere a client supplies a result, a
     // standing, or a prize amount -- those all come from the tournament
     // engine via reportResult/advance/settlePrizes, never from a request body.
 
-    { method: "GET", path: "/v1/tournaments", action: "tournament.read",
+    // Public discovery, no login required -- the homepage's "upcoming
+    // tournaments" and the tournaments listing page both call this
+    // logged-out. `status` accepts a comma-separated list (the homepage
+    // wants everything from SCHEDULED through LIVE in one call, not four
+    // requests) and only PUBLIC-visibility tournaments are ever listed
+    // here -- an UNLISTED tournament is reachable by direct id (below) but
+    // never appears in discovery, which is the entire point of the field.
+    { method: "GET", path: "/v1/tournaments", action: "tournament.read", anonymous: true,
       handler: async ({ db, query }) => {
-        const status = query.get("status");
+        const statuses = (query.get("status") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
         const r = await db.query(
-          `SELECT id, game_id, format, status, tier, entry_fee_minor::text AS entry_fee_minor,
-                  asset, capacity, registration_closes_at, starts_at, completed_at
-             FROM tournament
-            WHERE ($1::tournament_status IS NULL OR status = $1)
-            ORDER BY created_at DESC LIMIT 100`,
-          [status]
+          `SELECT t.id, t.game_id, t.format, t.status, t.tier, t.entry_fee_minor::text AS entry_fee_minor,
+                  t.asset, t.capacity, t.title, t.description, t.registration_closes_at,
+                  t.scheduled_starts_at, t.starts_at, t.completed_at, t.prize_structure,
+                  (SELECT count(*)::int FROM tournament_registration tr
+                    WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS registered_count
+             FROM tournament t
+            WHERE t.visibility = 'PUBLIC'
+              AND ($1::text[] IS NULL OR t.status::text = ANY($1::text[]))
+            ORDER BY t.created_at DESC LIMIT 100`,
+          [statuses.length ? statuses : null]
         );
         return { body: { tournaments: r.rows } };
       } },
 
-    { method: "GET", path: "/v1/tournaments/:id", action: "tournament.read",
-      handler: async ({ params, db }) => {
+    { method: "GET", path: "/v1/tournaments/:id", action: "tournament.read", anonymous: true,
+      handler: async ({ params, db, actor }) => {
         const r = await db.query(
           `SELECT id, game_id, format, status, tier, entry_fee_minor::text AS entry_fee_minor,
-                  asset, capacity, min_players, time_control, swiss_rounds,
-                  registration_closes_at, starts_at, completed_at, prize_structure
+                  asset, capacity, min_players, time_control, swiss_rounds, title, description,
+                  eligibility, visibility, ruleset_version, registration_closes_at,
+                  scheduled_starts_at, starts_at, completed_at, prize_structure
              FROM tournament WHERE id = $1`,
           [params.id]
         );
@@ -1340,13 +1493,25 @@ function buildRoutes() {
           `SELECT count(*)::int c FROM tournament_registration WHERE tournament_id=$1 AND status='REGISTERED'`,
           [params.id]
         );
-        return { body: { ...r.rows[0], registeredCount: count.rows[0].c } };
+        // Told once, up front, rather than left for the client to discover
+        // by clicking Register and parsing an ALREADY_REGISTERED error --
+        // that error still exists as the real, structural guard, but the
+        // page shouldn't have to provoke it just to render its own state.
+        let registered = false;
+        if (actor.id) {
+          const own = await db.query(
+            `SELECT 1 FROM tournament_registration WHERE tournament_id=$1 AND player_id=$2 AND status='REGISTERED'`,
+            [params.id, actor.id]
+          );
+          registered = own.rows.length > 0;
+        }
+        return { body: { ...r.rows[0], registeredCount: count.rows[0].c, registered } };
       } },
 
-    { method: "GET", path: "/v1/tournaments/:id/standings", action: "tournament.read",
+    { method: "GET", path: "/v1/tournaments/:id/standings", action: "tournament.read", anonymous: true,
       handler: async ({ params, tournament }) => ({ body: { standings: await tournament.standings(params.id) } }) },
 
-    { method: "GET", path: "/v1/tournaments/:id/pairings", action: "tournament.read",
+    { method: "GET", path: "/v1/tournaments/:id/pairings", action: "tournament.read", anonymous: true,
       handler: async ({ params, db, query }) => {
         // One endpoint covers rounds, bracket and results: a bracket IS the
         // round-1..N pairings for a single-elimination tournament, and Swiss
@@ -1398,6 +1563,196 @@ function buildRoutes() {
         return r.ok ? { body: r } : { status: 400, body: errorBody(r.reason) };
       } },
 
+    // --- Admin: dashboard ----------------------------------------------------
+    // One aggregation point for the admin dashboard's KPI row and panels.
+    // Every figure here is a real read from a table or view this platform
+    // already treats as authoritative elsewhere (ledger_solvency for
+    // exposure, reconciliation_run for job health, admin_audit for recent
+    // activity, ...) -- nothing is computed only for this endpoint, and
+    // nothing is invented when a real source does not exist yet: a metric
+    // this platform cannot honestly compute (a live WebSocket connection
+    // count, a generic cross-process worker heartbeat) is reported `null`
+    // rather than guessed at, and the frontend renders that as "no data",
+    // never as a fabricated zero.
+    { method: "GET", path: "/v1/admin/dashboard/summary", action: "admin.analytics.read",
+      handler: async ({ db, rails, railHealth }) => {
+        const [
+          rakeBalance, liveDuels, pendingWithdrawals, pendingDeposits,
+          failedWithdrawals, failedDeposits, solvency, reconRuns,
+          openFairplay, openReconciliation, openCriticalReconciliation,
+          openTournaments, liveGamesCatalog, matches24h, recentAudit,
+          feeTrend, matchVolumeByGame, withdrawalQueue, recentTransactions,
+        ] = await Promise.all([
+          db.query(
+            `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance,0))::text AS balance
+               FROM ledger_account a LEFT JOIN ledger_balance b ON b.account_id = a.id
+              WHERE a.key = 'platform:rake'`
+          ),
+          db.query(
+            `SELECT count(DISTINCT d.id)::int AS matches,
+                    count(DISTINCT seat) FILTER (WHERE seat IS NOT NULL)::int AS players
+               FROM duel d, LATERAL (VALUES (d.seat_0), (d.seat_1)) AS s(seat)
+              WHERE d.status = 'LIVE'`
+          ),
+          db.query(
+            `SELECT count(*)::int c FROM withdrawal
+              WHERE status IN ('REQUESTED','VALIDATING','RISK_CHECK','PENDING_REVIEW','APPROVED','PROCESSING')`
+          ),
+          db.query(
+            `SELECT count(*)::int c FROM deposit
+              WHERE status IN ('INITIATED','AWAITING_PAYMENT','DETECTED','CONFIRMING','VERIFIED','SCREENED')`
+          ),
+          db.query(`SELECT count(*)::int c FROM withdrawal WHERE status = 'FAILED'`),
+          db.query(
+            `SELECT count(*)::int c FROM deposit
+              WHERE status IN ('EXPIRED','UNDERPAID','OVERPAID','WRONG_ASSET','WRONG_NETWORK','QUARANTINED')`
+          ),
+          db.query(`SELECT asset, custody_held::text AS custody, user_liabilities::text AS liabilities FROM ledger_solvency`),
+          db.query(
+            `SELECT DISTINCT ON (kind) kind, status, started_at, completed_at,
+                    records_checked, mismatches_found, cases_opened
+               FROM reconciliation_run ORDER BY kind, started_at DESC`
+          ),
+          db.query(`SELECT count(*)::int c FROM fairplay_case WHERE status IN ('OPEN','UNDER_REVIEW')`),
+          db.query(`SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW')`),
+          db.query(`SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW') AND severity = 'CRITICAL'`),
+          db.query(`SELECT count(*)::int c FROM tournament WHERE status IN ('REGISTRATION','LIVE','FINALS')`),
+          db.query(`SELECT count(*)::int c FROM game WHERE is_live = TRUE`),
+          db.query(`SELECT count(*)::int c FROM duel WHERE status IN ('COMPLETED','SETTLED') AND completed_at >= now() - interval '24 hours'`),
+          db.query(`SELECT admin_id, action, decision, subject_type, subject_id, at FROM admin_audit ORDER BY id DESC LIMIT 8`),
+          // Real daily fee revenue, not an invented trend line: every entry
+          // posted to platform:rake, grouped by the day it actually posted.
+          // A day with no entries simply has no row -- the frontend fills
+          // the gap with a real zero, never an interpolated guess.
+          db.query(
+            `SELECT date_trunc('day', e.created_at)::date AS day,
+                    -- platform:rake is a fixed CREDIT-normal REVENUE account
+                    -- (migration 0002) -- hardcoded rather than re-selecting
+                    -- a.normal_side, which Postgres cannot treat as constant
+                    -- across the GROUP BY without repeating the join filter.
+                    ledger_natural_balance('CREDIT', sum(e.amount)::bigint)::text AS minor
+               FROM ledger_entry e JOIN ledger_account a ON a.id = e.account_id
+              WHERE a.key = 'platform:rake' AND e.created_at >= now() - interval '14 days'
+              GROUP BY 1 ORDER BY 1`
+          ),
+          // Match volume per game over the last 7 days -- real counts,
+          // grouped by whichever games are actually live in the catalogue.
+          db.query(
+            `SELECT g.id AS game_id, g.display_name,
+                    count(d.id) FILTER (WHERE d.created_at >= now() - interval '7 days')::int AS matches_7d
+               FROM game g LEFT JOIN duel d ON d.game_id = g.id
+              WHERE g.is_live = TRUE
+              GROUP BY g.id, g.display_name ORDER BY matches_7d DESC`
+          ),
+          // The withdrawal queue itself, oldest first (the order it will
+          // actually be worked), for the panel a reviewer acts from.
+          db.query(
+            `SELECT id, player_id, asset, amount_minor::text AS amount_minor, status, requested_at
+               FROM withdrawal
+              WHERE status IN ('REQUESTED','VALIDATING','RISK_CHECK','PENDING_REVIEW','APPROVED','PROCESSING')
+              ORDER BY requested_at ASC LIMIT 8`
+          ),
+          // Recent deposits and withdrawals, merged and re-sorted by time --
+          // one real activity feed, not two panels each showing half a
+          // picture.
+          db.query(
+            `SELECT * FROM (
+                (SELECT 'DEPOSIT' AS kind, id, player_id, asset, observed_amount_minor::text AS amount_minor,
+                        status::text AS status, created_at AS at
+                   FROM deposit ORDER BY created_at DESC LIMIT 8)
+               UNION ALL
+                (SELECT 'WITHDRAWAL' AS kind, id, player_id, asset, amount_minor::text AS amount_minor,
+                        status::text AS status, requested_at AS at
+                   FROM withdrawal ORDER BY requested_at DESC LIMIT 8)
+             ) recent ORDER BY at DESC LIMIT 8`
+          ),
+        ]);
+
+        // The one configured rail's real health (see GET /v1/admin/payments/rails,
+        // the same call this dashboard's own Finance panel would otherwise
+        // have to duplicate). No rail configured yet -> null, not a guess.
+        let rail = null;
+        if (rails) {
+          const list = await rails.list();
+          const primary = list[0] ?? null;
+          if (primary) {
+            rail = {
+              asset: primary.asset, network: primary.network_display_name, status: primary.status,
+              health: railHealth ? await railHealth.checkRail(primary.asset, primary.network) : null,
+            };
+          }
+        }
+
+        // Reconciliation status: the worst state across every check's most
+        // recent run. A run that failed outright is CRITICAL; a completed
+        // run that found a mismatch is WARNING; a check that has simply
+        // never run yet (a fresh environment) is UNKNOWN, not "healthy" --
+        // this endpoint has no basis to claim a check it cannot see ran
+        // clean.
+        let reconciliationStatus = reconRuns.rows.length ? "HEALTHY" : "UNKNOWN";
+        for (const run of reconRuns.rows) {
+          if (run.status === "FAILED") { reconciliationStatus = "CRITICAL"; break; }
+          if (run.status === "COMPLETED" && Number(run.mismatches_found) > 0) reconciliationStatus = "WARNING";
+        }
+        if (openCriticalReconciliation.rows[0].c > 0) reconciliationStatus = "CRITICAL";
+
+        return {
+          body: {
+            generatedAt: new Date().toISOString(),
+            kpis: {
+              platformFees: { minor: rakeBalance.rows[0]?.balance ?? "0", asset: "USDT" },
+              activeMatches: liveDuels.rows[0].matches,
+              livePlayers: liveDuels.rows[0].players,
+              pendingWithdrawals: pendingWithdrawals.rows[0].c,
+              pendingDeposits: pendingDeposits.rows[0].c,
+              riskAlerts: openFairplay.rows[0].c + openReconciliation.rows[0].c,
+              reconciliationStatus,
+            },
+            finance: {
+              solvency: solvency.rows.map((r) => ({ asset: r.asset, custodyHeldMinor: r.custody, userLiabilitiesMinor: r.liabilities })),
+              pendingDeposits: pendingDeposits.rows[0].c,
+              pendingWithdrawals: pendingWithdrawals.rows[0].c,
+              failedDeposits: failedDeposits.rows[0].c,
+              failedWithdrawals: failedWithdrawals.rows[0].c,
+              reconciliationRuns: reconRuns.rows.map((r) => ({
+                kind: r.kind, status: r.status, startedAt: r.started_at, completedAt: r.completed_at,
+                recordsChecked: r.records_checked, mismatchesFound: r.mismatches_found, casesOpened: r.cases_opened,
+              })),
+              rail,
+            },
+            operations: {
+              activeGames: liveGamesCatalog.rows[0].c,
+              liveMatches: liveDuels.rows[0].matches,
+              livePlayers: liveDuels.rows[0].players,
+              openTournaments: openTournaments.rows[0].c,
+              matchesLast24h: matches24h.rows[0].c,
+            },
+            security: {
+              openFairPlayCases: openFairplay.rows[0].c,
+              openReconciliationCases: openReconciliation.rows[0].c,
+              openCriticalReconciliationCases: openCriticalReconciliation.rows[0].c,
+              chainReaderHealth: rail?.health?.checks?.find((c) => c.name === "CHAIN_REACHABLE") ?? null,
+            },
+            recentActivity: recentAudit.rows.map((r) => ({
+              adminId: r.admin_id, action: r.action, decision: r.decision,
+              subjectType: r.subject_type, subjectId: r.subject_id, at: r.at,
+            })),
+            feeTrend: feeTrend.rows.map((r) => ({ day: r.day, minor: r.minor })),
+            matchVolumeByGame: matchVolumeByGame.rows.map((r) => ({
+              gameId: r.game_id, displayName: r.display_name, matches7d: r.matches_7d,
+            })),
+            withdrawalQueue: withdrawalQueue.rows.map((r) => ({
+              id: r.id, playerId: r.player_id, asset: r.asset, amountMinor: r.amount_minor,
+              status: r.status, requestedAt: r.requested_at,
+            })),
+            recentTransactions: recentTransactions.rows.map((r) => ({
+              kind: r.kind, id: r.id, playerId: r.player_id, asset: r.asset,
+              amountMinor: r.amount_minor, status: r.status, at: r.at,
+            })),
+          },
+        };
+      } },
+
     // --- Admin: tournaments ------------------------------------------------------
     // Orchestration only. Pairings, standings and settlement amounts are all
     // computed by the tournament engine itself -- these handlers never
@@ -1410,10 +1765,28 @@ function buildRoutes() {
         return { status: 201, body: r };
       } },
 
+    { method: "POST", path: "/v1/admin/tournaments/:id/schedule", action: "admin.tournament.manage",
+      subjectType: "tournament",
+      handler: async ({ params, tournament }) => {
+        const r = await tournament.schedule(params.id);
+        return r.ok ? { body: r } : { status: 400, body: errorBody(r.reason) };
+      } },
+
     { method: "POST", path: "/v1/admin/tournaments/:id/open", action: "admin.tournament.manage",
       subjectType: "tournament",
       handler: async ({ params, tournament }) => {
         const r = await tournament.openRegistration(params.id);
+        return r.ok ? { body: r } : { status: 400, body: errorBody(r.reason) };
+      } },
+
+    // A deterministic, full refund of each entrant's OWN locked fee -- no
+    // admin discretion over amount or recipient -- so this sits at the same
+    // tier as create/open/start/advance (step-up, no four-eyes), not at
+    // settle's tier.
+    { method: "POST", path: "/v1/admin/tournaments/:id/cancel", action: "admin.tournament.manage",
+      subjectType: "tournament",
+      handler: async ({ params, body, tournament }) => {
+        const r = await tournament.cancel(params.id, { reason: body?.reason });
         return r.ok ? { body: r } : { status: 400, body: errorBody(r.reason) };
       } },
 
@@ -1566,6 +1939,89 @@ function buildRoutes() {
           }
           throw e;
         }
+      } },
+
+    // --- Admin: the Payment & Stablecoin Control Center -------------------------
+    //
+    // Global pause/resume (deposits, withdrawals, real-money play) is NOT
+    // reimplemented here -- it is exactly POST /v1/admin/controls/:key above
+    // (keys DEPOSITS, WITHDRAWALS, CASH_MATCHES), which already gives it a
+    // real actor, a fresh reason, and an append-only audit row via
+    // platform_control's own trigger. GET below surfaces those same three
+    // keys read-only, at their own lower-sensitivity capability, so a role
+    // that can only SEE whether deposits are paused is not thereby handed
+    // the ability to pause them.
+    //
+    // "Turning a rail OFF must ... not erase history, not alter settled
+    // balances, not change existing matches, not rewrite existing
+    // transactions" is enforced structurally, not by these handlers: every
+    // write below goes through rails.setStatus()/updateLimits()
+    // (packages/payments/src/valuation.mjs), which only ever UPDATEs
+    // payment_rail's own configuration columns and appends to
+    // rail_configuration_change. Neither touches deposit, withdrawal,
+    // duel, or ledger_* tables -- there is no code path here that could
+    // rewrite a settled balance even if it tried.
+
+    { method: "GET", path: "/v1/admin/payments/rails", action: "admin.rail.read",
+      handler: async ({ rails, railHealth }) => {
+        if (!rails) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const list = await rails.list();
+        const withHealth = await Promise.all(list.map(async (rail) => ({
+          ...rail,
+          health: railHealth ? await railHealth.checkRail(rail.asset, rail.network) : { status: "UNKNOWN", checks: [], checkedAt: null },
+        })));
+        return { body: { rails: withHealth } };
+      } },
+
+    { method: "GET", path: "/v1/admin/payments/rails/:id/history", action: "admin.rail.read",
+      subjectType: "payment_rail",
+      handler: async ({ params, rails }) => {
+        if (!rails) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        return { body: { history: await rails.history(params.id) } };
+      } },
+
+    { method: "GET", path: "/v1/admin/payments/controls", action: "admin.control.read",
+      handler: async ({ db }) => {
+        const r = await db.query(
+          `SELECT key, enabled, changed_by, reason, changed_at FROM platform_control
+            WHERE key IN ('DEPOSITS','WITHDRAWALS','CASH_MATCHES','GLOBAL_EMERGENCY')`
+        );
+        return { body: { controls: r.rows } };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/rails/:id/status", action: "admin.rail.manage",
+      subjectType: "payment_rail",
+      handler: async ({ params, body, actor, rails }) => {
+        if (!rails) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        if (typeof body.status !== "string" || typeof body.reason !== "string") {
+          return { status: 400, body: errorBody("BAD_REQUEST") };
+        }
+        if (!["ACTIVE", "ADMIN_PAUSED", "EMERGENCY_HOLD", "RETIRED"].includes(body.status)) {
+          // RISK_PAUSED is deliberately unreachable here -- it is the
+          // AUTOMATIC state record_valuation_snapshot() enters on a real
+          // depeg observation, never something an admin sets directly.
+          return { status: 400, body: errorBody("INVALID_STATUS") };
+        }
+        const result = await rails.setStatus(params.id, body.status, {
+          actorType: "ADMIN", actorId: actor.id, reason: body.reason,
+        });
+        return result.ok
+          ? { body: result.rail, audit: { field: "status", to: body.status } }
+          : { status: result.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(result.reason) };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/rails/:id/limits", action: "admin.rail.manage",
+      subjectType: "payment_rail",
+      handler: async ({ params, body, actor, rails }) => {
+        if (!rails) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        if (typeof body.reason !== "string") return { status: 400, body: errorBody("BAD_REQUEST") };
+        const { reason, ...patch } = body;
+        const result = await rails.updateLimits(params.id, patch, {
+          actorType: "ADMIN", actorId: actor.id, reason,
+        });
+        return result.ok
+          ? { body: result.rail, audit: { changedFields: result.changedFields } }
+          : { status: result.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(result.reason, result.detail) };
       } },
 
     // --- Admin: reconciliation ---------------------------------------------------

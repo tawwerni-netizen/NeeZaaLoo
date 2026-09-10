@@ -49,6 +49,40 @@
   font-size: var(--nz-text-sm);
 }
 
+.title {
+  font-size: var(--nz-text-lg);
+  font-weight: 600;
+  margin: 0;
+}
+
+.statusPill {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  background: var(--nz-surface-2);
+  color: var(--nz-text-2);
+}
+
+.status_REGISTRATION {
+  background: var(--nz-accent-soft);
+  color: var(--nz-accent);
+}
+
+.status_LIVE {
+  background: color-mix(in srgb, var(--nz-loss) 16%, transparent);
+  color: var(--nz-loss);
+}
+
+.status_FINALS {
+  background: color-mix(in srgb, var(--nz-warn) 18%, transparent);
+  color: var(--nz-warn);
+}
+
 .cardMeta {
   display: flex;
   gap: var(--nz-space-6);

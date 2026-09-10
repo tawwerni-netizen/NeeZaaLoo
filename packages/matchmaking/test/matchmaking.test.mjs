@@ -365,7 +365,14 @@ describe("duel integrity", () => {
     );
   });
 
-  test("duel events are append-only", async () => {
+  test("duel events can never be edited, but CAN now be bulk-deleted by the approved retention sweep", async () => {
+    // Migration 0046 (the approved live-evidence retention rule): a move
+    // must never be silently EDITED -- that half of "append-only" is
+    // exactly as strict as it always was -- but a completed duel's
+    // detailed log now has a real, intended way to go away entirely (see
+    // reconciliation's own runEvidenceCleanup()), so DELETE is no longer
+    // denied at the trigger level. This test used to assert the opposite;
+    // that assumption is what changed, on purpose, not a regression.
     const db = await fresh();
     await enqueue(db, "alice");
     await enqueue(db, "bob");
@@ -378,7 +385,9 @@ describe("duel integrity", () => {
       () => db.query("UPDATE duel_event SET payload='{\"uci\":\"e2e5\"}'::jsonb WHERE duel_id='d-z'"),
       /append-only/
     );
-    await rejects(() => db.query("DELETE FROM duel_event WHERE duel_id='d-z'"), /append-only/);
+    await db.query("DELETE FROM duel_event WHERE duel_id='d-z'");
+    const remaining = await db.query("SELECT count(*)::int c FROM duel_event WHERE duel_id='d-z'");
+    assert.equal(remaining.rows[0].c, 0);
   });
 
   test("an event sequence number cannot be reused", async () => {

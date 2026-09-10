@@ -14,6 +14,8 @@ import { createGateway } from "../src/gateway.mjs";
 import { ServerMsg, ErrorCode } from "../src/protocol.mjs";
 import { ChessPlugin } from "../../game-chess/src/plugin.mjs";
 import { createChessAiAdapter } from "../../game-chess/src/ai.mjs";
+import { SpeedMathPlugin, DEFAULT_CONFIG as SPEED_MATH_DEFAULT_CONFIG } from "../../game-speed-math/src/plugin.mjs";
+import { createSpeedMathAiAdapter } from "../../game-speed-math/src/ai.mjs";
 import { createDuel, start, DuelState } from "../../duel-engine/src/duel.mjs";
 
 // A controllable clock: the tests must never depend on wall time.
@@ -99,7 +101,7 @@ const settle = () => new Promise((r) => setTimeout(r, 30));
 before(() => {
   sessions = new Map([["tok-alice", "alice"], ["tok-bob", "bob"], ["tok-eve", "eve"]]);
   duels = new Map();
-  plugins = new Map([["chess", ChessPlugin]]);
+  plugins = new Map([["chess", ChessPlugin], ["speed-math", SpeedMathPlugin]]);
   gw = createGateway({ sessions, duels, plugins, now });
 });
 
@@ -609,6 +611,108 @@ describe("VS_COMPUTER -- a bot moves through the SAME path a human's INTENT does
     await alice.next((m) => m.t === ServerMsg.STATE);
     await settle();
     assert.equal(d.clock.toMove, 0, "nothing moved -- there is no bot on this duel to move");
+    await alice.close();
+  });
+});
+
+describe("VS_COMPUTER against a SIMULTANEOUS game -- the bot paces itself independently", () => {
+  let smGw, smDuels;
+  const SM_CONFIG = { ...SPEED_MATH_DEFAULT_CONFIG, durationMs: 60_000, questionCount: 20 };
+
+  before(() => {
+    smDuels = new Map();
+    smGw = createGateway({
+      sessions, duels: smDuels, plugins, now,
+      aiAdapters: new Map([["speed-math", createSpeedMathAiAdapter()]]),
+      aiMoveDelayMs: 10, // real timers, kept short so tests stay fast
+    });
+  });
+  after(async () => { await smGw.close(); });
+
+  function newVsComputerDuel(id, { botId = "ai-easy" } = {}) {
+    const d = createDuel({
+      duelId: id, plugin: SpeedMathPlugin, players: ["alice", botId],
+      seed: "seed-sm-ai", config: SM_CONFIG, timeControl: { durationMs: SM_CONFIG.durationMs }, now: CLOCK,
+    });
+    d.vsComputer = true; // set exactly as store.hydrate() would from duel.is_vs_computer
+    start(d, CLOCK);
+    smDuels.set(id, d);
+    return d;
+  }
+
+  test("the bot answers on its own, with no human turn to wait for", async () => {
+    newVsComputerDuel("d-sm-ai-first");
+    const alice = await authed("tok-alice", smGw);
+    alice.send({ t: "JOIN", duelId: "d-sm-ai-first" });
+    const state = await alice.next((m) => m.t === ServerMsg.STATE);
+
+    // Regression test for a real bug: project() takes a THIRD `seat`
+    // argument for an imperfect-information game (this one), which the
+    // gateway computes but used to never actually pass -- collapsing
+    // every real player's own view down to scores only, with no question
+    // ever shown, completely unplayable from a real frontend.
+    assert.ok(state.view.current, "the joining player must see their OWN current question, not scores alone");
+    assert.equal(typeof state.view.current.a, "number");
+    assert.equal(typeof state.view.current.b, "number");
+    assert.ok(state.view.you, "the joining player must see their own progress");
+
+    const ev = await alice.next((m) => m.t === ServerMsg.EVENT && m.type === "ANSWER" && m.payload.seat === 1);
+    assert.equal(ev.payload.seat, 1, "the answer came from the bot's seat, unprompted");
+    assert.equal(typeof ev.payload.correct, "boolean");
+    assert.ok(ev.view.current, "every EVENT broadcast must also carry the recipient's own current question");
+    await alice.close();
+  });
+
+  test("the bot keeps progressing through its OWN questions, independent of the human's pace", async () => {
+    newVsComputerDuel("d-sm-ai-sequence");
+    const alice = await authed("tok-alice", smGw);
+    alice.send({ t: "JOIN", duelId: "d-sm-ai-sequence" });
+    await alice.next((m) => m.t === ServerMsg.STATE);
+
+    // The human never answers anything at all; the bot must still work
+    // through several of its own questions on its own schedule.
+    let botAnswers = 0;
+    for (let i = 0; i < 5; i++) {
+      await alice.next((m) => m.t === ServerMsg.EVENT && m.type === "ANSWER" && m.payload.seat === 1);
+      botAnswers++;
+    }
+    assert.equal(botAnswers, 5);
+    assert.ok(smDuels.get("d-sm-ai-sequence").state.progress[1].index >= 5);
+    await alice.close();
+  });
+
+  test("resigning against the bot ends the duel immediately -- it does not keep answering after the game is over", async () => {
+    newVsComputerDuel("d-sm-ai-resign");
+    const alice = await authed("tok-alice", smGw);
+    alice.send({ t: "JOIN", duelId: "d-sm-ai-resign" });
+    await alice.next((m) => m.t === ServerMsg.STATE);
+    await alice.next((m) => m.t === ServerMsg.EVENT && m.type === "ANSWER" && m.payload.seat === 1);
+
+    alice.send({ t: "RESIGN", duelId: "d-sm-ai-resign" });
+    const done = await alice.next((m) => m.t === ServerMsg.COMPLETED);
+    assert.equal(done.result, "0-1");
+    const answeredAtResign = smDuels.get("d-sm-ai-resign").state.progress[1].index;
+    await settle(); // give any (incorrectly) scheduled bot timer a chance to fire
+    assert.equal(
+      smDuels.get("d-sm-ai-resign").state.progress[1].index, answeredAtResign,
+      "must not have kept answering after resignation ended the duel"
+    );
+    await alice.close();
+  });
+
+  test("an ordinary human-vs-human SIMULTANEOUS duel on the same gateway never receives a bot answer", async () => {
+    const d = createDuel({
+      duelId: "d-sm-ai-none", plugin: SpeedMathPlugin, players: ["alice", "bob"],
+      seed: "seed-sm-none", config: SM_CONFIG, timeControl: { durationMs: SM_CONFIG.durationMs }, now: CLOCK,
+    });
+    start(d, CLOCK); // vsComputer left false -- exactly the ordinary shape
+    smDuels.set("d-sm-ai-none", d);
+
+    const alice = await authed("tok-alice", smGw);
+    alice.send({ t: "JOIN", duelId: "d-sm-ai-none" });
+    await alice.next((m) => m.t === ServerMsg.STATE);
+    await settle();
+    assert.equal(d.state.progress[1].index, 0, "nothing answered -- there is no bot on this duel to answer");
     await alice.close();
   });
 });

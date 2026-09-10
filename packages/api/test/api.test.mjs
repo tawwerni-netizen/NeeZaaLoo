@@ -1314,6 +1314,73 @@ describe("play surfaces", () => {
     assert.deepEqual(Object.keys(r.body.error), ["code"], "no internal detail escapes");
   });
 
+  describe("RANDOM OPPONENT: Free or Competitive, exactly like PLAY WITH FRIEND", () => {
+    // A dedicated server with controlCacheMs: 0 -- the shared `api`
+    // instance caches platform_control reads for a full second
+    // (server.mjs's own loadControls()), which a raw DB UPDATE right
+    // before a request (as these tests do, to reach CASH_MATCHES=on
+    // without a second admin round-trip) would not see in time. Every
+    // other route these tests need (auth, matchmaking) works identically
+    // regardless of that cache setting.
+    let own;
+    before(async () => {
+      own = createApi({ db, auth, rateLimit: { capacity: 5000, refillPerSecond: 5000 }, controlCacheMs: 0 });
+      await own.listen();
+    });
+    after(async () => { await own.close(); });
+
+    async function reqOwn(method, path, { token, body } = {}) {
+      const res = await fetch(`${own.url}${path}`, {
+        method,
+        headers: {
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+          ...(body !== undefined ? { "content-type": "application/json" } : {}),
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+      let json = null;
+      try { json = await res.json(); } catch { /* empty body */ }
+      return { status: res.status, body: json };
+    }
+
+    test("MONEY ELIGIBILITY: a competitive ticket is refused while CASH_MATCHES is off (its real default)", async () => {
+      const token = await tokenFor("bob");
+      const r = await reqOwn("POST", "/v1/matchmaking/tickets", {
+        token, body: { gameId: "chess", tier: "CASH", stakeMinor: "50000000" },
+      });
+      assert.equal(r.status, 503);
+      assert.equal(r.body.error.code, "CONTROL_DISABLED");
+    });
+
+    test("INVALID STAKE: an off-ladder stake is refused, even with CASH_MATCHES on", async () => {
+      await db.query(`UPDATE platform_control SET enabled=TRUE, changed_by='root', reason='test: enable cash matches for random opponent' WHERE key='CASH_MATCHES'`);
+      try {
+        const r = await reqOwn("POST", "/v1/matchmaking/tickets", {
+          token: await tokenFor("bob"), body: { gameId: "chess", tier: "CASH", stakeMinor: "3000000" },
+        });
+        assert.equal(r.status, 400);
+      } finally {
+        await db.query(`UPDATE platform_control SET enabled=FALSE, changed_by='root', reason='test: restore default for random opponent' WHERE key='CASH_MATCHES'`);
+      }
+    });
+
+    test("a valid preset stake, with CASH_MATCHES on, queues a real competitive ticket", async () => {
+      await db.query(`UPDATE platform_control SET enabled=TRUE, changed_by='root', reason='test: enable cash matches for random opponent 2' WHERE key='CASH_MATCHES'`);
+      try {
+        const r = await reqOwn("POST", "/v1/matchmaking/tickets", {
+          token: await tokenFor("bob"), body: { gameId: "chess", tier: "CASH", stakeMinor: "20000000" },
+        });
+        assert.equal(r.status, 201);
+        const row = await db.query("SELECT tier, stake_minor::text st FROM matchmaking_ticket WHERE id=$1", [r.body.ticketId]);
+        assert.equal(row.rows[0].tier, "CASH");
+        assert.equal(row.rows[0].st, "20000000");
+        await reqOwn("POST", "/v1/matchmaking/cancel", { token: await tokenFor("bob") });
+      } finally {
+        await db.query(`UPDATE platform_control SET enabled=FALSE, changed_by='root', reason='test: restore default for random opponent 2' WHERE key='CASH_MATCHES'`);
+      }
+    });
+  });
+
   describe("VS_COMPUTER", () => {
     test("creating one returns a real, immediately-loadable duel against the chosen difficulty's bot", async () => {
       const token = await tokenFor("alice");
@@ -1339,8 +1406,12 @@ describe("play surfaces", () => {
     });
 
     test("a game with no registered AI adapter is refused, not silently allowed to hang forever unplayed", async () => {
+      // speed-math used to be this example, before it had its own AI
+      // adapter -- every real launch game now has one, so this exercises
+      // the same UNSUPPORTED_GAME guard against a gameId that simply
+      // does not exist at all.
       const token = await tokenFor("alice");
-      const r = await req("POST", "/v1/matchmaking/vs-computer", { token, body: { gameId: "speed-math", difficulty: "EASY" } });
+      const r = await req("POST", "/v1/matchmaking/vs-computer", { token, body: { gameId: "not-a-real-game", difficulty: "EASY" } });
       assert.equal(r.status, 400);
       assert.equal(r.body.error.code, "UNSUPPORTED_GAME");
     });
@@ -1351,6 +1422,49 @@ describe("play surfaces", () => {
       assert.equal(r.status, 201);
       const row = await db.query("SELECT seat_1 FROM duel WHERE id = $1", [r.body.duelId]);
       assert.equal(row.rows[0].seat_1, "ai-easy");
+    });
+
+    for (const gameId of ["checkers", "connect-four", "xo"]) {
+      test(`${gameId}: creating one returns a real duel, with its own plugin's own recipe as initial_state`, async () => {
+        const token = await tokenFor("alice");
+        const r = await req("POST", "/v1/matchmaking/vs-computer", { token, body: { gameId, difficulty: "HARD" } });
+        assert.equal(r.status, 201);
+        const row = await db.query(
+          "SELECT seat_0, seat_1, tier, is_vs_computer, status, initial_state FROM duel WHERE id = $1", [r.body.duelId]
+        );
+        assert.equal(row.rows[0].seat_0, "alice");
+        assert.equal(row.rows[0].seat_1, "ai-hard");
+        assert.equal(row.rows[0].tier, "FREE");
+        assert.equal(row.rows[0].is_vs_computer, true);
+        assert.deepEqual(row.rows[0].initial_state, {}, `${gameId} always starts from its own fixed position, not a chess FEN or a bare seed`);
+        assert.ok(["READY", "LIVE"].includes(row.rows[0].status));
+      });
+    }
+
+    describe("speed-math -- difficulty changes the CONTENT, not just the bot's own play", () => {
+      test("HARD produces a harder question set and a matching 60-second round, not the ALTERNATING default clock", async () => {
+        const token = await tokenFor("alice");
+        const r = await req("POST", "/v1/matchmaking/vs-computer", { token, body: { gameId: "speed-math", difficulty: "HARD" } });
+        assert.equal(r.status, 201);
+        const row = await db.query(
+          "SELECT seat_0, seat_1, tier, is_vs_computer, status, initial_state, time_control FROM duel WHERE id = $1",
+          [r.body.duelId]
+        );
+        assert.equal(row.rows[0].seat_0, "alice");
+        assert.equal(row.rows[0].seat_1, "ai-hard");
+        assert.equal(row.rows[0].is_vs_computer, true);
+        assert.ok(row.rows[0].initial_state.seed, "a real seed must be persisted, unlike the board games' empty recipe");
+        assert.deepEqual(row.rows[0].initial_state.config.operations, ["+", "-", "*", "/"], "HARD must include division");
+        assert.equal(row.rows[0].time_control.durationMs, 60_000, "a shared-clock round, not the board games' 5-minute default");
+      });
+
+      test("EASY never includes multiplication or division in its question set", async () => {
+        const token = await tokenFor("alice");
+        const r = await req("POST", "/v1/matchmaking/vs-computer", { token, body: { gameId: "speed-math", difficulty: "EASY" } });
+        assert.equal(r.status, 201);
+        const row = await db.query("SELECT initial_state FROM duel WHERE id = $1", [r.body.duelId]);
+        assert.deepEqual(row.rows[0].initial_state.config.operations, ["+", "-"]);
+      });
     });
   });
 
@@ -1438,6 +1552,77 @@ describe("play surfaces", () => {
       const secondAccept = await req("POST", `/v1/challenges/${create.body.challengeId}/accept`, { token: bobToken });
       assert.equal(secondAccept.status, 400);
       assert.equal(secondAccept.body.error.code, "NOT_PENDING");
+    });
+
+    describe("Free or Competitive, exactly like RANDOM OPPONENT", () => {
+      // See the identical note in the RANDOM OPPONENT describe block above:
+      // a dedicated server with controlCacheMs: 0, so a raw platform_control
+      // UPDATE right before a request is actually visible to it.
+      let own;
+      before(async () => {
+        own = createApi({ db, auth, rateLimit: { capacity: 5000, refillPerSecond: 5000 }, controlCacheMs: 0 });
+        await own.listen();
+      });
+      after(async () => { await own.close(); });
+
+      async function reqOwn(method, path, { token, body } = {}) {
+        const res = await fetch(`${own.url}${path}`, {
+          method,
+          headers: {
+            ...(token ? { authorization: `Bearer ${token}` } : {}),
+            ...(body !== undefined ? { "content-type": "application/json" } : {}),
+          },
+          body: body !== undefined ? JSON.stringify(body) : undefined,
+        });
+        let json = null;
+        try { json = await res.json(); } catch { /* empty body */ }
+        return { status: res.status, body: json };
+      }
+
+      test("MONEY ELIGIBILITY: a competitive challenge is refused while CASH_MATCHES is off (its real default)", async () => {
+        const token = await tokenFor("alice");
+        const r = await reqOwn("POST", "/v1/challenges", {
+          token, body: { gameId: "chess", opponentNickname: "bob", tier: "CASH", stakeMinor: "50000000" },
+        });
+        assert.equal(r.status, 503);
+        assert.equal(r.body.error.code, "CONTROL_DISABLED");
+      });
+
+      test("INVALID STAKE: an off-ladder stake is refused, even with CASH_MATCHES on", async () => {
+        await db.query(`UPDATE platform_control SET enabled=TRUE, changed_by='root', reason='test: enable cash matches' WHERE key='CASH_MATCHES'`);
+        try {
+          const r = await reqOwn("POST", "/v1/challenges", {
+            token: await tokenFor("alice"), body: { gameId: "chess", opponentNickname: "bob", tier: "CASH", stakeMinor: "3000000" },
+          });
+          assert.equal(r.status, 400);
+          assert.equal(r.body.error.code, "INVALID_STAKE");
+        } finally {
+          await db.query(`UPDATE platform_control SET enabled=FALSE, changed_by='root', reason='test: restore default' WHERE key='CASH_MATCHES'`);
+        }
+      });
+
+      test("a valid preset stake, with CASH_MATCHES on, creates a real competitive challenge and (once accepted) a RESERVED cash duel", async () => {
+        await db.query(`UPDATE platform_control SET enabled=TRUE, changed_by='root', reason='test: enable cash matches' WHERE key='CASH_MATCHES'`);
+        try {
+          const token = await tokenFor("alice");
+          const create = await reqOwn("POST", "/v1/challenges", {
+            token, body: { gameId: "chess", opponentNickname: "bob", tier: "CASH", stakeMinor: "20000000" },
+          });
+          assert.equal(create.status, 201);
+
+          const accept = await reqOwn("POST", `/v1/challenges/${create.body.challengeId}/accept`, { token: await tokenFor("bob") });
+          assert.equal(accept.status, 200);
+
+          const row = await db.query(
+            "SELECT tier, stake_minor::text st, status FROM duel WHERE id=$1", [accept.body.duelId]
+          );
+          assert.equal(row.rows[0].tier, "CASH");
+          assert.equal(row.rows[0].st, "20000000");
+          assert.equal(row.rows[0].status, "RESERVED", "funds are not yet locked -- the existing dispatch sweep, untouched by this feature, does that");
+        } finally {
+          await db.query(`UPDATE platform_control SET enabled=FALSE, changed_by='root', reason='test: restore default' WHERE key='CASH_MATCHES'`);
+        }
+      });
     });
   });
 

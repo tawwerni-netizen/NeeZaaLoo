@@ -1,44 +1,45 @@
 "use client";
 
 /**
- * The two live games. Per the phase instructions: future-ready placeholders
- * may exist ARCHITECTURALLY, but nothing unfinished is advertised as
- * playable here -- only Chess and Speed Math get a card with a working
- * "Play" action.
+ * The live games -- reads its catalog from the SAME registry /play's own
+ * lobby does (getGame/listGames), not a hardcoded list. This card grid
+ * used to hardcode ["chess", "speed_math"], which is exactly the "lobby
+ * advertises a game with no real board" catalog drift already fixed once
+ * in app/[locale]/play/page.tsx -- Speed Math has never had a frontend
+ * board, so it never belonged in either list to begin with.
  */
 import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
 import { useI18n } from "@/lib/i18n/context";
+import { listGames } from "@/lib/games";
 import styles from "./GameModes.module.css";
-
-const GAME_IDS = ["chess", "speed_math"] as const;
-const GAME_ROUTE_ID: Record<(typeof GAME_IDS)[number], string> = { chess: "chess", speed_math: "speed-math" };
 
 export function GameModes() {
   const { t } = useI18n();
+  const games = listGames();
 
   return (
     <section className={styles.section}>
       <div className="nz-container">
         <h2 className={styles.heading}>{t("home.games.heading")}</h2>
         <div className={styles.grid}>
-          {GAME_IDS.map((id) => {
-            const name = t(`common.game_names.${id}`);
+          {games.map((game) => {
+            const name = t(`common.game_names.${game.nameKey}`);
             return (
-              <div key={id} className={styles.card}>
+              <div key={game.id} className={styles.card}>
                 <h3 className={styles.cardTitle}>{name}</h3>
-                <p className={styles.cardDescription}>{t(`home.games.${id}.description`)}</p>
+                <p className={styles.cardDescription}>{t(`home.games.${game.nameKey}.description`)}</p>
                 <dl className={styles.meta}>
                   <div>
                     <dt>{t("home.games.duration_label")}</dt>
-                    <dd>{t(`home.games.${id}.duration`)}</dd>
+                    <dd>{t(`home.games.${game.nameKey}.duration`)}</dd>
                   </div>
                   <div>
                     <dt>{t("home.games.mode_label")}</dt>
-                    <dd>{t(`home.games.${id}.mode`)}</dd>
+                    <dd>{t(`home.games.${game.nameKey}.mode`)}</dd>
                   </div>
                 </dl>
-                <LocaleLink href={`/play/${GAME_ROUTE_ID[id]}`}>
+                <LocaleLink href={`/play/${game.id}`}>
                   <Button variant="secondary" className={styles.cardAction}>
                     {t("home.games.play_cta", { name })}
                   </Button>

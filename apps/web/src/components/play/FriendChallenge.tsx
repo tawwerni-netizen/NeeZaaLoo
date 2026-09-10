@@ -1,50 +1,60 @@
 "use client";
 
 /**
- * PLAY WITH FRIEND, end to end: name an opponent (OpponentSelect), send a
- * real challenge (POST /v1/challenges), and watch it live -- both the
- * outgoing challenge waiting on a reply, and any incoming ones this player
- * can accept. Polls the same GET /v1/challenges an incoming-side player
- * would use; there is no push channel for challenges (unlike a live duel,
- * which has one), so polling is the honest mechanism here, not a
- * placeholder for one.
+ * PLAY WITH FRIEND, sending side: name an opponent (OpponentSelect) and
+ * send a real challenge (POST /v1/challenges) -- Free or Competitive,
+ * exactly like RANDOM OPPONENT -- then watch it live: the outgoing
+ * challenge waiting on a reply, with its own real 30-second countdown.
+ * Polls GET /v1/challenges on a fast 1-second cadence so that window
+ * actually feels live -- there is no push channel for challenges (unlike a
+ * live duel, which has one), so polling is the honest mechanism here, not
+ * a placeholder for one.
  *
- * Accepting a challenge -- theirs or the one this player just sent -- hands
- * a real duelId to onDuelReady, which navigates into the SAME /game/[duelId]
- * route every other mode uses. Nothing here knows how a duel is played.
+ * The RECEIVING side's popup is deliberately NOT rendered here: it is
+ * IncomingChallengeWatcher, mounted once for the whole app (see the locale
+ * layout), so a recipient sees it wherever they are, not only if they
+ * happen to already be on the sender's own /play page for the same game.
+ *
+ * Accepting a sent challenge is the OTHER side's action (the outgoing list
+ * here only ever offers Cancel); the resulting duel is handed to that
+ * side's IncomingChallengeWatcher, which navigates into the SAME
+ * /game/[duelId] route every other mode uses.
  */
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/Button";
 import { get, post, ApiError } from "@/lib/api";
 import { useI18n } from "@/lib/i18n/context";
 import { OpponentSelect } from "./OpponentSelect";
+import type { StakeChoice } from "./StakeSelect";
 import styles from "./FriendChallenge.module.css";
 
-type ChallengeRow = { id: string; game_id: string; created_at: string; expires_at: string };
-type IncomingRow = ChallengeRow & { challenger_handle: string };
-type OutgoingRow = ChallengeRow & { opponent_handle: string };
+type OutgoingRow = {
+  id: string; game_id: string; created_at: string; expires_at: string;
+  tier: "FREE" | "CASH"; stake_minor: string; asset: string | null;
+  opponent_id: string; opponent_handle: string;
+};
 
 const ERROR_KEYS: Record<string, string> = {
   UNKNOWN_OPPONENT: "play.challenge.error_unknown_opponent",
   CANNOT_CHALLENGE_SELF: "play.challenge.error_self",
   ALREADY_PENDING: "play.challenge.error_already_pending",
+  BLOCKED: "play.challenge.error_blocked",
+  INVALID_STAKE: "play.challenge.error_invalid_stake",
 };
 
-export function FriendChallenge({ gameId, onDuelReady }: {
+export function FriendChallenge({ gameId, stake }: {
   gameId: string;
-  onDuelReady: (duelId: string) => void;
+  stake?: StakeChoice;
 }) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
-  const [incoming, setIncoming] = useState<IncomingRow[]>([]);
   const [outgoing, setOutgoing] = useState<OutgoingRow[]>([]);
 
   const refresh = useCallback(async () => {
     try {
-      const r = await get<{ incoming: IncomingRow[]; outgoing: OutgoingRow[] }>("/v1/challenges");
-      setIncoming(r.incoming.filter((c) => c.game_id === gameId));
+      const r = await get<{ outgoing: OutgoingRow[] }>("/v1/challenges");
       setOutgoing(r.outgoing.filter((c) => c.game_id === gameId));
     } catch {
       // A transient poll failure is not fatal -- the next tick retries.
@@ -53,7 +63,7 @@ export function FriendChallenge({ gameId, onDuelReady }: {
 
   useEffect(() => {
     void refresh();
-    const timer = setInterval(() => void refresh(), 2000);
+    const timer = setInterval(() => void refresh(), 1000);
     return () => clearInterval(timer);
   }, [refresh]);
 
@@ -61,7 +71,10 @@ export function FriendChallenge({ gameId, onDuelReady }: {
     setBusy(true);
     setError(null);
     try {
-      await post("/v1/challenges", { gameId, opponentNickname: nickname });
+      await post("/v1/challenges", {
+        gameId, opponentNickname: nickname,
+        ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor } : {}),
+      });
       setSentTo(nickname);
       await refresh();
     } catch (e) {
@@ -70,16 +83,6 @@ export function FriendChallenge({ gameId, onDuelReady }: {
     } finally {
       setBusy(false);
     }
-  }
-
-  async function accept(challengeId: string) {
-    const r = await post<{ duelId: string }>(`/v1/challenges/${challengeId}/accept`);
-    onDuelReady(r.duelId);
-  }
-
-  async function decline(challengeId: string) {
-    await post(`/v1/challenges/${challengeId}/decline`);
-    await refresh();
   }
 
   async function cancel(challengeId: string) {
@@ -94,30 +97,20 @@ export function FriendChallenge({ gameId, onDuelReady }: {
       {error && <p className={styles.error} role="alert">{error}</p>}
       {sentTo && !error && <p className={styles.sent}>{t("play.challenge.sent", { handle: sentTo })}</p>}
 
-      {incoming.length > 0 && (
-        <section className={styles.section}>
-          <h2 className={styles.sectionHeading}>{t("play.challenge.incoming_heading")}</h2>
-          <ul className={styles.list}>
-            {incoming.map((c) => (
-              <li key={c.id} className={styles.row}>
-                <span>{t("play.challenge.from", { handle: c.challenger_handle })}</span>
-                <span className={styles.actions}>
-                  <Button variant="primary" onClick={() => void accept(c.id)}>{t("play.challenge.accept")}</Button>
-                  <Button variant="ghost" onClick={() => void decline(c.id)}>{t("play.challenge.decline")}</Button>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       {outgoing.length > 0 && (
         <section className={styles.section}>
           <h2 className={styles.sectionHeading}>{t("play.challenge.outgoing_heading")}</h2>
           <ul className={styles.list}>
             {outgoing.map((c) => (
               <li key={c.id} className={styles.row}>
-                <span>{t("play.challenge.waiting_for", { handle: c.opponent_handle })}</span>
+                <span>
+                  {t("play.challenge.waiting_for", { handle: c.opponent_handle })}
+                  {c.tier === "CASH" && (
+                    <span className={styles.stakeTag}>
+                      {t("play.challenge.mode_competitive_stake", { amount: Number(BigInt(c.stake_minor) / 1_000_000n) })}
+                    </span>
+                  )}
+                </span>
                 <Button variant="ghost" onClick={() => void cancel(c.id)}>{t("play.challenge.cancel")}</Button>
               </li>
             ))}

@@ -16,8 +16,10 @@
  *                        the payment provider says happened? (L3, chain
  *                        custody vs. actual on-chain balance, needs a
  *                        capability this codebase does not have yet --
- *                        `chain.getIncoming()` checks one address's
- *                        incoming transfers, not an aggregate balance --
+ *                        the BlockchainProvider (packages/chain/src/
+ *                        provider.mjs) verifies one transaction, or one
+ *                        address's incoming transfers, not an aggregate
+ *                        custody balance across every address we control --
  *                        and is deliberately NOT implemented here rather
  *                        than faked.)
  *   SOLVENCY          -- custody >= liabilities, per asset, always.
@@ -53,6 +55,8 @@
  */
 import { randomUUID } from "node:crypto";
 import { ProviderPaymentState, ProviderPayoutState } from "../../payments/src/provider.mjs";
+import { createDuelStore } from "../../realtime/src/store.mjs";
+import { serializeReplay, verifyReplay } from "../../duel-engine/src/duel.mjs";
 
 export const RunOutcome = {
   COMPLETED: "COMPLETED",
@@ -145,9 +149,18 @@ export function createReconciliationService(db, {
   // that service, not part of its public surface), so it is passed here
   // separately rather than reaching into `paymentSvc`'s closure.
   provider = null,
+  // The game plugin registry (id -> plugin), the same Map every process
+  // that touches duels already builds -- required for runReplayVerification()
+  // to rebuild a duel's real event history and re-derive its result. Optional,
+  // like paymentSvc/provider above: a caller that omits it (a test, a
+  // narrowly-scoped tool) simply does not get that check registered in
+  // runAll(), exactly the existing pattern for the provider-reconciliation
+  // checks.
+  plugins = null,
   emit = () => {},
   now = () => Date.now(),
 } = {}) {
+  const duelStore = plugins ? createDuelStore(db, { emit }) : null;
   const svc = {
     /** L1: does the cached balance snapshot still agree with the ledger entries? */
     async runLedgerDrift() {
@@ -339,6 +352,142 @@ export function createReconciliationService(db, {
               });
             }
           }
+
+          // UNKNOWN means the provider (or this process's own in-memory
+          // double) no longer recognises a reference this platform is
+          // still actively tracking -- e.g. a restart that lost payout
+          // state. reconcile() itself already refuses to act on this (see
+          // its own header), but a human should still see it: an unknown
+          // payout reference is exactly the situation a lost-state bug
+          // looks like before it becomes an unrecoverable one.
+          if (providerState.state === ProviderPayoutState.UNKNOWN) {
+            await openCase(conn, tally, emit, {
+              category: "PROVIDER_MISMATCH", severity: "WARNING",
+              subjectType: "withdrawal", subjectId: wd.id,
+              detail: { providerState: providerState.state, ourStatus: wd.status, note: "provider does not recognise this payout reference" },
+            });
+          }
+        }
+      }, { emit });
+    },
+
+    /**
+     * F-11: independently re-derive a settled CASH duel's result from its
+     * own real move history and check it against what was actually paid.
+     * `settlementLegs()` (packages/settlement/src/rake.mjs) pays whoever
+     * `duel.result` names, and `duel.result` comes entirely from a game
+     * plugin's own evaluate() -- a plugin bug, or a compromised plugin
+     * release, decides real-money payouts with nothing independently
+     * checking its answer. This is that check: the exact recovery path a
+     * gateway restart already uses (`duelStore.load()`) plus the exact
+     * audit primitive already built for disputes (`verifyReplay()`),
+     * neither duplicated, run over every recently-settled cash duel.
+     *
+     * A mismatch never reverses or re-settles anything by itself -- same
+     * rule as every other check in this file -- it opens a CRITICAL case
+     * naming exactly what the replay derived versus what was paid, for a
+     * human (with adjustment.create + four-eyes) to decide the correction.
+     */
+    async runReplayVerification({ limit = 200, sinceMinutes = 24 * 60 } = {}) {
+      if (!plugins) throw new Error("runReplayVerification requires plugins");
+      return withRun(db, "REPLAY_VERIFICATION", async (conn, tally) => {
+        const rows = await conn.query(
+          `SELECT id FROM duel
+            WHERE tier = 'CASH' AND is_vs_computer = FALSE
+              AND status IN ('COMPLETED','SETTLED')
+              AND completed_at >= now() - ($1 || ' minutes')::interval
+            ORDER BY completed_at DESC LIMIT $2`,
+          [String(sinceMinutes), limit]
+        );
+        tally.checked += rows.rows.length;
+        for (const row of rows.rows) {
+          let replay, plugin;
+          try {
+            const duel = await duelStore.load(row.id, plugins, now());
+            if (!duel) continue;
+            plugin = plugins.get(duel.gameId);
+            if (!plugin) continue;
+            replay = serializeReplay(duel, plugin);
+          } catch (e) {
+            // A hydrate failure here (a stored event the current plugin
+            // version can no longer replay, e.g.) is itself worth a human's
+            // attention -- surfaced as its own case, never a silent skip.
+            await openCase(conn, tally, emit, {
+              category: "REPLAY_MISMATCH", severity: "CRITICAL",
+              subjectType: "duel", subjectId: row.id,
+              detail: { error: String(e.message ?? e), stage: "REHYDRATE" },
+            });
+            continue;
+          }
+          if (replay.outcome == null) continue; // not yet a decided result to check
+
+          const verified = verifyReplay(replay, plugin);
+          if (!verified.valid) {
+            await openCase(conn, tally, emit, {
+              category: "REPLAY_MISMATCH", severity: "CRITICAL",
+              subjectType: "duel", subjectId: row.id,
+              detail: {
+                claimedResult: replay.outcome.result, claimedReason: replay.outcome.reason,
+                error: verified.error,
+              },
+            });
+          }
+        }
+      }, { emit });
+    },
+
+    /**
+     * Live evidence retention (the approved anti-cheat architecture): once
+     * a duel is over, its detailed per-action log (`duel_event`) has no
+     * further business reason to exist -- realtime, reconnect and
+     * spectating all needed it only while the match was live, and it is
+     * NOT the permanent record (the `duel` row itself, `rating_change`,
+     * and every settlement/ledger entry are -- none of them are touched
+     * here, and none of them depend on `duel_event` surviving).
+     *
+     * Two tiers, exactly as specified: a FREE duel loses its log after a
+     * short grace window; a CASH duel keeps it for the SAME 24 hours
+     * `runReplayVerification()` above sweeps by default, so that check
+     * always gets its full window before the evidence it reads can be
+     * purged out from under it -- if this ran the other way around, a
+     * cash duel could be purged clean before verification ever looked at
+     * it, and the check would go on reporting success over an empty set.
+     *
+     * A duel is exempt from purge entirely -- FREE or CASH, regardless of
+     * age -- if it carries any real fair-play evidence: an active funds
+     * hold, or a recorded `fairplay_signal`. That signal can only have
+     * been produced at or before completion (nothing in this codebase
+     * generates one afterwards), so "flagged before completion" holds
+     * without any extra bookkeeping. Nothing exposes a duel's raw event
+     * log to anyone outside this internal sweep and the Fair Play
+     * Engine's own case review, so "restricted access" for that retained
+     * evidence already holds by construction, without a second copy of it
+     * in a separate table.
+     *
+     * Idempotent and safe to retry: the `EXISTS (... duel_event ...)`
+     * guard means a duel already purged simply matches nothing on the
+     * next run, rather than erroring or re-counting.
+     */
+    async runEvidenceCleanup({ freeGraceMinutes = 10, cashRetentionMinutes = 24 * 60, limit = 500 } = {}) {
+      return withRun(db, "EVIDENCE_CLEANUP", async (conn, tally) => {
+        const due = await conn.query(
+          `SELECT d.id FROM duel d
+             WHERE d.status IN ('COMPLETED','SETTLED')
+               AND (
+                 (d.tier = 'FREE' AND d.completed_at < now() - ($1 || ' minutes')::interval)
+                 OR
+                 (d.tier = 'CASH' AND d.completed_at < now() - ($2 || ' minutes')::interval)
+               )
+               AND d.fairplay_hold = FALSE
+               AND NOT EXISTS (SELECT 1 FROM fairplay_signal s WHERE s.duel_id = d.id)
+               AND EXISTS (SELECT 1 FROM duel_event e WHERE e.duel_id = d.id)
+             ORDER BY d.completed_at LIMIT $3`,
+          [String(freeGraceMinutes), String(cashRetentionMinutes), limit]
+        );
+        tally.checked += due.rows.length;
+        for (const row of due.rows) {
+          await conn.query(`DELETE FROM duel_event WHERE duel_id = $1`, [row.id]);
+          emit("evidence.cleanup_purged", { duelId: row.id });
         }
       }, { emit });
     },
@@ -399,6 +548,14 @@ export function createReconciliationService(db, {
         checks.push(["runProviderDeposits", [options.providerDeposits]]);
         checks.push(["runProviderWithdrawals", [options.providerWithdrawals]]);
       }
+      if (plugins) {
+        checks.push(["runReplayVerification", [options.replayVerification]]);
+      }
+      // Evidence cleanup needs no `plugins` -- it only deletes rows -- but
+      // runs right after replay verification for readability: verify,
+      // THEN retire what verification (or a fresh dispute window) no
+      // longer needs.
+      checks.push(["runEvidenceCleanup", [options.evidenceCleanup]]);
       const results = [];
       for (const [method, args] of checks) {
         try {

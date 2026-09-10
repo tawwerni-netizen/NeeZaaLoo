@@ -13,26 +13,33 @@
     "profile": "个人资料",
     "support": "支持",
     "chat": "聊天",
-    "watch": "观战"
+    "watch": "观赛",
+    "games": "游戏",
+    "tournaments": "锦标赛",
+    "create_account": "创建账户",
+    "download_app": "下载应用",
+    "menu_aria_label": "菜单"
   },
   "footer": {
     "learn": "了解",
     "tournaments": "锦标赛",
     "leaderboard": "排行榜",
     "support": "支持",
-    "copyright": "© {year} Nizalo。你的对决,你的证明。"
+    "copyright": "© {year} Nizalo。你的对决,你的证明。",
+    "fair_play": "公平竞赛"
   },
   "home": {
     "hero": {
-      "eyebrow": "全球技能竞技",
-      "headline_line1": "自认技高一筹?",
-      "headline_line2": "拿出证明。",
-      "subhead": "你的对决,你的证明。国际象棋与快速数学,只凭实力决胜负——公平匹配,诚实计分,绝不靠运气。",
-      "cta_primary": "寻找对手",
-      "cta_secondary": "了解玩法"
+      "eyebrow": "唯技能定胜负",
+      "headline_line1": "证明。较量。",
+      "headline_line2": "制胜。",
+      "subhead": "十款服务器裁决的对战游戏。真实对手,公平匹配。在符合条件的技能竞赛中赢取奖金——须视当地规定而定。",
+      "cta_primary": "立即开始",
+      "cta_secondary": "观看直播",
+      "featured_heading": "今日精选"
     },
     "games": {
-      "heading": "选择你的项目",
+      "heading": "十款游戏,同一套公平机制",
       "duration_label": "时长",
       "mode_label": "模式",
       "play_cta": "开始{name}",
@@ -48,6 +55,46 @@
       "speed_math": {
         "description": "共享的60秒倒计时。同样的题目,同一瞬间开始——只凭速度与准确率定胜负。",
         "duration": "60 秒",
+        "mode": "1对1 · 排位或休闲"
+      },
+      "checkers": {
+        "description": "美式跳棋标准规则。强制吃子,连续跳吃不可中断,没有捷径可走。",
+        "duration": "10–20 分钟",
+        "mode": "1对1 · 排位或休闲"
+      },
+      "connect_four": {
+        "description": "落子占位,封锁连线。标准7x6棋盘,率先连成四子获胜。",
+        "duration": "3–8 分钟",
+        "mode": "1对1 · 排位或休闲"
+      },
+      "xo": {
+        "description": "平台上最快的对决。率先连成三子获胜——双方发挥完美则必和。",
+        "duration": "1–3 分钟",
+        "mode": "1对1 · 排位或休闲"
+      },
+      "dominoes": {
+        "description": "双六骨牌阻塞玩法。看清两端数字,优先出重点数的骨牌,别让自己手里憋着点数。",
+        "duration": "10–20 分钟",
+        "mode": "1对1 · 排位或休闲"
+      },
+      "backgammon": {
+        "description": "掷骰、行棋、收子。每一次掷骰都由服务器完成——吃子、进条、收子全部按规则强制执行。",
+        "duration": "15–30 分钟",
+        "mode": "1对1 · 排位或休闲"
+      },
+      "seega": {
+        "description": "先摆放棋子,再抢占中心。把敌方棋子夹在你的两颗棋子之间即可吃掉它。",
+        "duration": "10–20 分钟",
+        "mode": "1对1 · 排位或休闲"
+      },
+      "reversi": {
+        "description": "把对手的一整排棋子夹住,它们就会全部变成你的颜色。棋局结束时棋子更多的一方获胜。",
+        "duration": "10–20 分钟",
+        "mode": "1对1 · 排位或休闲"
+      },
+      "gomoku": {
+        "description": "在对手之前率先连成五子——横、竖、斜,棋盘上任何位置皆可。",
+        "duration": "10–20 分钟",
         "mode": "1对1 · 排位或休闲"
       }
     },
@@ -75,12 +122,72 @@
           "body": "提升排名,获得锦标赛资格,在允许的地区还可角逐真实奖金。"
         }
       }
+    },
+    "tournaments": {
+      "heading": "即将开始的锦标赛",
+      "empty": "目前没有安排的锦标赛,请稍后再来查看。",
+      "view_all": "查看所有锦标赛 →"
+    },
+    "liveArena": {
+      "heading": "直播竞技场",
+      "subhead": "此刻正在进行的真实对局。",
+      "empty": "此刻没有正在进行的对局——棋局更新很快,请稍后再查看。",
+      "view_all": "打开直播竞技场 →"
+    },
+    "rank": {
+      "heading": "全球排名",
+      "body": "每款游戏都计入同一个全球技能分——一个真实的、基于百分位的数值,随每局结果变化。清楚看到你在所有玩家中的位置。",
+      "cta": "查看排行榜 →"
+    },
+    "mastery": {
+      "heading": "你的精通度",
+      "body": "追踪每款游戏的真实进度——准确率、连胜与里程碑,全部来自实际对局,绝不凭空赠予。",
+      "cta": "查看你的精通度 →"
+    },
+    "dailyChallenge": {
+      "heading": "每日挑战",
+      "body": "每天一个全新的真实目标。通过正常游戏即可完成——无需额外刷分,无需购买。",
+      "cta": "查看今日挑战 →"
+    },
+    "friendChallenge": {
+      "heading": "好友挑战",
+      "body": "按昵称点名挑战特定对手。对方会收到真实的限时邀请——接受后比赛立即开始。",
+      "cta": "挑战好友 →"
+    },
+    "learn": {
+      "heading": "学习",
+      "body": "十款游戏的规则、计分方式,以及服务器端公平机制的真实运作原理。",
+      "cta": "阅读指南 →"
+    },
+    "download": {
+      "heading": "下载应用",
+      "body": "原生应用即将推出。在此之前,Nizalo 可在任何现代浏览器中完整运行,支持桌面端与移动端。",
+      "badge": "即将推出"
+    },
+    "trust": {
+      "heading": "信任与公平竞赛",
+      "body": "每一局的结果都由服务器决定——绝非客户端。每一局对战都可被独立复盘并验证。审核中的资金只会被冻结,绝不没收,直到人工确认为止。",
+      "cta": "阅读公平竞赛政策 →",
+      "point_server": "服务器裁决",
+      "point_server_body": "客户端永远无法自行断言结果、比分或时钟读数——只有服务器可以。",
+      "point_verify": "可独立验证",
+      "point_verify_body": "任何一局结束后的对局都可以从记录的真实着法重新推演,并与实际结果核对。",
+      "point_human": "资金决策必经人工",
+      "point_human_body": "任何自动化操作都不会仅凭单一薄弱信号就限制资金或账户——决定权始终在人工审核手中。"
     }
   },
   "common": {
     "game_names": {
       "chess": "国际象棋",
-      "speed_math": "快速数学"
+      "speed_math": "快速数学",
+      "checkers": "西洋跳棋",
+      "connect_four": "四子棋",
+      "xo": "井字棋",
+      "dominoes": "多米诺骨牌",
+      "backgammon": "西洋双陆棋",
+      "seega": "塞加棋",
+      "reversi": "黑白棋",
+      "gomoku": "五子棋"
     },
     "unknown_game": "未知游戏。"
   },
@@ -235,10 +342,22 @@
     "back": "返回",
     "mode": {
       "heading": "选择对战方式",
-      "vs_computer": { "title": "人机对战", "description": "与AI对手练习" },
-      "friend": { "title": "挑战好友", "description": "通过昵称挑战某人" },
-      "competitive": { "title": "竞技对战", "description": "根据你的水平进行排位匹配" },
-      "tournament": { "title": "锦标赛", "description": "参加淘汰赛争夺奖金" }
+      "vs_computer": {
+        "title": "人机对战",
+        "description": "与AI对手练习"
+      },
+      "friend": {
+        "title": "挑战好友",
+        "description": "通过昵称挑战某人"
+      },
+      "random_opponent": {
+        "title": "随机对手",
+        "description": "根据你的水平进行排位匹配"
+      },
+      "tournament": {
+        "title": "锦标赛",
+        "description": "参加淘汰赛争夺奖金"
+      }
     },
     "difficulty": {
       "heading": "选择难度"
@@ -246,7 +365,11 @@
     "stake": {
       "heading": "选择赌注",
       "free_only": "仅限免费",
-      "free_only_note": "该项目暂不支持现金赌注。"
+      "free_only_note": "该项目暂不支持现金赌注。",
+      "free_title": "免费",
+      "free_description": "不设赌注——纯粹对局。",
+      "competitive_title": "竞技",
+      "competitive_description": "为真实赌注对战，赢得比赛后才会释放。"
     },
     "challenge": {
       "heading": "挑战好友",
@@ -264,10 +387,18 @@
       "empty_outgoing": "暂无已发送的挑战。",
       "from": "{handle} 向你发起了挑战",
       "waiting_for": "等待 {handle}",
+      "more_waiting": "还有 {count} 个等待中",
       "error_unknown_opponent": "找不到该昵称的玩家。",
       "error_self": "不能挑战自己。",
       "error_already_pending": "你与 {handle} 已有一个待处理的挑战。",
-      "error_generic": "挑战发送失败，请重试。"
+      "error_blocked": "你无法挑战该玩家。",
+      "error_invalid_stake": "该赌注金额不可用。",
+      "error_generic": "挑战发送失败，请重试。",
+      "mode_free": "免费对局",
+      "mode_competitive_stake": "竞技 — ${amount}",
+      "popup_title": "{handle} 向你发起了挑战",
+      "meta_game": "游戏",
+      "meta_mode": "模式"
     }
   },
   "dashboard": {
@@ -339,7 +470,23 @@
       "INSUFFICIENT_MATERIAL": "子力不足",
       "RESIGNATION": "认输",
       "TIMEOUT": "超时",
-      "DRAW_AGREED": "协议和棋"
+      "DRAW_AGREED": "协议和棋",
+      "NO_LEGAL_MOVES": "无子可走",
+      "FORTY_MOVE_RULE": "四十步和棋规则",
+      "FOUR_IN_A_ROW": "四子连线",
+      "BOARD_FULL": "棋盘已满",
+      "LINE_COMPLETE": "连成一线",
+      "ALL_ANSWERED": "全部题目已作答",
+      "TIME_EXPIRED": "时间到",
+      "ALL_ANSWERED_TIEBREAK_TIME": "全部题目已作答——按用时判定",
+      "TIME_EXPIRED_TIEBREAK_TIME": "时间到——按用时判定",
+      "DOMINO_OUT": "骨牌出尽",
+      "BLOCKED": "僵局",
+      "BEAR_OFF_ALL": "全部收子",
+      "GAMMON": "一击(Gammon)",
+      "BACKGAMMON": "双倍一击(Backgammon)",
+      "ALL_CAPTURED": "全部棋子被吃",
+      "FIVE_IN_A_ROW": "五子连珠"
     },
     "rematch": "再战一局",
     "new_opponent": "更换对手",
@@ -360,8 +507,31 @@
     },
     "move_history": "着法记录",
     "achievement": {
-      "FIRST_WIN": { "title": "首胜！", "description": "你赢得了第一场对战。" },
-      "FIRST_TOURNAMENT": { "title": "锦标赛首秀", "description": "你完成了第一场锦标赛。" }
+      "FIRST_WIN": {
+        "title": "首胜！",
+        "description": "你赢得了第一场对战。"
+      },
+      "FIRST_TOURNAMENT": {
+        "title": "锦标赛首秀",
+        "description": "你完成了第一场锦标赛。"
+      }
+    },
+    "speed_math": {
+      "answer_label": "你的答案",
+      "answered": "已作答"
+    },
+    "dominoes": {
+      "tiles_left": "剩余 {count} 张骨牌",
+      "empty_line": "出任意一张骨牌开局",
+      "play_here": "放在这里",
+      "pass": "跳过"
+    },
+    "backgammon": {
+      "bar": "门柱",
+      "borne_off": "已收子"
+    },
+    "reversi": {
+      "pass": "跳过"
     }
   },
   "settings": {
@@ -382,11 +552,13 @@
     },
     "status": {
       "DRAFT": "草稿",
-      "REGISTRATION_OPEN": "报名中",
-      "REGISTRATION_CLOSED": "报名已截止",
-      "IN_PROGRESS": "进行中",
       "COMPLETED": "已结束",
-      "CANCELLED": "已取消"
+      "CANCELLED": "已取消",
+      "SCHEDULED": "已安排",
+      "REGISTRATION": "报名开放中",
+      "LIVE": "进行中",
+      "FINALS": "决赛",
+      "SETTLED": "已结算"
     },
     "register": "报名",
     "registering": "报名中…",
@@ -402,7 +574,13 @@
     "error_not_open": "报名已截止。",
     "error_already_registered": "你已经报名了。",
     "error_generic": "出了点问题，请重试。",
-    "not_found": "未找到该锦标赛。"
+    "not_found": "未找到该锦标赛。",
+    "join": "加入",
+    "error_not_eligible": "你不符合本次锦标赛的参赛资格要求。",
+    "pairings_heading": "对阵表",
+    "round_label": "第 {number} 轮",
+    "bye": "轮空",
+    "login_to_register": "登录以报名"
   },
   "meta": {
     "title": "Nizalo — 你的对决,你的证明。",
@@ -508,8 +686,36 @@
     "not_found": "找不到该玩家。",
     "achievements_catalog": {
       "FIRST_WIN": "首次获胜",
-      "FIRST_TOURNAMENT": "首次参赛"
-    }
+      "FIRST_TOURNAMENT": "首次参赛",
+      "TOURNAMENT_CHAMPION": "锦标赛冠军",
+      "MASTERY_ADVANCED_ANY": "高级精通",
+      "MASTERY_EXPERT_ANY": "专家精通",
+      "MASTERY_MASTER_ANY": "大师精通",
+      "MULTI_GAME_CHAMPION": "多游戏冠军",
+      "STREAK_7": "连续7天",
+      "STREAK_30": "连续30天"
+    },
+    "mastery_title": "精通等级",
+    "mastery_level": {
+      "BEGINNER": "新手",
+      "INTERMEDIATE": "中级",
+      "ADVANCED": "高级",
+      "EXPERT": "专家",
+      "MASTER": "大师"
+    },
+    "streak_title": "连续记录",
+    "streak_current": "连续 {count} 天",
+    "streak_longest": "最长：{count} 天",
+    "streak_at_risk": "今天游玩以保持连续记录。",
+    "streak_none": "今天游玩以开始连续记录。",
+    "highest_rating_label": "最高",
+    "tournaments_played_label": "锦标赛",
+    "tournaments_won_label": "冠军数",
+    "frames_title": "头像框",
+    "no_frames": "还没有头像框。",
+    "frame_select_cta": "佩戴",
+    "frame_selected_cta": "已佩戴",
+    "try_game_cta": "试玩这个游戏 →"
   },
   "support": {
     "title": "支持",
@@ -628,13 +834,147 @@
       "SPECTATORS_DISABLED": "该对局不支持观战。",
       "POST_GAME_CLOSED": "对局已结束，聊天已关闭。"
     },
-    "spectator_title": "观战聊天"
+    "spectator_title": "观战聊天",
+    "open_cta": "打开聊天",
+    "open_with_unread_cta": "打开聊天，{count} 条未读",
+    "expand_cta": "展开聊天",
+    "minimize_cta": "最小化聊天",
+    "close_cta": "关闭聊天",
+    "system_event": {
+      "MATCH_STARTED": "对局已开始"
+    }
   },
   "watch": {
-    "title": "观看直播",
+    "title": "直播竞技场",
     "subtitle": "当前可观战的实时对局。",
     "empty": "目前没有正在进行的对局，请稍后再来查看。",
     "watch_cta": "观看",
-    "vs": "对"
+    "vs": "对",
+    "live_badge": "直播",
+    "tournament_badge": "锦标赛对局",
+    "move_count": "已走{count}步"
+  },
+  "dailyChallenges": {
+    "title": "每日挑战",
+    "subtitle": "每天重置，从不要求充值。",
+    "reward": "+{exp} 经验值",
+    "completed_label": "已完成",
+    "metric": {
+      "WIN_FREE_MATCHES": "赢得 {target} 场免费比赛",
+      "PLAY_SPEED_MATH": "进行 {target} 场速算比赛",
+      "PLAY_DIFFERENT_GAMES": "游玩 {target} 款不同的游戏",
+      "PLAY_RATED_MATCH": "进行一场计分对局",
+      "FINISH_TRAINING": "完成一场训练赛"
+    }
+  },
+  "recommendations": {
+    "title": "尝试新游戏",
+    "strong_category": "你擅长{category}类游戏——试试{game}。",
+    "improving_related": "你在{fromGame}中进步很快——探索一下{game}。",
+    "category": {
+      "STRATEGY": "策略",
+      "TACTICAL": "战术",
+      "PATTERN": "图案",
+      "SPEED": "速度",
+      "PROBABILITY": "概率",
+      "DEEP": "深度策略",
+      "ARITHMETIC": "算术",
+      "FAST": "快节奏"
+    }
+  },
+  "rank": {
+    "heading": "全球技能分解",
+    "subtitle": "你的分数究竟是如何逐个游戏构建的。",
+    "score_scale": "满分1000",
+    "empty": "至少在一个游戏中建立评分即可查看分解详情。",
+    "col_game": "游戏",
+    "col_percentile": "百分位",
+    "col_weight": "权重",
+    "col_contribution": "得分",
+    "capped_note": "（已封顶）",
+    "breadth_note": "多款游戏都表现出色会增加 +{breadth}% 的广度加成，该加成有上限，确保没有单一游戏能独自撑起你的分数。",
+    "methodology_title": "计算方式",
+    "methodology_body_1": "只有你至少打过10场排位赛且评分已趋于稳定的游戏才计入分数。每款游戏按你在该游戏所有已确立评分玩家中的百分位排名计分——而非原始评分——这样国际象棋和速算就能直接比较。",
+    "methodology_body_2": "每款游戏的权重取决于你玩了多少以及该评分的可信度，上限为35%，确保没有单一游戏能主导总分。一个小额加成会奖励在多款游戏中展现出的真实技能广度。"
+  },
+  "authPopup": {
+    "title": "加入对决",
+    "subtitle": "登录或创建免费账户即可开始游戏。",
+    "sign_in": "登录",
+    "sign_in_body": "已有账户。",
+    "create_account": "创建账户",
+    "create_account_body": "新用户——不到一分钟即可完成。",
+    "google": "使用 Google 继续",
+    "email_code": "使用邮箱验证码登录",
+    "close_aria_label": "关闭",
+    "footnote": "继续即表示您同意这是一项技能竞赛。在符合条件的技能竞赛中赢取奖金(如当地允许)——绝非保证收入。"
+  },
+  "learnPage": {
+    "heading": "学习",
+    "subhead": "了解 Nizalo 的真实运作方式,以及每款游戏的规则。",
+    "how_heading": "一局比赛如何被裁定",
+    "how_body": "你的每一个操作都会作为一个请求发送给服务器,而不是一个被直接采信的事实。规则的执行、计时与结果全部只由服务器决定。这正是为什么这里的每一局比赛都可以被复盘、被独立核实——结果从不取决于是否信任任何一方的设备。",
+    "games_heading": "各游戏规则",
+    "games_body": "选择一款游戏,了解它的玩法、计时方式与计分方式。",
+    "fair_heading": "公平竞赛,简述",
+    "fair_body": "系统会自动检测时序与行为异常,但任何单一的自动化信号都不会限制账户或冻结资金——这项决定始终交由人工,并附带完整证据供其审阅。",
+    "fair_cta": "阅读完整公平竞赛政策 →",
+    "cta_play": "开始玩{name} →"
+  },
+  "fairPlayPage": {
+    "heading": "信任与公平竞赛",
+    "subhead": "这里究竟靠什么保证公平——直白陈述,而非营销话术。",
+    "server_heading": "服务器是唯一的裁决方",
+    "server_body": "玩家的设备只能发送请求——例如“我想走 e4”——而不能断言任何事实。合法性、计时、比分与结果,全部完全由服务器决定。客户端没有任何消息可以用来宣称一个结果。",
+    "verify_heading": "每一局都可独立验证",
+    "verify_body": "任何一局结束的比赛,都可以从其真实记录的着法从头重新推演,并与实际支付的结果核对。这与争议裁定前内部使用的核查方式完全相同——不依赖于对数据库数值的单方面信任。",
+    "review_heading": "资金决策从不完全自动化",
+    "review_body": "系统会监测时序与行为,但任何单一自动化信号都不会独自限制账户或冻结资金。统计层面的发现始终会交由人工审核后才采取行动,且任何处置都可以向另一位审核人提出申诉。",
+    "eligibility_heading": "资格说明,如实告知",
+    "eligibility_body": "若竞技对战涉及押注,参赛资格及可能获得的奖金均须遵守因地区而异的资格规定。Nizalo 是一项技能竞赛——并非投资,也绝不构成收入保证。",
+    "contact_cta": "有疑问?联系客服 →"
+  },
+  "gamesPage": {
+    "heading": "游戏",
+    "subhead": "十款服务器裁决的游戏。选一款看看怎么玩,或者直接开始。",
+    "filter_all": "全部",
+    "filter_turnbased": "回合制",
+    "filter_shared_clock": "共享计时",
+    "turn_model_alternating": "回合制",
+    "turn_model_simultaneous": "共享计时",
+    "play_cta": "开始玩{name} →"
+  },
+  "gameDetailsPage": {
+    "back_to_games": "← 所有游戏",
+    "play_cta": "开始玩{name}",
+    "facts_heading": "基本信息",
+    "fact_turn_model": "形式",
+    "fact_duration": "典型时长",
+    "fact_mode": "模式",
+    "fact_stakes": "赌注",
+    "stakes_free_only": "仅限免费游玩——此游戏暂未开放竞技押注。",
+    "stakes_enabled": "可免费游玩,也可在符合条件时进行真实押注的竞技对战。",
+    "difficulty_heading": "对战电脑",
+    "difficulty_body": "四个真实难度等级,每一级都是真正不同的对手——绝非同一引擎放慢了时钟。",
+    "no_ai_body": "这款游戏暂不提供电脑对手——每一局都是对战真实玩家。",
+    "leaderboard_heading": "顶尖玩家",
+    "leaderboard_signed_out": "登录后即可查看此游戏真实的实时排行榜。",
+    "leaderboard_empty": "目前评级对局数量还不够,暂无法显示排行榜。",
+    "leaderboard_games_played": "{count} 局评级赛"
+  },
+  "walletPage": {
+    "heading": "钱包",
+    "subhead": "你的真实余额,直接来自账本。",
+    "available_label": "可用余额",
+    "locked_label": "冻结余额",
+    "available_note": "可用于押注或提现。",
+    "locked_note": "因进行中的对局或待处理的提现而被暂时保留。",
+    "deposit_cta": "充值",
+    "withdraw_cta": "提现",
+    "coming_soon_title": "尚未开放",
+    "coming_soon_body": "此版本尚未开放充值与提现功能。上方余额是真实的,功能开放后即可立即使用。",
+    "empty": "暂无钱包活动。",
+    "forbidden": "无法加载你的钱包。",
+    "error": "无法加载你的钱包({code})。请尝试重新加载。"
   }
 }

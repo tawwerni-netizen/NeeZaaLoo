@@ -1,0 +1,130 @@
+/* Gomoku's own identity: stones on a line-intersection grid, the classic
+   Gomoku/Go board convention -- deliberately NOT XO's open cell-filling
+   grid, NOT Reversi's flat disc cells, and NOT Seega's warm stone table.
+   A cool slate-blue board with fine ivory ink lines, tactile glossy
+   stones, and a tactical, uncluttered reading at a glance. Per the
+   platform's own "every game belongs to Nizalo, no two games look
+   identical" rule. */
+.wrap {
+  --board-ground: #171B26;
+  --board-ground-2: #1F2433;
+  --grid-ink: rgba(230, 224, 208, 0.32);
+  --star: rgba(230, 224, 208, 0.55);
+  --stone-a: #17181B;
+  --stone-a-hi: #43464E;
+  --stone-b: #F3ECDB;
+  --stone-b-hi: #FFFDF6;
+  display: flex;
+  justify-content: center;
+}
+
+.board {
+  position: relative;
+  width: min(94vw, 460px);
+  aspect-ratio: 1 / 1;
+  background: radial-gradient(120% 120% at 30% 15%, var(--board-ground-2), var(--board-ground));
+  border-radius: var(--nz-radius-lg);
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3));
+  overflow: hidden;
+}
+
+.gridLines {
+  position: absolute;
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+  pointer-events: none;
+}
+
+.gridLines line {
+  stroke: var(--grid-ink);
+  stroke-width: 0.035;
+  vector-effect: non-scaling-stroke;
+}
+
+.starPoint {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--star);
+}
+
+.winOverlay {
+  position: absolute;
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+  pointer-events: none;
+}
+
+.winOverlay line {
+  stroke: var(--nz-win);
+  stroke-width: 0.09;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
+}
+
+.cell {
+  position: absolute;
+  width: calc(88% / 15);
+  height: calc(88% / 15);
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  z-index: 1;
+}
+
+.cell:disabled { cursor: default; }
+
+.cell:not(:disabled):hover {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06), transparent 70%);
+  border-radius: 50%;
+}
+
+.stone {
+  width: 84%;
+  height: 84%;
+  border-radius: 50%;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5), inset 0 -2px 4px rgba(0, 0, 0, 0.3), inset 0 2px 3px rgba(255, 255, 255, 0.2);
+}
+
+.stoneA { background: radial-gradient(circle at 35% 30%, var(--stone-a-hi), var(--stone-a) 70%); }
+.stoneB { background: radial-gradient(circle at 35% 30%, var(--stone-b-hi), var(--stone-b) 70%); }
+
+.glow {
+  box-shadow: 0 0 0 2px var(--nz-win), 0 0 10px 2px color-mix(in srgb, var(--nz-win) 55%, transparent), 0 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+.previewStone {
+  position: absolute;
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.lastMoveRing {
+  position: absolute;
+  inset: 22%;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* The ring defaults to a light border (reads on the dark stone); a light
+   stone needs the dark variant instead, since white-on-cream would
+   vanish. */
+.stoneB ~ .lastMoveRing {
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 640px) {
+  .board { width: 96vw; }
+}

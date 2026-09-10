@@ -233,7 +233,7 @@ The brief lists ten financial attacks. Here is the honest coverage map.
 | ~~F2~~ | ~~No payment provider adapter~~ — **CLOSED**: `PaymentProvider` abstraction + NOWPayments adapter + a structurally different sandbox provider driven by the same code | — |
 | ~~F3~~ | ~~No withdrawal state machine~~ — **CLOSED**: 12 states, legal transitions enforced by trigger, amount/destination immutable after request | — |
 | F4 | Reconciliation exists as two SQL **views** (`ledger_balance_verification`, `ledger_solvency`). Nothing runs them, nothing alerts. | High |
-| ~~F5~~ | ~~Economy Rules Engine not built~~ — **CLOSED**: versioned, time-bounded, two-admin enforced by CHECK, 20% hard ceiling, append-only | — |
+| ~~F5~~ | ~~Economy Rules Engine not built~~ — **CLOSED**: versioned, time-bounded, two-admin enforced by CHECK, either exactly 0% or the 10%-25% competitive band (1000-2500 bps, `db/migrations/0035_rake_ladder.sql`), append-only. Fee is now snapshotted at match/tournament creation and frozen (`0036_fee_snapshot.sql`) so an admin rate change never reprices a match already under way. | — |
 | F6 | Custody model undecided. Blocks Phase 5. | **Critical (business)** |
 
 **One thing is right by default:** `game.cash_enabled = FALSE` for chess in

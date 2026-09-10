@@ -1,38 +1,63 @@
 {
   "nav": {
     "play": "Play",
+    "games": "Games",
     "rank": "Rank",
     "tournament": "Tournament",
+    "tournaments": "Tournaments",
     "learn": "Learn",
     "wallet": "Wallet",
     "log_in": "Log in",
     "log_out": "Log out",
     "play_now": "Play now",
+    "create_account": "Create account",
     "home_aria_label": "Nizalo home",
     "security": "Security",
     "profile": "Profile",
     "support": "Support",
     "chat": "Chat",
-    "watch": "Watch"
+    "watch": "Watch",
+    "download_app": "Download app",
+    "menu_aria_label": "Menu"
   },
   "footer": {
     "learn": "Learn",
     "tournaments": "Tournaments",
     "leaderboard": "Leaderboard",
     "support": "Support",
+    "fair_play": "Fair play",
     "copyright": "© {year} Nizalo. Your duel. Your proof."
+  },
+  "authPopup": {
+    "title": "Join the duel",
+    "subtitle": "Sign in or create a free account to play.",
+    "sign_in": "Sign in",
+    "sign_in_body": "Already have an account.",
+    "create_account": "Create account",
+    "create_account_body": "New here — takes under a minute.",
+    "google": "Continue with Google",
+    "email_code": "Sign in with an email code",
+    "close_aria_label": "Close",
+    "footnote": "By continuing you agree this is a game of skill. Earn prizes through eligible skill competitions where permitted — never a guaranteed income."
   },
   "home": {
     "hero": {
-      "eyebrow": "Global skill competition",
-      "headline_line1": "Think you’re good?",
-      "headline_line2": "Prove it.",
-      "subhead": "Your duel. Your proof. Chess and Speed Math, decided by skill alone — matched fairly, scored honestly, never left to chance.",
-      "cta_primary": "Find an opponent",
-      "cta_secondary": "See how it works"
+      "eyebrow": "Skill decides. Nothing else.",
+      "headline_line1": "PROVE. PLAY.",
+      "headline_line2": "WIN.",
+      "subhead": "Ten server-authoritative games. Real opponents, matched fairly. Earn prizes through eligible skill competitions, where permitted.",
+      "cta_primary": "Play now",
+      "cta_secondary": "Watch live",
+      "featured_heading": "Featured today"
+    },
+    "liveArena": {
+      "heading": "Live Arena",
+      "subhead": "Real matches, in progress right now.",
+      "empty": "No matches live at this exact moment — the board resets fast, check back in a minute.",
+      "view_all": "Open Live Arena →"
     },
     "games": {
-      "heading": "Choose your game",
+      "heading": "10 games, one fair foundation",
       "duration_label": "Duration",
       "mode_label": "Mode",
       "play_cta": "Play {name}",
@@ -48,6 +73,46 @@
       "speed_math": {
         "description": "A shared 60-second clock. Same questions, same instant — decided by speed and accuracy alone.",
         "duration": "60 sec",
+        "mode": "1v1 · Ranked or free"
+      },
+      "checkers": {
+        "description": "American Checkers, standard rules. Mandatory captures, forced multi-jumps, no shortcuts.",
+        "duration": "10–20 min",
+        "mode": "1v1 · Ranked or free"
+      },
+      "connect_four": {
+        "description": "Drop your token, deny the line. Four in a row, on the standard 7x6 grid.",
+        "duration": "3–8 min",
+        "mode": "1v1 · Ranked or free"
+      },
+      "xo": {
+        "description": "The fastest duel on the platform. Three in a row wins — perfect play always draws.",
+        "duration": "1–3 min",
+        "mode": "1v1 · Ranked or free"
+      },
+      "dominoes": {
+        "description": "Double-six block dominoes. Read both ends, play your heaviest tiles first, and don't get stuck holding pips.",
+        "duration": "10–20 min",
+        "mode": "1v1 · Ranked or free"
+      },
+      "backgammon": {
+        "description": "Roll, run, and bear off. Every die is rolled by the server — hitting, the bar, and bearing off enforced to the letter.",
+        "duration": "15–30 min",
+        "mode": "1v1 · Ranked or free"
+      },
+      "seega": {
+        "description": "Place your stones, then box in the center. Flank an enemy piece between two of yours to capture it.",
+        "duration": "10–20 min",
+        "mode": "1v1 · Ranked or free"
+      },
+      "reversi": {
+        "description": "Outflank a line of your opponent's discs and every one of them turns to your colour. Most discs when the board is settled wins.",
+        "duration": "10–20 min",
+        "mode": "1v1 · Ranked or free"
+      },
+      "gomoku": {
+        "description": "Five stones in a row — straight, diagonal, anywhere on the board — before your opponent does.",
+        "duration": "10–20 min",
         "mode": "1v1 · Ranked or free"
       }
     },
@@ -75,12 +140,66 @@
           "body": "Rank up, qualify for tournaments, and where permitted — compete for real prizes."
         }
       }
+    },
+    "tournaments": {
+      "heading": "Upcoming Tournaments",
+      "empty": "No tournaments scheduled right now — check back soon.",
+      "view_all": "View all tournaments →"
+    },
+    "rank": {
+      "heading": "Global Rank",
+      "body": "Every game feeds one Global Skill Score — a real, percentile-based number that moves with each result. See exactly where you stand against everyone else.",
+      "cta": "View the leaderboard →"
+    },
+    "mastery": {
+      "heading": "Your Mastery",
+      "body": "Track real progress per game — accuracy, streaks, and milestones earned through actual play, never handed out.",
+      "cta": "See your mastery →"
+    },
+    "dailyChallenge": {
+      "heading": "Daily Challenge",
+      "body": "A fresh, real target every day. Complete it through ordinary play — no separate grind, no purchase.",
+      "cta": "Today's challenge →"
+    },
+    "friendChallenge": {
+      "heading": "Friend Challenge",
+      "body": "Call out a specific opponent by nickname. They get a real, time-limited invite — accept, and the match starts immediately.",
+      "cta": "Challenge a friend →"
+    },
+    "learn": {
+      "heading": "Learn",
+      "body": "Rules, scoring, and how server-side fairness actually works — for every one of the ten games.",
+      "cta": "Read the guides →"
+    },
+    "download": {
+      "heading": "Download the app",
+      "body": "A native app is on the way. Until then, Nizalo runs full-featured in any modern browser, on desktop or mobile.",
+      "badge": "Coming soon"
+    },
+    "trust": {
+      "heading": "Trust & Fair Play",
+      "body": "The server decides every result — never the client. Every match can be independently replayed and verified. Funds under review are held, never confiscated, until a person signs off.",
+      "cta": "Read the Fair Play policy →",
+      "point_server": "Server-authoritative",
+      "point_server_body": "The client can never assert a result, a score, or a clock reading — only the server does.",
+      "point_verify": "Independently verifiable",
+      "point_verify_body": "Every finished match can be re-run from its own recorded moves and checked against the result.",
+      "point_human": "Human review for money",
+      "point_human_body": "No automated action ever restricts funds or an account on a single weak signal — a person decides."
     }
   },
   "common": {
     "game_names": {
       "chess": "Chess",
-      "speed_math": "Speed Math"
+      "speed_math": "Speed Math",
+      "checkers": "Checkers",
+      "connect_four": "Connect Four",
+      "xo": "XO",
+      "dominoes": "Dominoes",
+      "backgammon": "Backgammon",
+      "seega": "Seega",
+      "reversi": "Reversi",
+      "gomoku": "Gomoku"
     },
     "unknown_game": "Unknown game."
   },
@@ -235,10 +354,22 @@
     "back": "Back",
     "mode": {
       "heading": "Choose how to play",
-      "vs_computer": { "title": "Vs Computer", "description": "Practice against an AI opponent" },
-      "friend": { "title": "Play a Friend", "description": "Challenge someone by nickname" },
-      "competitive": { "title": "Competitive", "description": "Ranked matchmaking against your skill level" },
-      "tournament": { "title": "Tournament", "description": "Compete in a bracket for a prize" }
+      "vs_computer": {
+        "title": "Vs Computer",
+        "description": "Practice against an AI opponent"
+      },
+      "friend": {
+        "title": "Play a Friend",
+        "description": "Challenge someone by nickname"
+      },
+      "random_opponent": {
+        "title": "Random Opponent",
+        "description": "Ranked matchmaking against your skill level"
+      },
+      "tournament": {
+        "title": "Tournament",
+        "description": "Compete in a bracket for a prize"
+      }
     },
     "difficulty": {
       "heading": "Choose a difficulty"
@@ -246,7 +377,11 @@
     "stake": {
       "heading": "Choose your stake",
       "free_only": "Free only",
-      "free_only_note": "Cash stakes aren't available for this game yet."
+      "free_only_note": "Cash stakes aren't available for this game yet.",
+      "free_title": "Free",
+      "free_description": "No stake — just the game.",
+      "competitive_title": "Competitive",
+      "competitive_description": "Play for a real stake, released only once the match is won."
     },
     "challenge": {
       "heading": "Challenge a friend",
@@ -264,10 +399,18 @@
       "empty_outgoing": "No challenges sent.",
       "from": "{handle} challenged you",
       "waiting_for": "Waiting for {handle}",
+      "more_waiting": "{count} more waiting",
       "error_unknown_opponent": "No player with that nickname.",
       "error_self": "You can't challenge yourself.",
       "error_already_pending": "You already have a pending challenge with {handle}.",
-      "error_generic": "Couldn't send the challenge. Try again."
+      "error_blocked": "You can't challenge this player.",
+      "error_invalid_stake": "That stake amount isn't available.",
+      "error_generic": "Couldn't send the challenge. Try again.",
+      "mode_free": "Free match",
+      "mode_competitive_stake": "Competitive — ${amount}",
+      "popup_title": "{handle} challenged you",
+      "meta_game": "Game",
+      "meta_mode": "Mode"
     }
   },
   "dashboard": {
@@ -339,7 +482,23 @@
       "INSUFFICIENT_MATERIAL": "Insufficient material",
       "RESIGNATION": "Resignation",
       "TIMEOUT": "Timeout",
-      "DRAW_AGREED": "Draw agreed"
+      "DRAW_AGREED": "Draw agreed",
+      "NO_LEGAL_MOVES": "No legal moves",
+      "FORTY_MOVE_RULE": "Forty-move rule",
+      "FOUR_IN_A_ROW": "Four in a row",
+      "BOARD_FULL": "Board full",
+      "LINE_COMPLETE": "Line complete",
+      "ALL_ANSWERED": "All questions answered",
+      "TIME_EXPIRED": "Time's up",
+      "ALL_ANSWERED_TIEBREAK_TIME": "All questions answered — decided by speed",
+      "TIME_EXPIRED_TIEBREAK_TIME": "Time's up — decided by speed",
+      "DOMINO_OUT": "Domino out",
+      "BLOCKED": "Blocked",
+      "BEAR_OFF_ALL": "Bore off all checkers",
+      "GAMMON": "Gammon",
+      "BACKGAMMON": "Backgammon",
+      "ALL_CAPTURED": "All pieces captured",
+      "FIVE_IN_A_ROW": "Five in a row"
     },
     "rematch": "Rematch",
     "new_opponent": "New opponent",
@@ -360,8 +519,31 @@
     },
     "move_history": "Moves",
     "achievement": {
-      "FIRST_WIN": { "title": "First Win!", "description": "You won your first duel." },
-      "FIRST_TOURNAMENT": { "title": "Tournament Debut", "description": "You completed your first tournament." }
+      "FIRST_WIN": {
+        "title": "First Win!",
+        "description": "You won your first duel."
+      },
+      "FIRST_TOURNAMENT": {
+        "title": "Tournament Debut",
+        "description": "You completed your first tournament."
+      }
+    },
+    "speed_math": {
+      "answer_label": "Your answer",
+      "answered": "Answered"
+    },
+    "dominoes": {
+      "tiles_left": "{count} tiles left",
+      "empty_line": "Play any tile to open",
+      "play_here": "Play here",
+      "pass": "Pass"
+    },
+    "backgammon": {
+      "bar": "Bar",
+      "borne_off": "Borne off"
+    },
+    "reversi": {
+      "pass": "Pass"
     }
   },
   "settings": {
@@ -374,6 +556,7 @@
     "entry_fee": "{amount} {asset}",
     "registered_count": "{count}/{capacity} registered",
     "starts_at": "Starts {date}",
+    "join": "Join",
     "view": "View →",
     "back": "← All tournaments",
     "format": {
@@ -382,10 +565,12 @@
     },
     "status": {
       "DRAFT": "Draft",
-      "REGISTRATION_OPEN": "Registration open",
-      "REGISTRATION_CLOSED": "Registration closed",
-      "IN_PROGRESS": "In progress",
+      "SCHEDULED": "Scheduled",
+      "REGISTRATION": "Registration open",
+      "LIVE": "Live",
+      "FINALS": "Finals",
       "COMPLETED": "Completed",
+      "SETTLED": "Settled",
       "CANCELLED": "Cancelled"
     },
     "register": "Register",
@@ -401,8 +586,13 @@
     "error_at_capacity": "This tournament is full.",
     "error_not_open": "Registration is closed.",
     "error_already_registered": "You're already registered.",
+    "error_not_eligible": "You don't meet the eligibility requirements for this tournament.",
     "error_generic": "Something went wrong. Try again.",
-    "not_found": "Tournament not found."
+    "not_found": "Tournament not found.",
+    "pairings_heading": "Bracket",
+    "round_label": "Round {number}",
+    "bye": "Bye",
+    "login_to_register": "Log in to register"
   },
   "meta": {
     "title": "Nizalo — Your duel. Your proof.",
@@ -508,8 +698,36 @@
     "not_found": "This player could not be found.",
     "achievements_catalog": {
       "FIRST_WIN": "First Win",
-      "FIRST_TOURNAMENT": "First Tournament"
-    }
+      "FIRST_TOURNAMENT": "First Tournament",
+      "TOURNAMENT_CHAMPION": "Tournament Champion",
+      "MASTERY_ADVANCED_ANY": "Advanced Mastery",
+      "MASTERY_EXPERT_ANY": "Expert Mastery",
+      "MASTERY_MASTER_ANY": "Master Mastery",
+      "MULTI_GAME_CHAMPION": "Multi-Game Champion",
+      "STREAK_7": "7-Day Streak",
+      "STREAK_30": "30-Day Streak"
+    },
+    "mastery_title": "Mastery",
+    "mastery_level": {
+      "BEGINNER": "Beginner",
+      "INTERMEDIATE": "Intermediate",
+      "ADVANCED": "Advanced",
+      "EXPERT": "Expert",
+      "MASTER": "Master"
+    },
+    "streak_title": "Streak",
+    "streak_current": "{count}-day streak",
+    "streak_longest": "Longest: {count} days",
+    "streak_at_risk": "Play today to keep your streak alive.",
+    "streak_none": "Play a game today to start a streak.",
+    "highest_rating_label": "Peak",
+    "tournaments_played_label": "Tournaments",
+    "tournaments_won_label": "Titles",
+    "frames_title": "Frames",
+    "no_frames": "No frames yet.",
+    "frame_select_cta": "Wear",
+    "frame_selected_cta": "Worn",
+    "try_game_cta": "Try this game →"
   },
   "support": {
     "title": "Support",
@@ -628,13 +846,135 @@
       "SPECTATORS_DISABLED": "Spectating is not available for this match.",
       "POST_GAME_CLOSED": "This chat is closed now that the match has ended."
     },
-    "spectator_title": "Spectator Chat"
+    "spectator_title": "Spectator Chat",
+    "open_cta": "Open chat",
+    "open_with_unread_cta": "Open chat, {count} unread",
+    "expand_cta": "Expand chat",
+    "minimize_cta": "Minimize chat",
+    "close_cta": "Close chat",
+    "system_event": {
+      "MATCH_STARTED": "Match started"
+    }
   },
   "watch": {
-    "title": "Watch Live",
+    "title": "Live Arena",
     "subtitle": "Live matches you can spectate right now.",
     "empty": "No live matches right now. Check back soon.",
     "watch_cta": "Watch",
-    "vs": "vs"
+    "vs": "vs",
+    "live_badge": "Live",
+    "tournament_badge": "Tournament match",
+    "move_count": "{count} moves played"
+  },
+  "dailyChallenges": {
+    "title": "Daily Challenges",
+    "subtitle": "Reset every day. No deposit ever required.",
+    "reward": "+{exp} EXP",
+    "completed_label": "Completed",
+    "metric": {
+      "WIN_FREE_MATCHES": "Win {target} free matches",
+      "PLAY_SPEED_MATH": "Play {target} Speed Math matches",
+      "PLAY_DIFFERENT_GAMES": "Play {target} different games",
+      "PLAY_RATED_MATCH": "Play a rated match",
+      "FINISH_TRAINING": "Finish a training match"
+    }
+  },
+  "recommendations": {
+    "title": "Try Something New",
+    "strong_category": "You're strong at {category} games — try {game}.",
+    "improving_related": "You're improving quickly in {fromGame} — explore {game}.",
+    "category": {
+      "STRATEGY": "strategic",
+      "TACTICAL": "tactical",
+      "PATTERN": "pattern",
+      "SPEED": "speed",
+      "PROBABILITY": "probability",
+      "DEEP": "deep",
+      "ARITHMETIC": "arithmetic",
+      "FAST": "fast-paced"
+    }
+  },
+  "rank": {
+    "heading": "Global Skill Breakdown",
+    "subtitle": "How your score is actually built, game by game.",
+    "score_scale": "out of 1000",
+    "empty": "Establish a rating in at least one game to see your breakdown.",
+    "col_game": "Game",
+    "col_percentile": "Percentile",
+    "col_weight": "Weight",
+    "col_contribution": "Points",
+    "capped_note": "(capped)",
+    "breadth_note": "Playing multiple games well adds a +{breadth}% breadth bonus, capped so no single game can carry your score alone.",
+    "methodology_title": "How this is calculated",
+    "methodology_body_1": "Only games where you've played at least 10 rated matches and your rating has settled down count toward your score. Each counts by percentile rank among other established players of that same game -- not your raw rating -- so Chess and Speed Math are directly comparable.",
+    "methodology_body_2": "Each game's weight comes from how much you've played it and how confident that rating is, capped at 35% so no single game can dominate the total. A small bonus rewards genuine skill spread across several games."
+  },
+  "learnPage": {
+    "heading": "Learn",
+    "subhead": "How Nizalo actually works, and the rules for every game.",
+    "how_heading": "How a match is decided",
+    "how_body": "Every action you take is sent to the server as a request, never as a claimed fact. The server alone applies the rules, keeps the clock, and decides the result. That is what makes a match here replayable and independently checkable — nothing about the outcome depends on trusting either player's device.",
+    "games_heading": "Rules, by game",
+    "games_body": "Pick a game to see how it's played, timed, and scored.",
+    "fair_heading": "Fair play, briefly",
+    "fair_body": "Timing and behaviour are checked automatically, but no single automated signal ever restricts an account or holds funds — that decision always goes to a person, with the evidence in front of them.",
+    "fair_cta": "Read the full Fair Play policy →",
+    "cta_play": "Play {name} →"
+  },
+  "fairPlayPage": {
+    "heading": "Trust & Fair Play",
+    "subhead": "What actually keeps a match fair here — stated plainly, not marketing language.",
+    "server_heading": "The server is the only authority",
+    "server_body": "A player's device can only ever send a request — \"I'd like to play e4\" — never a claimed fact. Legality, the clock, the score, and the result are all decided entirely on the server. There is no message a client can send that asserts an outcome.",
+    "verify_heading": "Every match is independently verifiable",
+    "verify_body": "A finished match's real, recorded moves can be replayed from the start and checked against the result that was paid out. This is the same check used internally before any dispute is resolved — it does not depend on trusting a database value.",
+    "review_heading": "Money decisions are never fully automated",
+    "review_body": "Timing and behaviour are monitored, but no single automated signal ever restricts an account or holds funds on its own. A statistical finding is always sent to a person to review before any action is taken, and every such action can be appealed to a different reviewer.",
+    "eligibility_heading": "Eligibility, stated honestly",
+    "eligibility_body": "Where competitive play involves a stake, participation and any resulting prize are subject to eligibility rules that vary by region. Nizalo is a game of skill — not an investment, and never a guaranteed income.",
+    "contact_cta": "Questions? Contact Support →"
+  },
+  "gamesPage": {
+    "heading": "Games",
+    "subhead": "Ten server-authoritative games. Pick one to see how it plays, or jump straight in.",
+    "filter_all": "All",
+    "filter_turnbased": "Turn-based",
+    "filter_shared_clock": "Shared clock",
+    "turn_model_alternating": "Turn-based",
+    "turn_model_simultaneous": "Shared clock",
+    "play_cta": "Play {name} →"
+  },
+  "gameDetailsPage": {
+    "back_to_games": "← All games",
+    "play_cta": "Play {name}",
+    "facts_heading": "The facts",
+    "fact_turn_model": "Format",
+    "fact_duration": "Typical duration",
+    "fact_mode": "Mode",
+    "fact_stakes": "Stakes",
+    "stakes_free_only": "Free to play — competitive stakes are not yet enabled for this game.",
+    "stakes_enabled": "Free, or competitive with a real stake where eligible.",
+    "difficulty_heading": "Play against the computer",
+    "difficulty_body": "Four real difficulty levels, each a genuinely different opponent — never the same engine with a slower clock.",
+    "no_ai_body": "This game doesn't offer a computer opponent yet — every match is against a real player.",
+    "leaderboard_heading": "Top players",
+    "leaderboard_signed_out": "Sign in to see the real, live leaderboard for this game.",
+    "leaderboard_empty": "Not enough rated matches have been played yet to show a leaderboard.",
+    "leaderboard_games_played": "{count} rated"
+  },
+  "walletPage": {
+    "heading": "Wallet",
+    "subhead": "Your real balance, straight from the ledger.",
+    "available_label": "Available",
+    "locked_label": "Locked",
+    "available_note": "Ready to stake or withdraw.",
+    "locked_note": "Reserved by an in-progress match or a pending withdrawal.",
+    "deposit_cta": "Deposit",
+    "withdraw_cta": "Withdraw",
+    "coming_soon_title": "Not open yet",
+    "coming_soon_body": "Deposits and withdrawals aren't live on this build. Your balance above is real and will be ready the moment they are.",
+    "empty": "No wallet activity yet.",
+    "forbidden": "Could not load your wallet.",
+    "error": "Could not load your wallet ({code}). Try reloading."
   }
 }

@@ -22,24 +22,12 @@ import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { createPgAdapter } from "../../ledger/src/pg-adapter.mjs";
 import { migrate } from "../../ledger/src/migrate.mjs";
+import { provisionRealPgDatabase } from "../../ledger/test-support/real-pg-db.mjs";
 import { createEmailChallengeService, ChallengePurpose } from "../src/email-challenge.mjs";
 
 const { Client } = pg;
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/skill_platform_test";
-
-let reachable = true;
-let reachabilityError = null;
-try {
-  const probe = new Client({ connectionString: TEST_DATABASE_URL });
-  await probe.connect();
-  await probe.query("SELECT 1");
-  await probe.end();
-} catch (e) {
-  reachable = false;
-  reachabilityError = e;
-}
+const { reachable, reachabilityError, TEST_DATABASE_URL, drop } = await provisionRealPgDatabase();
 
 async function connection() {
   const client = new Client({ connectionString: TEST_DATABASE_URL });
@@ -63,7 +51,7 @@ describe(
       await migrate(createPgAdapter(admin));
     });
 
-    after(async () => { await admin.end(); });
+    after(async () => { await admin.end(); await drop(); });
 
     test("exactly one of two simultaneous verify() calls, on two separate connections, succeeds", async () => {
       const playerId = `r${randomUUID().replace(/-/g, "").slice(0, 15)}`;

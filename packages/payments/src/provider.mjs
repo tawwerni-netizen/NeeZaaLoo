@@ -31,6 +31,14 @@ export const ProviderPayoutState = {
   BROADCASTED: "BROADCASTED",
   CONFIRMED: "CONFIRMED",
   FAILED: "FAILED",
+  // A reference the provider (or this process's own in-memory double) does
+  // not recognise at all -- e.g. after a restart that lost in-memory state.
+  // This is deliberately NOT mapped to FAILED: "we cannot find it" is not
+  // "it failed," and treating it as failure would release a withdrawal's
+  // locked funds for a payout that may already be broadcast on-chain.
+  // reconcile() (payments.mjs) treats UNKNOWN exactly like any other
+  // non-terminal answer -- retryable, no mutation -- never a release.
+  UNKNOWN: "UNKNOWN",
 };
 
 export const SigError = {
@@ -285,7 +293,11 @@ export function createSandboxProvider({ secret = "sandbox-secret" } = {}) {
     },
 
     async getPayout(providerRef) {
-      return payouts.get(providerRef) ?? { providerRef, state: ProviderPayoutState.FAILED };
+      // An unrecognised reference (e.g. this process restarted and lost its
+      // in-memory payout map) is UNKNOWN, never FAILED -- see
+      // ProviderPayoutState.UNKNOWN's own header for why that distinction
+      // is load-bearing, not cosmetic.
+      return payouts.get(providerRef) ?? { providerRef, state: ProviderPayoutState.UNKNOWN };
     },
 
     /** Test helper: sign a webhook body the way this provider would. */

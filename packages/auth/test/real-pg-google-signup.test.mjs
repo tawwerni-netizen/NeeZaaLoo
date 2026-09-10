@@ -19,6 +19,7 @@ import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { createPgAdapter } from "../../ledger/src/pg-adapter.mjs";
 import { migrate } from "../../ledger/src/migrate.mjs";
+import { provisionRealPgDatabase } from "../../ledger/test-support/real-pg-db.mjs";
 import { createAuthService } from "../src/service.mjs";
 import { createEmailIdentityService } from "../src/email-identity.mjs";
 import { createOAuthIdentityService } from "../src/oauth-identity.mjs";
@@ -29,24 +30,11 @@ import { issueOAuthState } from "../src/tokens.mjs";
 
 const { Client } = pg;
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/skill_platform_test";
+const { reachable, reachabilityError, TEST_DATABASE_URL, drop } = await provisionRealPgDatabase();
 
 const SIGNING_KEY = Buffer.alloc(32, 13);
 const ENCRYPTION_KEY = Buffer.alloc(32, 14);
 const FAST_ARGON = { algorithm: 2, memoryCost: 1024, timeCost: 1, parallelism: 1 };
-
-let reachable = true;
-let reachabilityError = null;
-try {
-  const probe = new Client({ connectionString: TEST_DATABASE_URL });
-  await probe.connect();
-  await probe.query("SELECT 1");
-  await probe.end();
-} catch (e) {
-  reachable = false;
-  reachabilityError = e;
-}
 
 async function connection(sharedGoogleProvider) {
   const client = new Client({ connectionString: TEST_DATABASE_URL });
@@ -75,7 +63,7 @@ describe(
       await migrate(createPgAdapter(admin));
     });
 
-    after(async () => { await admin.end(); });
+    after(async () => { await admin.end(); await drop(); });
 
     test("two simultaneous first-time logins for the SAME Google subject create exactly one player", async () => {
       const subject = `sub-race-${randomUUID()}`;

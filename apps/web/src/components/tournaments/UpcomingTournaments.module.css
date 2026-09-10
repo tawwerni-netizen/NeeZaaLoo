@@ -1,0 +1,183 @@
+.section {
+  padding-block: var(--nz-space-8);
+}
+
+.headerRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--nz-space-4);
+  margin-bottom: var(--nz-space-5);
+}
+
+.heading {
+  font-size: var(--nz-text-2xl);
+  margin: 0;
+}
+
+.viewAll {
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.viewAll:hover {
+  color: var(--nz-accent);
+}
+
+.empty {
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--nz-space-5);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-3);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  border-radius: var(--nz-radius-md);
+  background: var(--nz-surface-2);
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.row:hover {
+  background: var(--nz-surface-3, var(--nz-surface-2));
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  flex-shrink: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-3);
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-5);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.card:hover {
+  border-color: var(--nz-line-strong);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-2);
+}
+
+.gameName {
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+}
+
+.statusPill {
+  flex-shrink: 0;
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  background: var(--nz-surface-2);
+  color: var(--nz-text-2);
+}
+
+.status_REGISTRATION {
+  background: var(--nz-accent-soft);
+  color: var(--nz-accent);
+}
+
+.status_LIVE {
+  background: color-mix(in srgb, var(--nz-loss) 16%, transparent);
+  color: var(--nz-loss);
+}
+
+.status_FINALS {
+  background: color-mix(in srgb, var(--nz-warn) 18%, transparent);
+  color: var(--nz-warn);
+}
+
+.cardTitle {
+  font-size: var(--nz-text-lg);
+  margin: 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nz-space-1) var(--nz-space-4);
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+}
+
+.cardBottom {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-2);
+}
+
+.countdown {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+}
+
+.joinBadge {
+  flex-shrink: 0;
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  background: var(--nz-accent);
+  color: var(--nz-accent-contrast);
+}

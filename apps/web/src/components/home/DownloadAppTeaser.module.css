@@ -1,0 +1,36 @@
+.section {
+  padding-block: var(--nz-space-12);
+  border-top: 1px solid var(--nz-line);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 52ch;
+  margin: 0 auto;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--nz-tracking-caps);
+  text-transform: uppercase;
+  color: var(--nz-text-3);
+  border: 1px solid var(--nz-line-strong);
+  border-radius: var(--nz-radius-pill);
+  padding: 4px 12px;
+  margin-block-end: var(--nz-space-4);
+}
+
+.heading {
+  font-size: var(--nz-text-xl);
+  margin: 0 0 var(--nz-space-2);
+}
+
+.body {
+  font-size: var(--nz-text-md);
+  color: var(--nz-text-2);
+  margin: 0;
+}

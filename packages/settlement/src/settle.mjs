@@ -93,16 +93,35 @@ export function createSettlementService(db, { asset = "USDT" } = {}) {
             return { ok: false, reason: SettleResult.NOT_RESERVED };
           }
 
-          // Price it with the rule that was in force when the game ENDED, not
-          // with today's rule. This is what makes a historical settlement
-          // re-derivable years later.
-          const pricedAt = at ?? duel.completed_at;
-          const r = await tx.query(
-            `SELECT * FROM economy_resolve($1, $2::entry_tier, $3::timestamptz)`,
-            [duel.game_id, duel.tier, pricedAt]
-          );
-          if (!r.rows.length) return { ok: false, reason: SettleResult.NO_ECONOMY_RULE };
-          rule = r.rows[0];
+          if (duel.priced_rake_bps !== null && duel.priced_rake_bps !== undefined) {
+            // The normal case for anything created after
+            // db/migrations/0036_fee_snapshot.sql: the fee was resolved and
+            // frozen onto the row by mm_pair() at CREATION time. Settlement
+            // reads that snapshot and resolves nothing -- an admin who
+            // changes the global rule after this duel started cannot reach
+            // back into a match already under way.
+            rule = {
+              rule_id: duel.priced_economy_rule_id,
+              rule_version: duel.priced_economy_rule_version,
+              rake_bps: duel.priced_rake_bps,
+              min_rake_minor: duel.priced_min_rake_minor,
+              max_rake_minor: duel.priced_max_rake_minor,
+            };
+          } else {
+            // Legacy fallback ONLY: a duel created before creation-time
+            // pricing existed, or inserted directly by a test fixture that
+            // bypasses mm_pair(). The real production path always carries a
+            // snapshot, so this branch never runs there. Price it with the
+            // rule that was in force when the game ENDED, exactly as every
+            // duel was priced before 0036.
+            const pricedAt = at ?? duel.completed_at;
+            const r = await tx.query(
+              `SELECT * FROM economy_resolve($1, $2::entry_tier, $3::timestamptz)`,
+              [duel.game_id, duel.tier, pricedAt]
+            );
+            if (!r.rows.length) return { ok: false, reason: SettleResult.NO_ECONOMY_RULE };
+            rule = r.rows[0];
+          }
 
           // A draw takes no rake (see settlementLegs). The fee must be zeroed
           // HERE as well as in the legs, or the ledger would be correct while
@@ -233,7 +252,9 @@ async function lockDuel(tx, duelId) {
     `SELECT id, game_id, seat_0, seat_1, tier, stake_minor::text AS stake_minor,
             status, result, termination_reason, completed_at,
             reservation_tx_id, settlement_tx_id, fairplay_hold, rating_applied,
-            is_vs_computer
+            is_vs_computer, priced_rake_bps, priced_economy_rule_id,
+            priced_economy_rule_version, priced_min_rake_minor::text AS priced_min_rake_minor,
+            priced_max_rake_minor::text AS priced_max_rake_minor
        FROM duel WHERE id = $1 FOR UPDATE`,
     [duelId]
   );

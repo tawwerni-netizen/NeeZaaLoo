@@ -25,18 +25,42 @@ export type ProfileStats = { games: number; wins: number; losses: number; draws:
 
 export type PlayerBadge = { code: string; source: "ACHIEVEMENT" | "PURCHASE" };
 
+/** Beginner < Intermediate < Advanced < Expert < Master -- see
+ * packages/mastery/src/mastery.mjs for the exact, non-inflatable gates. */
+export type MasteryLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT" | "MASTER";
+
+export type GameMastery = {
+  gameId: string;
+  displayName: string;
+  rating: number;
+  gamesPlayed: number;
+  established: boolean;
+  percentile: number | null;
+  level: MasteryLevel;
+};
+
+export type StreakStatus = { current: number; longest: number; activeToday: boolean; atRisk: boolean };
+
+export type TournamentStats = { played: number; won: number };
+
 export type PublicProfile = {
   id: string;
   nickname: string;
   bio: string;
   avatarUrl: string | null;
   selectedBadge: string | null;
+  selectedFrame: string | null;
   exp: ExpProgress;
   globalSkill: number | null;
   ratings: GameRating[];
   stats: ProfileStats;
+  mastery: GameMastery[];
+  streak: StreakStatus;
+  highestRatings: Record<string, number>;
+  tournaments: TournamentStats;
   achievements: string[];
   badges: PlayerBadge[];
+  frames: string[];
   memberSince: string;
 };
 

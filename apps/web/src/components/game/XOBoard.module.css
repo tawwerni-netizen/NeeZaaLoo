@@ -1,0 +1,93 @@
+/* XO's own identity: an open, precise grid on a graphite ground -- no
+   filled squares, no tray, no felt. Two clean marks: X in the platform's
+   own accent, O in a cool teal chosen specifically to sit opposite it.
+   Per the platform's own "every game belongs to Nizalo, no two games look
+   identical" rule, and the brief's own "fast, elegant, joyful" -- open
+   space and crisp geometry read as more premium than a busy board would
+   for a game this small. */
+.wrap {
+  --grid-ground: var(--nz-surface-1);
+  --grid-line: var(--nz-line);
+  --mark-x: var(--nz-accent);
+  --mark-o: #2DD4BF;
+  --mark-o-dark: #14B8A6;
+  display: flex;
+  justify-content: center;
+}
+
+.board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 3px;
+  width: min(78vw, 380px);
+  aspect-ratio: 1 / 1;
+  background: var(--grid-line);
+  border-radius: var(--nz-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3));
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 14%;
+  background: var(--grid-ground);
+  cursor: pointer;
+  font: inherit;
+  transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.cell:disabled { cursor: default; }
+.cell:not(:disabled):hover { background: var(--nz-surface-2); }
+
+.winning {
+  background: var(--nz-accent-soft);
+}
+
+.mark {
+  width: 100%;
+  height: 100%;
+}
+
+.mark line,
+.mark circle {
+  stroke-width: 9;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.mark[data-seat="0"] line { stroke: var(--mark-x); }
+.mark[data-seat="1"] circle { stroke: var(--mark-o); }
+
+.previewMark {
+  position: absolute;
+  inset: 14%;
+  width: auto;
+  height: auto;
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.winOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.winOverlay line {
+  stroke: var(--nz-win);
+  stroke-width: 6;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.35));
+}
+
+@media (max-width: 640px) {
+  .board { width: 86vw; }
+}

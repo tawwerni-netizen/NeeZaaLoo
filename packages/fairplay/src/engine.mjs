@@ -17,6 +17,7 @@
  * automatic action.
  */
 import { randomUUID } from "node:crypto";
+import { deriveMoveTimes } from "../../duel-engine/src/duel.mjs";
 
 /** Categories where the finding is certain, not inferred. */
 export const AUTO_ACTIONABLE = new Set([
@@ -67,6 +68,100 @@ export function createFairPlayEngine(db, { now = () => Date.now(), openCaseAt = 
         ids.push(Number(r.rows[0].id));
       }
       return ids;
+    },
+
+    /**
+     * S0: the ONE place a completed duel's already-written, per-game
+     * `fairPlaySignals()` is actually called. Every game plugin has
+     * implemented this since its own registration was first enforced
+     * (duel-engine requires the method to exist at all), and the tests
+     * for each one have exercised it directly for just as long -- but
+     * nothing in the realtime/settlement path ever invoked it outside
+     * those tests, so no signal it can produce had ever once been
+     * generated from real gameplay. This closes that gap without adding
+     * a second detection engine: it is glue over TWO capabilities that
+     * already existed on their own (a plugin's own detector, and this
+     * engine's own `recordSignals`), computed off the in-memory duel
+     * object at the moment it actually finishes -- never a second replay
+     * of `duel_event`, and so unaffected by however long that log ends up
+     * surviving retention (see reconcile.mjs's own runEvidenceCleanup).
+     *
+     * Called once per seat, exactly like a chess engine reviewing one
+     * side's clock at a time: `deriveMoveTimes()` (duel-engine) splits the
+     * shared event log into each seat's own think-time sequence, and
+     * `history.seat` lets a plugin project its OWN internal timing data
+     * (Speed Math's per-question record) onto whichever seat is being
+     * checked.
+     */
+    async recordFromCompletedDuel(duel, plugin) {
+      if (!duel.outcome) return 0;
+      const moveTimes = deriveMoveTimes(duel);
+      const signals = [];
+      for (let seat = 0; seat < duel.players.length; seat++) {
+        const raw = plugin.fairPlaySignals(duel.state, { moveTimesMs: moveTimes[seat], seat }) ?? [];
+        for (const s of raw) {
+          signals.push({
+            playerId: duel.players[seat],
+            duelId: duel.duelId,
+            gameId: duel.gameId,
+            detector: s.id ?? `${duel.gameId}.fairplay`,
+            detectorVersion: s.detectorVersion ?? 1,
+            kind: s.kind,
+            strength: s.strength,
+            confidence: s.confidence,
+            observed: s.observedValue ?? {},
+            baseline: s.baseline ?? {},
+            explanation: s.explanation,
+          });
+        }
+      }
+      if (signals.length) await svc.recordSignals(signals);
+      return signals.length;
+    },
+
+    /**
+     * A2/admission (realtime/gateway.mjs's own INTENT handler): a nonce
+     * already used, under a DIFFERENT payload than what was accepted the
+     * first time -- or one from further back than the seat's own last
+     * accepted action. No honest client, however laggy or however many
+     * times it retries, ever produces this; it is PROTOCOL_VIOLATION, the
+     * existing AUTO_ACTIONABLE category built for exactly this shape of
+     * certain finding (see this file's own AUTO_ACTIONABLE set above).
+     * This still only ever records evidence -- opening a case from it
+     * remains a separate, deliberate call to openCase().
+     */
+    async recordReplayedAction({ playerId, duelId, gameId }) {
+      return svc.recordSignals([{
+        playerId, duelId, gameId,
+        detector: "realtime.sequence_admission", detectorVersion: 1,
+        kind: "PROTOCOL_VIOLATION", strength: 1, confidence: 1,
+        observed: { duelId }, baseline: {},
+        explanation:
+          "A client message reused an action sequence number that had already been accepted " +
+          "under a different payload (or one already superseded by a later real action). No " +
+          "honest retry produces this shape; it is a replayed or forged action frame.",
+      }]);
+    },
+
+    /**
+     * Session binding (realtime/gateway.mjs's own JOIN handler): the same
+     * account's seat is bound to more than one LIVE connection in one
+     * duel at once -- not an ordinary reconnect, whose old socket is
+     * already gone by the time a new one binds. Moderate, not certain: an
+     * innocent second tab is possible, so this is ACCOUNT_RELATIONSHIP
+     * (already a STATISTICAL category), never auto-actionable on its own.
+     */
+    async recordConcurrentSeat({ playerId, duelId, gameId, concurrentSessions }) {
+      return svc.recordSignals([{
+        playerId, duelId, gameId,
+        detector: "realtime.session_binding", detectorVersion: 1,
+        kind: "ACCOUNT_RELATIONSHIP", strength: 0.6, confidence: 0.6,
+        observed: { concurrentSessions }, baseline: { expectedConcurrentSessions: 1 },
+        explanation:
+          `This account had ${concurrentSessions} live connections bound to the same seat of ` +
+          `the same duel at the same time. A genuine reconnect's earlier connection is already ` +
+          `closed by the time a new one binds, so this is concurrent occupancy, not reconnection.`,
+      }]);
     },
 
     /**

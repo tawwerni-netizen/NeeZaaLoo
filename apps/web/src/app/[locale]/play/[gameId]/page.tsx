@@ -1,11 +1,17 @@
 "use client";
 
 /**
- * The pre-match flow for any registered game: Mode -> (Difficulty ->) Stake
- * -> matchmaking/creation, or Friend, entirely driven by the resolved
+ * The pre-match flow for any registered game: Mode -> (Difficulty ->)
+ * Stake -> matchmaking/creation, entirely driven by the resolved
  * GamePlugin's own capabilities (supportsAI, difficulties, cashEnabled) --
- * never a gameId switch. TOURNAMENT never opens a step here; its card in
- * ModeSelect links straight into the standalone /tournaments surface.
+ * never a gameId switch.
+ *
+ * VS_COMPUTER never sees a stake step at all -- FREE ONLY, full stop: a
+ * computer opponent must never be presented as a real-money opponent, so
+ * this file simply never routes that mode through StakeSelect the way
+ * FRIEND and RANDOM_OPPONENT both do. TOURNAMENT never opens a step here
+ * either; its card in ModeSelect links straight into the standalone
+ * /tournaments surface.
  */
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +20,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { MatchmakingFlow } from "@/components/matchmaking/MatchmakingFlow";
 import { ModeSelect, type PlayMode } from "@/components/play/ModeSelect";
 import { DifficultySelect } from "@/components/play/DifficultySelect";
-import { StakeSelect } from "@/components/play/StakeSelect";
+import { StakeSelect, type StakeChoice } from "@/components/play/StakeSelect";
 import { FriendChallenge } from "@/components/play/FriendChallenge";
 import { getGame, type Difficulty } from "@/lib/games";
 import { post } from "@/lib/api";
@@ -23,9 +29,10 @@ import { useI18n } from "@/lib/i18n/context";
 type Step =
   | { name: "mode" }
   | { name: "difficulty" }
-  | { name: "stake"; next: "vs_computer" | "competitive" }
-  | { name: "friend" }
-  | { name: "matchmaking" };
+  | { name: "friend_stake" }
+  | { name: "random_stake" }
+  | { name: "friend"; stake: StakeChoice }
+  | { name: "matchmaking"; stake: StakeChoice };
 
 export default function PlayGamePage({ params }: { params: Promise<{ gameId: string }> }) {
   const { gameId } = use(params);
@@ -47,19 +54,26 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
 
   function handleMode(mode: PlayMode) {
     if (mode === "VS_COMPUTER") {
-      setStep(plugin!.difficulties.length > 0 ? { name: "difficulty" } : { name: "stake", next: "vs_computer" });
+      if (plugin!.difficulties.length > 0) {
+        setStep({ name: "difficulty" });
+      } else {
+        void startVsComputer(null);
+      }
     } else if (mode === "FRIEND") {
-      setStep({ name: "friend" });
+      setStep({ name: "friend_stake" });
     } else {
-      setStep({ name: "stake", next: "competitive" });
+      setStep({ name: "random_stake" });
     }
   }
 
-  async function startVsComputer() {
-    if (!difficulty) return;
+  async function startVsComputer(chosen: Difficulty | null) {
+    const use = chosen ?? difficulty;
+    if (!use) return;
     setCreating(true);
     try {
-      const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", { gameId, difficulty });
+      // FREE ONLY -- no stake, no tier, ever, in this request. A computer
+      // opponent is never presented as a real-money opponent.
+      const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", { gameId, difficulty: use });
       router.push(`/${locale}/game/${r.duelId}`);
     } finally {
       setCreating(false);
@@ -75,23 +89,23 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
         {step.name === "difficulty" && (
           <DifficultySelect
             plugin={plugin}
-            onSelect={(d) => { setDifficulty(d); setStep({ name: "stake", next: "vs_computer" }); }}
+            onSelect={(d) => { setDifficulty(d); void startVsComputer(d); }}
           />
         )}
 
-        {step.name === "stake" && step.next === "vs_computer" && (
-          <StakeSelect plugin={plugin} onContinue={() => void startVsComputer()} />
+        {step.name === "friend_stake" && (
+          <StakeSelect plugin={plugin} onContinue={(stake) => setStep({ name: "friend", stake })} />
         )}
 
-        {step.name === "stake" && step.next === "competitive" && (
-          <StakeSelect plugin={plugin} onContinue={() => setStep({ name: "matchmaking" })} />
+        {step.name === "random_stake" && (
+          <StakeSelect plugin={plugin} onContinue={(stake) => setStep({ name: "matchmaking", stake })} />
         )}
 
         {step.name === "friend" && (
-          <FriendChallenge gameId={gameId} onDuelReady={(duelId) => router.push(`/${locale}/game/${duelId}`)} />
+          <FriendChallenge gameId={gameId} stake={step.stake} />
         )}
 
-        {step.name === "matchmaking" && <MatchmakingFlow gameId={gameId} />}
+        {step.name === "matchmaking" && <MatchmakingFlow gameId={gameId} stake={step.stake} />}
 
         {creating && <p aria-live="polite">{t("game.connecting")}</p>}
       </main>

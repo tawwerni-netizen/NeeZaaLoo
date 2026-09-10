@@ -228,6 +228,63 @@ describe("single elimination — a full bracket, byes and all", () => {
     assert.equal(first.player_id, players[0], "higher seed advances on a draw");
   });
 
+  test("a non-chess game gets ITS OWN plugin's real starting state, not a hardcoded chess FEN or a bare seed", async () => {
+    // Regression test for a shared-layer bug: this engine used to fall
+    // back to `{ seed: randomUUID() }` for any gameId other than "chess",
+    // which is not the shape either checkers' or connect four's own
+    // rehydrate() expects. Every pairing's duel must be spawned through
+    // the SAME matchmaking spawner map a fresh matchmade duel uses.
+    const { db, trn, settle, players } = await fresh(2);
+    for (const gameId of ["checkers", "connect-four", "xo"]) {
+      const c = await trn.create({
+        gameId, format: "SINGLE_ELIMINATION", capacity: 2,
+        timeControl: { initialMs: 60000 }, registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+      });
+      await trn.openRegistration(c.tournamentId);
+      await trn.register({ tournamentId: c.tournamentId, playerId: players[0], ratingX100: 150000 });
+      await trn.register({ tournamentId: c.tournamentId, playerId: players[1], ratingX100: 150000 });
+      await trn.start(c.tournamentId);
+
+      const row = await db.query(
+        `SELECT d.initial_state, d.game_id FROM tournament_pairing tp
+           JOIN duel d ON d.id = tp.duel_id
+          WHERE tp.tournament_id = $1 AND tp.round_number = 1 LIMIT 1`,
+        [c.tournamentId]
+      );
+      assert.equal(row.rows[0].game_id, gameId);
+      assert.deepEqual(row.rows[0].initial_state, {}, `${gameId}'s tournament duel must start from its own plugin's real recipe`);
+
+      await decideRound(db, trn, settle, c.tournamentId, 1);
+      const done = await trn.advance(c.tournamentId);
+      assert.equal(done.status, "COMPLETED", `${gameId} tournament must complete through the generic engine`);
+    }
+  });
+
+  test("a Speed Math tournament spawns a real seeded question set, not the board games' empty recipe", async () => {
+    const { db, trn, settle, players } = await fresh(2);
+    const c = await trn.create({
+      gameId: "speed-math", format: "SINGLE_ELIMINATION", capacity: 2,
+      timeControl: { initialMs: 60000 }, registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+    });
+    await trn.openRegistration(c.tournamentId);
+    await trn.register({ tournamentId: c.tournamentId, playerId: players[0], ratingX100: 150000 });
+    await trn.register({ tournamentId: c.tournamentId, playerId: players[1], ratingX100: 150000 });
+    await trn.start(c.tournamentId);
+
+    const row = await db.query(
+      `SELECT d.initial_state, d.game_id FROM tournament_pairing tp
+         JOIN duel d ON d.id = tp.duel_id
+        WHERE tp.tournament_id = $1 AND tp.round_number = 1 LIMIT 1`,
+      [c.tournamentId]
+    );
+    assert.equal(row.rows[0].game_id, "speed-math");
+    assert.ok(row.rows[0].initial_state.seed, "a real seed must be persisted for the question set to be reproducible");
+
+    await decideRound(db, trn, settle, c.tournamentId, 1);
+    const done = await trn.advance(c.tournamentId);
+    assert.equal(done.status, "COMPLETED");
+  });
+
   test("advance() refuses while any pairing in the round is undecided", async () => {
     const { trn, players } = await fresh(4);
     const c = await trn.create({
@@ -451,6 +508,47 @@ describe("prize settlement", () => {
     assert.equal(result.distributed, "0");
   });
 
+  test("the rank-1 finisher earns TOURNAMENT_CHAMPION exactly once, win or FREE", async () => {
+    const { db, trn, settle, players } = await fresh(2);
+    const c = await trn.create({
+      gameId: "chess", format: "SINGLE_ELIMINATION", capacity: 2,
+      timeControl: { initialMs: 60000 }, registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+    });
+    await trn.openRegistration(c.tournamentId);
+    await trn.register({ tournamentId: c.tournamentId, playerId: players[0], ratingX100: 150000 });
+    await trn.register({ tournamentId: c.tournamentId, playerId: players[1], ratingX100: 150000 });
+    await trn.start(c.tournamentId);
+    await decideRound(db, trn, settle, c.tournamentId, 1);
+    await trn.advance(c.tournamentId);
+    await trn.settlePrizes(c.tournamentId);
+
+    const champion = await db.query(
+      "SELECT player_id FROM tournament_settlement WHERE tournament_id=$1 AND rank=1",
+      [c.tournamentId]
+    );
+    const championId = champion.rows[0].player_id;
+    const runnerUpId = players.find((p) => p !== championId);
+
+    const ach = await db.query(
+      "SELECT achievement_code FROM player_achievement WHERE player_id=$1", [championId]
+    );
+    assert.deepEqual(ach.rows.map((r) => r.achievement_code), ["TOURNAMENT_CHAMPION"]);
+    const badge = await db.query("SELECT badge_code FROM player_badge WHERE player_id=$1", [championId]);
+    assert.deepEqual(badge.rows.map((r) => r.badge_code), ["TOURNAMENT_CHAMPION"]);
+    const exp = await db.query(
+      "SELECT amount FROM exp_event WHERE player_id=$1 AND event_type='ACHIEVEMENT'", [championId]
+    );
+    assert.equal(exp.rows.length, 1);
+
+    const runnerUpAch = await db.query("SELECT 1 FROM player_achievement WHERE player_id=$1", [runnerUpId]);
+    assert.equal(runnerUpAch.rows.length, 0, "the runner-up never gets the champion achievement");
+
+    // Re-settling (already ALREADY_SETTLED, a no-op) must never re-grant it.
+    await trn.settlePrizes(c.tournamentId);
+    const again = await db.query("SELECT count(*)::int c FROM player_achievement WHERE player_id=$1", [championId]);
+    assert.equal(again.rows[0].c, 1);
+  });
+
   test("settlement cannot happen before the tournament is complete", async () => {
     const { trn, players } = await fresh(2);
     const c = await trn.create({
@@ -511,5 +609,144 @@ describe("the database enforces tournament invariants directly", () => {
       () => db.query("DELETE FROM tournament_event WHERE tournament_id=$1", [c.tournamentId]),
       /append-only/
     );
+  });
+});
+
+describe("the unified lifecycle (DRAFT/SCHEDULED/REGISTRATION/LIVE/FINALS/COMPLETED/SETTLED/CANCELLED)", () => {
+  test("schedule() moves DRAFT to SCHEDULED, and registration can open directly from either", async () => {
+    const { db, trn } = await fresh(2);
+    const c = await trn.create({
+      gameId: "chess", format: "SINGLE_ELIMINATION", capacity: 2,
+      timeControl: { initialMs: 60000 }, registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+    });
+    const sched = await trn.schedule(c.tournamentId);
+    assert.equal(sched.ok, true);
+    const row = await db.query("SELECT status FROM tournament WHERE id=$1", [c.tournamentId]);
+    assert.equal(row.rows[0].status, "SCHEDULED");
+
+    // schedule() again is refused -- it is not idempotent, DRAFT-only.
+    const again = await trn.schedule(c.tournamentId);
+    assert.equal(again.reason, TournamentError.WRONG_STATUS);
+
+    const opened = await trn.openRegistration(c.tournamentId);
+    assert.equal(opened.ok, true);
+  });
+
+  test("many simultaneous registrations for the last slots resolve to exactly `capacity` winners", async () => {
+    const { trn, players } = await fresh(6);
+    const c = await trn.create({
+      gameId: "chess", format: "SINGLE_ELIMINATION", capacity: 4,
+      timeControl: { initialMs: 60000 }, registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+    });
+    await trn.openRegistration(c.tournamentId);
+    const results = await Promise.all(
+      players.map((p) => trn.register({ tournamentId: c.tournamentId, playerId: p, ratingX100: 150000 }))
+    );
+    const ok = results.filter((r) => r.ok);
+    const atCapacity = results.filter((r) => r.reason === TournamentError.AT_CAPACITY);
+    assert.equal(ok.length, 4, "capacity is 4 -- the trigger must admit exactly 4, never more, under concurrent load");
+    assert.equal(atCapacity.length, 2);
+  });
+
+  test("the same player racing to register twice is admitted exactly once", async () => {
+    const { trn, players } = await fresh(2);
+    const c = await trn.create({
+      gameId: "chess", format: "SINGLE_ELIMINATION", capacity: 2,
+      timeControl: { initialMs: 60000 }, registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+    });
+    await trn.openRegistration(c.tournamentId);
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () => trn.register({ tournamentId: c.tournamentId, playerId: players[0], ratingX100: 150000 }))
+    );
+    const ok = results.filter((r) => r.ok);
+    assert.equal(ok.length, 1, "PRIMARY KEY (tournament_id, player_id) admits exactly one of the racing attempts");
+  });
+
+  test("an eligibility floor refuses an under-rated player and admits an eligible one", async () => {
+    const { trn, players } = await fresh(2);
+    const c = await trn.create({
+      gameId: "chess", format: "SINGLE_ELIMINATION", capacity: 2,
+      timeControl: { initialMs: 60000 }, registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+      eligibility: { minRatingX100: 180000 },
+    });
+    await trn.openRegistration(c.tournamentId);
+    const low = await trn.register({ tournamentId: c.tournamentId, playerId: players[0], ratingX100: 150000 });
+    assert.equal(low.reason, TournamentError.NOT_ELIGIBLE);
+    const high = await trn.register({ tournamentId: c.tournamentId, playerId: players[1], ratingX100: 200000 });
+    assert.equal(high.ok, true);
+  });
+
+  test("cancelling a tournament before it starts refunds every locked entry fee and notifies each entrant", async () => {
+    const { db, trn, players } = await fresh(3, { fund: 100 });
+    const c = await trn.create({
+      gameId: "chess", format: "SINGLE_ELIMINATION", tier: "CASH", entryFeeMinor: u(10),
+      asset: "USDT", capacity: 3, timeControl: { initialMs: 60000 },
+      registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+      prizeStructure: [{ rank: 1, bps: 10000 }],
+    });
+    await trn.openRegistration(c.tournamentId);
+    for (const p of players) await trn.register({ tournamentId: c.tournamentId, playerId: p, ratingX100: 150000 });
+    for (const p of players) assert.equal(await natural(db, `user:${p}:available`), u(90));
+
+    const cancelled = await trn.cancel(c.tournamentId, { reason: "not enough interest" });
+    assert.equal(cancelled.ok, true);
+    assert.equal(cancelled.refunded, 3);
+
+    for (const p of players) assert.equal(await natural(db, `user:${p}:available`), u(100));
+    const status = await db.query("SELECT status FROM tournament WHERE id=$1", [c.tournamentId]);
+    assert.equal(status.rows[0].status, "CANCELLED");
+
+    const notes = await db.query(
+      "SELECT player_id, type FROM notification WHERE type='TOURNAMENT_CANCELLED' AND data->>'tournamentId'=$1",
+      [c.tournamentId]
+    );
+    assert.equal(notes.rows.length, 3);
+  });
+
+  test("cancellation is refused once the tournament has gone LIVE", async () => {
+    const { trn, players } = await fresh(2);
+    const c = await trn.create({
+      gameId: "chess", format: "SINGLE_ELIMINATION", capacity: 2,
+      timeControl: { initialMs: 60000 }, registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+    });
+    await trn.openRegistration(c.tournamentId);
+    await trn.register({ tournamentId: c.tournamentId, playerId: players[0], ratingX100: 150000 });
+    await trn.register({ tournamentId: c.tournamentId, playerId: players[1], ratingX100: 150000 });
+    await trn.start(c.tournamentId);
+    const r = await trn.cancel(c.tournamentId);
+    assert.equal(r.reason, TournamentError.WRONG_STATUS);
+  });
+
+  test("the bracket enters FINALS before the last pairing is decided, then settles to SETTLED after prizes", async () => {
+    const { db, trn, settle, players } = await fresh(4, { fund: 100 });
+    const c = await trn.create({
+      gameId: "chess", format: "SINGLE_ELIMINATION", tier: "CASH", entryFeeMinor: u(10),
+      asset: "USDT", capacity: 4, timeControl: { initialMs: 60000 },
+      registrationClosesAt: new Date(Date.now() + 3600_000).toISOString(),
+      prizeStructure: [{ rank: 1, bps: 10000 }],
+    });
+    await trn.openRegistration(c.tournamentId);
+    for (const p of players) await trn.register({ tournamentId: c.tournamentId, playerId: p, ratingX100: 150000 });
+    await trn.start(c.tournamentId);
+
+    await decideRound(db, trn, settle, c.tournamentId, 1);
+    await trn.advance(c.tournamentId);
+    const mid = await db.query("SELECT status FROM tournament WHERE id=$1", [c.tournamentId]);
+    assert.equal(mid.rows[0].status, "FINALS", "round 2 is the final -- the tournament must already show FINALS");
+
+    await decideRound(db, trn, settle, c.tournamentId, 2);
+    const done = await trn.advance(c.tournamentId);
+    assert.equal(done.status, "COMPLETED");
+
+    const notesBefore = await db.query("SELECT count(*)::int c FROM notification WHERE type='MATCH_READY'");
+    assert.ok(notesBefore.rows[0].c > 0, "each real pairing must have notified both seats their match was ready");
+
+    await trn.settlePrizes(c.tournamentId);
+    const settled = await db.query("SELECT status FROM tournament WHERE id=$1", [c.tournamentId]);
+    assert.equal(settled.rows[0].status, "SETTLED");
+
+    const again = await trn.settlePrizes(c.tournamentId);
+    assert.equal(again.ok, true);
+    assert.equal(again.reason, TournamentError.ALREADY_SETTLED);
   });
 });

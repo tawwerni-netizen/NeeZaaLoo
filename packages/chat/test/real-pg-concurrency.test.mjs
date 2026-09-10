@@ -25,25 +25,13 @@ import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { createPgAdapter } from "../../ledger/src/pg-adapter.mjs";
 import { migrate } from "../../ledger/src/migrate.mjs";
+import { provisionRealPgDatabase } from "../../ledger/test-support/real-pg-db.mjs";
 import { createChannelService, globalChannelId, matchChannelId, spectatorChannelId } from "../src/channels.mjs";
 import { createModerationService, ChatMuteScope } from "../src/moderation.mjs";
 import { createBlockService } from "../src/blocks.mjs";
 import { createMessageService } from "../src/messages.mjs";
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/skill_platform_test";
-
-let reachable = true;
-let reachabilityError = null;
-try {
-  const probe = new pg.Client({ connectionString: TEST_DATABASE_URL });
-  await probe.connect();
-  await probe.query("SELECT 1");
-  await probe.end();
-} catch (e) {
-  reachable = false;
-  reachabilityError = e;
-}
+const { reachable, reachabilityError, TEST_DATABASE_URL, drop } = await provisionRealPgDatabase();
 
 async function connection() {
   const client = new pg.Client({ connectionString: TEST_DATABASE_URL });
@@ -83,7 +71,7 @@ describe(
       await migrate(admin.db);
     });
 
-    after(async () => { await admin.client.end(); });
+    after(async () => { await admin.client.end(); await drop(); });
 
     async function seedPlayer(playerId) {
       await admin.client.query("INSERT INTO player (id, handle) VALUES ($1,$1)", [playerId]);

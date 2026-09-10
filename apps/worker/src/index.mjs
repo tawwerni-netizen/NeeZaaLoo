@@ -21,16 +21,30 @@ import { createPgAdapter } from "../../../packages/ledger/src/pg-adapter.mjs";
 import { createSettlementService } from "../../../packages/settlement/src/settle.mjs";
 import { createDuelStore } from "../../../packages/realtime/src/store.mjs";
 import { createMatchmakingService } from "../../../packages/matchmaking/src/matchmaking.mjs";
+import { createChallengeService } from "../../../packages/matchmaking/src/challenge.mjs";
 import { createDispatchWorker } from "../../../packages/matchmaking/src/dispatch.mjs";
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
 import { createSandboxProvider } from "../../../packages/payments/src/provider.mjs";
+import { createChainReader } from "../../../packages/chain/src/reader.mjs";
 import { createReconciliationService } from "../../../packages/reconciliation/src/reconcile.mjs";
 import { createExpService } from "../../../packages/profile/src/exp.mjs";
 import { createAchievementService } from "../../../packages/profile/src/achievements.mjs";
 import { createBadgeService } from "../../../packages/profile/src/badges.mjs";
 import { createProgressionService } from "../../../packages/progression/src/service.mjs";
+import { createMasteryService } from "../../../packages/mastery/src/service.mjs";
+import { createStreakService } from "../../../packages/engagement/src/streaks.mjs";
+import { createTournamentService } from "../../../packages/tournament/src/tournament.mjs";
+import { createTournamentSweep } from "../../../packages/tournament/src/sweep.mjs";
 import { ChessPlugin } from "../../../packages/game-chess/src/plugin.mjs";
 import { SpeedMathPlugin } from "../../../packages/game-speed-math/src/plugin.mjs";
+import { CheckersPlugin } from "../../../packages/game-checkers/src/plugin.mjs";
+import { ConnectFourPlugin } from "../../../packages/game-connect-four/src/plugin.mjs";
+import { XOPlugin } from "../../../packages/game-xo/src/plugin.mjs";
+import { DominoesPlugin } from "../../../packages/game-dominoes/src/plugin.mjs";
+import { BackgammonPlugin } from "../../../packages/game-backgammon/src/plugin.mjs";
+import { SeegaPlugin } from "../../../packages/game-seega/src/plugin.mjs";
+import { ReversiPlugin } from "../../../packages/game-reversi/src/plugin.mjs";
+import { GomokuPlugin } from "../../../packages/game-gomoku/src/plugin.mjs";
 import {
   createLogger, createMetricsRegistry, createConsoleSink, createStructuredLogSink,
 } from "../../../packages/observability/src/index.mjs";
@@ -53,7 +67,12 @@ async function main() {
   const logger = createLogger({ service: "worker", sink });
   const metrics = createMetricsRegistry();
 
-  const plugins = new Map([["chess", ChessPlugin], ["speed-math", SpeedMathPlugin]]);
+  const plugins = new Map([
+    ["chess", ChessPlugin], ["speed-math", SpeedMathPlugin],
+    ["checkers", CheckersPlugin], ["connect-four", ConnectFourPlugin],
+    ["xo", XOPlugin], ["dominoes", DominoesPlugin], ["backgammon", BackgammonPlugin],
+    ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin],
+  ]);
   const settlement = createSettlementService(db);
   const store = createDuelStore(db, { emit: logger.emit });
   const mm = createMatchmakingService(db);
@@ -62,15 +81,20 @@ async function main() {
     settlement, store, plugins, mm, emit: logger.emit,
   });
 
-  // Sandbox only -- see the header comment. `chain` has no real on-chain
-  // reader wired in yet (there is no chain-reading capability in this
-  // codebase beyond the per-address `getIncoming()` shape payments.mjs
-  // already depends on); deposits will not actually credit from this
-  // process until a real chain reader exists, which is honest, not a bug.
+  // Sandbox only -- see the header comment. `chain`, by contrast, IS the
+  // real on-chain reader: createChainReader() honours CHAIN_READER=tron
+  // (with TRON_API_KEY) when configured, and REFUSES TO START under
+  // NODE_ENV=production without it -- deposits must never be able to
+  // "confirm" from a reader that always answers null.
   const provider = createSandboxProvider();
-  const chain = { async getIncoming() { return null; } };
+  const chain = createChainReader();
   const paymentSvc = createPaymentService(db, { provider, chain });
-  const reconciliation = createReconciliationService(db, { paymentSvc, provider, emit: logger.emit });
+  // `plugins` (constructed above) lets reconciliation's runReplayVerification()
+  // independently re-derive a settled cash duel's real result and check it
+  // against what was actually paid -- see reconcile.mjs's own header on why
+  // this closes a real gap (a game plugin decided every payout with nothing
+  // ever re-checking its answer).
+  const reconciliation = createReconciliationService(db, { paymentSvc, provider, plugins, emit: logger.emit });
   const reconciliationIntervalMs = Number(process.env.RECONCILIATION_INTERVAL_MS || 60000);
   const reconciliationWorker = createTickLoop(() => reconciliation.runAll(), {
     intervalMs: reconciliationIntervalMs,
@@ -100,7 +124,9 @@ async function main() {
   const exp = createExpService(db);
   const achievements = createAchievementService(db);
   const badges = createBadgeService(db);
-  const progression = createProgressionService(db, { exp, achievements, badges });
+  const mastery = createMasteryService(db);
+  const streaks = createStreakService(db);
+  const progression = createProgressionService(db, { exp, achievements, badges, mastery, streaks });
   const progressionSweepIntervalMs = Number(process.env.PROGRESSION_SWEEP_INTERVAL_MS || 3000);
   const progressionSweepWorker = createTickLoop(
     async () => {
@@ -111,6 +137,33 @@ async function main() {
     { intervalMs: progressionSweepIntervalMs }
   );
 
+  // Tournament sweep: closes registration at the deadline, bridges a
+  // pairing's duel result into the bracket once it completes through the
+  // ordinary duel lifecycle (nothing else in production ever calls
+  // tournament.reportResult()), advances a round once every pairing in it
+  // is decided, and auto-settles FREE-tier tournaments. Runs at the same
+  // cadence as settlement/progression -- every step here is idempotent and
+  // status-gated, so a faster or slower tick is always safe.
+  const tournament = createTournamentService(db);
+  const tournamentSweep = createTournamentSweep(db, tournament, settlement);
+  const tournamentSweepIntervalMs = Number(process.env.TOURNAMENT_SWEEP_INTERVAL_MS || 3000);
+  const tournamentSweepWorker = createTickLoop(() => tournamentSweep.sweepAll(), {
+    intervalMs: tournamentSweepIntervalMs,
+  });
+
+  // PLAY WITH FRIEND: "if no action within 30 seconds, EXPIRED -- the
+  // system must log this automatically." A live client polling GET
+  // /v1/challenges already flips a stale row lazily (challenge.mjs's own
+  // expireIfDue/expireStale), but this sweep is what makes the automatic
+  // part true even for a challenge nobody is looking at anymore -- a
+  // closed tab, a player who never opened the popup at all. Runs often
+  // given the window itself is only 30 seconds.
+  const challenge = createChallengeService(db);
+  const challengeExpiryIntervalMs = Number(process.env.CHALLENGE_EXPIRY_INTERVAL_MS || 5000);
+  const challengeExpiryWorker = createTickLoop(() => challenge.expireStale(), {
+    intervalMs: challengeExpiryIntervalMs,
+  });
+
   const runtime = createWorkerRuntime({
     workers: [
       { name: "matchmaking_dispatch", worker: dispatchWorker },
@@ -120,6 +173,8 @@ async function main() {
       { name: "reconciliation", worker: reconciliationWorker, intervalMs: reconciliationIntervalMs },
       { name: "settlement_sweep", worker: settlementSweepWorker, intervalMs: settlementSweepIntervalMs },
       { name: "progression_sweep", worker: progressionSweepWorker, intervalMs: progressionSweepIntervalMs },
+      { name: "tournament_sweep", worker: tournamentSweepWorker, intervalMs: tournamentSweepIntervalMs },
+      { name: "challenge_expiry", worker: challengeExpiryWorker, intervalMs: challengeExpiryIntervalMs },
     ],
     logger,
     metrics,

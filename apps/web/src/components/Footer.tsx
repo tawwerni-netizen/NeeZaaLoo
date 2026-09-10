@@ -15,6 +15,7 @@ export function Footer() {
           <LocaleLink href="/learn">{t("footer.learn")}</LocaleLink>
           <LocaleLink href="/tournaments">{t("footer.tournaments")}</LocaleLink>
           <LocaleLink href="/rank">{t("footer.leaderboard")}</LocaleLink>
+          <LocaleLink href="/fair-play">{t("footer.fair_play")}</LocaleLink>
           <LocaleLink href="/support">{t("footer.support")}</LocaleLink>
         </nav>
         <p className={styles.copy}>{t("footer.copyright", { year: String(new Date().getFullYear()) })}</p>

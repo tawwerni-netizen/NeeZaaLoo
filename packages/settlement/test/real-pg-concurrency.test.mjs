@@ -26,26 +26,16 @@ import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { createPgAdapter } from "../../ledger/src/pg-adapter.mjs";
 import { migrate } from "../../ledger/src/migrate.mjs";
+import { provisionRealPgDatabase } from "../../ledger/test-support/real-pg-db.mjs";
 import { createSettlementService } from "../src/settle.mjs";
 import { createProgressionService } from "../../progression/src/service.mjs";
 import { createExpService } from "../../profile/src/exp.mjs";
 import { createAchievementService } from "../../profile/src/achievements.mjs";
 import { createBadgeService } from "../../profile/src/badges.mjs";
+import { createMasteryService } from "../../mastery/src/service.mjs";
+import { createStreakService } from "../../engagement/src/streaks.mjs";
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/skill_platform_test";
-
-let reachable = true;
-let reachabilityError = null;
-try {
-  const probe = new pg.Client({ connectionString: TEST_DATABASE_URL });
-  await probe.connect();
-  await probe.query("SELECT 1");
-  await probe.end();
-} catch (e) {
-  reachable = false;
-  reachabilityError = e;
-}
+const { reachable, reachabilityError, TEST_DATABASE_URL, drop } = await provisionRealPgDatabase();
 
 async function connection() {
   const client = new pg.Client({ connectionString: TEST_DATABASE_URL });
@@ -55,7 +45,9 @@ async function connection() {
   const exp = createExpService(db);
   const achievements = createAchievementService(db);
   const badges = createBadgeService(db);
-  const progression = createProgressionService(db, { exp, achievements, badges });
+  const mastery = createMasteryService(db);
+  const streaks = createStreakService(db);
+  const progression = createProgressionService(db, { exp, achievements, badges, mastery, streaks });
   return { client, db, settlement, exp, progression };
 }
 
@@ -84,7 +76,7 @@ describe(
       await migrate(admin.db);
     });
 
-    after(async () => { await admin.client.end(); });
+    after(async () => { await admin.client.end(); await drop(); });
 
     async function seedPlayer(playerId) {
       await admin.client.query("INSERT INTO player (id, handle) VALUES ($1,$1)", [playerId]);

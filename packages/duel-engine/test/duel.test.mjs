@@ -126,6 +126,25 @@ describe("createDuel and start: state transitions and clock models", () => {
     assert.equal(sim.clock.durationMs, 20_000);
   });
 
+  test("an ALTERNATING clock starts ticking against whoever the plugin's own challenge actually hands the first move to -- not always seat 0", () => {
+    // Every existing launch plugin happens to open with seat 0 to move,
+    // which is exactly what let this go unnoticed: a plugin whose real
+    // opening leader is seat 1 (Dominoes: whoever holds the highest
+    // double leads) must still get a clock that ticks against seat 1
+    // from the first second, in sync with the plugin's own state.turn --
+    // not a clock silently defaulted to seat 0 regardless.
+    const seat1Leads = createDuel({
+      duelId: "d3", plugin: makeCounterPlugin({ firstMover: 1 }), players: ["alice", "bob"], seed: "s", timeControl: ALT_TC, now: 0,
+    });
+    assert.equal(seat1Leads.clock.toMove, 1);
+    assert.equal(seat1Leads.state.turn, 1);
+
+    const seat0Leads = createDuel({
+      duelId: "d4", plugin: makeCounterPlugin({ firstMover: 0 }), players: ["alice", "bob"], seed: "s", timeControl: ALT_TC, now: 0,
+    });
+    assert.equal(seat0Leads.clock.toMove, 0);
+  });
+
   test("start() stamps the clock from the moment play ACTUALLY begins, not from creation time", () => {
     const duel = createDuel({ duelId: "d1", plugin: makeCounterPlugin(), players: ["alice", "bob"], seed: "s", timeControl: ALT_TC, now: 1000 });
     assert.equal(duel.clock.turnStartedAt, 1000);
@@ -192,6 +211,54 @@ describe("runIntent: ALTERNATING state transitions", () => {
     assert.equal(duel.clock.toMove, 1, "turn passed to seat 1");
     assert.equal(duel.clock.remaining[0], 10_000 - 2000 + 500, "charged 2s, credited the increment");
     assert.equal(duel.clock.turnStartedAt, 3000);
+  });
+
+  test("a ply that leaves the SAME seat to move (a checkers multi-jump, a Backgammon multi-die turn) charges elapsed time but does not hand the clock to the other seat", () => {
+    // A minimal stand-in for exactly this shape: `intent > 0` continues
+    // the SAME seat's turn (state.turn unchanged, e.g. more dice/jumps
+    // left); `intent < 0` ends it (state.turn flips). Neither existing
+    // fixture models a same-seat multi-ply turn, so this is inline.
+    const stickyPlugin = {
+      id: "sticky", version: 1, turnModel: "ALTERNATING",
+      createChallenge: () => ({ state: { turn: 0, plies: 0 }, publicSeed: null }),
+      rehydrate: () => ({ state: { turn: 0, plies: 0 } }),
+      applyIntent(state, intent, ctx) {
+        const continues = intent > 0;
+        return {
+          ok: true,
+          state: { turn: continues ? state.turn : state.turn ^ 1, plies: state.plies + 1 },
+          record: { seat: ctx.seat },
+          events: [],
+        };
+      },
+      evaluate: () => null,
+      score: () => [0, 0],
+      project: (s) => s,
+      fairPlaySignals: () => [],
+      serializeReplay: (s) => s,
+    };
+
+    const duel = live(stickyPlugin, ALT_TC, 1000);
+    // First ply: alice continues her own turn (like landing mid-multi-jump
+    // with another capture available, or one die of a Backgammon roll
+    // played with more still to use).
+    const r1 = runIntent(duel, stickyPlugin, { playerId: "alice", intent: 1 }, 2000); // 1s elapsed
+    assert.equal(r1.ok, true);
+    assert.equal(duel.clock.toMove, 0, "still alice's turn -- the clock must not have handed off");
+    assert.equal(duel.clock.remaining[0], 10_000 - 1000, "charged the 1s, but NO increment yet -- the turn has not ended");
+    assert.equal(duel.clock.turnStartedAt, 2000, "her own thinking clock for the next ply starts fresh from here");
+
+    // Bob could not have moved in between -- it was never his turn.
+    const wrongTurn = runIntent(duel, stickyPlugin, { playerId: "bob", intent: -1 }, 2500);
+    assert.equal(wrongTurn.ok, false);
+    assert.equal(wrongTurn.reason, Reject.NOT_YOUR_TURN);
+
+    // Second ply: alice ends her turn (the last die used, the last jump
+    // in the chain). NOW the clock hands off, and the increment applies.
+    const r2 = runIntent(duel, stickyPlugin, { playerId: "alice", intent: -1 }, 2500); // 0.5s elapsed
+    assert.equal(r2.ok, true);
+    assert.equal(duel.clock.toMove, 1, "the turn actually ended -- now it hands off");
+    assert.equal(duel.clock.remaining[0], 10_000 - 1000 - 500 + 500, "charged, THEN credited the increment on the handoff ply");
   });
 
   test("the return value surfaces only the LAST event this intent produced -- the full log has all of them", () => {

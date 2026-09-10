@@ -32,11 +32,6 @@
   padding-block: var(--nz-space-8);
 }
 
-.chatSlot {
-  max-width: 480px;
-  margin: 0 auto var(--nz-space-8);
-}
-
 .drawBanner {
   display: flex;
   align-items: center;

@@ -9,10 +9,14 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { formatPercent } from "@/lib/i18n/format";
 import { get } from "@/lib/api";
+import { UpcomingTournaments } from "@/components/tournaments/UpcomingTournaments";
+import { getGame } from "@/lib/games";
 import styles from "./home.module.css";
 
 type GlobalSkill = { score: number | null; breakdown: { gameId: string; percentile: number }[] };
 type Duel = { id: string; game_id: string; status: string; result: string | null; created_at: string };
+type DailyChallenge = { code: string; gameId: string | null; progress: number; target: number; expReward: number; completed: boolean };
+type Recommendation = { gameId: string; reasonKey: string; reasonData: { category?: string; fromGame?: string } };
 
 export default function HomePage() {
   return (
@@ -28,11 +32,22 @@ function HomeContent() {
   const { t, locale } = useI18n();
   const [skill, setSkill] = useState<GlobalSkill | null>(null);
   const [recent, setRecent] = useState<Duel[]>([]);
+  const [challenges, setChallenges] = useState<DailyChallenge[] | null>(null);
+  const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null);
 
   useEffect(() => {
     void get<GlobalSkill>("/v1/me/global-skill").then(setSkill).catch(() => setSkill(null));
     void get<{ duels: Duel[] }>("/v1/me/duels?limit=5").then((r) => setRecent(r.duels)).catch(() => setRecent([]));
+    void get<{ challenges: DailyChallenge[] }>("/v1/me/daily-challenges")
+      .then((r) => setChallenges(r.challenges)).catch(() => setChallenges([]));
+    void get<{ recommendations: Recommendation[] }>("/v1/me/recommendations")
+      .then((r) => setRecommendations(r.recommendations)).catch(() => setRecommendations([]));
   }, []);
+
+  function gameName(gameId: string): string {
+    const nameKey = getGame(gameId)?.nameKey ?? gameId;
+    return t(`common.game_names.${nameKey}`);
+  }
 
   return (
     <main className="nz-container">
@@ -84,9 +99,53 @@ function HomeContent() {
 
         <div className={styles.card}>
           <h2 className={styles.cardTitle}>{t("dashboard.tournaments.title")}</h2>
-          <p className={styles.emptyState}>{t("dashboard.tournaments.empty")}</p>
+          <UpcomingTournaments variant="compact" emptyText={t("dashboard.tournaments.empty")} limit={3} />
           <LocaleLink href="/tournaments" className={styles.cardLink}>{t("dashboard.tournaments.browse")}</LocaleLink>
         </div>
+
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>{t("dailyChallenges.title")}</h2>
+          {challenges === null ? null : challenges.length === 0 ? (
+            <p className={styles.emptyState}>{t("dashboard.recent.empty")}</p>
+          ) : (
+            <ul className={styles.challengeList}>
+              {challenges.map((c) => (
+                <li key={c.code} className={styles.challengeItem}>
+                  <div className={styles.challengeRow}>
+                    <span className={c.completed ? styles.challengeDone : undefined}>
+                      {t(`dailyChallenges.metric.${c.code}`, { target: c.target })}
+                    </span>
+                    <span className="nz-num">{c.completed ? t("dailyChallenges.completed_label") : `${c.progress}/${c.target}`}</span>
+                  </div>
+                  <div className={styles.challengeBar}>
+                    <div className={styles.challengeBarFill} style={{ width: `${Math.min(100, (c.progress / c.target) * 100)}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {recommendations !== null && recommendations.length > 0 && (
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>{t("recommendations.title")}</h2>
+            <ul className={styles.recommendationList}>
+              {recommendations.map((r) => (
+                <li key={r.gameId}>
+                  <LocaleLink href={`/play/${r.gameId}`} className={styles.recommendationLink}>
+                    {r.reasonKey === "improving_related"
+                      ? t("recommendations.improving_related", {
+                          fromGame: gameName(r.reasonData.fromGame ?? ""), game: gameName(r.gameId),
+                        })
+                      : t("recommendations.strong_category", {
+                          category: t(`recommendations.category.${r.reasonData.category}`), game: gameName(r.gameId),
+                        })}
+                  </LocaleLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
     </main>
   );

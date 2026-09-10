@@ -20,25 +20,15 @@ import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { createPgAdapter } from "../../ledger/src/pg-adapter.mjs";
 import { migrate } from "../../ledger/src/migrate.mjs";
+import { provisionRealPgDatabase } from "../../ledger/test-support/real-pg-db.mjs";
 import { createExpService } from "../../profile/src/exp.mjs";
 import { createAchievementService } from "../../profile/src/achievements.mjs";
 import { createBadgeService } from "../../profile/src/badges.mjs";
+import { createMasteryService } from "../../mastery/src/service.mjs";
+import { createStreakService } from "../../engagement/src/streaks.mjs";
 import { createProgressionService } from "../src/service.mjs";
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/skill_platform_test";
-
-let reachable = true;
-let reachabilityError = null;
-try {
-  const probe = new pg.Client({ connectionString: TEST_DATABASE_URL });
-  await probe.connect();
-  await probe.query("SELECT 1");
-  await probe.end();
-} catch (e) {
-  reachable = false;
-  reachabilityError = e;
-}
+const { reachable, reachabilityError, TEST_DATABASE_URL, drop } = await provisionRealPgDatabase();
 
 async function connection() {
   const client = new pg.Client({ connectionString: TEST_DATABASE_URL });
@@ -47,7 +37,9 @@ async function connection() {
   const exp = createExpService(db);
   const achievements = createAchievementService(db);
   const badges = createBadgeService(db);
-  const progression = createProgressionService(db, { exp, achievements, badges });
+  const mastery = createMasteryService(db);
+  const streaks = createStreakService(db);
+  const progression = createProgressionService(db, { exp, achievements, badges, mastery, streaks });
   return { client, db, exp, achievements, badges, progression };
 }
 
@@ -74,20 +66,16 @@ describe(
     before(async () => {
       admin = await connection();
       await migrate(admin.db);
-      // This is a SHARED, persistent real-Postgres database (the same one
-      // every real-pg test file in this repo runs against, never
-      // truncated between runs) -- earlier test runs today can leave
-      // pending SETTLED-but-unprocessed duels/tournaments behind. A
-      // `limit:10` sweep run against a backlog deeper than 10 would fetch
-      // only the OLDEST rows and never reach the fresh ones THIS file's
-      // own tests create, which has nothing to do with the property under
-      // test here. Drain any backlog once, up front, so every test below
-      // starts from "nothing pending except what it itself just seeded."
+      // This database is fresh per run (see provisionRealPgDatabase), but a
+      // `limit:10` sweep is still only safe to rely on if nothing is
+      // pending beforehand -- drain any backlog up front so every test
+      // below starts from "nothing pending except what it itself just
+      // seeded," regardless of what earlier tests in this same file left.
       await admin.progression.progressionDue({ limit: 100000 });
       await admin.progression.tournamentProgressionDue({ limit: 100000 });
     });
 
-    after(async () => { await admin.client.end(); });
+    after(async () => { await admin.client.end(); await drop(); });
 
     async function seedPlayer(playerId) {
       await admin.client.query("INSERT INTO player (id, handle) VALUES ($1,$1)", [playerId]);
@@ -103,8 +91,8 @@ describe(
 
     async function seedSettledTournament(tournamentId, participants) {
       await admin.client.query(
-        `INSERT INTO tournament (id, game_id, format, status, capacity, time_control, registration_closes_at, completed_at)
-         VALUES ($1,'chess','SINGLE_ELIMINATION','COMPLETED',4,'{}'::jsonb,now(),now())`,
+        `INSERT INTO tournament (id, game_id, format, status, capacity, time_control, registration_closes_at, completed_at, ruleset_version)
+         VALUES ($1,'chess','SINGLE_ELIMINATION','COMPLETED',4,'{}'::jsonb,now(),now(),1)`,
         [tournamentId]
       );
       let rank = 1;

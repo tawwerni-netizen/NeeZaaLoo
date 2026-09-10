@@ -1,0 +1,148 @@
+/* Speed Math's own identity: no board at all -- a single, oversized,
+   unmistakably legible equation card. Energetic without being loud: one
+   accent for focus, semantic green/red ONLY for the instant of feedback,
+   never as decoration. Per the brief's own "brain-focused, highly
+   readable" -- every choice here optimises for reading one number fast,
+   nothing else competes for attention. */
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-6);
+  width: 100%;
+}
+
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-6);
+}
+
+.scoreItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-1);
+}
+
+.scoreLabel {
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+}
+
+.scoreValue {
+  font-size: var(--nz-text-2xl);
+  font-weight: 800;
+}
+
+.scoreDivider {
+  width: 1px;
+  height: 32px;
+  background: var(--nz-line);
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-6);
+  width: min(92vw, 480px);
+  padding: var(--nz-space-10) var(--nz-space-8);
+  background: var(--nz-surface-1);
+  border: 2px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3));
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out), background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.card.correct {
+  border-color: var(--nz-win);
+  background: color-mix(in srgb, var(--nz-win) 12%, var(--nz-surface-1));
+}
+
+.card.incorrect {
+  border-color: var(--nz-loss);
+  background: color-mix(in srgb, var(--nz-loss) 12%, var(--nz-surface-1));
+}
+
+.equation {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--nz-space-4);
+  min-height: 64px;
+}
+
+.operand {
+  font-size: clamp(36px, 9vw, 56px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.operator {
+  font-size: clamp(28px, 6vw, 40px);
+  font-weight: 700;
+  color: var(--nz-accent);
+}
+
+.waiting {
+  font-size: var(--nz-text-lg);
+  color: var(--nz-text-3);
+}
+
+.answerRow {
+  display: flex;
+  gap: var(--nz-space-3);
+  width: 100%;
+}
+
+.answerInput {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--nz-text-2xl);
+  font-weight: 700;
+  text-align: center;
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  color: inherit;
+}
+
+.answerInput:focus-visible {
+  outline: 2px solid var(--nz-accent);
+  outline-offset: 1px;
+}
+
+.answerInput:disabled {
+  opacity: 0.5;
+}
+
+.submitButton {
+  padding: 0 var(--nz-space-6);
+  border-radius: var(--nz-radius-md);
+  border: none;
+  background: var(--nz-accent);
+  color: var(--nz-accent-contrast);
+  font-weight: 700;
+  font-size: var(--nz-text-lg);
+  cursor: pointer;
+  transition: transform var(--nz-dur-instant) var(--nz-ease-out), opacity var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.submitButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.submitButton:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+.progress {
+  color: var(--nz-text-3);
+  font-size: var(--nz-text-sm);
+}

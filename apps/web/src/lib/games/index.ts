@@ -5,6 +5,15 @@
  * else in the generic factory changes.
  */
 import "./chess";
+import "./checkers";
+import "./connect-four";
+import "./xo";
+import "./speed-math";
+import "./dominoes";
+import "./backgammon";
+import "./seega";
+import "./reversi";
+import "./gomoku";
 
 export { getGame, listGames } from "./registry";
 export type { GamePlugin, BoardProps, Difficulty } from "./types";

@@ -1,37 +1,44 @@
 "use client";
 
 /**
- * One tournament: register/withdraw, and -- the actual integration point
- * with the rest of the Game Factory -- a live pairing's duelId links
- * straight into /game/[duelId], the SAME DuelShell every other mode uses.
- * Nothing here renders a board, a clock, or a result; a tournament duel is
- * an ordinary duel the moment it exists.
+ * One tournament: register/withdraw, the real bracket (every pairing the
+ * server has actually created, grouped by round -- never a fabricated
+ * bracket shape for rounds that don't exist yet), and the actual
+ * integration point with the rest of the Game Factory -- a live pairing's
+ * duelId links straight into /game/[duelId], the SAME DuelShell every
+ * other mode uses. Nothing here renders a board, a clock, or a result; a
+ * tournament duel is an ordinary duel the moment it exists. Viewing is
+ * public (the API is anonymous); only register/withdraw require login.
  */
 import { use, useCallback, useEffect, useState } from "react";
 import { Header } from "@/components/Header";
-import { RequireAuth } from "@/components/RequireAuth";
+import { Footer } from "@/components/Footer";
 import { LocaleLink } from "@/components/LocaleLink";
 import { Button } from "@/components/Button";
 import { get, post, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { formatDate } from "@/lib/i18n/format";
+import { getGame } from "@/lib/games";
 import styles from "./tournament-detail.module.css";
 
 type TournamentDetail = {
   id: string; game_id: string; format: "SINGLE_ELIMINATION" | "SWISS"; status: string;
   tier: "FREE" | "RANKED" | "CASH"; entry_fee_minor: string; asset: string | null;
-  capacity: number; registeredCount: number; starts_at: string | null;
+  capacity: number; registeredCount: number; title: string | null; description: string | null;
+  eligibility: { minRatingX100?: number; maxRatingX100?: number } | null;
+  scheduled_starts_at: string | null; starts_at: string | null;
+  registered: boolean;
 };
 type Pairing = { round_number: number; slot: number; seat_0: string; seat_1: string | null; status: string; result: string | null; duel_id: string | null };
 type Standing = { player_id: string; points: number; wins: number; losses: number; draws: number; rank: number | null };
 type Preview = { nickname: string };
 
-const GAME_NAME_KEY: Record<string, string> = { chess: "chess", "speed-math": "speed_math" };
 const REGISTER_ERROR_KEYS: Record<string, string> = {
   AT_CAPACITY: "tournamentsPage.error_at_capacity",
   NOT_OPEN: "tournamentsPage.error_not_open",
   ALREADY_REGISTERED: "tournamentsPage.error_already_registered",
+  NOT_ELIGIBLE: "tournamentsPage.error_not_eligible",
 };
 
 export default function TournamentDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -50,6 +57,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
     try {
       const detail = await get<TournamentDetail>(`/v1/tournaments/${id}`);
       setTournament(detail);
+      setRegistered(detail.registered);
       const [pairingRes, standingRes] = await Promise.all([
         get<{ pairings: Pairing[] }>(`/v1/tournaments/${id}/pairings`),
         get<{ standings: Standing[] }>(`/v1/tournaments/${id}/standings`).catch(() => ({ standings: [] })),
@@ -113,32 +121,48 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
 
   if (tournament === "not_found") {
     return (
-      <RequireAuth>
+      <>
         <Header />
         <main className="nz-container"><p>{t("tournamentsPage.not_found")}</p></main>
-      </RequireAuth>
+      </>
     );
   }
   if (!tournament) {
-    return <RequireAuth><Header /><main className="nz-container" /></RequireAuth>;
+    return <><Header /><main className="nz-container" /></>;
   }
 
+  const nameKey = getGame(tournament.game_id)?.nameKey ?? tournament.game_id;
+  const startTarget = tournament.scheduled_starts_at ?? tournament.starts_at;
   const myLivePairing = player
     ? pairings.find((p) => (p.seat_0 === player.id || p.seat_1 === player.id) && p.status === "LIVE" && p.duel_id)
     : undefined;
 
+  const rounds = new Map<number, Pairing[]>();
+  for (const p of pairings) {
+    if (!rounds.has(p.round_number)) rounds.set(p.round_number, []);
+    rounds.get(p.round_number)!.push(p);
+  }
+  const roundNumbers = [...rounds.keys()].sort((a, b) => a - b);
+
   return (
-    <RequireAuth>
+    <>
       <Header />
       <main className="nz-container">
         <LocaleLink href="/tournaments" className={styles.back}>{t("tournamentsPage.back")}</LocaleLink>
-        <h1 className={styles.heading}>{t(`common.game_names.${GAME_NAME_KEY[tournament.game_id] ?? tournament.game_id}`)}</h1>
+        <div className={styles.headingRow}>
+          <span className={styles.gameName}>{t(`common.game_names.${nameKey}`)}</span>
+          <span className={`${styles.statusPill} ${styles[`status_${tournament.status}`] ?? ""}`}>
+            {t(`tournamentsPage.status.${tournament.status}`)}
+          </span>
+        </div>
+        <h1 className={styles.heading}>{tournament.title ?? t(`tournamentsPage.format.${tournament.format}`)}</h1>
+        {tournament.description && <p className={styles.description}>{tournament.description}</p>}
+
         <div className={styles.metaRow}>
           <span>{t(`tournamentsPage.format.${tournament.format}`)}</span>
-          <span>{t(`tournamentsPage.status.${tournament.status}`)}</span>
           <span>{tournament.tier === "FREE" ? t("tournamentsPage.entry_free") : t("tournamentsPage.entry_fee", { amount: Number(tournament.entry_fee_minor) / 100, asset: tournament.asset ?? "" })}</span>
-          <span>{t("tournamentsPage.registered_count", { count: tournament.registeredCount, capacity: tournament.capacity })}</span>
-          {tournament.starts_at && <span>{t("tournamentsPage.starts_at", { date: formatDate(tournament.starts_at, locale) })}</span>}
+          <span className="nz-num">{t("tournamentsPage.registered_count", { count: tournament.registeredCount, capacity: tournament.capacity })}</span>
+          {startTarget && <span>{t("tournamentsPage.starts_at", { date: formatDate(startTarget, locale) })}</span>}
         </div>
 
         {myLivePairing?.duel_id && (
@@ -147,9 +171,11 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
           </LocaleLink>
         )}
 
-        {tournament.status === "REGISTRATION_OPEN" && (
+        {tournament.status === "REGISTRATION" && (
           <div className={styles.actions}>
-            {registered ? (
+            {!player ? (
+              <LocaleLink href="/login"><Button variant="primary">{t("tournamentsPage.login_to_register")}</Button></LocaleLink>
+            ) : registered ? (
               <Button variant="secondary" onClick={() => void withdraw()} disabled={busy}>{t("tournamentsPage.withdraw")}</Button>
             ) : (
               <Button variant="primary" onClick={() => void register()} disabled={busy}>
@@ -159,6 +185,33 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
             {registered && !error && <span className={styles.registeredNote}>{t("tournamentsPage.registered")}</span>}
             {error && <p className={styles.error} role="alert">{error}</p>}
           </div>
+        )}
+
+        {roundNumbers.length > 0 && (
+          <section className={styles.bracket}>
+            <h2 className={styles.sectionHeading}>{t("tournamentsPage.pairings_heading")}</h2>
+            {roundNumbers.map((rn) => (
+              <div key={rn} className={styles.round}>
+                <h3 className={styles.roundLabel}>{t("tournamentsPage.round_label", { number: rn })}</h3>
+                <div className={styles.pairingList}>
+                  {rounds.get(rn)!.map((p) => (
+                    <div key={`${rn}-${p.slot}`} className={styles.pairingRow}>
+                      <span className={styles.pairingPlayers}>
+                        <span>{previews[p.seat_0]?.nickname ?? p.seat_0}</span>
+                        <span className={styles.pairingVs}>{t("watch.vs")}</span>
+                        <span>{p.seat_1 ? (previews[p.seat_1]?.nickname ?? p.seat_1) : t("tournamentsPage.bye")}</span>
+                      </span>
+                      {p.status === "LIVE" && p.duel_id ? (
+                        <LocaleLink href={`/game/${p.duel_id}`} className={styles.watchLink}>{t("watch.watch_cta")}</LocaleLink>
+                      ) : (
+                        <span className={styles.pairingResult}>{p.result ?? t(`tournamentsPage.status.${p.status}`)}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
         )}
 
         {standings.length > 0 && (
@@ -187,6 +240,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
           </section>
         )}
       </main>
-    </RequireAuth>
+      <Footer />
+    </>
   );
 }

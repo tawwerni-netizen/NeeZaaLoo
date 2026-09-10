@@ -18,25 +18,13 @@ import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { createPgAdapter } from "../../ledger/src/pg-adapter.mjs";
 import { migrate } from "../../ledger/src/migrate.mjs";
+import { provisionRealPgDatabase } from "../../ledger/test-support/real-pg-db.mjs";
 import { createNicknameService } from "../src/nickname.mjs";
 import { createExpService } from "../src/exp.mjs";
 import { createAchievementService } from "../src/achievements.mjs";
 import { createBadgeService, BadgeSource } from "../src/badges.mjs";
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/skill_platform_test";
-
-let reachable = true;
-let reachabilityError = null;
-try {
-  const probe = new pg.Client({ connectionString: TEST_DATABASE_URL });
-  await probe.connect();
-  await probe.query("SELECT 1");
-  await probe.end();
-} catch (e) {
-  reachable = false;
-  reachabilityError = e;
-}
+const { reachable, reachabilityError, TEST_DATABASE_URL, drop } = await provisionRealPgDatabase();
 
 async function connection() {
   const client = new pg.Client({ connectionString: TEST_DATABASE_URL });
@@ -62,7 +50,7 @@ describe(
       await migrate(admin.db);
     });
 
-    after(async () => { await admin.client.end(); });
+    after(async () => { await admin.client.end(); await drop(); });
 
     test("two DIFFERENT players simultaneously claiming the SAME nickname: exactly one wins", async () => {
       const nickname = `Race${randomUUID().replace(/-/g, "").slice(0, 10)}`;

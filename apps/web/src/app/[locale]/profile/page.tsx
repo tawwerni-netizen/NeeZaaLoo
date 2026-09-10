@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/Button";
 import { Avatar } from "@/components/profile/Avatar";
 import { badgeIcon } from "@/components/profile/badge-icons";
@@ -54,7 +55,12 @@ function ProfileContent() {
     }
   }
 
-  if (!profile) return <><Header /><div className={styles.wrap} /></>;
+  async function selectFrame(code: string | null) {
+    await post("/v1/me/frame", { code });
+    await reload();
+  }
+
+  if (!profile) return <><Header /><div className={styles.wrap} /><Footer /></>;
 
   return (
     <>
@@ -65,7 +71,9 @@ function ProfileContent() {
 
         <div className={styles.header}>
           <div>
-            <Avatar nickname={profile.nickname} avatarUrl={profile.avatarUrl} size={88} />
+            <span className={`${styles.avatarFrame} ${profile.selectedFrame ? styles[`frame_${profile.selectedFrame}`] ?? "" : ""}`}>
+              <Avatar nickname={profile.nickname} avatarUrl={profile.avatarUrl} size={88} />
+            </span>
             <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => void onAvatarSelected(e)} />
             <Button variant="ghost" onClick={() => fileInput.current?.click()} disabled={uploading}>
               {uploading ? t("profile.uploading_avatar") : t("profile.change_avatar_cta")}
@@ -112,12 +120,40 @@ function ProfileContent() {
           {profile.ratings.length === 0 ? (
             <p className={styles.empty}>{t("profile.no_ratings")}</p>
           ) : (
-            profile.ratings.map((r) => (
-              <div key={r.gameId} className={styles.ratingRow}>
-                <span>{r.displayName}</span>
-                <span className={`nz-num ${styles.ratingValue}`}>{Math.round(r.rating)}</span>
+            profile.ratings.map((r) => {
+              const m = profile.mastery.find((mm) => mm.gameId === r.gameId);
+              const peak = profile.highestRatings[r.gameId];
+              return (
+                <div key={r.gameId} className={styles.ratingRow}>
+                  <span className={styles.ratingGameName}>
+                    {r.displayName}
+                    {m && <span className={styles.masteryPill}>{t(`profile.mastery_level.${m.level}`)}</span>}
+                  </span>
+                  <span className={styles.ratingNumbers}>
+                    {peak != null && peak > r.rating && (
+                      <span className={styles.peakRating}>{t("profile.highest_rating_label")} {Math.round(peak)}</span>
+                    )}
+                    <span className={`nz-num ${styles.ratingValue}`}>{Math.round(r.rating)}</span>
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>{t("profile.streak_title")}</h2>
+          {profile.streak.current === 0 ? (
+            <p className={styles.empty}>{t("profile.streak_none")}</p>
+          ) : (
+            <>
+              <div className={styles.streakRow}>
+                <span className={`nz-num ${styles.streakValue}`}>{profile.streak.current}</span>
+                <span>{t("profile.streak_current", { count: profile.streak.current })}</span>
               </div>
-            ))
+              <p className={styles.streakLongest}>{t("profile.streak_longest", { count: profile.streak.longest })}</p>
+              {profile.streak.atRisk && <p className={styles.streakAtRisk}>{t("profile.streak_at_risk")}</p>}
+            </>
           )}
         </div>
 
@@ -128,6 +164,8 @@ function ProfileContent() {
             <div><div className={`nz-num ${styles.statValue}`}>{profile.stats.wins}</div><div className={styles.statLabel}>{t("profile.wins_label")}</div></div>
             <div><div className={`nz-num ${styles.statValue}`}>{profile.stats.losses}</div><div className={styles.statLabel}>{t("profile.losses_label")}</div></div>
             <div><div className={`nz-num ${styles.statValue}`}>{winRate(profile.stats)}</div><div className={styles.statLabel}>{t("profile.win_rate_label")}</div></div>
+            <div><div className={`nz-num ${styles.statValue}`}>{profile.tournaments.played}</div><div className={styles.statLabel}>{t("profile.tournaments_played_label")}</div></div>
+            <div><div className={`nz-num ${styles.statValue}`}>{profile.tournaments.won}</div><div className={styles.statLabel}>{t("profile.tournaments_won_label")}</div></div>
           </div>
         </div>
 
@@ -155,10 +193,36 @@ function ProfileContent() {
           )}
         </div>
 
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>{t("profile.frames_title")}</h2>
+          {profile.frames.length === 0 ? (
+            <p className={styles.empty}>{t("profile.no_frames")}</p>
+          ) : (
+            <div className={styles.frameList}>
+              {profile.frames.map((code) => {
+                const worn = profile.selectedFrame === code;
+                return (
+                  <div key={code} className={styles.frameRow}>
+                    <span className={`${styles.frameSwatch} ${styles[`frame_${code}`] ?? ""}`} aria-hidden="true" />
+                    <span>{t(`profile.achievements_catalog.${code}`)}</span>
+                    <Button
+                      variant={worn ? "secondary" : "ghost"}
+                      onClick={() => void selectFrame(worn ? null : code)}
+                    >
+                      {worn ? t("profile.frame_selected_cta") : t("profile.frame_select_cta")}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <p className={styles.memberSince}>
           {t("profile.member_since_label")} {new Date(profile.memberSince).toLocaleDateString()}
         </p>
       </div>
+      <Footer />
     </>
   );
 }

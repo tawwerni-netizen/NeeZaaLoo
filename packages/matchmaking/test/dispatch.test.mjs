@@ -28,10 +28,12 @@ const TC_SPEED = { durationMs: 30000 };
 async function fresh() {
   const db = await PGlite.create();
   await migrate(db);
-  await db.query(
-    "INSERT INTO game (id, display_name, plugin_version, is_live, cash_enabled) VALUES ('speed-math','Speed Math',1,TRUE,TRUE)"
-  );
-  await db.query("UPDATE game SET cash_enabled = TRUE WHERE id = 'chess'");
+  // Both rows already exist from migration 0029 (speed-math) and 0003
+  // (chess) -- this test's own cash-tier dispatch scenarios need both
+  // flagged cash-enabled, which is a test-local override, never the real
+  // launch policy (see migration 0029's own comment on why speed-math
+  // ships FREE only).
+  await db.query("UPDATE game SET cash_enabled = TRUE WHERE id IN ('chess', 'speed-math')");
 
   const mm = createMatchmakingService(db);
   const settlement = createSettlementService(db);

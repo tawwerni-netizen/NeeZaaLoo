@@ -11,24 +11,12 @@ import assert from "node:assert/strict";
 import pg from "pg";
 import { createPgAdapter } from "../../ledger/src/pg-adapter.mjs";
 import { migrate } from "../../ledger/src/migrate.mjs";
+import { provisionRealPgDatabase } from "../../ledger/test-support/real-pg-db.mjs";
 import { createReconciliationService, RunOutcome } from "../src/reconcile.mjs";
 
 const { Client } = pg;
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "postgres://postgres:postgres@localhost:5432/skill_platform_test";
-
-let reachable = true;
-let reachabilityError = null;
-try {
-  const probe = new Client({ connectionString: TEST_DATABASE_URL });
-  await probe.connect();
-  await probe.query("SELECT 1");
-  await probe.end();
-} catch (e) {
-  reachable = false;
-  reachabilityError = e;
-}
+const { reachable, reachabilityError, TEST_DATABASE_URL, drop } = await provisionRealPgDatabase();
 
 async function connection() {
   const client = new Client({ connectionString: TEST_DATABASE_URL });
@@ -45,7 +33,7 @@ describe("reconciliation under real concurrency", { skip: reachable ? false : `P
     await migrate(createPgAdapter(admin));
   });
 
-  after(async () => { await admin.end(); });
+  after(async () => { await admin.end(); await drop(); });
 
   test("a run already RUNNING (started by one connection) causes a second, genuinely independent connection's attempt to be skipped, not duplicated", async () => {
     const A = await connection();

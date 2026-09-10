@@ -73,6 +73,9 @@ export const ACTIONS = {
   "tournament.withdraw":     { capability: null, control: "TOURNAMENTS" },
   "tournament.read":         { capability: null },   // list/detail/standings/bracket/results -- read-only, public shape
   "global_skill.read":       { capability: null },   // own profile, leaderboards, per-game ratings
+  "notification.read":       { capability: null, selfOnly: true },
+  "player.daily_challenge.read": { capability: null, selfOnly: true },
+  "player.recommendation.read":  { capability: null, selfOnly: true },
 
   // --- Read surfaces ---------------------------------------------------------
   "admin.user.read":         { capability: "user.read" },
@@ -84,6 +87,16 @@ export const ACTIONS = {
   "admin.analytics.read":    { capability: "analytics.read" },
   "admin.audit.read":        { capability: "audit.read" },
   "admin.reconciliation.read": { capability: "reconciliation.read" },
+  // The Admin Payment & Stablecoin Control Center. Reading a rail's
+  // configuration, its live health, and whether a global switch is on is
+  // the same sensitivity tier as reconciliation.read/audit.read (aggregate
+  // operational visibility, no individual user data) -- granted to the same
+  // roles. control.read is deliberately its OWN capability, not folded into
+  // admin.control.toggle's existing "control.toggle": a role that can only
+  // SEE whether deposits are paused must not thereby gain the ability to
+  // pause them.
+  "admin.rail.read":    { capability: "rail.read" },
+  "admin.control.read": { capability: "control.read" },
 
   // --- Money -----------------------------------------------------------------
   "admin.withdrawal.review":  { capability: "withdrawal.review" },
@@ -91,6 +104,16 @@ export const ACTIONS = {
   "admin.withdrawal.reject":  { capability: "withdrawal.review", stepUp: true },
   "admin.adjustment.create":  { capability: "adjustment.create", stepUp: true, fourEyes: true },
   "admin.economy.change":     { capability: "economy.manage", stepUp: true, fourEyes: true },
+  // Enabling/disabling/pausing a rail, or editing its limits, is
+  // reversible, does not itself move a single unit of money (it only ever
+  // gates FUTURE deposit/withdrawal creation -- see rail_enabled_for() and
+  // payments.mjs's own railOperationAllowed()), and never touches history,
+  // an existing balance, or an in-flight operation's own state machine.
+  // That places it at economy.manage's tier -- step-up, no four-eyes --
+  // rather than withdrawal.approve's: turning USDT/TRC20 off is the same
+  // shape of decision as changing the platform's rake, not the same shape
+  // as releasing a specific payout.
+  "admin.rail.manage": { capability: "rail.manage", stepUp: true },
 
   // --- Trust & safety --------------------------------------------------------
   "admin.risk.decide":       { capability: "risk.decide", stepUp: true },
@@ -233,6 +256,7 @@ export const ROLE_CAPABILITIES = {
     "wallet.read", "ledger.read", "duel.read", "duel.void",
     "withdrawal.review", "withdrawal.approve",
     "adjustment.create", "economy.manage",
+    "rail.read", "rail.manage", "control.read",
     "risk.read", "risk.decide",
     "fairplay.read", "fairplay.decide", "fairplay.appeal",
     "content.moderate", "support.respond",
@@ -245,6 +269,7 @@ export const ROLE_CAPABILITIES = {
   ADMIN: [
     "user.read", "user.restrict",
     "wallet.read", "ledger.read", "duel.read",
+    "rail.read", "control.read",
     "risk.read", "fairplay.read",
     "content.moderate", "support.respond",
     "analytics.read", "audit.read",
@@ -256,12 +281,14 @@ export const ROLE_CAPABILITIES = {
     "user.read", "wallet.read", "ledger.read",
     "withdrawal.review", "withdrawal.approve",
     "adjustment.create", "economy.manage",
+    "rail.read", "rail.manage", "control.read",
     "analytics.read", "audit.read",
     "reconciliation.read", "reconciliation.decide",
   ],
   RISK_ADMIN: [
     "user.read", "user.restrict",
     "wallet.read", "ledger.read", "duel.read",
+    "rail.read", "control.read",
     "risk.read", "risk.decide",
     "fairplay.read",
     "withdrawal.review",              // may hold a payout, may NOT release one
@@ -283,10 +310,11 @@ export const ROLE_CAPABILITIES = {
     // exists through the ticket, and does not need the balance to answer it.
   ],
   ANALYST: [
-    "analytics.read", "duel.read", "reconciliation.read",
+    "analytics.read", "duel.read", "reconciliation.read", "rail.read", "control.read",
   ],
   READ_ONLY: [
     "user.read", "duel.read", "analytics.read", "audit.read", "reconciliation.read",
+    "rail.read", "control.read",
   ],
 };
 

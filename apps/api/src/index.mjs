@@ -28,7 +28,10 @@ import { createSettlementService } from "../../../packages/settlement/src/settle
 import { createTournamentService } from "../../../packages/tournament/src/tournament.mjs";
 import { createGlobalSkillService } from "../../../packages/global-skill/src/service.mjs";
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
+import { createRailService } from "../../../packages/payments/src/valuation.mjs";
+import { createHealthService } from "../../../packages/payments/src/health.mjs";
 import { createSandboxProvider } from "../../../packages/payments/src/provider.mjs";
+import { createChainReader } from "../../../packages/chain/src/reader.mjs";
 import { createReconciliationService } from "../../../packages/reconciliation/src/reconcile.mjs";
 import { createRbacService } from "../../../packages/authz/src/rbac.mjs";
 import { createEmailIdentityService } from "../../../packages/auth/src/email-identity.mjs";
@@ -45,8 +48,23 @@ import { createNicknameService } from "../../../packages/profile/src/nickname.mj
 import { createExpService } from "../../../packages/profile/src/exp.mjs";
 import { createAchievementService } from "../../../packages/profile/src/achievements.mjs";
 import { createBadgeService } from "../../../packages/profile/src/badges.mjs";
+import { createFrameService } from "../../../packages/profile/src/frames.mjs";
 import { createLocalAvatarStorage } from "../../../packages/profile/src/avatar-storage.mjs";
 import { createProfileService } from "../../../packages/profile/src/service.mjs";
+import { createMasteryService } from "../../../packages/mastery/src/service.mjs";
+import { createStreakService } from "../../../packages/engagement/src/streaks.mjs";
+import { createDailyChallengeService } from "../../../packages/engagement/src/daily-challenges.mjs";
+import { createRecommendationService } from "../../../packages/engagement/src/recommendations.mjs";
+import { ChessPlugin } from "../../../packages/game-chess/src/plugin.mjs";
+import { SpeedMathPlugin } from "../../../packages/game-speed-math/src/plugin.mjs";
+import { CheckersPlugin } from "../../../packages/game-checkers/src/plugin.mjs";
+import { ConnectFourPlugin } from "../../../packages/game-connect-four/src/plugin.mjs";
+import { XOPlugin } from "../../../packages/game-xo/src/plugin.mjs";
+import { DominoesPlugin } from "../../../packages/game-dominoes/src/plugin.mjs";
+import { BackgammonPlugin } from "../../../packages/game-backgammon/src/plugin.mjs";
+import { SeegaPlugin } from "../../../packages/game-seega/src/plugin.mjs";
+import { ReversiPlugin } from "../../../packages/game-reversi/src/plugin.mjs";
+import { GomokuPlugin } from "../../../packages/game-gomoku/src/plugin.mjs";
 import { createTicketService } from "../../../packages/support/src/ticket.mjs";
 import { createTicketNotificationFlow } from "../../../packages/support/src/notifications.mjs";
 import { createChannelService } from "../../../packages/chat/src/channels.mjs";
@@ -143,21 +161,47 @@ async function main() {
   const expService = createExpService(db);
   const achievementService = createAchievementService(db);
   const badgeService = createBadgeService(db);
+  const frameService = createFrameService(db);
+  const masteryService = createMasteryService(db);
+  const streakService = createStreakService(db);
+  const dailyChallenges = createDailyChallengeService(db);
+  const recommendations = createRecommendationService(db, masteryService);
+  const gamePlugins = new Map([
+    ["chess", ChessPlugin], ["speed-math", SpeedMathPlugin],
+    ["checkers", CheckersPlugin], ["connect-four", ConnectFourPlugin],
+    ["xo", XOPlugin], ["dominoes", DominoesPlugin], ["backgammon", BackgammonPlugin],
+    ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin],
+  ]);
   const profile = createProfileService(db, {
     nicknameService: createNicknameService(db),
-    expService, achievementService, badgeService,
+    expService, achievementService, badgeService, frameService,
     avatarStorage,
     globalSkill,
+    masteryService, streakService,
   });
   // Read-only bundle for GET /v1/admin/players/:id/progression -- see
   // server.mjs's own route for why this exposes no award/mutation path.
   const progression = { exp: expService, achievements: achievementService, badges: badgeService };
 
-  // Sandbox only -- see header comment and apps/worker/src/index.mjs.
+  // Sandbox only -- see header comment and apps/worker/src/index.mjs. `chain`
+  // is the real on-chain reader (packages/chain/src/reader.mjs): it honours
+  // CHAIN_READER=tron when configured and refuses to start under
+  // NODE_ENV=production without it, rather than silently verifying nothing.
   const provider = createSandboxProvider();
-  const chain = { async getIncoming() { return null; } };
+  const chain = createChainReader();
   const paymentSvc = createPaymentService(db, { provider, chain });
-  const reconciliation = createReconciliationService(db, { paymentSvc, provider, emit: logger.emit });
+  // `gamePlugins` (constructed above for the gateway's own plugin
+  // registry) also lets reconciliation's runReplayVerification() and
+  // runEvidenceCleanup() independently re-derive a settled cash duel's
+  // real result and check it against what was actually paid -- see
+  // reconcile.mjs's own header.
+  const reconciliation = createReconciliationService(db, { paymentSvc, provider, plugins: gamePlugins, emit: logger.emit });
+
+  // Admin Payment & Stablecoin Control Center. railHealth's chain check
+  // reuses the SAME chain reader payments/reconciliation already read
+  // through -- no second, independently-configured connection to TRON.
+  const rails = createRailService(db);
+  const railHealth = createHealthService({ db, chain });
 
   // Customer Support / Ticket System (Slice 8). Staff access is granted
   // entirely through the custom RBAC layer (rbac.mjs) via TICKET_VIEW/
@@ -201,6 +245,8 @@ async function main() {
     emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
     googleOAuth, googleFrontendOrigin: process.env.GOOGLE_FRONTEND_ORIGIN || "https://nizalo.com",
     profile, support, ticketNotifications, chat, progression,
+    mastery: masteryService, streaks: streakService, dailyChallenges, recommendations, frames: frameService,
+    rails, railHealth,
     rateLimit: { capacity: Number(process.env.RATE_LIMIT_CAPACITY || 100), refillPerSecond: Number(process.env.RATE_LIMIT_REFILL || 20) },
     sensitiveRateLimits: {
       "email-code-request": {

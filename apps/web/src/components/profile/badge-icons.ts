@@ -8,6 +8,13 @@
 export const BADGE_ICON: Record<string, string> = {
   FIRST_WIN: "🏆",
   FIRST_TOURNAMENT: "⚡",
+  TOURNAMENT_CHAMPION: "👑",
+  MASTERY_ADVANCED_ANY: "🔷",
+  MASTERY_EXPERT_ANY: "🔶",
+  MASTERY_MASTER_ANY: "🌟",
+  MULTI_GAME_CHAMPION: "🎯",
+  STREAK_7: "🔥",
+  STREAK_30: "💎",
 };
 
 export function badgeIcon(code: string): string {

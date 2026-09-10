@@ -98,6 +98,28 @@ export function createGateway({
   // opponent's client has a moment to render the position before the
   // reply lands -- an instantaneous bot move reads as broken, not strong.
   aiMoveDelayMs = 500,
+  // The Fair Play Engine (packages/fairplay) -- optional, like `chat` and
+  // `metrics` above: a caller that omits it (most existing tests) simply
+  // gets no signal recording at all, exactly the prior behaviour. When
+  // supplied, this is the ONLY anti-cheat engine this gateway ever talks
+  // to -- there is no second, parallel detection system here, only two
+  // things fed INTO the existing one: a completed duel's own per-game
+  // fairPlaySignals() (finally wired up -- see recordFromCompletedDuel's
+  // own header for why that capability existed but ran nowhere before
+  // this), and the admission layer's own certain findings (a replayed
+  // action, a concurrently-occupied seat).
+  fairPlay = null,
+  // Reconnect grace: a per-player budget on how often a SEAT may be
+  // (re)bound to a new session in one duel, reusing the SAME token-bucket
+  // limiter protocol.mjs already provides for frame rate limiting rather
+  // than inventing a second kind of throttle. Generous by design -- an
+  // ordinary flaky connection reconnects a handful of times a minute at
+  // most; this exists to catch something rebinding far faster than any
+  // human's own network ever would, not to punish a bad wifi signal. It
+  // deliberately does NOT pause or extend the clock (see gateway.mjs's
+  // own "leaving the room does NOT pause the duel" rule below) -- a slow
+  // reconnect simply costs the time it costs.
+  reconnectRateLimit = { capacity: 8, refillPerSecond: 0.05 },
 }) {
   if (lease && !ownerId) throw new TypeError("createGateway needs an ownerId when a lease manager is given");
   /** duelId -> the fencing token this instance currently believes it holds */
@@ -165,6 +187,14 @@ export function createGateway({
   const chatLimiters = new Map();
   /** playerId -> chat JOIN rate limiter state -- separate budget from sends. */
   const chatJoinLimiters = new Map();
+  /** `${playerId}:${duelId}` -> reconnect-rebind rate limiter state (see
+   * createGateway's own `reconnectRateLimit` comment). Keyed by the PAIR,
+   * not by player alone: a player who legitimately plays many different
+   * matches over a session must never be throttled for it -- what this
+   * bounds is one seat, in one match, rebinding far faster than any
+   * genuine reconnect ever would. Keyed by player (not connection) WITHIN
+   * that pair, so it survives the very reconnects it is meant to bound. */
+  const reconnectLimiters = new Map();
   /** duelId -> the pending setTimeout for that duel's next bot move, if
    * any -- tracked so it can be cancelled on release/close rather than
    * firing against a duel this instance no longer owns, or leaking a
@@ -197,6 +227,17 @@ export function createGateway({
     return r;
   }
 
+  /** The other half of session binding's JOIN handler: remove this
+   * connection from whichever seat's occupancy set it was added to, on an
+   * explicit LEAVE or an abrupt close alike -- otherwise a seat's
+   * occupancy count only ever grows across reconnects, turning every
+   * ordinary drop-and-reconnect into a false CONCURRENT_SEAT signal. */
+  function unbindSeat(duel, conn) {
+    if (!duel?.seatConns) return;
+    const seat = duel.players.indexOf(conn.playerId);
+    if (seat >= 0) duel.seatConns[seat].delete(conn);
+  }
+
   function chatLimiterFor(playerId) {
     let l = chatLimiters.get(playerId);
     if (!l) { l = createRateLimiter(chatRateLimit); chatLimiters.set(playerId, l); }
@@ -206,6 +247,13 @@ export function createGateway({
   function chatJoinLimiterFor(playerId) {
     let l = chatJoinLimiters.get(playerId);
     if (!l) { l = createRateLimiter(chatJoinRateLimit); chatJoinLimiters.set(playerId, l); }
+    return l;
+  }
+
+  function reconnectLimiterFor(playerId, duelId) {
+    const key = `${playerId}:${duelId}`;
+    let l = reconnectLimiters.get(key);
+    if (!l) { l = createRateLimiter(reconnectRateLimit); reconnectLimiters.set(key, l); }
     return l;
   }
 
@@ -378,9 +426,32 @@ export function createGateway({
       status: duel.status,
       seat: seat >= 0 ? seat : null,
       players: [...duel.players],
-      view: plugin.project(duel.state, viewer),
+      // The THIRD argument matters: an imperfect-information game (Speed
+      // Math) needs to know WHICH seat's own current question to project
+      // -- a perfect-information game (chess, checkers, Connect Four, XO)
+      // simply ignores it. Omitting it here silently collapsed every real
+      // player's own view down to whatever `project()` returns for
+      // "unknown seat", which for Speed Math is scores only, with no
+      // question ever shown -- undetectable without a real frontend to
+      // notice, which is exactly why it went unnoticed until this game
+      // got one.
+      view: plugin.project(duel.state, viewer, seat >= 0 ? seat : null),
       clock: projectClock(duel, t),
       lastSeq: duel.events.length ? duel.events[duel.events.length - 1].seq : -1,
+      // Sequence admission (A5): the event count right now -- a client
+      // sends this back as `baseVersion` on its NEXT intent, so the
+      // server can tell a decision made against THIS board from one made
+      // against a board that has since moved on. Named separately from
+      // `lastSeq` above (same number, different audience) since `lastSeq`
+      // predates this and existing code already depends on its shape.
+      version: duel.events.length,
+      // A seated player's own last ACCEPTED nonce -- omitted for a
+      // spectator, who never sends an intent and so has no nonce sequence
+      // of their own. A reconnecting client resumes numbering from
+      // `nonce + 1`, never from wherever it last left off locally, which
+      // is exactly what makes a page refresh mid-game safe rather than a
+      // guaranteed STALE_ACTION on its next move.
+      nonce: seat >= 0 ? duel.seq.lastNonce[seat] : null,
       outcome: duel.outcome,
       serverTimeMs: t,
       // Transient (never persisted -- see store.hydrate()'s own comment),
@@ -416,11 +487,15 @@ export function createGateway({
    * The move itself is submitted through runIntent()/publishNewEvents(),
    * identical to a human's INTENT -- a bot has no shortcut around move
    * validation, the clock, or the event log (directive: "AI must not
-   * become the authority for results").
+   * become the authority for results"). Dispatches on the duel's own
+   * clock model: an ALTERNATING game has a real "whose turn is it"; a
+   * SIMULTANEOUS game (Speed Math) does not, so its bot instead paces
+   * itself independently through its OWN question sequence (see
+   * scheduleBotAnswerIfNeeded below).
    */
   function scheduleBotMoveIfNeeded(duel, plugin) {
     if (duel.status !== DuelState.LIVE) return;
-    if (duel.clock.model === "SHARED") return; // AI is wired for ALTERNATING games only, this slice
+    if (duel.clock.model === "SHARED") return scheduleBotAnswerIfNeeded(duel, plugin);
     const bot = botSeat(duel);
     if (!bot || duel.clock.toMove !== bot.seat) return;
     const adapter = aiAdapters.get(duel.gameId);
@@ -439,6 +514,48 @@ export function createGateway({
       const res = runIntent(duel, plugin, { playerId: bot.playerId, intent: move }, t);
       if (res.ok) await publishNewEvents(duel, plugin, before, t);
     }, aiMoveDelayMs);
+    if (typeof timer.unref === "function") timer.unref();
+    aiTimers.set(duel.duelId, timer);
+  }
+
+  /**
+   * The SIMULTANEOUS-game sibling of the ALTERNATING scheduler above.
+   * There is no "the bot's turn" here -- both seats can answer at any
+   * time, on their own pace, exactly like two humans racing the same
+   * shared deadline. So instead of waiting to be handed a turn, this
+   * schedules ONE answer, submits it, and -- regardless of what the
+   * human opponent is doing -- immediately schedules the bot's NEXT
+   * answer, until either the bot exhausts its own question set (nothing
+   * left to answer) or runIntent() itself ends the duel because the
+   * shared clock ran out (the same expiry check a human's own late
+   * answer would hit).
+   */
+  function scheduleBotAnswerIfNeeded(duel, plugin) {
+    if (duel.status !== DuelState.LIVE) return;
+    const bot = botSeat(duel);
+    if (!bot) return;
+    const adapter = aiAdapters.get(duel.gameId);
+    if (!adapter) return;
+    if (aiTimers.has(duel.duelId)) return; // already progressing on its own schedule
+
+    const timer = setTimeout(async () => {
+      aiTimers.delete(duel.duelId);
+      if (duel.status !== DuelState.LIVE) return;
+      const t = now();
+      const progressIndex = duel.state.progress?.[bot.seat]?.index ?? 0;
+      const answer = adapter.chooseAction(duel.state, bot.seat, bot.difficulty, aiThinkMs, `${duel.duelId}:${progressIndex}`);
+      if (answer === null || answer === undefined) return; // the bot has nothing left of its own to answer
+      const before = duel.events.length;
+      const res = runIntent(duel, plugin, { playerId: bot.playerId, intent: answer }, t);
+      if (res.ok) await publishNewEvents(duel, plugin, before, t);
+      scheduleBotAnswerIfNeeded(duel, plugin);
+      // `answerDelayMs`, when the adapter provides one, is this game's own
+      // per-difficulty race pacing scaled off the SAME `aiMoveDelayMs` base
+      // every other game's bot uses (see game-speed-math/src/ai.mjs's own
+      // header) -- so a test harness overriding that base for speed still
+      // gets a proportionally fast delay, and falling back to the base
+      // itself keeps every ALTERNATING game's bot untouched.
+    }, adapter.answerDelayMs?.(bot.difficulty, aiMoveDelayMs) ?? aiMoveDelayMs);
     if (typeof timer.unref === "function") timer.unref();
     aiTimers.set(duel.duelId, timer);
   }
@@ -481,8 +598,15 @@ export function createGateway({
           seq: ev.seq,
           type: ev.type,
           payload: ev.payload,
-          view: plugin.project(duel.state, viewer),
+          // See stateFor()'s own comment on why the third argument here
+          // is not optional for an imperfect-information game.
+          view: plugin.project(duel.state, viewer, seat >= 0 ? seat : null),
           clock: projectClock(duel, t),
+          // The event count INCLUDING this one -- see stateFor()'s own
+          // comment on `version`. A client updates its `baseVersion`
+          // baseline from this on every event it receives, not only from
+          // a fresh STATE on join/reconnect.
+          version: ev.seq + 1,
           serverTimeMs: ev.serverTimeMs,
           // Echoed ONLY to the connection that sent the intent this event
           // resulted from, and only on the FIRST event it produced -- a
@@ -512,6 +636,16 @@ export function createGateway({
       // this running again after a crash-and-replay is always safe.
       if (chat?.channels?.markMatchCompleted) {
         chat.channels.markMatchCompleted(duel.duelId, { at: t }).catch(() => {});
+      }
+      // Fair play (S0): the per-game fairPlaySignals() every plugin has
+      // always implemented, finally actually called. Computed off the
+      // in-memory duel object this instant, so it is independent of
+      // however long `duel_event` for this match ends up surviving
+      // (see reconcile.mjs's own runEvidenceCleanup) -- and, like every
+      // other fair-play write, fire-and-forget: a detector outage must
+      // never delay or fail a duel's own completion.
+      if (fairPlay) {
+        fairPlay.recordFromCompletedDuel(duel, plugin).catch(() => {});
       }
     }
     // If this event just handed the move to a bot, schedule it. A no-op
@@ -666,6 +800,33 @@ export function createGateway({
               return fail(conn, ErrorCode.SPECTATORS_DISABLED);
             }
           }
+          // Session binding (A5): a seat joining is bound to THIS
+          // connection. Bounded, not blocked -- an ordinary flaky network
+          // reconnects a handful of times; this throttle exists for
+          // something rebinding far faster than any human's own
+          // connection ever would. `duel.seatConns` is gateway-local,
+          // in-memory bookkeeping only -- never persisted, never read by
+          // anything but this instance's own JOIN/LEAVE/close handling.
+          if (isSeated) {
+            if (!takeToken(reconnectLimiterFor(conn.playerId, duel.duelId), t)) {
+              return fail(conn, ErrorCode.RECONNECT_LIMITED);
+            }
+            const seat = duel.players.indexOf(conn.playerId);
+            duel.seatConns ??= [new Set(), new Set()];
+            duel.seatConns[seat].add(conn);
+            // Two LIVE connections bound to the SAME seat at the SAME
+            // time is not reconnection (a genuine reconnect's old socket
+            // is already gone) -- it is concurrent occupancy: account
+            // sharing, a relay, or a bot riding alongside a human. A
+            // moderate, not certain, signal (an innocent second tab is
+            // possible), so it is recorded, never blocked on its own.
+            if (duel.seatConns[seat].size > 1 && fairPlay) {
+              fairPlay.recordConcurrentSeat({
+                playerId: conn.playerId, duelId: duel.duelId, gameId: duel.gameId,
+                concurrentSessions: duel.seatConns[seat].size,
+              }).catch(() => {});
+            }
+          }
           conn.subscriptions.add(duel.duelId);
           room(duel.duelId).add(conn);
           // Belt-and-braces alongside claimDuel()'s own trigger: a bot
@@ -680,6 +841,7 @@ export function createGateway({
         case ClientMsg.LEAVE: {
           conn.subscriptions.delete(duel.duelId);
           room(duel.duelId).delete(conn);
+          unbindSeat(duel, conn);
           return;
         }
 
@@ -691,10 +853,27 @@ export function createGateway({
           const before = duel.events.length;
           // State mutation is synchronous, so two interleaved intents cannot
           // both be applied to the same turn; only the broadcast awaits I/O.
-          const res = runIntent(duel, plugin, { playerId: conn.playerId, intent: msg.intent }, t);
+          // `nonce`/`baseVersion` (protocol.mjs's own optional INTENT
+          // fields) are handed straight through to runIntent's sequence
+          // admission -- see that function's own header for why they are
+          // optional there but always present on a real client message.
+          const res = runIntent(duel, plugin, {
+            playerId: conn.playerId, intent: msg.intent, nonce: msg.nonce, baseVersion: msg.baseVersion,
+          }, t);
           if (!res.ok) {
             // A rejected intent is a normal answer, not a disconnect. Bad input
             // is expected traffic; dropping the socket would punish lag.
+            // A REPLAYED_ACTION is not "bad input" in that same ordinary
+            // sense, though -- no honest client, however laggy, ever
+            // resends an old nonce with a NEW payload, or reuses a nonce
+            // already superseded by a real move. That is evidence, and it
+            // is recorded as such (fire-and-forget: a fair-play outage
+            // must never block or fail a duel in progress).
+            if (res.reason === "REPLAYED_ACTION" && fairPlay) {
+              fairPlay.recordReplayedAction({
+                playerId: conn.playerId, duelId: duel.duelId, gameId: duel.gameId,
+              }).catch(() => {});
+            }
             return send(conn, {
               t: ServerMsg.REJECTED,
               duelId: duel.duelId,
@@ -702,6 +881,14 @@ export function createGateway({
               cseq: msg.cseq ?? null,
               clock: projectClock(duel, t),
             });
+          }
+          if (res.duplicate) {
+            // Idempotent retry: nothing new was appended, so there is
+            // nothing to persist or broadcast -- just answer with the
+            // current, authoritative state so the client's optimistic UI
+            // reconciles instead of hanging on an ack it will never see
+            // for the (already-applied) attempt before this one.
+            return send(conn, { ...stateFor(duel, plugin, conn, t), cseq: msg.cseq ?? null, duplicate: true });
           }
           return publishNewEvents(duel, plugin, before, t, { conn, cseq: msg.cseq ?? null });
         }
@@ -761,7 +948,10 @@ export function createGateway({
     socket.on("close", () => {
       // Leaving the room does NOT pause the duel or the clock. A disconnect is
       // not a timeout extension; see clock.mjs.
-      for (const duelId of conn.subscriptions) room(duelId).delete(conn);
+      for (const duelId of conn.subscriptions) {
+        room(duelId).delete(conn);
+        unbindSeat(duels.get(duelId), conn);
+      }
       if (chatMetrics && conn.chatSubscriptions.size > 0) {
         chatMetrics.activeConnections.dec();
         for (const channelId of conn.chatSubscriptions) chatMetrics.leaves.inc(1, { channel_type: channelTypeLabel(channelId) });

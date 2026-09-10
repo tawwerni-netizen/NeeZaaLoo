@@ -325,8 +325,8 @@ describe("spectator discovery / Watch Live (Slice 10)", () => {
     assert.ok(!r.body.matches.some((m) => m.duelId === "specdiscoduel3"));
   });
 
-  test("anonymous discovery access is refused", async () => {
+  test("anonymous discovery access is allowed -- the Live Arena is a public showcase, like a homepage scoreboard", async () => {
     const r = await req("GET", "/v1/duels/live", {});
-    assert.equal(r.status, 401);
+    assert.equal(r.status, 200);
   });
 });

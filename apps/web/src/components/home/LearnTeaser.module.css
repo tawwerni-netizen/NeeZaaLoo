@@ -1,0 +1,24 @@
+.section {
+  padding-block: var(--nz-space-12);
+  border-top: 1px solid var(--nz-line);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-6);
+  flex-wrap: wrap;
+}
+
+.heading {
+  font-size: var(--nz-text-xl);
+  margin: 0 0 6px;
+}
+
+.body {
+  font-size: var(--nz-text-md);
+  color: var(--nz-text-2);
+  margin: 0;
+  max-width: 56ch;
+}

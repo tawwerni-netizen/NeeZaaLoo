@@ -13,7 +13,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/context";
-import { useChatChannel } from "@/lib/use-chat-socket";
+import type { useChatChannel } from "@/lib/use-chat-socket";
 import { post } from "@/lib/api";
 import { Avatar } from "@/components/profile/Avatar";
 import { badgeIcon } from "@/components/profile/badge-icons";
@@ -22,16 +22,26 @@ import styles from "./ChatWindow.module.css";
 
 const REPORT_CATEGORIES = ["ABUSE", "HARASSMENT", "SPAM", "SCAM", "THREATS", "INAPPROPRIATE_CONTENT", "OTHER"];
 
-type ChatWindowProps =
-  | { channel: "GLOBAL"; title?: string }
-  | { channel: "MATCH"; duelId: string; title?: string }
-  | { channel: "SPECTATOR"; duelId: string; title?: string };
+// The connection itself (useChatChannel(spec)) is owned by the CALLER, not
+// by this component -- the ChatDrawer wrapper needs the same live message
+// list to compute an unread count while the window is closed/minimized, and
+// a second useChatChannel() call for the same channel would open a second,
+// wasteful websocket connection rather than sharing the caller's one.
+type ChatWindowProps = {
+  channelKind: "GLOBAL" | "MATCH" | "SPECTATOR";
+  state: ReturnType<typeof useChatChannel>;
+  title?: string;
+  /** ChatDrawer's own bar already shows the title, with minimize/close
+   * controls -- rendering it again here would be the same text twice in
+   * one small panel. The connection dot still renders either way; only
+   * the duplicate heading text is skipped. */
+  hideTitle?: boolean;
+};
 
-export function ChatWindow(props: ChatWindowProps) {
+export function ChatWindow({ channelKind, state, title: titleProp, hideTitle = false }: ChatWindowProps) {
   const { t, locale } = useI18n();
   const router = useRouter();
-  const spec = props.channel === "GLOBAL" ? { channel: "GLOBAL" as const } : { channel: props.channel, duelId: props.duelId };
-  const { connected, messages, sendMessage, rejected, clearRejected } = useChatChannel(spec);
+  const { connected, messages, sendMessage, rejected, clearRejected } = state;
   const [draft, setDraft] = useState("");
   const [reportTarget, setReportTarget] = useState<ChatMessage | null>(null);
   const [blockTarget, setBlockTarget] = useState<{ id: string; nickname: string } | null>(null);
@@ -49,14 +59,14 @@ export function ChatWindow(props: ChatWindowProps) {
     setDraft("");
   }
 
-  const titleKey = props.channel === "GLOBAL" ? "chat.global_title" : props.channel === "SPECTATOR" ? "chat.spectator_title" : "chat.match_title";
-  const title = props.title ?? t(titleKey);
+  const titleKey = channelKind === "GLOBAL" ? "chat.global_title" : channelKind === "SPECTATOR" ? "chat.spectator_title" : "chat.match_title";
+  const title = titleProp ?? t(titleKey);
 
   return (
     <div className={styles.window}>
       <div className={styles.header}>
-        <h2 className={styles.title}>{title}</h2>
-        <span className={`${styles.status} ${connected ? styles.statusLive : ""}`}>
+        {!hideTitle && <h2 className={styles.title}>{title}</h2>}
+        <span className={`${styles.status} ${connected ? styles.statusLive : ""} ${hideTitle ? styles.statusAlone : ""}`}>
           {connected ? "" : t("chat.reconnecting")}
         </span>
       </div>
@@ -65,7 +75,12 @@ export function ChatWindow(props: ChatWindowProps) {
         {messages.length === 0 ? (
           <p className={styles.empty}>{t("chat.empty")}</p>
         ) : (
-          messages.map((m) => (
+          messages.map((m) =>
+            m.system ? (
+              <div key={m.id} className={styles.systemRow}>
+                <span className={styles.systemLabel}>{t(`chat.system_event.${m.system.eventType}`)}</span>
+              </div>
+            ) : (
             <div key={m.id} className={styles.row}>
               <Avatar nickname={m.nickname} avatarUrl={m.avatarUrl} size={36} />
               <div className={styles.bubble}>
@@ -103,7 +118,8 @@ export function ChatWindow(props: ChatWindowProps) {
                 )}
               </div>
             </div>
-          ))
+            )
+          )
         )}
       </div>
 
