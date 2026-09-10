@@ -2,7 +2,7 @@
   "name": "nizalo",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
+  "type": "commonjs",
   "workspaces": [
     "packages/*",
     "apps/*"
