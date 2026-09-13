@@ -1,9 +1,23 @@
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const url = new URL(request.url);
+  const searchParams = url.searchParams;
   const code = searchParams.get("code");
   const stateStr = searchParams.get("state");
+
+  // Determine true public origin behind reverse proxies (Hostinger, Cloudflare, Nginx)
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    url.host;
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https");
+
+  const origin =
+    process.env.APP_BASE_URL ||
+    (host.startsWith("0.0.0.0") ? "https://nizalo.com" : `${proto}://${host}`);
 
   let locale = "ar";
   try {
