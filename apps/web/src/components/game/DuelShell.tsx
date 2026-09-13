@@ -4,15 +4,7 @@
  * The generic duel room -- the ONE thing every game shares, per the Nizalo
  * Table System spec's "one club, ten tables": connection state, both
  * player strips, the clock, draw agreement, resign, the result ceremony,
- * reconnect, spectator handling, and the chat slot. This file NEVER
- * imports a specific game's module and NEVER switches on `gameId`; it
- * resolves a GamePlugin once (via lib/games) and hands that plugin's own
- * Board component an opaque `view`, exactly as packages/realtime/src/
- * gateway.mjs hands a game's own plugin.project() output to the wire
- * without reading inside it.
- *
- * A new game requires NONE of this file to change -- see lib/games/
- * types.ts's own header for the whole point of that boundary.
+ * reconnect, spectator handling, and the chat slot.
  */
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -24,6 +16,8 @@ import { useProgressionSnapshot } from "@/lib/use-progression-snapshot";
 import { ChatDrawer } from "@/components/chat/ChatDrawer";
 import { PlayerStrip } from "@/components/game/PlayerStrip";
 import { ResultCeremony } from "@/components/game/ResultCeremony";
+import { TableEnvironmentProvider } from "@/components/game/TableEnvironment";
+import { GameVisualSettings } from "@/components/game/GameVisualSettings";
 import { getGame } from "@/lib/games";
 import { get, post } from "@/lib/api";
 import styles from "./DuelShell.module.css";
@@ -59,25 +53,8 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const clock = latest && typeof latest === "object" && "clock" in latest
     ? (latest as { clock: { model?: string; remaining?: number[]; toMove?: number; remainingMs?: number } }).clock
     : null;
-  // A SHARED clock (Speed Math -- see packages/duel-engine/src/clock.mjs's
-  // own header on why this is a genuinely different object, not an
-  // ALTERNATING clock with a flag) has no `toMove` and no per-seat
-  // `remaining` array at all -- only one flat `remainingMs` for the whole
-  // race. Reading `clock.toMove`/`clock.remaining[...]` against it is not
-  // "no data yet", it is comparing against `undefined` forever, which
-  // silently made every SIMULTANEOUS game's board permanently un-playable
-  // (canMove never true) and its clock strips permanently blank.
+
   const isSharedClock = clock?.model === "SHARED";
-  // A live COMPLETED push (`t === "COMPLETED"`) is only ever seen by a
-  // client that was connected at the moment the duel ended. A fresh page
-  // load or a reconnect instead gets gateway.mjs's own `stateFor()` --
-  // always `t: "STATE"`, even for a duel that finished long ago -- with
-  // the result carried in its `status`/`outcome` fields instead. Checking
-  // only `t === "COMPLETED"` silently kept rendering the board (with
-  // working Resign/Offer Draw buttons) for an already-decided game
-  // forever, since that duel will never again emit a live COMPLETED
-  // event -- this is what actually makes "reconnect to a finished match"
-  // show the result instead of a dead board.
   const stateStatus = latest?.t === "STATE" ? (latest as { status?: unknown }).status : null;
   const stateOutcome = latest?.t === "STATE"
     ? (latest as { outcome?: { result?: unknown; reason?: unknown } | null }).outcome
@@ -122,7 +99,6 @@ export function DuelShell({ duelId }: { duelId: string }) {
       .then((r) => { if (!cancelled) setOpponentNickname(r.nickname); })
       .catch(() => {});
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [players, opponentSeat]);
 
   const canMove = !isSpectator && !completed && connected && mySeat !== null
@@ -152,101 +128,105 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const connectionLabel = reconnecting ? t("game.reconnecting") : connected ? t("game.connected") : t("game.connecting");
 
   return (
-    <main className="nz-container">
-      <div className={styles.statusBar}>
-        <span className={styles.statusGroup}>
-          <span className={connected ? styles.live : styles.offline}>{connectionLabel}</span>
-          {isSpectator && <span className={styles.spectatorBadge}>{t("game.spectating")}</span>}
-        </span>
-      </div>
-
-      {plugin?.supportsDraw && !isSpectator && !completed && drawOfferBy !== null && (
-        <div className={styles.drawBanner}>
-          {drawOfferBy === mySeat ? (
-            <span>{t("game.draw_offer_sent")}</span>
-          ) : (
-            <>
-              <span>{t("game.draw_offer_received", { handle: opponentNickname })}</span>
-              <Button variant="primary" onClick={acceptDraw}>{t("game.accept_draw")}</Button>
-              <Button variant="ghost" onClick={declineDraw}>{t("game.decline_draw")}</Button>
-            </>
-          )}
+    <TableEnvironmentProvider>
+      <main className="nz-container">
+        <div className={styles.statusBar}>
+          <span className={styles.statusGroup}>
+            <span className={connected ? styles.live : styles.offline}>{connectionLabel}</span>
+            {isSpectator && <span className={styles.spectatorBadge}>{t("game.spectating")}</span>}
+          </span>
+          <GameVisualSettings />
         </div>
-      )}
 
-      {completed ? (
-        <ResultCeremony
-          isSpectator={isSpectator}
-          outcome={myOutcome}
-          result={result}
-          reason={reason}
-          vsComputer={vsComputer}
-          duelId={duelId}
-          delta={delta}
-          onRematch={() => void handleRematch()}
-          rematchBusy={rematchBusy}
-        />
-      ) : plugin && view ? (
-        <>
-          {players && opponentSeat !== null && (
-            <PlayerStrip
-              playerId={players[opponentSeat] ?? ""}
-              active={isSharedClock ? true : clock?.toMove === opponentSeat}
-              remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[opponentSeat] ?? null}
-              flagged={false}
-            />
-          )}
+        {plugin?.supportsDraw && !isSpectator && !completed && drawOfferBy !== null && (
+          <div className={styles.drawBanner}>
+            {drawOfferBy === mySeat ? (
+              <span>{t("game.draw_offer_sent")}</span>
+            ) : (
+              <>
+                <span>{t("game.draw_offer_received", { handle: opponentNickname })}</span>
+                <Button variant="primary" onClick={acceptDraw}>{t("game.accept_draw")}</Button>
+                <Button variant="ghost" onClick={declineDraw}>{t("game.decline_draw")}</Button>
+              </>
+            )}
+          </div>
+        )}
 
-          <plugin.Board
-            view={view}
-            lastMove={lastMove}
-            mySeat={mySeat}
-            canMove={canMove}
-            onMove={(intent) => sendIntent(intent)}
+        {completed ? (
+          <ResultCeremony
+            isSpectator={isSpectator}
+            outcome={myOutcome}
+            result={result}
+            reason={reason}
+            vsComputer={vsComputer}
+            duelId={duelId}
+            gameId={gameId ?? "game"}
+            delta={delta}
+            onRematch={() => void handleRematch()}
+            rematchBusy={rematchBusy}
           />
+        ) : plugin && view ? (
+          <>
+            {players && opponentSeat !== null && (
+              <PlayerStrip
+                playerId={players[opponentSeat] ?? ""}
+                active={isSharedClock ? true : clock?.toMove === opponentSeat}
+                remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[opponentSeat] ?? null}
+                flagged={false}
+              />
+            )}
 
-          {players && mySeat !== null && (
-            <PlayerStrip
-              playerId={players[mySeat] ?? ""}
-              active={isSharedClock ? true : clock?.toMove === mySeat}
-              remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[mySeat] ?? null}
-              flagged={false}
+            <plugin.Board
+              view={view}
+              lastMove={lastMove}
+              mySeat={mySeat}
+              canMove={canMove}
+              onMove={(intent) => sendIntent(intent)}
             />
-          )}
 
-          {!isSpectator && (
-            <div className={styles.actionsRow}>
-              {plugin.supportsDraw && (
-                <Button variant="ghost" onClick={offerDraw} disabled={drawOfferBy !== null}>{t("game.offer_draw")}</Button>
-              )}
-              <Button variant="secondary" onClick={() => setResignConfirmOpen(true)}>{t("game.resign")}</Button>
-            </div>
-          )}
-        </>
-      ) : (
-        <p className={styles.playerLine}>{t("game.connecting")}</p>
-      )}
+            {players && mySeat !== null && (
+              <PlayerStrip
+                playerId={players[mySeat] ?? ""}
+                active={isSharedClock ? true : clock?.toMove === mySeat}
+                remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[mySeat] ?? null}
+                flagged={false}
+              />
+            )}
 
-      {resignConfirmOpen && (
-        <div className={styles.confirmOverlay} role="dialog" aria-label={t("game.resign_confirm_title")}>
-          <div className={styles.confirmCard}>
-            <h2>{t("game.resign_confirm_title")}</h2>
-            <p>{t("game.resign_confirm_body")}</p>
-            <div className={styles.confirmActions}>
-              <Button variant="secondary" onClick={() => { resign(); setResignConfirmOpen(false); }}>{t("game.confirm")}</Button>
-              <Button variant="ghost" onClick={() => setResignConfirmOpen(false)}>{t("game.cancel")}</Button>
+            {!isSpectator && (
+              <div className={styles.actionsRow}>
+                {plugin.supportsDraw && (
+                  <Button variant="ghost" onClick={offerDraw} disabled={drawOfferBy !== null}>{t("game.offer_draw")}</Button>
+                )}
+                <Button variant="secondary" onClick={() => setResignConfirmOpen(true)}>{t("game.resign")}</Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className={styles.playerLine}>{t("game.connecting")}</p>
+        )}
+
+        {resignConfirmOpen && (
+          <div className={styles.confirmOverlay} role="dialog" aria-label={t("game.resign_confirm_title")}>
+            <div className={styles.confirmCard}>
+              <h2>{t("game.resign_confirm_title")}</h2>
+              <p>{t("game.resign_confirm_body")}</p>
+              <div className={styles.confirmActions}>
+                <Button variant="secondary" onClick={() => { resign(); setResignConfirmOpen(false); }}>{t("game.confirm")}</Button>
+                <Button variant="ghost" onClick={() => setResignConfirmOpen(false)}>{t("game.cancel")}</Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <p className={styles.playerLine}>
-        {isSpectator ? t("game.watching_as", { handle: player?.handle ?? "" }) : t("game.playing_as", { handle: player?.handle ?? "" })}
-      </p>
+        <p className={styles.playerLine}>
+          {isSpectator ? t("game.watching_as", { handle: player?.handle ?? "" }) : t("game.playing_as", { handle: player?.handle ?? "" })}
+        </p>
 
-      {seat !== undefined && (
-        <ChatDrawer channelKind={isSpectator ? "SPECTATOR" : "MATCH"} duelId={duelId} />
-      )}
-    </main>
+        {seat !== undefined && (
+          <ChatDrawer channelKind={isSpectator ? "SPECTATOR" : "MATCH"} duelId={duelId} />
+        )}
+      </main>
+    </TableEnvironmentProvider>
   );
 }

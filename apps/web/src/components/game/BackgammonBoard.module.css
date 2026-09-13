@@ -1,19 +1,4 @@
-/* Backgammon's own identity: a luxury walnut-and-felt board with ivory and
-   obsidian checkers -- distinct from every other game's table. Local,
-   scoped custom properties, same pattern as CheckersBoard.module.css.
-   Note: this board never uses --nz-mat-gold -- every surface here is
-   clickable, and gold is reserved strictly for an ALREADY-EARNED, never-
-   interactive surface (see packages/tokens/tokens.css's own rule). The
-   warm trim below is its own, separate value for exactly that reason. */
 .wrap {
-  --point-ivory: #EFE6D2;
-  --point-walnut: #3B2A1E;
-  --board-frame: #24170F;
-  --board-trim: #8A6A3A;
-  --checker-a: #F2EDE3;
-  --checker-a-shade: #C9C0AA;
-  --checker-b: #17181B;
-  --checker-b-shade: #000000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -23,67 +8,65 @@
 
 .diceRow {
   display: flex;
-  gap: var(--nz-space-2);
-  min-height: 48px;
+  gap: var(--nz-space-3);
+  min-height: 56px;
   align-items: center;
+  justify-content: center;
 }
 
-.die {
-  width: 40px;
-  height: 40px;
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45));
+.die3d {
+  width: 48px;
+  height: 48px;
+  perspective: 600px;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
 }
 
-.die rect { fill: var(--nz-mat-ivory); stroke: rgba(0, 0, 0, 0.25); stroke-width: 2; }
-.die circle { fill: var(--nz-mat-obsidian); }
+.dieSvg {
+  width: 100%;
+  height: 100%;
+}
 
-.board {
-  width: min(94vw, 640px);
-  aspect-ratio: 15 / 11;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  grid-template-rows: 1fr 1fr;
-  background:
-    linear-gradient(180deg, #2c1c11, var(--board-frame)) padding-box;
-  border: 10px solid var(--board-frame);
-  border-radius: var(--nz-radius-lg);
-  box-shadow: var(--nz-elev-board, var(--nz-shadow-3)), inset 0 0 0 2px var(--board-trim);
-  overflow: hidden;
+.boardContainer {
   position: relative;
+  width: 100%;
+  max-width: 600px;
+  transition: transform var(--nz-dur-base) var(--nz-ease-settle);
 }
 
-/* Column order in the DOM is top-left, top-right, bar, bottom-left,
-   bottom-right -- the bar sits third in markup (after both handlers'
-   pointer targets are declared) but must render in the MIDDLE column,
-   spanning both rows, which grid-column/row placement below handles
-   independent of source order. */
+.perspective {
+  transform: rotateX(15deg) translateZ(10px);
+  transform-style: preserve-3d;
+}
+
+.attacheCase {
+  position: relative;
+  padding: 16px;
+  background: linear-gradient(145deg, #3d2614 0%, #201208 100%);
+  border-radius: var(--nz-radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 12px 0 #0d0703,
+    0 24px 45px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.feltBed {
+  display: grid;
+  grid-template-columns: 1fr 36px 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100%;
+  aspect-ratio: 1.15 / 1;
+  background: radial-gradient(circle at 50% 50%, #154f40 0%, #0d382d 100%);
+  border-radius: var(--nz-radius-sm);
+  border: 2px solid #140b05;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
 .quadrant {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 1px;
-  background: var(--point-walnut);
-}
-
-.barSlot {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--nz-space-2);
-  border: none;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.5));
-  cursor: pointer;
-  padding: var(--nz-space-2) 4px;
-}
-
-.barSlot:disabled { cursor: default; }
-
-.barGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  height: 100%;
 }
 
 .point {
@@ -91,91 +74,160 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  background: none;
   border: none;
   padding: 0;
-  background: var(--point-walnut);
   cursor: pointer;
-  font: inherit;
+  overflow: visible;
 }
 
 .point:disabled { cursor: default; }
 
-.pointLight::before,
-.pointDark::before {
-  content: "";
+.pointTriangle {
   position: absolute;
-  inset: 4% 8%;
-  clip-path: polygon(50% 100%, 0 0, 100% 0);
-}
-
-.top .pointLight::before, .top .pointDark::before {
-  top: 0; bottom: auto; clip-path: polygon(50% 100%, 0 0, 100% 0);
-}
-.bottom .pointLight::before, .bottom .pointDark::before {
-  clip-path: polygon(50% 0%, 0 100%, 100% 100%);
-}
-
-.pointLight::before { background: linear-gradient(var(--point-ivory), #e0d3b4); }
-.pointDark::before { background: linear-gradient(var(--nz-mat-emerald-2), var(--nz-mat-emerald)); }
-
-.pointSelected::before { outline: 2px solid var(--nz-accent); outline-offset: -2px; }
-
-.checkerStack {
-  position: relative;
+  inset: 0;
+  pointer-events: none;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 6% 0;
-  width: 100%;
 }
 
-.bottom .checkerStack { flex-direction: column-reverse; margin-top: auto; }
-.top .checkerStack { margin-bottom: auto; }
-
-.checker {
-  width: 78%;
-  max-width: 34px;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.45), inset 0 -3px 4px rgba(0, 0, 0, 0.25), inset 0 2px 3px rgba(255, 255, 255, 0.25);
+.top .pointTriangle {
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 
-.checkerA { background: radial-gradient(circle at 35% 30%, var(--checker-a), var(--checker-a-shade)); }
-.checkerB { background: radial-gradient(circle at 35% 30%, #3a3d44, var(--checker-b) 60%, var(--checker-b-shade)); }
-.checkerMuted { opacity: 0.6; }
+.bottom .pointTriangle {
+  clip-path: polygon(0 100%, 100% 100%, 50% 0);
+}
 
-.overflowLabel {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--nz-text-inverse);
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: var(--nz-radius-pill);
-  padding: 1px 6px;
+.pointLight .pointTriangle {
+  background: linear-gradient(180deg, #d4c2a5 0%, #b89f7b 100%);
+  opacity: 0.9;
+}
+.bottom .pointLight .pointTriangle {
+  background: linear-gradient(0deg, #d4c2a5 0%, #b89f7b 100%);
+}
+
+.pointDark .pointTriangle {
+  background: linear-gradient(180deg, #87361d 0%, #521d0d 100%);
+  opacity: 0.95;
+}
+.bottom .pointDark .pointTriangle {
+  background: linear-gradient(0deg, #87361d 0%, #521d0d 100%);
+}
+
+.pointSelected .pointTriangle {
+  background: var(--nz-brand-orange) !important;
+  opacity: 1;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.pointDestination {
+  background: rgba(255, 90, 43, 0.15);
 }
 
 .destDot {
   position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
   width: 12px;
   height: 12px;
-  border-radius: 50%;
-  background: var(--nz-accent);
-  box-shadow: 0 0 0 4px var(--nz-accent-soft);
+  border-radius: 999px;
+  background: var(--nz-brand-orange);
+  box-shadow: 0 0 8px rgba(255, 90, 43, 0.8);
+  z-index: 4;
+}
+
+.top .destDot { bottom: 12px; }
+.bottom .destDot { top: 12px; }
+
+/* 3D Cylindrical Checker */
+.checkerStack {
+  position: relative;
   z-index: 2;
-  animation: destPulse 1s var(--nz-ease-inout) infinite;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  padding: 4px 2px;
 }
 
-.pointDestination { cursor: pointer; }
+.top .checkerStack { justify-content: flex-start; }
+.bottom .checkerStack { justify-content: flex-end; height: 100%; }
 
-@keyframes destPulse {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(1.25); }
+.checker3d {
+  width: min(88%, 32px);
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  margin: -4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 3px 0 rgba(0, 0, 0, 0.6),
+    0 5px 8px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.3);
 }
 
+.checkerWhite {
+  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #ded7c8 70%, #b8ab96 100%);
+}
+
+.checkerBlack {
+  background: radial-gradient(circle at 35% 35%, #3d434f 0%, #1a1e24 70%, #0d0f12 100%);
+}
+
+.checkerInnerRim {
+  width: 70%;
+  height: 70%;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+}
+
+.checkerMuted {
+  opacity: 0.4;
+}
+
+.overflowLabel {
+  font-family: var(--nz-font-num);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1px 4px;
+  border-radius: 4px;
+  margin-top: 2px;
+  z-index: 3;
+}
+
+/* Center Bar */
+.barSlot {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  position: relative;
+  background: linear-gradient(180deg, #2a1a0c 0%, #1a1007 100%);
+  border-left: 2px solid #0d0804;
+  border-right: 2px solid #0d0804;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  cursor: pointer;
+  border-top: none;
+  border-bottom: none;
+}
+
+.barSelected {
+  box-shadow: inset 0 0 0 2px var(--nz-brand-orange);
+}
+
+.barGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  width: 100%;
+}
+
+/* Bear Off Tray */
 .offRow {
   display: flex;
   align-items: center;
@@ -184,30 +236,34 @@
 
 .offLabel {
   font-size: var(--nz-text-xs);
-  text-transform: uppercase;
-  letter-spacing: var(--nz-tracking-caps);
   color: var(--nz-text-2);
+  font-weight: 600;
 }
 
 .offTray {
   display: flex;
-  align-items: center;
   gap: var(--nz-space-3);
   padding: var(--nz-space-2) var(--nz-space-4);
-  border-radius: var(--nz-radius-md);
-  border: 1px solid var(--nz-line-strong);
   background: var(--nz-surface-2);
-  font-family: var(--nz-font-num);
-  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--nz-line-strong);
+  border-radius: var(--nz-radius-md);
   cursor: pointer;
+  box-shadow: var(--nz-shadow-1);
 }
 
-.offTray:disabled { cursor: default; opacity: 0.7; }
+.offCount {
+  font-family: var(--nz-font-num);
+  font-weight: 700;
+  color: var(--nz-text);
+}
 
-.offCount { font-weight: 700; }
-.offCountOpp { color: var(--nz-text-2); }
+.offCountOpp {
+  font-family: var(--nz-font-num);
+  font-weight: 600;
+  color: var(--nz-text-3);
+}
 
 @media (max-width: 640px) {
-  .board { width: 96vw; border-width: 6px; }
-  .checker { max-width: 26px; }
+  .attacheCase { padding: 10px; }
+  .feltBed { grid-template-columns: 1fr 24px 1fr; }
 }

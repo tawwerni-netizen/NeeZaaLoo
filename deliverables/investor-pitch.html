@@ -1,0 +1,203 @@
+<title>نزالو — عرض المستثمرين</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  @page { size: A4; margin: 20mm 18mm; }
+  :root{
+    --ink:#0B0D10; --paper:#FFFFFF; --s1:#F7F8FA; --s2:#F0F2F5; --line:#E2E5EA;
+    --tx:#14171C; --tx2:#4B5563; --tx3:#828A96;
+    --accent:#CC3A14; --accent-soft:#FDEBE4;
+    --f-disp:"Archivo",system-ui,sans-serif;
+    --f-ar:"IBM Plex Sans Arabic","Archivo",sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{direction:rtl}
+  body{background:var(--paper);color:var(--tx);font-family:var(--f-ar);font-size:11pt;line-height:1.85;margin:0;direction:rtl;text-align:right;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  h1,h2,h3,h4{font-family:var(--f-ar);color:var(--ink);text-wrap:balance;font-weight:700}
+  h1{font-size:30pt;font-weight:700;margin:0 0 8pt}
+  h2{font-size:19pt;font-weight:700;margin:0 0 14pt}
+  h3{font-size:13.5pt;font-weight:700;margin:18pt 0 8pt}
+  p{margin:0 0 10pt;color:var(--tx2)}
+  strong{color:var(--ink);font-weight:700}
+  .num{font-family:var(--f-mono);direction:ltr;display:inline-block;font-weight:600;color:var(--ink)}
+  .eyebrow{font-family:var(--f-mono);direction:ltr;text-align:left;font-size:8.5pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 10pt}
+  section{page-break-before:always;padding-top:2pt}
+  section:first-of-type{page-break-before:avoid}
+  table{width:100%;border-collapse:collapse;margin:10pt 0 16pt;font-size:10pt}
+  th{background:var(--s2);text-align:right;font-weight:600;padding:7pt 10pt;border-bottom:1.5pt solid var(--line);font-size:9.5pt;color:var(--tx2)}
+  td{padding:7pt 10pt;border-bottom:0.75pt solid var(--line);vertical-align:top;color:var(--tx2)}
+  td strong{color:var(--tx)}
+  .callout{background:var(--s1);border-right:3pt solid var(--accent);padding:12pt 16pt;margin:12pt 0;border-radius:4pt 0 0 4pt}
+  .callout p{margin:0}
+  .stat{border:0.75pt solid var(--line);border-radius:8pt;padding:14pt;text-align:center}
+  .stat .n{font-family:var(--f-mono);direction:ltr;font-size:20pt;font-weight:600;color:var(--ink);display:block}
+  .stat .l{font-size:8.5pt;color:var(--tx3)}
+  .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10pt;margin:12pt 0 18pt}
+  .statgrid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10pt;margin:12pt 0 18pt}
+  .bar-row{display:flex;align-items:center;gap:10pt;margin:8pt 0}
+  .bar-label{width:150pt;font-size:9.5pt;color:var(--tx2);flex-shrink:0}
+  .bar-track{flex:1;height:16pt;background:var(--s2);border-radius:3pt;overflow:hidden;display:flex;flex-direction:row-reverse}
+  .bar-fill{background:var(--accent);height:100%}
+  .bar-pct{width:40pt;text-align:left;font-family:var(--f-mono);direction:ltr;font-size:9.5pt;font-weight:600;flex-shrink:0}
+  .cover{min-height:230mm;display:flex;flex-direction:column;justify-content:space-between}
+  .cover-mark{width:64px;height:64px;border-radius:16px;background:var(--ink);display:flex;align-items:center;justify-content:center;margin-right:0}
+  .tagline{font-size:15pt;color:var(--tx2);font-weight:500}
+  .disclaimer{font-size:8pt;color:var(--tx3);border-top:0.75pt solid var(--line);padding-top:8pt;margin-top:20pt}
+  ul{margin:0 0 10pt;padding-right:18pt}
+  li{margin-bottom:6pt;color:var(--tx2)}
+  li strong{color:var(--tx)}
+</style>
+
+<section class="cover">
+  <div>
+    <div class="cover-mark">
+      <svg width="34" height="34" viewBox="0 0 100 100"><rect x="18" y="14" width="12" height="72" fill="#F7F8FA"/><rect x="70" y="14" width="12" height="72" fill="#F7F8FA"/><polygon points="30,86 82,14 70,14 30,74" fill="#FF5A2B"/></svg>
+    </div>
+    <div class="eyebrow" style="margin-top:26pt">عرض تقديمي للمستثمرين — مرحلة تأسيسية</div>
+    <h1>نزالو</h1>
+    <p class="tagline">منصة عالمية لمبارزات المهارة — حساب واحد، نظام تصنيف واحد، محفظة واحدة، محرك مباريات واحد، محرك بطولات واحد، طبقة أمان وثقة واحدة — ووراءها عشر ألعاب مباشرة بين لاعبَين.</p>
+    <p style="font-size:13pt;color:var(--ink);font-weight:600;margin-top:10pt">نزال واحد يكفي.</p>
+  </div>
+  <div>
+    <table style="margin:0">
+      <tr><td style="width:110pt"><strong>الموقع</strong></td><td class="num" style="direction:ltr;text-align:right">nizalo.com</td></tr>
+      <tr><td><strong>التواصل</strong></td><td>universebrands.org@gmail.com</td></tr>
+      <tr><td><strong>تاريخ العرض</strong></td><td>سبتمبر ٢٠٢٦</td></tr>
+      <tr><td><strong>المرحلة</strong></td><td>ما قبل الإطلاق التجاري — البنية التقنية الأساسية مكتملة</td></tr>
+    </table>
+    <p class="disclaimer">هذا العرض تمهيدي، يستهدف بدء محادثة تمويل. الأرقام المالية فيه (مبلغ الجولة، توزيع الاستخدام) هي تقدير مقترح من المؤسس ويمكن مناقشتها وتعديلها مع أي مستثمر جاد. لا يتضمن هذا العرض أي وعد بعائد أو أداء مستقبلي.</p>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">01 — الفكرة</div>
+  <h2>لماذا نزالو</h2>
+  <p>ملايين اللاعبين حول العالم يبحثون عن إثبات مهارتهم — في الشطرنج، في سرعة الحساب، في الذاكرة، في رد الفعل — لكن كل لعبة تعيش في تطبيق منفصل، بتصنيف منفصل، وبثقة منفصلة. لا يوجد مكان واحد يجمع "أنا بارع في هذا" عبر أكثر من مهارة، بمصداقية مالية وتقنية حقيقية.</p>
+  <p><strong>نزالو منصة واحدة</strong> تجمع عشر ألعاب مباشرة بين لاعبَين تحت هوية لاعب واحدة، ونظام تصنيف عالمي واحد (Global Skill Score)، ومحفظة ومحرك تسويات مالية واحد مبني من اليوم الأول على معايير مؤسسات مالية حقيقية — لا على معايير "ألعاب الكازينو".</p>
+  <div class="callout"><p>الرسالة العاطفية ليست أبدًا "أودع فلوسك وقامر". هي: <strong>"عايز أثبت مهارتي"</strong> ← <strong>"أقدر أتحدى"</strong> ← <strong>"أقدر أتحسّن"</strong> ← <strong>"أقدر أرتقي"</strong> ← وفقط حيث يسمح القانون، <strong>"أقدر أتنافس على جوائز"</strong>.</p></div>
+  <p>الشطرنج هو اللعبة الرئيسية التي تفتح المنصة — لكن الشطرنج <strong>ليس</strong> الفئة. المنصة مصممة بحيث إضافة لعبة جديدة لا تلمس أبدًا البنية المالية أو الأمنية القائمة، وهذا هو الأساس الذي يجعل النمو ممكنًا بسرعة وبأمان.</p>
+</section>
+
+<section>
+  <div class="eyebrow">02 — الإنجاز حتى الآن</div>
+  <h2>هذا مش فكرة على ورق</h2>
+  <p>المنصة <strong>مبنية فعليًا</strong>، ليست مجرد عرض تصوري. البنية التحتية المالية والأمنية — الأصعب والأخطر في أي منتج من هذا النوع — مكتملة ومُختبرة بشكل حقيقي، وليس بالتقدير.</p>
+  <div class="statgrid">
+    <div class="stat"><span class="n">10</span><span class="l">ألعاب جاهزة كمكوّنات</span></div>
+    <div class="stat"><span class="n">2,122</span><span class="l">اختبار آلي ناجح</span></div>
+    <div class="stat"><span class="n">37</span><span class="l">وحدة برمجية مستقلة</span></div>
+    <div class="stat"><span class="n">46</span><span class="l">ترحيل قاعدة بيانات مُرقّم</span></div>
+  </div>
+  <h3>ما تم بناؤه واختباره فعليًا</h3>
+  <ul>
+    <li><strong>دفتر أستاذ مالي مزدوج القيد</strong> (نفس النموذج المستخدم في الأنظمة المصرفية) — كل معاملة يجب أن توازن صفرًا، وإلا يرفضها النظام تلقائيًا. مُثبت بالاختبار ضد قاعدة بيانات PostgreSQL حقيقية تحت تزامن فعلي (حتى ٨ اتصالات مستقلة في وقت واحد).</li>
+    <li><strong>محرك مباريات لا مركزي بالكامل من جهة الخادم</strong> — العميل (المتصفح أو التطبيق) لا يملك أي سلطة على النتيجة أو النقاط أو الساعة، وهذا يغلق الباب أمام أكثر أنواع الغش شيوعًا.</li>
+    <li><strong>محرك مكافحة غش وتلاعب</strong> يعمل بنظام "إشارات ← تقييم ← دليل ← قضية ← مراجعة بشرية" — لا قرار حظر آلي أبدًا بناءً على إشارة واحدة.</li>
+    <li><strong>طبقة امتثال قابلة للتهيئة</strong> — كل دولة تبدأ افتراضيًا بوضع "لعب مجاني فقط" حتى تُفعَّل بقرار قانوني موثّق، بلا استثناء.</li>
+    <li><strong>نظام بطولات كامل</strong> (٨ مراحل، من الجدولة حتى التسوية)، ونظام تصنيف عالمي موحّد عبر كل الألعاب، ونظام إنجازات وتتبع تقدم طويل المدى.</li>
+    <li><strong>هوية بصرية كاملة</strong> — شعار، نظام ألوان، خطوط، ودليل استخدام موثّق بالكامل (مرفق كملف PDF منفصل).</li>
+  </ul>
+  <p>هذا المستوى من الجاهزية التقنية عادة يحتاج فريقًا كاملًا من ٥ إلى ٨ مهندسين ومهندسة على مدار ٦ إلى ٩ أشهر. تم الوصول له هنا بموارد أقل بكثير — وهذا بالضبط ما يجعل نموذج بناء نزالو ميزة تنافسية حقيقية (قسم ٠٦).</p>
+</section>
+
+<section>
+  <div class="eyebrow">03 — الميزة التنافسية</div>
+  <h2>الخندق: لماذا هذا صعب التقليد</h2>
+  <ul>
+    <li><strong>البنية المالية أولًا، لا لاحقًا.</strong> أغلب منصات الألعاب تبني اللعبة أولًا وتحاول "توصيل" نظام مالي موثوق لاحقًا — وهذا يفشل غالبًا. نزالو بُنيت بالترتيب المعاكس: الدفتر المالي والأمان هما الأساس الذي بُنيت عليه الألعاب.</li>
+    <li><strong>معمارية "لعبة واحدة تُضاف، صفر لمسات على المال."</strong> كل لعبة جديدة هي وحدة معزولة تمامًا عن الجزء المالي — هذا يعني توسّع سريع وآمن في عدد الألعاب دون مخاطرة بالجزء الحساس.</li>
+    <li><strong>لا تُشبه الكازينو، بتصميم لا بمصادفة.</strong> قواعد صارمة موثّقة تمنع أي عنصر تصميم "يستدرج" اللاعب الخاسر على الإيداع أكثر — وهذا أساسي لأي ترخيص تنظيمي مستقبلي في أغلب الأسواق الجادة.</li>
+    <li><strong>سرعة بناء غير تقليدية.</strong> الاعتماد على أدوات الذكاء الاصطناعي في التطوير (تفصيل في القسم التالي) يعني أن دورة "فكرة → ميزة مبنية ومُختبرة" أسرع بشكل كبير من الفرق التقليدية، بتكلفة تشغيلية أقل بكثير.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="eyebrow">04 — الفريق</div>
+  <h2>مؤسس واحد + بنية تطوير مدعومة بالذكاء الاصطناعي</h2>
+  <p>نزالو اليوم مشروع <strong>مؤسس واحد</strong>، يعمل مباشرة مع أدوات تطوير برمجي مدعومة بالذكاء الاصطناعي (Claude Code) كشريك تنفيذ تقني رئيسي — وليس كأداة مساعدة هامشية.</p>
+  <div class="callout"><p>هذه ليست نقطة ضعف يجب إخفاؤها — هي جزء من القصة. الحجم التقني الذي وصلت له المنصة (دفتر مالي مُختبر تحت تزامن حقيقي، عشر ألعاب، نظام مكافحة غش، طبقة امتثال) في هذه المرحلة المبكرة يوضح مدى الكفاءة التشغيلية لهذا النموذج — وهو بالضبط نوع الكفاءة التي يبحث عنها مستثمر مرحلة تأسيسية اليوم.</p></div>
+  <p>التمويل المطلوب في هذه الجولة يذهب أساسًا لتحويل هذه الكفاءة الفردية إلى <strong>قدرة إطلاق واستحواذ مستخدمين حقيقية</strong> — لا لبناء فريق هندسي ضخم من الصفر.</p>
+</section>
+
+<section>
+  <div class="eyebrow">05 — خارطة الطريق</div>
+  <h2>ما تبقّى حتى الإطلاق التجاري الكامل</h2>
+  <table>
+    <tr><th>المرحلة</th><th>المحتوى</th><th>الحالة</th></tr>
+    <tr><td><strong>٠ إلى ٤</strong></td><td>الأساس، المنصة، الشطرنج، محرك المباريات، البطولات، عشر ألعاب</td><td>مكتملة ومُختبرة</td></tr>
+    <tr><td><strong>٥</strong></td><td>تفعيل المال الحقيقي في الإنتاج (بيئة تجريبية آمنة أولًا)</td><td>قيد الإعداد</td></tr>
+    <tr><td><strong>٦</strong></td><td>الترخيص القانوني، التحقق من الهوية، مكافحة غسل الأموال</td><td>يحتاج تمويل + استشارة قانونية متخصصة</td></tr>
+    <tr><td><strong>٧</strong></td><td>تطبيق أندرويد</td><td>يحتاج تمويل</td></tr>
+    <tr><td><strong>٨</strong></td><td>اختبار أمان خارجي مستقل، اختبار تحت ضغط حقيقي</td><td>يحتاج تمويل</td></tr>
+    <tr><td><strong>٩</strong></td><td>الإطلاق التجاري التدريجي في أسواق مرخّصة + النمو</td><td>يحتاج تمويل</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="eyebrow">06 — التمويل المطلوب</div>
+  <h2>مبلغ الجولة المقترح</h2>
+  <div class="statgrid3">
+    <div class="stat"><span class="n">$400,000</span><span class="l">الجولة المقترحة (تأسيسية)</span></div>
+    <div class="stat"><span class="n">12–15</span><span class="l">شهر مدى تشغيلي متوقع</span></div>
+    <div class="stat"><span class="n">2</span><span class="l">مجالان رئيسيان للصرف: تطوير + تسويق</span></div>
+  </div>
+  <p style="font-size:9pt;color:var(--tx3)">* هذا رقم تقديري مقترح بناءً على حجم العمل المتبقي حتى الإطلاق التجاري المرخّص، وهو نقطة بداية للنقاش وليس رقمًا نهائيًا.</p>
+
+  <h3>توزيع الاستخدام المقترح</h3>
+  <div class="bar-row">
+    <div class="bar-label">تطوير المنتج والبنية التحتية</div>
+    <div class="bar-track"><div class="bar-fill" style="width:45%"></div></div>
+    <div class="bar-pct">45%</div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">التسويق والنمو</div>
+    <div class="bar-track"><div class="bar-fill" style="width:35%"></div></div>
+    <div class="bar-pct">35%</div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">الترخيص القانوني والامتثال</div>
+    <div class="bar-track"><div class="bar-fill" style="width:15%"></div></div>
+    <div class="bar-pct">15%</div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">احتياطي تشغيلي</div>
+    <div class="bar-track"><div class="bar-fill" style="width:5%"></div></div>
+    <div class="bar-pct">5%</div>
+  </div>
+
+  <h3>تفصيل: تطوير المنتج (٤٥٪)</h3>
+  <ul>
+    <li>إتمام نشر البنية التحتية للإنتاج بالكامل (خادم المباريات الفورية، خادم المهام الخلفية، التسويات المالية).</li>
+    <li>تطبيق أندرويد كامل (Kotlin + Jetpack Compose) بنفس مزايا الويب.</li>
+    <li>اختبار أمان خارجي مستقل (Penetration Testing) — شرط أساسي قبل أي إطلاق حقيقي للأموال.</li>
+    <li>تحسين الأداء والاستقرار تحت أحمال حقيقية.</li>
+  </ul>
+  <h3>تفصيل: التسويق والنمو (٣٥٪)</h3>
+  <ul>
+    <li>حملات إطلاق في الأسواق المستهدفة الأولى.</li>
+    <li>بناء مجتمع لاعبين حول الشطرنج كلعبة رئيسية جاذبة، ثم توسيع تدريجي لباقي الألعاب.</li>
+    <li>شراكات مع صنّاع محتوى ومجتمعات ألعاب المهارة.</li>
+    <li>بطولات إطلاق بجوائز حقيقية في الأسواق المرخّصة فقط.</li>
+  </ul>
+  <h3>تفصيل: الترخيص القانوني (١٥٪)</h3>
+  <ul>
+    <li>تأسيس الكيان القانوني واختيار الولاية القضائية المناسبة.</li>
+    <li>استشارة قانونية متخصصة في ألعاب المهارة والتقنية المالية.</li>
+    <li>دمج مزوّد خدمة التحقق من الهوية (KYC) ومكافحة غسل الأموال.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="eyebrow">07 — الرؤية</div>
+  <h2>إلى أين تتجه نزالو</h2>
+  <p>الهدف ليس "موقع شطرنج ناجح آخر". الهدف هو أن تصبح نزالو <strong>المرجع العالمي لإثبات المهارة التنافسية</strong> عبر أكثر من مجال — تصنيف واحد يفهمه أي شخص، بغض النظر عن اللعبة التي بدأ بها.</p>
+  <p>النمو المخطط: الشطرنج كبوابة دخول أولى وأكبر جمهور جاهز عالميًا → توسّع تدريجي لباقي الألعاب التسع → بطولات منتظمة تبني هوية ومجتمع → طبقة مالية موثوقة تجعل "المنافسة على جوائز حقيقية" ممكنة وآمنة وقانونية في الأسواق المسموح بها فقط.</p>
+  <div class="callout"><p><strong>القاعدة الحاكمة:</strong> واجهات المال يجب أن تبدو كأنها من بنك. وواجهات اللعب يجب أن تبدو كأنها من رياضة. لا شيء يجب أن يبدو أبدًا كأرضية كازينو.</p></div>
+
+  <h3>للتواصل</h3>
+  <table style="margin-top:6pt">
+    <tr><td style="width:100pt"><strong>البريد الإلكتروني</strong></td><td>universebrands.org@gmail.com</td></tr>
+    <tr><td><strong>الموقع</strong></td><td class="num" style="direction:ltr;text-align:right">nizalo.com</td></tr>
+  </table>
+  <p class="disclaimer">هذا المستند تمهيدي وليس عرضًا قانونيًا أو ماليًا ملزمًا، ولا يشكل التماسًا للاستثمار بموجب أي قانون. جميع الأرقام المالية تقديرية وقابلة للتفاوض. المنصة في مرحلة ما قبل الإطلاق التجاري ولا تحقق إيرادات فعلية حتى تاريخ هذا العرض.</p>
+</section>

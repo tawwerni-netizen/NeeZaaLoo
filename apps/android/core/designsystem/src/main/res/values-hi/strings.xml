@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">Nizalo</string>
+    <string name="nav_home">होम</string>
+    <string name="nav_games">गेम्स</string>
+    <string name="nav_tournaments">टूर्नामेंट</string>
+    <string name="nav_ranking">रैंकिंग</string>
+    <string name="nav_profile">प्रोफाइल</string>
+    <string name="nav_wallet">वॉलेट</string>
+    <string name="nav_support">सहायता</string>
+
+    <string name="game_chess">शतरंज (Chess)</string>
+    <string name="game_checkers">चेकर्स</string>
+    <string name="game_dominoes">डोमिनोज़</string>
+    <string name="game_backgammon">बैकगैमौन</string>
+    <string name="game_connect_four">कनेक्ट फोर</string>
+    <string name="game_seega">सीगा</string>
+    <string name="game_xo">एक्सओ (XO)</string>
+    <string name="game_speed_math">स्पीड मैथ</string>
+    <string name="game_reversi">रिवर्सि</string>
+    <string name="game_gomoku">गोमोकू</string>
+
+    <string name="mode_vs_computer">कंप्यूटर के खिलाफ</string>
+    <string name="mode_friend">दोस्त के साथ खेलें</string>
+    <string name="mode_random">रैंडम मैच</string>
+    <string name="mode_tournament">टूर्नामेंट</string>
+
+    <string name="diff_easy">सरल</string>
+    <string name="diff_medium">मध्यम</string>
+    <string name="diff_hard">कठिन</string>
+    <string name="diff_expert">विशेषज्ञ</string>
+
+    <string name="login_title">साइन इन करें</string>
+    <string name="register_title">खाता बनाएं</string>
+    <string name="terms_checkbox">मैं नियम एवं शर्तों और गोपनीयता नीति से सहमत हूँ</string>
+    <string name="terms_required_error">आगे बढ़ने के लिए आपको नियमों को स्वीकार करना होगा</string>
+    <string name="policy_reacceptance_title">नीति अपडेट सूचना</string>
+    <string name="policy_reacceptance_msg">हमने अपनी नीतियों को अपडेट किया है। खेलना जारी रखने के लिए कृपया समीक्षा करें और स्वीकार करें।</string>
+    <string name="accept_and_continue">स्वीकार करें और जारी रखें</string>
+
+    <string name="wallet_balance">उपलब्ध बैलेंस</string>
+    <string name="wallet_deposit">USDT जमा करें</string>
+    <string name="wallet_withdraw">USDT निकालें</string>
+    <string name="wallet_transactions">लेन-देन इतिहास</string>
+
+    <string name="spectator_badge">लाइव दर्शक</string>
+    <string name="your_turn">आपकी बारी</string>
+    <string name="opponent_turn">विरोधी की बारी</string>
+    <string name="game_over">मैच समाप्त</string>
+    <string name="reconnecting">मैच से पुनः जुड़ रहा है…</string>
+</resources>

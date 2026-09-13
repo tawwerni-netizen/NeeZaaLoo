@@ -1,24 +1,9 @@
 "use client";
 
-/**
- * The Checkers board -- server-authoritative, the same discipline as
- * ChessBoard.tsx: selection is the ONLY client-side state, `legalMoves`
- * is the plugin's own projection (packages/game-checkers/src/plugin.mjs's
- * project()), and a click never moves a piece directly -- it only ever
- * calls `onMove("c3d4")`, sent as an ordinary INTENT.
- *
- * Mandatory multi-jump: when the server's own state carries a
- * `forcedFrom` square (packages/game-checkers/src/checkers.mjs's own
- * rule -- a capturing piece that can jump again MUST), that square is
- * auto-selected and is the ONLY selectable square; the player cannot
- * even try to move a different piece, matching what the server would
- * refuse anyway.
- *
- * RTL note: forced `dir="ltr"` internally, exactly like the chess board,
- * for the same reason -- a board's own geometry never mirrors.
- */
 import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
+import { useVisualSettings } from "./TableEnvironment";
 import styles from "./CheckersBoard.module.css";
 
 const FILES = "abcdefgh";
@@ -35,12 +20,65 @@ type Props = {
   onMove: (move: string) => void;
 };
 
+export function CheckersPieceSvg({ isKing, seat }: { isKing: boolean; seat: "0" | "1" }) {
+  const isRed = seat === "0";
+  const gradId = isRed ? "chk-red-grad" : "chk-dark-grad";
+  const strokeColor = isRed ? "#7a1a12" : "#0d0f12";
+
+  return (
+    <svg viewBox="0 0 100 100" width="100%" height="100%" className={styles.pieceSvg}>
+      <defs>
+        <radialGradient id="chk-red-grad" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#FF6B4A" />
+          <stop offset="45%" stopColor="#E03818" />
+          <stop offset="85%" stopColor="#9E1D0E" />
+          <stop offset="100%" stopColor="#5A0E06" />
+        </radialGradient>
+        <radialGradient id="chk-dark-grad" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#4A5260" />
+          <stop offset="45%" stopColor="#252A33" />
+          <stop offset="85%" stopColor="#14171C" />
+          <stop offset="100%" stopColor="#0B0D10" />
+        </radialGradient>
+        <radialGradient id="chk-specular" cx="30%" cy="25%" r="40%">
+          <stop offset="0%" stopColor="rgba(255, 255, 255, 0.45)" />
+          <stop offset="100%" stopColor="transparent" />
+        </radialGradient>
+      </defs>
+
+      {/* Outer 3D Rim */}
+      <circle cx="50" cy="50" r="45" fill={`url(#${gradId})`} stroke={strokeColor} strokeWidth="3" />
+      {/* Concentric Lathe Rings */}
+      <circle cx="50" cy="50" r="37" fill="none" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="1.5" />
+      <circle cx="50" cy="50" r="28" fill="none" stroke="rgba(0, 0, 0, 0.35)" strokeWidth="2" />
+      <circle cx="50" cy="50" r="24" fill={`url(#${gradId})`} />
+      {/* Top Specular Highlight */}
+      <circle cx="50" cy="50" r="43" fill="url(#chk-specular)" />
+
+      {/* Gold Crown for King */}
+      {isKing && (
+        <g filter="drop-shadow(0 2px 3px rgba(0,0,0,0.6))">
+          <path
+            d="M 28 64 L 72 64 L 70 42 L 59 52 L 50 34 L 41 52 L 30 42 Z"
+            fill="#F6D365"
+            stroke="#9E782F"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <circle cx="30" cy="40" r="2.5" fill="#FFF" />
+          <circle cx="50" cy="32" r="3" fill="#FFF" />
+          <circle cx="70" cy="40" r="2.5" fill="#FFF" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
 export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat, canMove, onMove }: Props) {
   const { t } = useI18n();
+  const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<string | null>(null);
 
-  // The server's own forced-continuation square always wins over whatever
-  // the player had clicked -- it is not a suggestion.
   useEffect(() => {
     setSelected(forcedFrom);
   }, [forcedFrom]);
@@ -61,10 +99,6 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
     return { from: lastMove.slice(0, 2), to: lastMove.slice(2, 4) };
   }, [lastMove]);
 
-  // Capture effect: the square the last move jumped OVER, if it was a
-  // capture -- the midpoint between from and to. Re-keyed on `lastMove`
-  // itself so the flash animation replays for every new capture, not just
-  // the first one to land on a given square.
   const capturedSquare = useMemo(() => {
     if (!lastMoveSquares) return null;
     const { from, to } = lastMoveSquares;
@@ -75,12 +109,6 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
     return `${FILES[midFile]}${midRank}`;
   }, [lastMoveSquares]);
 
-  // A checkers capture always LANDS on an empty square (you jump OVER the
-  // captured piece, never onto it) -- so, unlike chess, "is this
-  // destination a capture" can never be read off what currently occupies
-  // the destination cell. It IS always exactly 2 files/ranks away from
-  // the origin, where a simple move is always exactly 1 -- a fixed
-  // geometric fact of this ruleset, not a heuristic.
   function isJumpDestination(from: string, to: string) {
     return Math.abs(FILES.indexOf(to[0] ?? "") - FILES.indexOf(from[0] ?? "")) === 2;
   }
@@ -90,7 +118,6 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
     const sq = squareLabel(row, col);
 
     if (forcedFrom) {
-      // Only the forced piece's own destinations are ever legal right now.
       if (destinationsFromSelected.has(sq)) onMove(`${forcedFrom}${sq}`);
       return;
     }
@@ -112,51 +139,63 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>
-        {displayRows.map((row) =>
-          displayCols.map((col) => {
-            const piece = board[row]?.[col] ?? 0;
-            const sq = squareLabel(row, col);
-            const isDark = (row + col) % 2 === 1;
-            const isSelected = selected === sq;
-            const isDest = destinationsFromSelected.has(sq);
-            const isLast = lastMoveSquares && (lastMoveSquares.from === sq || lastMoveSquares.to === sq);
-            const isKingPiece = Math.abs(piece) === 2;
-            const isCaptured = capturedSquare === sq;
-            return (
-              <button
-                key={sq}
-                type="button"
-                role="gridcell"
-                aria-label={sq}
-                className={[
-                  styles.square,
-                  isDark ? styles.dark : styles.light,
-                  isLast ? styles.lastMove : "",
-                  isSelected ? styles.selected : "",
-                ].join(" ")}
-                onClick={() => handleClick(row, col)}
-                disabled={!canMove || !isDark}
-              >
-                {isCaptured && <span key={lastMove} className={styles.captureFlash} aria-hidden="true" />}
-                {piece !== 0 && (
-                  <span
-                    className={[styles.piece, isKingPiece ? styles.king : ""].join(" ")}
-                    data-seat={piece > 0 ? "0" : "1"}
+      <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
+        <div className={styles.tableBevel}>
+          <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>
+            {displayRows.map((row) =>
+              displayCols.map((col) => {
+                const piece = board[row]?.[col] ?? 0;
+                const sq = squareLabel(row, col);
+                const isDark = (row + col) % 2 === 1;
+                const isSelected = selected === sq;
+                const isDest = destinationsFromSelected.has(sq);
+                const isLast = lastMoveSquares && (lastMoveSquares.from === sq || lastMoveSquares.to === sq);
+                const isKingPiece = Math.abs(piece) === 2;
+                const isCaptured = capturedSquare === sq;
+
+                return (
+                  <button
+                    key={sq}
+                    type="button"
+                    role="gridcell"
+                    aria-label={sq}
+                    className={[
+                      styles.square,
+                      isDark ? styles.dark : styles.light,
+                      isLast ? styles.lastMove : "",
+                      isSelected ? styles.selected : "",
+                    ].join(" ")}
+                    onClick={() => handleClick(row, col)}
+                    disabled={!canMove || !isDark}
                   >
-                    {isKingPiece && <span className={styles.crown} aria-hidden="true">&#9813;</span>}
-                  </span>
-                )}
-                {isDest && (
-                  <span
-                    className={isJumpDestination(selected ?? forcedFrom ?? sq, sq) ? styles.captureHint : styles.moveHint}
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
-            );
-          })
-        )}
+                    {isCaptured && <span key={lastMove} className={styles.captureFlash} aria-hidden="true" />}
+                    {piece !== 0 && (
+                      <motion.div
+                        className={styles.piece}
+                        {...(quality !== "low" ? { layoutId: `checkers-piece-${sq}` } : {})}
+                        initial={isLast && lastMoveSquares?.to === sq ? { scale: 1.2, y: -12 } : false}
+                        animate={{
+                          scale: isSelected ? 1.15 : 1,
+                          y: isSelected ? -8 : 0,
+                          z: isSelected ? 24 : 0,
+                        }}
+                        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <CheckersPieceSvg isKing={isKingPiece} seat={piece > 0 ? "0" : "1"} />
+                      </motion.div>
+                    )}
+                    {isDest && (
+                      <span
+                        className={isJumpDestination(selected ?? forcedFrom ?? sq, sq) ? styles.captureHint : styles.moveHint}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

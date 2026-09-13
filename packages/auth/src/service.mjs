@@ -41,6 +41,7 @@ export const AuthError = {
   HANDLE_TAKEN: "HANDLE_TAKEN",
   COOLING_OFF: "COOLING_OFF",
   CREDENTIAL_ALREADY_SET: "CREDENTIAL_ALREADY_SET",
+  TERMS_ACCEPTANCE_REQUIRED: "TERMS_ACCEPTANCE_REQUIRED",
 };
 
 const MAX_FAILURES = 10;                 // per 15-minute window, per identifier
@@ -64,7 +65,11 @@ export function createAuthService(db, {
 
   const svc = {
     /** Create an account. The password is never stored, logged, or echoed. */
-    async register({ playerId, handle, password }, ctx = {}) {
+    async register({ playerId, handle, password, referralCode = null, termsAccepted = true, locale = "en", policyVersion = "1.0.0" }, ctx = {}) {
+      if (termsAccepted !== true) {
+        return { ok: false, reason: AuthError.TERMS_ACCEPTANCE_REQUIRED };
+      }
+
       const weak = checkPasswordStrength(password);
       if (weak) return { ok: false, reason: AuthError.WEAK_PASSWORD, detail: weak };
 
@@ -80,7 +85,41 @@ export function createAuthService(db, {
           [playerId, passwordHash]
         );
         await tx.query("SELECT ledger_open_user_wallet($1)", [playerId]);
-        await audit(tx, playerId, "REGISTERED", { handle }, ctx);
+
+        const consentId = `lcn_${randomUUID()}`;
+        const consentTime = new Date(now()).toISOString();
+        await tx.query(
+          `INSERT INTO legal_consent
+             (id, player_id, policy_identifier, policy_version, locale, consent_type, source, accepted_at, ip_hash, user_agent_hash)
+           VALUES ($1, $2, 'terms_of_service', $3, $4, 'TERMS_AND_CONDITIONS', 'WEB_REGISTRATION', $5, $6, $7)`,
+          [
+            consentId,
+            playerId,
+            policyVersion || "1.0.0",
+            locale || "en",
+            consentTime,
+            ctx.ip ? sha256(ctx.ip) : null,
+            ctx.userAgent ? sha256(ctx.userAgent) : null,
+          ]
+        );
+
+        if (referralCode) {
+          const cleanCode = String(referralCode).trim().toUpperCase();
+          const rc = await tx.query(
+            "SELECT player_id, is_active FROM referral_code WHERE code = $1",
+            [cleanCode]
+          );
+          if (rc.rows.length && rc.rows[0].is_active && rc.rows[0].player_id !== playerId) {
+            await tx.query(
+              `INSERT INTO referral_attribution (referred_player_id, referrer_player_id, referral_code)
+               VALUES ($1, $2, $3)
+               ON CONFLICT (referred_player_id) DO NOTHING`,
+              [playerId, rc.rows[0].player_id, cleanCode]
+            );
+          }
+        }
+
+        await audit(tx, playerId, "REGISTERED", { handle, termsAccepted: true, policyVersion: policyVersion || "1.0.0" }, ctx);
         return { ok: true, playerId };
       });
     },

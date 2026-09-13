@@ -1,0 +1,80 @@
+/* Nizalo Game Visual Effects & 3D Lighting Library */
+
+.pedestal3D {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform var(--nz-dur-base) var(--nz-ease-settle), box-shadow var(--nz-dur-base) ease;
+}
+
+/* 3D Board Elevation for Full 3D mode */
+.board3D {
+  transform: rotateX(16deg) translateZ(10px);
+  transform-style: preserve-3d;
+  box-shadow: 
+    0 10px 0 #12151a,
+    0 15px 0 #0d0f12,
+    0 25px 45px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.flatBoard {
+  transform: none !important;
+  box-shadow: var(--nz-elev-board, var(--nz-shadow-3));
+}
+
+/* Bevel Edge Rim */
+.woodBevel {
+  border: 10px solid #2e1c0c;
+  border-image: linear-gradient(135deg, #4d3016 0%, #2e1c0c 50%, #1a1007 100%) 10;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.7);
+}
+
+.metallicBevel {
+  border: 8px solid #2a313d;
+  border-image: linear-gradient(135deg, #475569 0%, #1e293b 50%, #0f172a 100%) 8;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.8), 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+.leatherFeltBevel {
+  border: 12px solid #0a332a;
+  border-image: linear-gradient(135deg, #134e40 0%, #0a332a 50%, #041713 100%) 12;
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.75);
+}
+
+/* Tactile 3D Pieces */
+.piece3D {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform var(--nz-dur-fast) var(--nz-ease-snap), filter var(--nz-dur-fast) ease;
+}
+
+.pieceHover:hover {
+  transform: translateZ(18px) scale(1.08);
+  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.65));
+}
+
+.pieceSelected {
+  transform: translateZ(24px) scale(1.12);
+  filter: drop-shadow(0 18px 20px rgba(255, 90, 43, 0.5));
+}
+
+/* Victory Particles & Rays */
+@keyframes goldPulse {
+  0% { box-shadow: 0 0 0 0 rgba(198, 168, 103, 0.6); }
+  70% { box-shadow: 0 0 0 16px rgba(198, 168, 103, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(198, 168, 103, 0); }
+}
+
+@keyframes neonBeam {
+  0% { filter: drop-shadow(0 0 4px var(--nz-accent)) drop-shadow(0 0 8px var(--nz-accent)); }
+  50% { filter: drop-shadow(0 0 12px var(--nz-accent)) drop-shadow(0 0 24px var(--nz-accent)); }
+  100% { filter: drop-shadow(0 0 4px var(--nz-accent)) drop-shadow(0 0 8px var(--nz-accent)); }
+}
+
+.goldVictoryGlow {
+  animation: goldPulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+.neonStrikeGlow {
+  animation: neonBeam 1.2s infinite ease-in-out;
+}

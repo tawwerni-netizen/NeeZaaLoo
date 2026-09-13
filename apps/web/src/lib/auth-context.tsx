@@ -18,7 +18,7 @@ type AuthState = {
   player: Player | null;
   loading: boolean;
   login: (identifier: string, password: string) => Promise<{ ok: true } | { ok: false; reason: string }>;
-  register: (handle: string, password: string) => Promise<{ ok: true } | { ok: false; reason: string }>;
+  register: (handle: string, password: string, referralCode?: string, termsAccepted?: boolean) => Promise<{ ok: true } | { ok: false; reason: string }>;
   logout: () => Promise<void>;
   /** Saves a language preference to the signed-in player's account (PATCH /v1/me). */
   setLocale: (locale: SupportedLocale) => Promise<void>;
@@ -98,15 +98,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshPlayer]);
 
-  const register = useCallback(async (handle: string, password: string) => {
+  const register = useCallback(async (handle: string, password: string, referralCode?: string, termsAccepted: boolean = true) => {
     try {
-      await post("/v1/auth/register", { handle, password }, { noRefresh: true });
+      const code = referralCode || readCookie("nz_ref") || undefined;
+      await post("/v1/auth/register", {
+        handle,
+        password,
+        referralCode: code,
+        termsAccepted,
+        locale: activeLocale,
+      }, { noRefresh: true });
       return login(handle, password);
     } catch (e) {
       const reason = e instanceof ApiError ? (e.code ?? "REGISTER_FAILED") : "NETWORK_ERROR";
       return { ok: false as const, reason };
     }
-  }, [login]);
+  }, [login, activeLocale]);
 
   const logout = useCallback(async () => {
     const { refreshToken } = getTokens();

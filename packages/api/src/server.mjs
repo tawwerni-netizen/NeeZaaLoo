@@ -35,12 +35,14 @@ import { ChatMessageError } from "../../chat/src/messages.mjs";
 import { ModerationError } from "../../chat/src/moderation.mjs";
 import { BlockError } from "../../chat/src/blocks.mjs";
 import { ReportError } from "../../chat/src/reports.mjs";
+import { createConsentService, ConsentError } from "../../compliance/src/consent.mjs";
 
 export function createApi({
   db, auth, settlement = null, tournament = null, globalSkill = null, reconciliation = null, rbac = null,
   emailIdentity = null, emailVerification = null, welcomeEmail = null, emailLoginCode = null, passwordReset = null,
   googleOAuth = null, profile = null, support = null, ticketNotifications = null, chat = null,
   mastery = null, streaks = null, dailyChallenges = null, recommendations = null, frames = null,
+  consent = null,
   // Read-only admin visibility into EXP/achievements/badges (Slice 11,
   // directive #20) -- { exp, achievements, badges }, the SAME
   // packages/profile services `profile` above already wraps for the
@@ -48,6 +50,7 @@ export function createApi({
   // through this bundle's routes below -- see this file's own comment at
   // the route itself for why a manual-EXP-edit endpoint does not exist.
   progression = null,
+  referral = null, referrals = null,
   // The Admin Payment & Stablecoin Control Center: `rails` is
   // createRailService() (packages/payments/src/valuation.mjs), `railHealth`
   // is createHealthService() (packages/payments/src/health.mjs). Both null
@@ -157,6 +160,8 @@ export function createApi({
     return { type: "PLAYER", id: playerId, sessionId: res.claims.sid };
   }
 
+  const consentService = consent || (db ? createConsentService(db, { now }) : null);
+
   const server = createServer(async (req, res) => {
     try {
       await handle(req, res);
@@ -218,20 +223,17 @@ export function createApi({
     // routes (see `rateLimitKey` on the route definition) -- on top of,
     // never instead of, the general limiter above.
     if (route.rateLimitKey) {
-      if (!sensitiveLimiters.has(route.rateLimitKey)) sensitiveLimiters.set(route.rateLimitKey, new Map());
-      const byIp = sensitiveLimiters.get(route.rateLimitKey);
-      if (!byIp.has(key)) {
-        byIp.set(key, createRateLimiter(sensitiveRateLimits[route.rateLimitKey] ?? { capacity: 5, refillPerSecond: 5 / 300 }));
+      const perIpBudget = sensitiveRateLimits[route.rateLimitKey] ?? { capacity: 5, refillRatePerSecond: 5 / 300 };
+      if (!sensitiveLimiters.has(route.rateLimitKey)) {
+        sensitiveLimiters.set(route.rateLimitKey, new Map());
       }
-      if (!takeToken(byIp.get(key), now())) {
+      const map = sensitiveLimiters.get(route.rateLimitKey);
+      if (!map.has(key)) map.set(key, createRateLimiter(perIpBudget));
+      if (!takeToken(map.get(key), now())) {
         return sendJson(res, 429, errorBody("RATE_LIMITED"), { "retry-after": "60" });
       }
     }
 
-    // A route may declare its own `maxBodyBytes` -- today only the avatar
-    // upload route does, since a base64-encoded image legitimately
-    // exceeds the default 64KB cap every other JSON body is held to.
-    // Every other route is unaffected by this being configurable at all.
     const parsed = ["POST", "PUT", "PATCH"].includes(req.method)
       ? await readJsonBody(req, route.maxBodyBytes ? { maxBytes: route.maxBodyBytes } : {})
       : { ok: true, body: {} };
@@ -242,8 +244,9 @@ export function createApi({
     }
 
     const actor = await identify(req);
-    // Loaded once per request and reused: both the generic authorize() call
-    // below AND any handler that needs a second, finer-grained authorize()
+
+    // Platform emergency controls: loaded once per request, passed into
+    // authorize() and on to handlers through `ctx.controls` so any secondary
     // check (e.g. a competitive challenge/ticket re-checked against
     // duel.play.cash on top of the route's own duel.play.free) read the
     // SAME snapshot, rather than a second DB round-trip that could
@@ -251,11 +254,12 @@ export function createApi({
     const controls = await loadControls();
     const ctx = {
       params, body: parsed.body, query: url.searchParams, actor,
-      ip: req.socket.remoteAddress, db, auth, settlement, tournament, globalSkill, reconciliation, rbac,
+      ip: req.socket.remoteAddress, userAgent: req.headers["user-agent"],
+      db, auth, settlement, tournament, globalSkill, reconciliation, rbac,
       emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
       googleOAuth, googleFrontendOrigin, profile, support, ticketNotifications, chat, progression, now,
       mastery, streaks, dailyChallenges, recommendations, frames,
-      rails, railHealth, controls,
+      rails, railHealth, referral, referrals, consent: consentService, controls,
     };
 
     if (!route.anonymous && actor.type === "ANON") {
@@ -398,12 +402,23 @@ function buildRoutes() {
 
     // --- Auth ----------------------------------------------------------------
     { method: "POST", path: "/v1/auth/register", action: "player.register", anonymous: true,
-      handler: async ({ body, auth, ip }) => {
-        const { handle, password } = body;
+      handler: async ({ body, auth, ip, userAgent }) => {
+        const { handle, password, referralCode, termsAccepted, locale, policyVersion } = body ?? {};
         if (typeof handle !== "string" || typeof password !== "string") {
           return { status: 400, body: errorBody("BAD_REQUEST") };
         }
-        const r = await auth.register({ playerId: handle, handle, password }, { ip });
+        if (termsAccepted === false) {
+          return { status: 400, body: errorBody("TERMS_ACCEPTANCE_REQUIRED", "You must agree to the Terms & Conditions to register") };
+        }
+        const r = await auth.register({
+          playerId: handle,
+          handle,
+          password,
+          referralCode: referralCode ? String(referralCode) : null,
+          termsAccepted: true,
+          locale: locale ? String(locale) : "en",
+          policyVersion: policyVersion ? String(policyVersion) : "1.0.0",
+        }, { ip, userAgent });
         return r.ok
           ? { status: 201, body: { playerId: r.playerId } }
           : { status: 400, body: errorBody(r.reason, r.detail) };
@@ -2456,6 +2471,130 @@ function buildRoutes() {
       handler: async ({ params, rbac }) => ({
         body: { roles: await rbac.rolesFor(params.id), permissions: await rbac.effectivePermissions(params.id) },
       }) },
+
+    // --- Referrals & Attributions ---------------------------------------------
+    { method: "GET", path: "/v1/me/referral", action: "player.referral.read",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, referral, referrals }) => {
+        const refService = referral || referrals;
+        if (!refService) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const dashboard = await refService.getDashboard(actor.id);
+        if (!dashboard) return { status: 404, body: errorBody("NOT_FOUND") };
+        return { body: dashboard };
+      } },
+
+    { method: "GET", path: "/v1/referral/code/:code", action: "player.referral.code.read", anonymous: true,
+      handler: async ({ params, referral, referrals }) => {
+        const refService = referral || referrals;
+        if (!refService) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const res = await refService.resolveReferralCode(params.code);
+        if (!res.ok) {
+          const status = res.reason === "CODE_NOT_FOUND" ? 404 : 400;
+          return { status, body: errorBody(res.reason) };
+        }
+        return { body: { ok: true, code: res.code, referrerHandle: res.referrerHandle } };
+      } },
+
+    { method: "GET", path: "/v1/admin/referrals", action: "admin.referral.read",
+      subjectType: "referrals",
+      handler: async ({ query, referral, referrals }) => {
+        const refService = referral || referrals;
+        if (!refService) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const limit = Math.min(Math.max(parseInt(query.get("limit") || "50", 10) || 50, 1), 200);
+        const offset = Math.max(parseInt(query.get("offset") || "0", 10) || 0, 0);
+        const rows = await refService.getAdminReferrals({ limit, offset });
+        return { body: { ok: true, referrals: rows } };
+      } },
+
+    { method: "POST", path: "/v1/admin/referrals/:id/decide", action: "admin.referral.decide",
+      subjectType: "referral_reward",
+      handler: async ({ params, body, actor, referral, referrals }) => {
+        const refService = referral || referrals;
+        if (!refService) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        if (typeof body.approved !== "boolean") {
+          return { status: 400, body: errorBody("BAD_REQUEST", "approved boolean is required") };
+        }
+        const res = await refService.decideReward(params.id, {
+          approved: body.approved,
+          adminId: actor.id,
+          reason: body.reason ? String(body.reason) : null,
+        });
+        if (!res.ok) {
+          const status = res.reason === "NOT_FOUND" ? 404 : 400;
+          return { status, body: errorBody(res.reason) };
+        }
+        return { body: { ok: true, state: res.state }, audit: { rewardId: params.id, approved: body.approved } };
+      } },
+
+    // --- Legal & Consent ------------------------------------------------------
+    { method: "GET", path: "/v1/legal/policies", action: "legal.policies.read", anonymous: true,
+      handler: async ({ consent }) => {
+        if (!consent) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const policies = await consent.getAllPolicies();
+        return { body: { ok: true, policies } };
+      } },
+
+    { method: "GET", path: "/v1/me/consent/status", action: "player.consent.read",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, consent }) => {
+        if (!consent) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const status = await consent.getPlayerConsentStatus(actor.id);
+        return { body: { ok: true, ...status } };
+      } },
+
+    { method: "POST", path: "/v1/me/consent/accept", action: "player.consent.accept",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, body, consent, ip, userAgent }) => {
+        if (!consent) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const { policyIdentifier, policyVersion, locale } = body ?? {};
+        if (!policyIdentifier) return { status: 400, body: errorBody("BAD_REQUEST", "policyIdentifier is required") };
+        const r = await consent.recordConsent({
+          playerId: actor.id,
+          policyIdentifier: String(policyIdentifier),
+          policyVersion: policyVersion ? String(policyVersion) : null,
+          locale: locale ? String(locale) : "en",
+          consentType: "POLICY_REACCEPTANCE",
+          source: "REACCEPTANCE_MODAL",
+          ip,
+          userAgent,
+        });
+        if (!r.ok) return { status: 400, body: errorBody(r.reason) };
+        return { body: { ok: true, ...r } };
+      } },
+
+    { method: "POST", path: "/v1/admin/policies/:identifier/version", action: "admin.policy.manage",
+      subjectType: "legal_policy",
+      handler: async ({ params, body, actor, consent }) => {
+        if (!consent) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const { newVersion, title, isMandatory } = body ?? {};
+        if (!newVersion) return { status: 400, body: errorBody("BAD_REQUEST", "newVersion is required") };
+        const r = await consent.updatePolicyVersion({
+          policyIdentifier: params.identifier,
+          newVersion: String(newVersion),
+          title: title ? String(title) : undefined,
+          isMandatory: typeof isMandatory === "boolean" ? isMandatory : undefined,
+        }, actor.id);
+        if (!r.ok) return { status: 404, body: errorBody(r.reason) };
+        return { body: { ok: true, policy: r.policy }, audit: { policyIdentifier: params.identifier, newVersion } };
+      } },
+
+    // --- Platform Support Config ----------------------------------------------
+    { method: "GET", path: "/v1/support/config", action: "support.config.read", anonymous: true,
+      handler: async ({ consent }) => {
+        if (!consent) return { body: { ok: true, phone: "+2 01069999557", email: "Tawwerni@gmail.com" } };
+        const config = await consent.getSupportConfig();
+        return { body: { ok: true, ...config } };
+      } },
+
+    { method: "POST", path: "/v1/admin/support/config", action: "admin.support.config.update",
+      subjectType: "platform_support_config",
+      handler: async ({ body, actor, consent }) => {
+        if (!consent) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const { phone, email } = body ?? {};
+        if (!phone || !email) return { status: 400, body: errorBody("BAD_REQUEST", "phone and email are required") };
+        const r = await consent.updateSupportConfig({ phone: String(phone), email: String(email) }, actor.id);
+        return { body: { ok: true, ...r.config }, audit: { phone, email } };
+      } },
   ];
 }
 

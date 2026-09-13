@@ -1,0 +1,105 @@
+.shareContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 440px;
+  margin: var(--space-4) auto 0;
+  padding: var(--space-4);
+  background: rgba(14, 18, 24, 0.7);
+  border: 1px solid rgba(212, 163, 62, 0.2);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.previewWrap {
+  width: 100%;
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 1200 / 630;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.shareBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0.6rem 1.2rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #121008;
+  background: linear-gradient(135deg, #FFF2B2 0%, #E5C158 50%, #C4972C 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 4px 14px rgba(212, 163, 62, 0.35);
+}
+
+.shareBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 20px rgba(212, 163, 62, 0.5);
+}
+
+.shareBtn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0.6rem 1rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-foreground-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-foreground-primary);
+  border-color: rgba(212, 163, 62, 0.4);
+}
+
+.shareIcon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.copiedToast {
+  font-size: var(--text-xs);
+  color: #4ade80;
+  font-weight: 600;
+  text-align: center;
+  margin-top: var(--space-1);
+}

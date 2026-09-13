@@ -76,6 +76,12 @@ export const ACTIONS = {
   "notification.read":       { capability: null, selfOnly: true },
   "player.daily_challenge.read": { capability: null, selfOnly: true },
   "player.recommendation.read":  { capability: null, selfOnly: true },
+  "player.referral.read":        { capability: null, selfOnly: true, control: "REFERRALS" },
+  "player.referral.code.read":   { capability: null, control: "REFERRALS" },
+  "player.consent.read":         { capability: null, selfOnly: true },
+  "player.consent.accept":       { capability: null, selfOnly: true },
+  "legal.policies.read":         { capability: null },
+  "support.config.read":         { capability: null },
 
   // --- Read surfaces ---------------------------------------------------------
   "admin.user.read":         { capability: "user.read" },
@@ -118,6 +124,8 @@ export const ACTIONS = {
   // --- Trust & safety --------------------------------------------------------
   "admin.risk.decide":       { capability: "risk.decide", stepUp: true },
   "admin.fairplay.decide":   { capability: "fairplay.decide", stepUp: true },
+  "admin.referral.read":     { capability: "referral.read" },
+  "admin.referral.decide":   { capability: "referral.decide", stepUp: true },
   // Resolving a reconciliation case (marking it RESOLVED or FALSE_POSITIVE)
   // is a reviewed judgment call, the same tier as risk.decide/fairplay.decide
   // -- step-up, no four-eyes, because closing the case does not itself move
@@ -131,6 +139,8 @@ export const ACTIONS = {
   "admin.user.close":        { capability: "user.close", stepUp: true, fourEyes: true },
   "admin.content.moderate":  { capability: "content.moderate" },
   "admin.support.respond":   { capability: "support.respond" },
+  "admin.support.config.update": { capability: "support.respond", stepUp: true },
+  "admin.policy.manage":     { capability: "control.toggle", stepUp: true },
 
   // --- The admin plane itself ------------------------------------------------
   "admin.role.grant":        { capability: "role.manage", stepUp: true, fourEyes: true },
@@ -265,6 +275,7 @@ export const ROLE_CAPABILITIES = {
     "tournament.manage",
     "reconciliation.read", "reconciliation.decide",
     "rbac.manage",
+    "referral.read", "referral.decide",
   ],
   ADMIN: [
     "user.read", "user.restrict",
@@ -276,6 +287,7 @@ export const ROLE_CAPABILITIES = {
     "control.toggle",
     "tournament.manage",
     "reconciliation.read",
+    "referral.read",
   ],
   FINANCE_ADMIN: [
     "user.read", "wallet.read", "ledger.read",
@@ -284,6 +296,7 @@ export const ROLE_CAPABILITIES = {
     "rail.read", "rail.manage", "control.read",
     "analytics.read", "audit.read",
     "reconciliation.read", "reconciliation.decide",
+    "referral.read", "referral.decide",
   ],
   RISK_ADMIN: [
     "user.read", "user.restrict",
@@ -294,6 +307,7 @@ export const ROLE_CAPABILITIES = {
     "withdrawal.review",              // may hold a payout, may NOT release one
     "analytics.read", "audit.read",
     "reconciliation.read",            // sees the same cases finance decides; does not close them
+    "referral.read", "referral.decide",
   ],
   ANTI_CHEAT_MODERATOR: [
     "user.read", "duel.read",

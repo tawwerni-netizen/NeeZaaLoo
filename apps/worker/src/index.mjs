@@ -35,6 +35,7 @@ import { createMasteryService } from "../../../packages/mastery/src/service.mjs"
 import { createStreakService } from "../../../packages/engagement/src/streaks.mjs";
 import { createTournamentService } from "../../../packages/tournament/src/tournament.mjs";
 import { createTournamentSweep } from "../../../packages/tournament/src/sweep.mjs";
+import { createReferralSweep } from "../../../packages/referral/src/index.mjs";
 import { ChessPlugin } from "../../../packages/game-chess/src/plugin.mjs";
 import { SpeedMathPlugin } from "../../../packages/game-speed-math/src/plugin.mjs";
 import { CheckersPlugin } from "../../../packages/game-checkers/src/plugin.mjs";
@@ -164,6 +165,15 @@ async function main() {
     intervalMs: challengeExpiryIntervalMs,
   });
 
+  // Referral Reward Settlement Sweep: sweeps qualifying deposits (>= $5) from
+  // attributed referees, verifies anti-fraud scoring, and atomically posts the
+  // $1 reward through the double-entry ledger.
+  const referralSweep = createReferralSweep(db);
+  const referralSweepIntervalMs = Number(process.env.REFERRAL_SWEEP_INTERVAL_MS || 10000);
+  const referralSweepWorker = createTickLoop(() => referralSweep.sweepDue(), {
+    intervalMs: referralSweepIntervalMs,
+  });
+
   const runtime = createWorkerRuntime({
     workers: [
       { name: "matchmaking_dispatch", worker: dispatchWorker },
@@ -175,6 +185,7 @@ async function main() {
       { name: "progression_sweep", worker: progressionSweepWorker, intervalMs: progressionSweepIntervalMs },
       { name: "tournament_sweep", worker: tournamentSweepWorker, intervalMs: tournamentSweepIntervalMs },
       { name: "challenge_expiry", worker: challengeExpiryWorker, intervalMs: challengeExpiryIntervalMs },
+      { name: "referral_sweep", worker: referralSweepWorker, intervalMs: referralSweepIntervalMs },
     ],
     logger,
     metrics,

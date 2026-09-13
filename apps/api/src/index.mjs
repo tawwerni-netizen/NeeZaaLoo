@@ -72,6 +72,8 @@ import { createModerationService } from "../../../packages/chat/src/moderation.m
 import { createBlockService } from "../../../packages/chat/src/blocks.mjs";
 import { createMessageService } from "../../../packages/chat/src/messages.mjs";
 import { createReportService } from "../../../packages/chat/src/reports.mjs";
+import { createReferralService } from "../../../packages/referral/src/index.mjs";
+import { createConsentService } from "../../../packages/compliance/src/consent.mjs";
 import { createPgBus } from "../../../packages/realtime/src/bus.mjs";
 import { createEmailService, createConsoleEmailProvider } from "../../../packages/email/src/index.mjs";
 import { createApi } from "../../../packages/api/src/server.mjs";
@@ -240,13 +242,16 @@ async function main() {
   const chatReports = createReportService(db);
   const chat = { channels: chatChannels, moderation: chatModeration, blocks: chatBlocks, messages: chatMessages, reports: chatReports };
 
+  const referrals = createReferralService(db);
+  const consent = createConsentService(db);
+
   const api = createApi({
     db, auth, settlement, tournament, globalSkill, reconciliation, rbac,
     emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
     googleOAuth, googleFrontendOrigin: process.env.GOOGLE_FRONTEND_ORIGIN || "https://nizalo.com",
     profile, support, ticketNotifications, chat, progression,
     mastery: masteryService, streaks: streakService, dailyChallenges, recommendations, frames: frameService,
-    rails, railHealth,
+    rails, railHealth, referrals, consent,
     rateLimit: { capacity: Number(process.env.RATE_LIMIT_CAPACITY || 100), refillPerSecond: Number(process.env.RATE_LIMIT_REFILL || 20) },
     sensitiveRateLimits: {
       "email-code-request": {

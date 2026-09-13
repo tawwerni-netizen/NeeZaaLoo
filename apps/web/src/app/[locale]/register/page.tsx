@@ -16,14 +16,21 @@ export default function RegisterPage() {
   const router = useRouter();
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!agreeTerms) {
+      setError(t("legal.terms_required_error") || "You must agree to the Terms & Conditions to create an account.");
+      return;
+    }
+
     setSubmitting(true);
-    const result = await register(handle, password);
+    const result = await register(handle, password, undefined, true);
     setSubmitting(false);
     if (result.ok) {
       router.push(`/${locale}/home`);
@@ -71,7 +78,27 @@ export default function RegisterPage() {
             />
           </div>
 
-          <Button type="submit" className={styles.submit} disabled={submitting}>
+          <div className={styles.checkboxField}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                id="agreeTerms"
+                name="agreeTerms"
+                required
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+              />
+              <span>
+                {t("legal.terms_checkbox")} (
+                <LocaleLink href="/help#terms">
+                  {t("legal.terms_link")}
+                </LocaleLink>
+                )
+              </span>
+            </label>
+          </div>
+
+          <Button type="submit" className={styles.submit} disabled={submitting || !agreeTerms}>
             {submitting ? t("auth.register.submitting") : t("auth.register.submit")}
           </Button>
 

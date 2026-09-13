@@ -1,11 +1,47 @@
-.countdown {
-  font-family: var(--nz-font-num);
-  font-size: 120px;
-  font-weight: 700;
-  color: var(--nz-accent);
-  font-variant-numeric: tabular-nums;
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  perspective: 800px;
 }
 
-@media (max-width: 640px) {
-  .countdown { font-size: 80px; }
+.countdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--nz-font-display);
+  font-size: clamp(64px, 16vw, 110px);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(255, 90, 43, 0.8), 0 4px 12px rgba(0, 0, 0, 0.8);
+  user-select: none;
+  transform-style: preserve-3d;
+}
+
+.numberText {
+  position: relative;
+  z-index: 2;
+}
+
+.energyRing {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 999px;
+  border: 3px solid var(--nz-brand-orange);
+  box-shadow: 0 0 25px rgba(255, 90, 43, 0.8), inset 0 0 15px rgba(255, 90, 43, 0.4);
+  animation: energyRingPulse 0.8s infinite ease-out;
+  z-index: 1;
+}
+
+@keyframes energyRingPulse {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.goText {
+  color: #ffb547;
+  text-shadow: 0 0 30px rgba(255, 181, 71, 0.9), 0 0 60px rgba(255, 90, 43, 0.6);
 }

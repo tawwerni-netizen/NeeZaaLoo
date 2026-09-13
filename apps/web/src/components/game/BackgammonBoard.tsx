@@ -1,29 +1,10 @@
 "use client";
 
-/**
- * The Backgammon board -- server-authoritative, same discipline as every
- * other board component: selection (which point, or the bar) is the
- * ONLY client-side state, and a click never moves a checker directly --
- * it only ever calls `onMove({ from, die })` or `onMove({ pass: true })`,
- * sent as an ordinary INTENT. `legalActions` (own turn only) is the
- * plugin's own projection; nothing here re-derives legality.
- *
- * Both seats get an IDENTICAL relative view -- "my home is bottom-right,
- * my checkers run counter-clockwise into it" -- via a seat-relative
- * re-labelling (`toAbsolute`/`toDisplay`, mirroring seat 1's own index
- * through `23 - idx`) rather than literally mirroring the DOM, the same
- * spirit as CheckersBoard's own `flipped` handling. RTL note: forced
- * `dir="ltr"` on the board itself -- this is geometry, never text.
- *
- * Visual identity: a luxury felt-and-wood board, tactile ivory/obsidian
- * checkers, and a premium dice-roll flourish -- the brief's own "luxury
- * board, tactile pieces, premium dice animation, subtle depth,
- * satisfying movement".
- */
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
+import { useVisualSettings } from "./TableEnvironment";
 import styles from "./BackgammonBoard.module.css";
 
 type LegalAction = { from: number | "BAR"; die: number; to: number | "OFF" };
@@ -32,7 +13,7 @@ type Props = {
   bar: [number, number];
   off: [number, number];
   dice: number[];
-  legalActions: LegalAction[] | null; // null unless it is genuinely this seat's turn
+  legalActions: LegalAction[] | null;
   mySeat: 0 | 1 | null;
   canMove: boolean;
   onMove: (intent: { from: number | "BAR"; die: number } | { pass: true }) => void;
@@ -51,26 +32,48 @@ function DieFace({ value }: { value: number }) {
     5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
     6: [[28, 24], [28, 50], [28, 76], [72, 24], [72, 50], [72, 76]],
   };
+
   return (
-    <motion.svg
-      viewBox="0 0 100 100"
-      className={styles.die}
-      initial={{ rotate: -35, scale: 0.5, opacity: 0 }}
-      animate={{ rotate: 0, scale: 1, opacity: 1 }}
-      transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
+    <motion.div
+      className={styles.die3d}
+      initial={{ rotateX: 180, rotateY: 90, scale: 0.4, opacity: 0 }}
+      animate={{ rotateX: 0, rotateY: 0, scale: 1, opacity: 1 }}
+      transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
     >
-      <rect x="4" y="4" width="92" height="92" rx="16" />
-      {(layout[value] ?? []).map(([cx, cy], i) => <circle key={i} cx={cx} cy={cy} r={9} />)}
-    </motion.svg>
+      <svg viewBox="0 0 100 100" className={styles.dieSvg}>
+        <defs>
+          <linearGradient id="die-bone-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="60%" stopColor="#F5EFE6" />
+            <stop offset="100%" stopColor="#D6CBB8" />
+          </linearGradient>
+          <radialGradient id="die-pip-grad" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#111" />
+            <stop offset="100%" stopColor="#2A2A2A" />
+          </radialGradient>
+        </defs>
+        <rect x="5" y="5" width="90" height="90" rx="18" fill="url(#die-bone-grad)" stroke="#9C8E77" strokeWidth="2.5" />
+        <rect x="7" y="7" width="86" height="86" rx="16" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" />
+        {(layout[value] ?? []).map(([cx, cy], i) => (
+          <circle key={i} cx={cx} cy={cy} r={8.5} fill="url(#die-pip-grad)" filter="drop-shadow(0 1px 1px rgba(255,255,255,0.4))" />
+        ))}
+      </svg>
+    </motion.div>
   );
 }
 
-function Checker({ seat, muted = false }: { seat: 0 | 1; muted?: boolean }) {
-  return <div className={[styles.checker, seat === 0 ? styles.checkerA : styles.checkerB, muted ? styles.checkerMuted : ""].join(" ")} />;
+function BackgammonChecker({ seat, muted = false }: { seat: 0 | 1; muted?: boolean }) {
+  const isWhite = seat === 0;
+  return (
+    <div className={[styles.checker3d, isWhite ? styles.checkerWhite : styles.checkerBlack, muted ? styles.checkerMuted : ""].join(" ")}>
+      <div className={styles.checkerInnerRim} />
+    </div>
+  );
 }
 
 export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, canMove, onMove }: Props) {
   const { t } = useI18n();
+  const { perspective3D } = useVisualSettings();
   const [selected, setSelected] = useState<number | "BAR" | null>(null);
 
   const flip = mySeat === 1;
@@ -150,9 +153,10 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
         onClick={() => handlePointClick(idx)}
         aria-label={`point ${idx}`}
       >
+        <div className={styles.pointTriangle} />
         <div className={styles.checkerStack}>
           {seat !== null && Array.from({ length: shown }).map((_, i) => (
-            <Checker key={i} seat={seat} />
+            <BackgammonChecker key={i} seat={seat} />
           ))}
           {overflow > 0 && <span className={styles.overflowLabel}>+{overflow}</span>}
         </div>
@@ -169,41 +173,54 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
         </AnimatePresence>
       </div>
 
-      <div className={styles.board} dir="ltr">
-        <div className={[styles.quadrant, styles.top].join(" ")}>
-          {DISP_TOP.slice(0, 6).map((rel) => renderPoint(rel, "top"))}
-        </div>
-        <div className={[styles.quadrant, styles.top].join(" ")}>
-          {DISP_TOP.slice(6, 12).map((rel) => renderPoint(rel, "top"))}
-        </div>
-
-        <button
-          type="button"
-          className={[styles.barSlot, selected === "BAR" ? styles.pointSelected : ""].join(" ")}
-          onClick={handleBarClick}
-          disabled={mySeat === null || bar[mySeat] === 0 || !sourcesWithLegalMove.has("BAR")}
-          aria-label={t("game.backgammon.bar")}
-        >
-          {bar[0] > 0 && (
-            <div className={styles.barGroup}>
-              {Array.from({ length: bar[0] }).map((_, i) => <Checker key={i} seat={0} />)}
+      <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
+        <div className={styles.attacheCase} dir="ltr">
+          <div className={styles.feltBed}>
+            {/* Top Left Quadrant */}
+            <div className={[styles.quadrant, styles.top].join(" ")}>
+              {DISP_TOP.slice(0, 6).map((rel) => renderPoint(rel, "top"))}
             </div>
-          )}
-          {bar[1] > 0 && (
-            <div className={styles.barGroup}>
-              {Array.from({ length: bar[1] }).map((_, i) => <Checker key={i} seat={1} />)}
-            </div>
-          )}
-        </button>
 
-        <div className={[styles.quadrant, styles.bottom].join(" ")}>
-          {DISP_BOTTOM.slice(0, 6).map((rel) => renderPoint(rel, "bottom"))}
-        </div>
-        <div className={[styles.quadrant, styles.bottom].join(" ")}>
-          {DISP_BOTTOM.slice(6, 12).map((rel) => renderPoint(rel, "bottom"))}
+            {/* Raised Center Bar */}
+            <button
+              type="button"
+              className={[styles.barSlot, selected === "BAR" ? styles.barSelected : ""].join(" ")}
+              onClick={handleBarClick}
+              disabled={mySeat === null || bar[mySeat] === 0 || !sourcesWithLegalMove.has("BAR")}
+              aria-label={t("game.backgammon.bar")}
+            >
+              <div className={styles.barLeather} />
+              {bar[0] > 0 && (
+                <div className={styles.barGroup}>
+                  {Array.from({ length: bar[0] }).map((_, i) => <BackgammonChecker key={i} seat={0} />)}
+                </div>
+              )}
+              {bar[1] > 0 && (
+                <div className={styles.barGroup}>
+                  {Array.from({ length: bar[1] }).map((_, i) => <BackgammonChecker key={i} seat={1} />)}
+                </div>
+              )}
+            </button>
+
+            {/* Top Right Quadrant */}
+            <div className={[styles.quadrant, styles.top].join(" ")}>
+              {DISP_TOP.slice(6, 12).map((rel) => renderPoint(rel, "top"))}
+            </div>
+
+            {/* Bottom Left Quadrant */}
+            <div className={[styles.quadrant, styles.bottom].join(" ")}>
+              {DISP_BOTTOM.slice(0, 6).map((rel) => renderPoint(rel, "bottom"))}
+            </div>
+
+            {/* Bottom Right Quadrant */}
+            <div className={[styles.quadrant, styles.bottom].join(" ")}>
+              {DISP_BOTTOM.slice(6, 12).map((rel) => renderPoint(rel, "bottom"))}
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Bear-off Tray */}
       <div className={styles.offRow}>
         <span className={styles.offLabel}>{t("game.backgammon.borne_off")}</span>
         <button

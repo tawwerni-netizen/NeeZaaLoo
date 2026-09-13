@@ -5,6 +5,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { IncomingChallengeWatcher } from "@/components/play/IncomingChallengeWatcher";
 import { AuthPopupProvider } from "@/lib/auth-popup-context";
 import { AuthPopup, AuthPopupAutoOpen } from "@/components/auth/AuthPopup";
+import { PolicyReacceptanceModal } from "@/components/legal/PolicyReacceptanceModal";
 import { I18nProvider } from "@/lib/i18n/context";
 import { SUPPORTED_LOCALE_CODES, DEFAULT_LOCALE, directionFor, isSupportedLocale } from "@/lib/i18n/locale";
 import { RESOURCES } from "@/lib/i18n/resources";
@@ -70,6 +71,7 @@ export default async function LocaleLayout({
               <IncomingChallengeWatcher />
               <AuthPopupAutoOpen />
               <AuthPopup />
+              <PolicyReacceptanceModal />
             </AuthPopupProvider>
           </AuthProvider>
         </I18nProvider>

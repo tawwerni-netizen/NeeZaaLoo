@@ -1,0 +1,104 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nz-space-4);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  width: 100%;
+  max-width: 540px;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-xl);
+  padding: var(--nz-space-8);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+}
+
+.icon {
+  font-size: 28px;
+}
+
+.title {
+  font-size: var(--nz-text-xl);
+  font-weight: 700;
+  margin: 0;
+  color: var(--nz-text);
+}
+
+.body {
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.policyList {
+  list-style: none;
+  padding: 0;
+  margin: var(--nz-space-2) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+}
+
+.policyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--nz-space-3) var(--nz-space-4);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  color: var(--nz-text);
+}
+
+.versionBadge {
+  font-size: var(--nz-text-xs);
+  padding: 2px 8px;
+  border-radius: var(--nz-radius-full);
+  background: rgba(var(--nz-accent-rgb, 79, 70, 229), 0.15);
+  color: var(--nz-accent);
+}
+
+.notice {
+  padding: var(--nz-space-3) var(--nz-space-4);
+  background: rgba(234, 179, 8, 0.1);
+  border-left: 3px solid #eab308;
+  border-radius: 0 var(--nz-radius-sm) var(--nz-radius-sm) 0;
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: var(--nz-space-3);
+  margin-top: var(--nz-space-2);
+}
+
+.submitBtn {
+  flex: 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}

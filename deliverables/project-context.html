@@ -1,0 +1,449 @@
+<title>Nizalo — Engineering &amp; Project Context</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  @page { size: A4; margin: 22mm 18mm 20mm 18mm; }
+  :root{
+    --ink:#0B0D10; --paper:#FFFFFF; --s1:#F7F8FA; --s2:#F0F2F5; --line:#E2E5EA;
+    --tx:#14171C; --tx2:#4B5563; --tx3:#828A96;
+    --accent:#CC3A14; --accent-soft:#FDEBE4;
+    --win:#157F4A; --loss:#C2282D; --mono-bg:#0B0D10;
+    --f-disp:"Archivo",system-ui,sans-serif;
+    --f-ui:"IBM Plex Sans",system-ui,sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--tx);font-family:var(--f-ui);font-size:10.3pt;line-height:1.55;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  h1,h2,h3,h4{font-family:var(--f-disp);color:var(--ink);letter-spacing:-.01em;text-wrap:balance}
+  h1{font-size:28pt;font-weight:800;margin:0 0 6pt}
+  h2{font-size:16pt;font-weight:800;margin:0 0 10pt;padding-top:2pt}
+  h3{font-size:12pt;font-weight:700;margin:16pt 0 6pt}
+  h4{font-size:10.5pt;font-weight:700;margin:12pt 0 4pt;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;font-family:var(--f-mono);font-weight:600}
+  p{margin:0 0 8pt}
+  a{color:var(--accent)}
+  strong{color:var(--ink);font-weight:600}
+  code,.mono{font-family:var(--f-mono);font-size:9pt}
+  .eyebrow{font-family:var(--f-mono);font-size:8.5pt;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 8pt}
+  section{page-break-before:always;padding-top:2pt}
+  section:first-of-type{page-break-before:avoid}
+  .no-break{page-break-inside:avoid}
+  table{width:100%;border-collapse:collapse;margin:8pt 0 14pt;font-size:9pt}
+  th{background:var(--s2);text-align:left;font-family:var(--f-mono);font-size:8pt;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2);padding:6pt 8pt;border-bottom:1.5pt solid var(--line)}
+  td{padding:6pt 8pt;border-bottom:0.75pt solid var(--line);vertical-align:top;color:var(--tx2)}
+  td strong{color:var(--tx)}
+  tr:last-child td{border-bottom:1pt solid var(--line)}
+  .tag{display:inline-block;font-family:var(--f-mono);font-size:7.5pt;font-weight:600;padding:2pt 6pt;border-radius:3pt;letter-spacing:.03em}
+  .tag-done{background:#E3F2E9;color:var(--win)}
+  .tag-open{background:var(--accent-soft);color:var(--accent)}
+  .tag-partial{background:#FDF3D8;color:#8A6416}
+  .callout{background:var(--s1);border-left:3pt solid var(--accent);padding:10pt 14pt;margin:10pt 0;border-radius:0 4pt 4pt 0}
+  .callout p{margin:0}
+  .rule-list{margin:0;padding-left:0;list-style:none;counter-reset:rule}
+  .rule-list li{counter-increment:rule;margin:0 0 8pt;padding-left:22pt;position:relative}
+  .rule-list li::before{content:counter(rule);position:absolute;left:0;top:0;width:16pt;height:16pt;background:var(--ink);color:#fff;border-radius:50%;font-family:var(--f-mono);font-size:8pt;font-weight:600;display:flex;align-items:center;justify-content:center}
+  pre{background:var(--mono-bg);color:#D8DEE9;font-family:var(--f-mono);font-size:7.8pt;padding:10pt 12pt;border-radius:5pt;overflow-x:auto;line-height:1.5;margin:8pt 0}
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:16pt}
+  .stat{border:0.75pt solid var(--line);border-radius:6pt;padding:10pt 12pt;text-align:center}
+  .stat .n{font-family:var(--f-mono);font-size:17pt;font-weight:600;color:var(--ink);display:block}
+  .stat .l{font-size:7.8pt;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em}
+  .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt;margin:10pt 0 14pt}
+  footer.pagefoot{font-family:var(--f-mono);font-size:7.5pt;color:var(--tx3);text-align:right;margin-top:4pt}
+  .toc{list-style:none;padding:0;margin:0}
+  .toc li{display:flex;justify-content:space-between;padding:6pt 0;border-bottom:0.5pt dotted var(--line);font-size:10pt}
+  .toc .n{font-family:var(--f-mono);color:var(--accent);font-weight:600;margin-right:8pt}
+  .cover{min-height:230mm;display:flex;flex-direction:column;justify-content:space-between}
+  .cover-mark{width:64px;height:64px;border-radius:16px;background:var(--ink);display:flex;align-items:center;justify-content:center}
+</style>
+
+<section class="cover">
+  <div>
+    <div class="cover-mark">
+      <svg width="34" height="34" viewBox="0 0 100 100"><rect x="18" y="14" width="12" height="72" fill="#F7F8FA"/><rect x="70" y="14" width="12" height="72" fill="#F7F8FA"/><polygon points="30,86 82,14 70,14 30,74" fill="#FF5A2B"/></svg>
+    </div>
+    <div class="eyebrow" style="margin-top:26pt">ENGINEERING &amp; PROJECT CONTEXT — HANDOFF DOCUMENT</div>
+    <h1>Nizalo</h1>
+    <p style="font-size:13pt;color:var(--tx2);max-width:420pt">A global skill duel platform — one account, one rating ecosystem, one wallet, one matchmaking core, one tournament engine, one trust &amp; safety layer, with many short-form 1v1 games behind it.</p>
+  </div>
+  <div>
+    <table style="margin:0">
+      <tr><td style="width:140pt"><strong>Repository</strong></td><td class="mono">github.com/tawwerni-netizen/NeeZaaLoo</td></tr>
+      <tr><td><strong>Owner</strong></td><td>universebrands.org@gmail.com</td></tr>
+      <tr><td><strong>Document date</strong></td><td>2026-09-12</td></tr>
+      <tr><td><strong>Purpose</strong></td><td>Complete technical and product context so any engineer or AI model can pick up this work with full understanding — architecture, current build status, live deployment state, and the rules that govern every decision.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">CONTENTS</div>
+  <h2>Table of contents</h2>
+  <ul class="toc">
+    <li><span><span class="n">01</span>What this is, and what it is not</span></li>
+    <li><span><span class="n">02</span>The rules that govern every decision</span></li>
+    <li><span><span class="n">03</span>System architecture</span></li>
+    <li><span><span class="n">04</span>The Skill Duel Engine &amp; plugin contract</span></li>
+    <li><span><span class="n">05</span>Repository structure</span></li>
+    <li><span><span class="n">06</span>Money: the ledger</span></li>
+    <li><span><span class="n">07</span>Payments</span></li>
+    <li><span><span class="n">08</span>Anti-cheat &amp; fair play</span></li>
+    <li><span><span class="n">09</span>Compliance &amp; trust</span></li>
+    <li><span><span class="n">10</span>Security &amp; threat model</span></li>
+    <li><span><span class="n">11</span>Build status — what is proven, phase by phase</span></li>
+    <li><span><span class="n">12</span>Live production deployment — current state</span></li>
+    <li><span><span class="n">13</span>Running and testing locally</span></li>
+    <li><span><span class="n">14</span>Open decisions and next actions</span></li>
+    <li><span><span class="n">15</span>Where to find more</span></li>
+  </ul>
+</section>
+
+<section>
+  <div class="eyebrow">01 — VISION</div>
+  <h2>What this is, and what it is not</h2>
+  <p>A <strong>global skill duel platform</strong>: one account, one rating ecosystem, one wallet, one matchmaking core, one tournament engine, one trust &amp; safety layer — with many short-form 1v1 games behind it. <strong>Chess is the flagship game. Chess is not the category.</strong></p>
+  <p>It is not a chess website, and it is not a betting product. Those two sentences constrain every decision downstream: the name, the homepage, the information architecture, the colour palette, and the copy.</p>
+  <div class="callout"><p>The emotional message is never "deposit money and gamble." It is: <em>"I want to test my skill"</em> → <em>"I can compete"</em> → <em>"I can improve"</em> → <em>"I can climb"</em> → and, only where legally permitted, <em>"I can compete for prizes."</em></p></div>
+
+  <h3>The product in one architectural sentence</h3>
+  <p>A <strong>Skill Duel Engine</strong> with pluggable games sits on top of a shared platform (identity, matchmaking, rating, wallet, ledger, tournaments, risk, fair play, compliance), so that <strong>adding a new game never requires rebuilding financial infrastructure</strong>. If a future engineer has to touch the ledger to ship a new game, the architecture has failed.</p>
+
+  <h3>Game roadmap and the veto rule</h3>
+  <table>
+    <tr><th>Phase</th><th>Games</th></tr>
+    <tr><td>1 — Flagship</td><td><strong>Chess</strong></td></tr>
+    <tr><td>2</td><td><strong>Speed Math · Memory Grid · Pattern · Number Memory · Reaction · Precision</strong></td></tr>
+    <tr><td>3 — Evaluated / free-play only</td><td>Connect Four · Checkers · Reversi · Backgammon · Seega · Gomoku · Dominoes · XO</td></tr>
+  </table>
+  <p><strong>No game ships because it is popular.</strong> Every candidate is scored on a twelve-criterion scorecard; a low score on <em>cheating risk</em> or <em>server authority</em> is an absolute veto no total can override. That veto already excludes Connect Four, Checkers, and Reversi from cash play — Connect Four is strongly solved, so a cash game on it transfers money from honest players to whoever downloads the solver first.</p>
+
+  <h3>Business model</h3>
+  <p>Configurable rake: standard <strong>10–15%</strong>, VIP <strong>8–10%</strong>, tournaments custom — driven entirely by the Economy Rules Engine, never hardcoded. No profit is promised or projected as guaranteed; the economics only work if the platform is trusted, which is why anti-cheat, the ledger, and compliance are core product, not overhead.</p>
+
+  <h3>The four things that would end this company</h3>
+  <table>
+    <tr><td style="width:20pt"><strong>1</strong></td><td><strong>A broken ledger</strong> — if we cannot say what we owe, nothing else matters.</td></tr>
+    <tr><td><strong>2</strong></td><td><strong>Loss of custody</strong> — a drained hot wallet.</td></tr>
+    <tr><td><strong>3</strong></td><td><strong>Loss of competitive integrity</strong> — the day cheating becomes common knowledge.</td></tr>
+    <tr><td><strong>4</strong></td><td><strong>Operating where not permitted</strong> — a legal, not an engineering, failure.</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="eyebrow">02 — FOUNDING RULES</div>
+  <h2>The rules that govern every decision here</h2>
+  <ol class="rule-list">
+    <li><strong>The client renders; the server decides.</strong> Nothing client-asserted is trusted for money, results, scores, state, clocks, or ratings.</li>
+    <li><strong>A mutable balance is never the source of truth.</strong> Double-entry, append-only; balances are derived from entries.</li>
+    <li><strong>A webhook is a notification to go look, never a reason to credit.</strong></li>
+    <li><strong>Never one signal = ban.</strong> Signals → score → evidence → case → review → decision → appeal.</li>
+    <li><strong>No unexplained discrepancy is ever auto-repaired.</strong></li>
+    <li><strong>Adding a game must never require touching financial infrastructure.</strong></li>
+    <li><strong>No secret in any client. No private key in any repository or APK.</strong></li>
+    <li><strong>Compliance is configuration, not conditionals.</strong> Every market defaults to free-play-only until counsel says otherwise.</li>
+    <li><strong>The money surfaces feel like a bank. The game surfaces feel like a sport.</strong> Nothing ever feels like a casino floor.</li>
+  </ol>
+</section>
+
+<section>
+  <div class="eyebrow">03 — ARCHITECTURE</div>
+  <h2>System architecture</h2>
+  <p><strong>Governing principle:</strong> the client renders; the server decides.</p>
+  <pre>Web (Next.js) ─┐
+Android (Compose)┤─▶ Edge (Cloudflare: WAF, DDoS, bot mgmt, geo, TLS)
+                 │
+     ┌───────────┼──────────────────────┐
+     ▼                                  ▼                       ▼
+  API (REST)              REALTIME GATEWAY (WS)          ADMIN API
+  auth, wallet             duels, clocks, presence     (separate deployable,
+                                                           own auth realm)
+     └───────────┬──────────────────────┘
+                  ▼
+  DOMAIN SERVICES (in-process modules, hard borders)
+  identity · matchmaking · duel-engine · rating · ledger · economy ·
+  payments · risk · fairplay · tournament · compliance · notification
+                  │
+    ┌─────────────┼──────────────┬───────────────┐
+    ▼              ▼              ▼               ▼
+ Postgres        Redis          BullMQ        Object storage
+ (system of     (queues,       workers       (replays, KYC,
+  record,       presence,    (settlement,      evidence)
+  ledger)      locks, RL)     reconciliation)</pre>
+  <p><strong>Why realtime is a separate deployable:</strong> game sockets are bursty, long-lived, and stateful. The money path is low-throughput and must never be starved by a chess rush hour, and a socket gateway crash must never take REST or settlement with it.</p>
+  <p><strong>Why admin is a separate deployable:</strong> admin holds the most dangerous capabilities in the system. It gets its own deployable, its own auth realm, its own network exposure, and its own audit stream — an RCE in the public API must not be an RCE in the admin plane.</p>
+
+  <h3>Server authority — the non-negotiable list</h3>
+  <table>
+    <tr><th>Concern</th><th>Authority</th><th>Enforcement</th></tr>
+    <tr><td>Money, balance</td><td>Postgres ledger</td><td>Derived from entries, never stored as truth</td></tr>
+    <tr><td>Game result</td><td>Duel engine (server)</td><td>Client sends <em>intents</em>; server produces <em>events</em></td></tr>
+    <tr><td>Score, state, clock</td><td>Server / game plugin</td><td>Client holds a projection it may not author</td></tr>
+    <tr><td>Rating</td><td>Rating service</td><td>Computed post-settlement from server's own result</td></tr>
+    <tr><td>Payment / withdrawal</td><td>Payment service + ledger</td><td>Only from verified provider/chain state; never client-advanced</td></tr>
+  </table>
+  <p>Every client→server game message is an <strong>intent</strong> (<code>SubmitMove</code>, <code>Resign</code>); every server→client message is an <strong>event</strong> (<code>MoveAccepted</code>, <code>DuelSettled</code>). There is no message shape in which a client asserts a result — enforced at the protocol schema level.</p>
+</section>
+
+<section>
+  <div class="eyebrow">04 — SKILL DUEL ENGINE</div>
+  <h2>The Skill Duel Engine &amp; plugin contract</h2>
+  <pre>SkillDuelEngine  (owns: lifecycle, clock, persistence, events, settlement)
+├── ChessPlugin        ├── DominoesPlugin
+├── SpeedMathPlugin    ├── BackgammonPlugin
+├── CheckersPlugin     ├── SeegaPlugin
+├── ConnectFourPlugin  ├── ReversiPlugin
+├── XOPlugin           └── GomokuPlugin</pre>
+  <p>The engine owns everything touching money, identity, or trust. A plugin owns only the rules of its game. Four properties the contract buys: <strong>purity</strong> (pure functions, fully unit-testable, exact replay verification), <strong>server-generated challenges</strong> (the seed is never sent to the client before content is due), <strong>projection</strong> (<code>project()</code> guarantees a client never receives data it should not have — if it's not in the projection, it's not on the wire), and <strong>signals not verdicts</strong> (a plugin can report an anomaly; it cannot ban anyone — enforced by the type system).</p>
+
+  <h3>Duel lifecycle</h3>
+  <pre>CREATED → RESERVED → READY → LIVE → COMPLETED → SETTLED
+                                              ↘ ABORTED / VOIDED</pre>
+  <p><strong>RESERVED:</strong> entry fees move to a locked ledger position before the duel starts — no duel with money attached ever begins with unlocked funds. <strong>COMPLETED vs SETTLED</strong> are deliberately distinct steps, so a settlement failure can be retried without re-running the game, and a duel under fair-play hold can sit in COMPLETED indefinitely.</p>
+
+  <h3>Game selection scorecard</h3>
+  <p>Weighted 12-criterion score; a game needs ≥70% of maximum <strong>and</strong> ≥4/5 on both cheating-risk and server-authority to enter development — a high total cannot compensate for a low cheat-risk score.</p>
+  <table>
+    <tr><th>Game</th><th>Cheat risk</th><th>Server authority</th><th>Verdict</th></tr>
+    <tr><td>Chess</td><td>2/5</td><td>5/5</td><td><strong>Ship.</strong> Flagship; heaviest anti-cheat investment.</td></tr>
+    <tr><td>Speed Math / Memory / Pattern</td><td>4/5</td><td>5/5</td><td><strong>Ship.</strong></td></tr>
+    <tr><td>Reaction / Precision</td><td>3/5</td><td>4/5</td><td><strong>Ship with caution.</strong> Latency-oracle risk — consider free-play only.</td></tr>
+    <tr><td>Connect Four / Checkers / Reversi</td><td>1/5 — solved/near-solved</td><td>5/5</td><td><strong>Never cash.</strong> Free-play only.</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="eyebrow">05 — REPOSITORY</div>
+  <h2>Repository structure</h2>
+  <p>npm workspaces monorepo. <code>H:\Claide Apps\nizalo</code> · GitHub: <code>tawwerni-netizen/NeeZaaLoo</code>, branch <code>main</code>. Root <code>package.json</code> is <code>"type":"commonjs"</code> (required for the Hostinger Node-20 preload system); every app and package underneath keeps its own <code>"type":"module"</code>.</p>
+  <div class="statgrid">
+    <div class="stat"><span class="n">4</span><span class="l">apps</span></div>
+    <div class="stat"><span class="n">37</span><span class="l">packages</span></div>
+    <div class="stat"><span class="n">46</span><span class="l">db migrations</span></div>
+    <div class="stat"><span class="n">10</span><span class="l">games shipped</span></div>
+  </div>
+  <table>
+    <tr><th>Path</th><th>What it is</th></tr>
+    <tr><td class="mono">apps/api</td><td>REST API server. Auth, wallet, tournaments, admin surface. <code>src/index.mjs</code> is the entry point.</td></tr>
+    <tr><td class="mono">apps/gateway</td><td>Realtime WebSocket gateway — duels, clocks, presence, chat. Separate deployable from the API by design (see §3).</td></tr>
+    <tr><td class="mono">apps/worker</td><td>Background workers — settlement, reconciliation, tournament sweeps, matchmaking dispatch.</td></tr>
+    <tr><td class="mono">apps/web</td><td>Next.js 16 (Turbopack) frontend, App Router, <code>output: "standalone"</code>, i18n (<code>en</code>/<code>zh</code>/<code>hi</code>/<code>ar</code>+2 more locales).</td></tr>
+    <tr><td class="mono">packages/ledger</td><td>Double-entry primitives, migration runner (<code>migrate.mjs</code>), Postgres adapter with deadlock retry.</td></tr>
+    <tr><td class="mono">packages/game-*</td><td>10 plugin packages — chess, checkers, connect-four, xo, speed-math, dominoes, backgammon, seega, reversi, gomoku. Each exports a Plugin + an AI adapter.</td></tr>
+    <tr><td class="mono">packages/auth / authz</td><td>Argon2id auth, TOTP 2FA, session/device management · deny-by-default RBAC (9 admin roles).</td></tr>
+    <tr><td class="mono">packages/tournament / mastery / engagement / replay</td><td>8-phase tournament lifecycle · non-inflatable per-game mastery levels · streaks/daily-challenges/recommendations · on-demand replay rebuilding.</td></tr>
+    <tr><td class="mono">packages/fairplay / compliance / reconciliation</td><td>Fair Play Engine (signals→score→case) · market matrix policy layer · L1/L2/L3 + solvency reconciliation.</td></tr>
+    <tr><td class="mono">packages/tokens</td><td>Design tokens, both themes, full RTL — <code>tokens.css</code>.</td></tr>
+    <tr><td class="mono">db/migrations/</td><td>46 forward-only, numbered SQL files, tracked in a <code>schema_migration</code> table. No <code>CREATE EXTENSION</code> — functions like <code>gen_random_uuid()</code> must pre-exist on the target DB.</td></tr>
+    <tr><td class="mono">brand/</td><td>12 SVG identity assets + the brand guidelines document (this PDF's companion).</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="eyebrow">06 — MONEY</div>
+  <h2>The ledger</h2>
+  <div class="callout"><p><strong>Every transaction sums to zero, per asset. Therefore the system always balances, or it refuses the write.</strong> Balances are derived by summing entries; a mutable balance column is never the source of truth.</p></div>
+  <h3>Account model</h3>
+  <p>Wallet states are <strong>distinct accounts</strong>, not a status flag on one balance — "locked" funds live in a different account, so a query for available balance cannot accidentally include them.</p>
+  <table>
+    <tr><th>Account</th><th>Meaning</th></tr>
+    <tr><td class="mono">user:{id}:available</td><td>Spendable now</td></tr>
+    <tr><td class="mono">user:{id}:locked</td><td>Committed to a live duel or pending withdrawal</td></tr>
+    <tr><td class="mono">user:{id}:pending</td><td>Deposit seen, not yet finalised</td></tr>
+    <tr><td class="mono">user:{id}:withdrawable</td><td>Cleared, eligible for withdrawal</td></tr>
+    <tr><td class="mono">platform:suspense</td><td><strong>The honesty account.</strong> Unexplained funds land here and raise a case — never auto-cleared.</td></tr>
+  </table>
+  <h3>Enforced invariants (all at the database layer)</h3>
+  <table>
+    <tr><td class="mono">I1</td><td>Every transaction sums to zero per asset</td><td>Deferred constraint trigger</td></tr>
+    <tr><td class="mono">I2</td><td>Entries are immutable</td><td>Revoked UPDATE/DELETE + trigger</td></tr>
+    <tr><td class="mono">I3</td><td>No user account goes negative</td><td>Checked under row lock</td></tr>
+    <tr><td class="mono">I4</td><td>Idempotency keys are unique</td><td>Unique index — a retry cannot double-post</td></tr>
+    <tr><td class="mono">I5</td><td>Adjustments require a reason + admin actor</td><td>CHECK constraint</td></tr>
+  </table>
+  <p><strong>Reconciliation runs continuously at three levels</strong> — L1 internal (snapshot vs. entries), L2 provider (our records vs. NOWPayments), L3 chain (custody vs. actual on-chain balance) — plus a global solvency check: <code>SUM(custody) ≥ SUM(liabilities)</code> per asset. A failure triggers an immediate automated withdrawal halt and pages a human. Discrepancies always produce <strong>ALERT → CASE → REVIEW</strong>, never a silent repair.</p>
+</section>
+
+<section>
+  <div class="eyebrow">07 — PAYMENTS</div>
+  <h2>Payments</h2>
+  <p><strong>MVP asset:</strong> USDT · <strong>MVP network:</strong> TRON (TRC20), one network only · <strong>Provider:</strong> NOWPayments, behind a <code>PaymentProvider</code> abstraction the core platform never sees past.</p>
+  <div class="callout"><p><strong>A webhook is a notification to go look. It is never the reason we credit.</strong> Credit happens only after independent on-chain verification of asset, network, amount, destination, and confirmation depth.</p></div>
+  <h3>Withdrawal state machine</h3>
+  <pre>REQUESTED → VALIDATING → RISK_CHECK → PENDING_REVIEW → APPROVED
+         → PROCESSING → BROADCASTED → CONFIRMED → COMPLETED
+                      (or FAILED | REJECTED | CANCELLED)</pre>
+  <p>Funds lock at <code>REQUESTED</code>. No transition is ever triggered by a client call. <strong>Four-eyes approval</strong> above a configured threshold — no single admin can both initiate and approve. Nine gates must all pass: balance, KYC, geo, age, address allowlist, security cooling-off, risk score, fair-play hold, and global solvency.</p>
+  <h3>Custody</h3>
+  <p><strong>Unresolved, blocks Phase 5 (founder + counsel decision).</strong> Options on the table: full provider custody, qualified third-party custodian, or MPC/HSM self-custody. Whatever is chosen: no private key in source code or the APK, ever; hot-wallet float capped and topped up from cold storage on a schedule; signing is a separate, minimal-surface service.</p>
+</section>
+
+<section>
+  <div class="eyebrow">08 — TRUST</div>
+  <h2>Anti-cheat &amp; fair play</h2>
+  <p><strong>Governing rule: never one signal = ban.</strong> <code>Signals → Risk Score → Evidence → Case → Review → Decision → Appeal</code>. The plugin contract enforces this structurally — <code>fairPlaySignals()</code> returns signals and has no type-level way to express a verdict.</p>
+  <h3>Chess-specific detection (the hardest problem in the product)</h3>
+  <p>Free engines exceed every human, so detection is statistical, never certain: engine correlation, ACPL, critical-position accuracy (the most discriminating signal — humans degrade on only-move positions, engines don't), move-time distribution, rating-performance delta, longitudinal consistency, and selective assistance. <strong>Thresholds come from labelled data, not intuition</strong> — this dataset does not exist yet (open item A1), so chess detection currently produces cases for human review with <strong>no automated sanctions</strong>.</p>
+  <h3>Anti-collusion</h3>
+  <p>Modelled as a graph problem: nodes are accounts/devices/IPs/payment instruments; edges are shared device, shared funding, repeated pairing, value flow. Abnormal pairing frequency is computable exactly, since the platform controls matchmaking and knows the expected meeting distribution.</p>
+  <h3>What may be automated vs. what always needs a human</h3>
+  <table>
+    <tr><th>Class</th><th>Auto-action?</th></tr>
+    <tr><td>Physically impossible input; confirmed multi-account self-play</td><td class="tag tag-done">YES</td></tr>
+    <tr><td>Statistical engine correlation; collusion graph anomaly; input-biometric anomaly</td><td class="tag tag-open">NO — always human</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="eyebrow">09 — TRUST</div>
+  <h2>Compliance &amp; trust</h2>
+  <p>A separate policy layer every sensitive action consults — never conditionals scattered through feature code — able to change a market's status by <strong>configuration, not deployment</strong>. <strong>Fail closed:</strong> if the policy engine cannot reach a dependency, real-money actions are denied; free play continues.</p>
+  <h3>Default posture</h3>
+  <p>Every country starts <code>UNDETERMINED</code> → <code>ALLOW_FREE_PLAY_ONLY</code> — no real money by default. A market becomes real-money eligible only by an explicit, counsel-backed, audited change.</p>
+  <h3>KYC tiers</h3>
+  <table>
+    <tr><th>Tier</th><th>Trigger</th><th>Unlocks</th></tr>
+    <tr><td>0</td><td>Registration</td><td>Free play, ranked play</td></tr>
+    <tr><td>1</td><td>First deposit</td><td>Cash duels within limits</td></tr>
+    <tr><td>2</td><td>Withdrawal / volume threshold</td><td>Withdrawals within limits</td></tr>
+    <tr><td>3</td><td>High volume / risk flag</td><td>Elevated limits</td></tr>
+  </table>
+  <p>KYC is enforced at the withdrawal boundary at minimum — a platform that allows anonymous deposit→play→withdraw is a laundering vehicle. Documents live in separate encrypted storage with their own retention clock.</p>
+</section>
+
+<section>
+  <div class="eyebrow">10 — SECURITY</div>
+  <h2>Threat model</h2>
+  <p>STRIDE per trust boundary, re-run at every phase gate. <strong>Three of the top four assets at risk are not classic security problems</strong> — a perfectly hardened server with a working cheat is a dead company.</p>
+  <table>
+    <tr><th>#</th><th>Asset</th><th>Severity</th></tr>
+    <tr><td>1</td><td>Ledger integrity</td><td><strong>Terminal</strong></td></tr>
+    <tr><td>2</td><td>Custody / withdrawal control</td><td><strong>Terminal</strong></td></tr>
+    <tr><td>3</td><td>Competitive integrity</td><td><strong>Terminal</strong></td></tr>
+    <tr><td>4</td><td>Regulatory standing</td><td><strong>Terminal</strong></td></tr>
+  </table>
+  <p><strong>Highest-value attack surface: payment provider webhooks.</strong> A forged webhook that credits a balance is a direct mint. Mitigation: HMAC verification before parsing (constant-time), idempotency on provider event id, and mandatory independent on-chain confirmation before any credit — never the webhook alone.</p>
+  <p><strong>Everything left of the client is hostile</strong> — the Android APK will be decompiled and the WebSocket protocol reverse-engineered. There is no client-side secret and no client-side check that matters.</p>
+  <h3>Standing security requirements</h3>
+  <p>No secret in any client · no private keys in application code or servers · deny by default on every endpoint (unannotated endpoints fail closed in CI) · all financial mutations idempotent and audited · fail closed on money, fail open on fun.</p>
+</section>
+
+<section>
+  <div class="eyebrow">11 — STATUS</div>
+  <h2>Build status — what is proven, phase by phase</h2>
+  <p>Each roadmap item is demonstrated by a test that fails if the guard is removed — "PROVEN" is not an assertion, it's a passing test suite.</p>
+  <table>
+    <tr><th>Phase</th><th>Scope</th><th>Status</th></tr>
+    <tr><td>0 — Foundation</td><td>Docs, threat model, ledger spec, brand, compliance &amp; anti-cheat architecture</td><td class="tag tag-done">GATE PASSED 2026-09-06</td></tr>
+    <tr><td>1 — Platform core</td><td>Ledger invariants, auth (Argon2id + TOTP), authz, REST contract</td><td class="tag tag-done">PROVEN — 22/22 tests vs real Postgres 17</td></tr>
+    <tr><td>2 — Chess, realtime, ratings</td><td>Server-authoritative chess, Glicko-2, matchmaking, WS gateway, concurrency</td><td class="tag tag-done">PROVEN — 746/746, incl. real-Postgres concurrency (8 connections, deadlock handling)</td></tr>
+    <tr><td>3 — Skill Duel Engine + games</td><td>10 games shipped as plugins; server-seeded challenges</td><td class="tag tag-done">Built — chess runs unmodified as a plugin</td></tr>
+    <tr><td>4 — Tournaments, progression, admin</td><td>8-phase tournament lifecycle, Global Skill Score (35% cap), 9-role RBAC, mastery, streaks, replay center</td><td class="tag tag-done">Built &amp; regression-tested — 2,122/2,122 across 37 packages</td></tr>
+    <tr><td>5 — Money in production</td><td>Full ledger wiring, NOWPayments sandbox, four-eyes approval</td><td class="tag tag-open">Sandbox only — production custody model (D4) still open</td></tr>
+    <tr><td>6 — Compliance, KYC/AML</td><td>Provider integration, market matrix enforcement, production payment keys</td><td class="tag tag-open">Not started — blocked on legal entity + counsel (D2, D3)</td></tr>
+    <tr><td>7 — Android</td><td>Kotlin + Jetpack Compose client</td><td class="tag tag-open">Not started</td></tr>
+    <tr><td>8 — Hardening</td><td>Pen-test, load/soak, DR drills</td><td class="tag tag-open">Not started</td></tr>
+    <tr><td>9 — Launch</td><td>Staged rollout, cash tiers per licensed market</td><td class="tag tag-open">Not started</td></tr>
+  </table>
+  <p><strong>What "PROVEN" does and doesn't mean:</strong> genuine parallelism (row-lock contention, deadlock ordering, serialisation failures) is exercised against real PostgreSQL for the specific scenarios the risk register names — real financial writes: withdrawals, reservations, settlement, deposits. Everyday tests still run single-connection PGlite; a <em>new</em> financial write path added later needs its own real-Postgres concurrency scenario, not just a PGlite test.</p>
+</section>
+
+<section>
+  <div class="eyebrow">12 — LIVE STATE</div>
+  <h2>Live production deployment — current state</h2>
+  <p class="callout" style="display:block"><strong>This section reflects the deployment work completed 2026-09-11/12 and is the most likely part of this document to go stale first — verify against the live Hostinger dashboards before trusting it.</strong></p>
+
+  <h3>Hosting: Hostinger</h3>
+  <table>
+    <tr><th>Site</th><th>Deploys</th><th>Root dir</th><th>Status</th></tr>
+    <tr><td class="mono">nizalo.com</td><td>apps/web (Next.js, standalone build, flattened via <code>apps/web/scripts/package-standalone.mjs</code>)</td><td class="mono">./</td><td class="tag tag-done">Live</td></tr>
+    <tr><td class="mono">stage.nizalo.com</td><td>staging copy of apps/web</td><td class="mono">./</td><td class="tag tag-partial">Exists, not actively used this pass</td></tr>
+    <tr><td class="mono">api.nizalo.com</td><td>apps/api (Node REST server)</td><td class="mono">apps/api</td><td class="tag tag-done">Deployed 2026-09-11 — build config fixed (see below)</td></tr>
+  </table>
+  <p>All three auto-deploy from GitHub (<code>tawwerni-netizen/NeeZaaLoo</code>, branch <code>main</code>) on every push, via Hostinger's Git-connected "Web Apps" flow. Node runtime: <strong>20.x</strong> (this is why root <code>package.json</code> is <code>"type":"commonjs"</code> — Hostinger's preload system uses <code>require()</code> and breaks under Node 20 if the root is ESM).</p>
+
+  <h4>api.nizalo.com build configuration (as corrected)</h4>
+  <p>apps/api is a plain Node server with no build step. The first deploy attempt used the default <code>npm run build</code>, which failed (<code>Missing script: "build"</code> — apps/api has no such script). Fixed to: <strong>Build command: None</strong> · <strong>Entry file: <code>src/index.mjs</code></strong> · Root directory <code>apps/api</code>. Redeployed successfully.</p>
+
+  <h4>Environment variables set on api.nizalo.com</h4>
+  <table>
+    <tr><td class="mono">DATABASE_URL</td><td>Postgres connection string (see Database below)</td></tr>
+    <tr><td class="mono">NODE_ENV</td><td><code>production</code></td></tr>
+    <tr><td class="mono">AUTH_SIGNING_KEY_B64</td><td>Freshly generated 32-byte key, base64 — <strong>never reused from staging</strong></td></tr>
+    <tr><td class="mono">AUTH_ENCRYPTION_KEY_B64</td><td>Freshly generated 32-byte key, base64 — <strong>never reused from staging</strong></td></tr>
+  </table>
+  <p style="color:var(--accent)"><strong>Both keys were generated fresh for this deployment and are not reproduced in this document.</strong> If they need rotating, generate via <code class="mono">node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"</code> and update both Hostinger's environment variables panel and any dependent service.</p>
+
+  <h3>Database: Supabase Postgres</h3>
+  <p>Project <code class="mono">oqauuhkztracrktpmlxp</code> on Supabase (<code class="mono">https://oqauuhkztracrktpmlxp.supabase.co</code>). <strong>Important distinction discovered during setup:</strong> Supabase surfaces several different connection values that are easy to confuse —</p>
+  <table>
+    <tr><th>Value</th><th>Looks like</th><th>Use for</th></tr>
+    <tr><td>Project REST URL</td><td class="mono">https://xxx.supabase.co/rest/v1/</td><td>Supabase's own REST/client API — <strong>not</strong> a Postgres connection string</td></tr>
+    <tr><td>Publishable / secret API key</td><td class="mono">sb_publishable_... / sb_secret_...</td><td>Supabase's REST/management API auth — <strong>not</strong> <code>DATABASE_URL</code></td></tr>
+    <tr><td><strong>Postgres connection string</strong></td><td class="mono">postgresql://postgres:[PW]@db.xxx.supabase.co:5432/postgres</td><td><strong>This is <code>DATABASE_URL</code></strong> — found under Project Settings → Database → Connection string → "Direct connection" → type "URI"</td></tr>
+  </table>
+  <p><strong>46 migrations have not yet been confirmed run against this production database as of this document's writing</strong> — run <code class="mono">packages/ledger/src/migrate.mjs</code>'s <code>migrate(db, {dir, log:true})</code> against the real <code>DATABASE_URL</code> before relying on signup/auth working end-to-end. No <code>CREATE EXTENSION</code> statements exist in the migration set, so confirm <code>gen_random_uuid()</code> (pgcrypto) is available on the target — Supabase enables it by default.</p>
+
+  <h3>Frontend ↔ API wiring</h3>
+  <p>The root cause of the original "signup does nothing" production bug: <code class="mono">apps/web/src/lib/api.ts</code> defaults <code>NEXT_PUBLIC_API_URL</code> to <code>http://localhost:3000</code> when the variable isn't set at <strong>build time</strong> (Next.js bakes <code>NEXT_PUBLIC_*</code> vars into the JS bundle — setting them after the build has no effect). Similarly <code class="mono">apps/web/src/lib/use-duel-socket.ts</code> defaults <code>NEXT_PUBLIC_GATEWAY_URL</code> to <code>ws://localhost:3010</code>.</p>
+  <p><strong>Required on nizalo.com's environment variables, before the next build:</strong></p>
+  <table>
+    <tr><td class="mono">NEXT_PUBLIC_API_URL</td><td class="mono">https://api.nizalo.com</td></tr>
+    <tr><td class="mono">NEXT_PUBLIC_GATEWAY_URL</td><td class="mono">wss://[gateway host — apps/gateway not yet deployed as of this doc]</td></tr>
+  </table>
+  <p class="callout" style="display:block"><strong>apps/gateway (the realtime WebSocket server for live duels/chat) has not been deployed to production yet.</strong> Only apps/web and apps/api are live. Realtime play, live duel spectating, and chat will not function until apps/gateway is deployed to a domain/port reachable over <code>wss://</code> and <code>NEXT_PUBLIC_GATEWAY_URL</code> is wired to it — this is the next infrastructure gap after this document was written.</p>
+
+  <h3>Known open items from this deployment pass</h3>
+  <ul>
+    <li>Confirm <code>DATABASE_URL</code> on api.nizalo.com is the real Postgres URI (not a Supabase REST URL) and that migrations have been run against it.</li>
+    <li>Set <code>NEXT_PUBLIC_API_URL=https://api.nizalo.com</code> on nizalo.com and trigger a rebuild (this variable only takes effect at build time).</li>
+    <li>Deploy apps/gateway for realtime features; wire <code>NEXT_PUBLIC_GATEWAY_URL</code>.</li>
+    <li>Deploy apps/worker (settlement, reconciliation, tournament sweeps) — not covered in this pass; without it, cash settlement and tournament automation will not run in production.</li>
+    <li>A double-modal rendering bug was observed on the signup form (cosmetic, non-blocking).</li>
+    <li>Any Supabase key pasted into a chat/session during this setup should be rotated as a precaution (Project Settings → API).</li>
+  </ul>
+</section>
+
+<section>
+  <div class="eyebrow">13 — LOCAL DEV</div>
+  <h2>Running and testing locally</h2>
+  <pre>npm install
+npm test              # 2,122+ tests across 37 workspaces, PGlite (Postgres 17 in WASM)
+npm run typecheck
+npm run build --workspace=apps/web
+npm run start --workspace=apps/web</pre>
+  <p>Tests run against <strong>PGlite</strong> — real PostgreSQL 17 compiled to WASM, in-process, no Docker required. This proves every constraint, trigger, and <code>plpgsql</code> function exactly as production, with one limitation: <strong>PGlite is single-connection</strong>, so genuine concurrency (row-lock contention, deadlocks, serialisation failures) is not exercised by the default suite. Real-Postgres concurrency scenarios live in <code class="mono">*/real-pg-concurrency.test.mjs</code> files and use <code class="mono">packages/ledger/test-support/real-pg-db.mjs</code> to provision a disposable database per test file against <code>TEST_DATABASE_URL</code> (defaults to <code class="mono">postgres://postgres:postgres@localhost:5432/skill_platform_test</code>) — a real local or containerised Postgres is required to run these.</p>
+  <p>A PGlite-socket bridge is available for standing up a full live dev environment (API + web dev server) with no local Postgres install at all — see the project memory note <em>"Smoke-test env via PGlite-socket"</em> for the exact recipe.</p>
+</section>
+
+<section>
+  <div class="eyebrow">14 — OPEN DECISIONS</div>
+  <h2>Open decisions and next actions</h2>
+  <table>
+    <tr><th>#</th><th>Decision</th><th>Blocks</th><th>Owner</th></tr>
+    <tr><td>D2</td><td>Legal entity, jurisdiction, licensing counsel</td><td>All real-money features (Phase 6)</td><td>Founder + counsel</td></tr>
+    <tr><td>D3</td><td>Launch markets (the market matrix)</td><td>Phase 6</td><td>Founder + counsel</td></tr>
+    <tr><td>D4</td><td>Custody model (provider / qualified custodian / MPC)</td><td>Phase 5</td><td>Founder</td></tr>
+    <tr><td>D5</td><td>Whether Reaction/Precision may ever be cash games</td><td>Phase 3 cash tiers</td><td>Engineering + founder</td></tr>
+    <tr><td>A1</td><td>Labelled dataset for chess cheat-detection tuning</td><td>Any automated chess sanction</td><td>Engineering</td></tr>
+    <tr><td>A2</td><td>Latency-oracle bound proven for Reaction/Precision</td><td>Cash tiers for those games</td><td>Engineering</td></tr>
+  </table>
+  <p><strong>Engineering can proceed through Phase 4 without D2–D5 resolved, and cannot proceed past it</strong> — Phase 5 (money in production) and Phase 6 (compliance/KYC) are gated on founder and legal decisions, not code.</p>
+</section>
+
+<section>
+  <div class="eyebrow">15 — SOURCE DOCS</div>
+  <h2>Where to find more</h2>
+  <p>This document condenses the full documentation tree at <code class="mono">docs/</code>. For anything requiring exact wording, cite the source file, not this summary:</p>
+  <table>
+    <tr><td class="mono">docs/product/PROJECT_VISION.md</td><td>Full vision, game design philosophy, growth &amp; psychology rules</td></tr>
+    <tr><td class="mono">docs/product/ROADMAP.md</td><td>All 10 phases with hard gates and exact test counts</td></tr>
+    <tr><td class="mono">docs/architecture/TECHNICAL_ARCHITECTURE.md</td><td>Full system design, plugin contract, matchmaking internals</td></tr>
+    <tr><td class="mono">docs/architecture/ENVIRONMENT_ASSESSMENT.md</td><td>Toolchain, stack decision rationale</td></tr>
+    <tr><td class="mono">docs/architecture/RISK_REGISTER.md</td><td>The 2026-09-06 concurrency audit (A2, A8, A9) in full</td></tr>
+    <tr><td class="mono">docs/security/THREAT_MODEL.md</td><td>Full STRIDE analysis, all 8 trust boundaries</td></tr>
+    <tr><td class="mono">docs/ledger/LEDGER_SPECIFICATION.md</td><td>Complete schema, all canonical flows</td></tr>
+    <tr><td class="mono">docs/payments/PAYMENT_ARCHITECTURE.md</td><td>Full deposit/withdrawal state machines</td></tr>
+    <tr><td class="mono">docs/anti-cheat/ANTI_CHEAT_ARCHITECTURE.md</td><td>Full signal catalogue, case management</td></tr>
+    <tr><td class="mono">docs/compliance/COMPLIANCE_ARCHITECTURE.md</td><td>Full market matrix schema, KYC/AML detail</td></tr>
+    <tr><td class="mono">docs/brand/BRAND_GUIDELINES.md</td><td>Companion document: <em>Nizalo — Brand Identity.pdf</em></td></tr>
+    <tr><td class="mono">README.md</td><td>Quick start, the 9 founding rules, full document index</td></tr>
+  </table>
+  <p style="margin-top:16pt;color:var(--tx3);font-size:8.5pt">Generated 2026-09-12 as a handoff/reference document. Source repository is the single source of truth — this PDF will drift from it over time and should be regenerated periodically, particularly §12 (live deployment state).</p>
+</section>

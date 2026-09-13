@@ -1,30 +1,10 @@
 "use client";
 
-/**
- * The Dominoes board -- server-authoritative, same discipline as every
- * other board component: selection (which hand tile, then which end) is
- * the ONLY client-side state, and a click never places a tile directly
- * -- it only ever calls `onMove({ tile, end? })` or `onMove({ pass: true })`,
- * sent as an ordinary INTENT.
- *
- * Which ends a given hand tile could legally attach to is recomputed
- * HERE, from the public line alone, purely so the hand can grey out
- * dead tiles and skip the end-picker when only one end is possible --
- * exactly the same "client mirrors the rule for display, server is the
- * only one who enforces it" split every other board component (XOBoard's
- * win-line, CheckersBoard's destination highlighting) already uses.
- *
- * Visual identity: a felt table (this game's own material, distinct from
- * chess's board and checkers' walnut) under ivory tiles with real pip
- * geometry -- the brief's own "premium table experience, physical-feeling
- * pieces, clean tile interaction". RTL note: forced `dir="ltr"` on the
- * table itself, same reasoning as every other board -- the line of play
- * is geometry, not text, and never mirrors.
- */
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
+import { useVisualSettings } from "./TableEnvironment";
 import styles from "./DominoesBoard.module.css";
 
 type Tile = [number, number];
@@ -67,8 +47,15 @@ const PIP_LAYOUTS: Record<number, Array<[number, number]>> = {
 function Pips({ value }: { value: number }) {
   return (
     <svg viewBox="0 0 100 100" className={styles.pips} aria-hidden="true">
+      <defs>
+        <radialGradient id="pip-inset" cx="40%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#111" />
+          <stop offset="80%" stopColor="#252525" />
+          <stop offset="100%" stopColor="#444" />
+        </radialGradient>
+      </defs>
       {(PIP_LAYOUTS[value] ?? []).map(([cx, cy], i) => (
-        <circle key={i} cx={cx} cy={cy} r={9} />
+        <circle key={i} cx={cx} cy={cy} r={9.5} fill="url(#pip-inset)" filter="drop-shadow(0 1px 1px rgba(255,255,255,0.4))" />
       ))}
     </svg>
   );
@@ -80,16 +67,23 @@ function DominoTile({
   values: [number, number]; size?: "sm" | "md" | "lg"; faded?: boolean; glow?: boolean;
 }) {
   return (
-    <div className={[styles.tile, styles[`tile-${size}`], faded ? styles.faded : "", glow ? styles.glow : ""].join(" ")}>
-      <div className={styles.half}><Pips value={values[0]} /></div>
-      <div className={styles.divider} />
-      <div className={styles.half}><Pips value={values[1]} /></div>
+    <div className={[styles.tile3d, styles[`tile-${size}`], faded ? styles.faded : "", glow ? styles.glow : ""].join(" ")}>
+      {/* 3D Tile Face */}
+      <div className={styles.tileFace}>
+        <div className={styles.half}><Pips value={values[0]} /></div>
+        <div className={styles.divider}>
+          {/* Metallic brass center spinner rivet */}
+          <span className={styles.spinnerRivet} />
+        </div>
+        <div className={styles.half}><Pips value={values[1]} /></div>
+      </div>
     </div>
   );
 }
 
 export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, mySeat, canMove, onMove }: Props) {
   const { t } = useI18n();
+  const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<Tile | null>(null);
 
   const selectedEnds = useMemo(
@@ -134,58 +128,73 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
         </div>
       )}
 
-      <div className={styles.table}>
-        <div className={styles.lineViewport} dir="ltr">
-          <div className={styles.line}>
-            {line.tiles.length === 0 && <span className={styles.emptyHint}>{t("game.dominoes.empty_line")}</span>}
-            {line.tiles.map((lt, i) => (
-              <DominoTile key={i} values={lt.orientation} size="md" />
-            ))}
+      {/* 3D Felt Table Surface */}
+      <div className={[styles.tableContainer, perspective3D ? styles.perspective : ""].join(" ")}>
+        <div className={styles.tableFelt}>
+          <div className={styles.lineViewport} dir="ltr">
+            <div className={styles.line}>
+              {line.tiles.length === 0 && <span className={styles.emptyHint}>{t("game.dominoes.empty_line")}</span>}
+              {line.tiles.map((lt, i) => (
+                <motion.div
+                  key={i}
+                  initial={i === line.tiles.length - 1 ? { scale: 1.15, y: -8, opacity: 0 } : false}
+                  animate={{ scale: 1, y: 0, opacity: 1 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <DominoTile values={lt.orientation} size="md" />
+                </motion.div>
+              ))}
+            </div>
+            {selected && selectedEnds.includes("LEFT") && (
+              <button type="button" className={[styles.endZone, styles.endLeft].join(" ")} onClick={() => handleEndClick("LEFT")}>
+                <span className={styles.endZoneGlow} />
+                {t("game.dominoes.play_here")}
+              </button>
+            )}
+            {selected && selectedEnds.includes("RIGHT") && (
+              <button type="button" className={[styles.endZone, styles.endRight].join(" ")} onClick={() => handleEndClick("RIGHT")}>
+                <span className={styles.endZoneGlow} />
+                {t("game.dominoes.play_here")}
+              </button>
+            )}
           </div>
-          {selected && selectedEnds.includes("LEFT") && (
-            <button type="button" className={[styles.endZone, styles.endLeft].join(" ")} onClick={() => handleEndClick("LEFT")}>
-              {t("game.dominoes.play_here")}
-            </button>
-          )}
-          {selected && selectedEnds.includes("RIGHT") && (
-            <button type="button" className={[styles.endZone, styles.endRight].join(" ")} onClick={() => handleEndClick("RIGHT")}>
-              {t("game.dominoes.play_here")}
-            </button>
-          )}
         </div>
       </div>
 
+      {/* 3D Hand Tray */}
       {hand && (
-        <div className={styles.handRow} dir="ltr">
-          <AnimatePresence initial={false}>
-            {hand.map((tile) => {
-              const forced = mustPlayTile !== null;
-              const isForcedTile = forced && sameTile(tile, mustPlayTile!);
-              const legal = !forced || isForcedTile;
-              const ends = legalEndsFor(tile, line);
-              const playable = canMove && legal && ends.length > 0;
-              const isSelected = selected !== null && sameTile(tile, selected);
-              return (
-                <motion.button
-                  key={`${tile[0]}-${tile[1]}`}
-                  type="button"
-                  layout
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  whileHover={{ y: playable ? -6 : 0 }}
-                  whileTap={{ scale: playable ? 0.96 : 1 }}
-                  transition={transition.ui}
-                  className={styles.handTile}
-                  disabled={!playable}
-                  onClick={() => handleTileClick(tile)}
-                  aria-pressed={isSelected}
-                >
-                  <DominoTile values={tile} size="lg" faded={!playable} glow={isSelected} />
-                </motion.button>
-              );
-            })}
-          </AnimatePresence>
+        <div className={styles.handTrayWrap} dir="ltr">
+          <div className={styles.handTrayBevel}>
+            <AnimatePresence initial={false}>
+              {hand.map((tile) => {
+                const forced = mustPlayTile !== null;
+                const isForcedTile = forced && sameTile(tile, mustPlayTile!);
+                const legal = !forced || isForcedTile;
+                const ends = legalEndsFor(tile, line);
+                const playable = canMove && legal && ends.length > 0;
+                const isSelected = selected !== null && sameTile(tile, selected);
+                return (
+                  <motion.button
+                    key={`${tile[0]}-${tile[1]}`}
+                    type="button"
+                    layout
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: isSelected ? -10 : 0, scale: isSelected ? 1.08 : 1 }}
+                    exit={{ opacity: 0, y: -16 }}
+                    whileHover={{ y: playable ? -8 : 0 }}
+                    whileTap={{ scale: playable ? 0.96 : 1 }}
+                    transition={transition.ui}
+                    className={styles.handTile}
+                    disabled={!playable}
+                    onClick={() => handleTileClick(tile)}
+                    aria-pressed={isSelected}
+                  >
+                    <DominoTile values={tile} size="lg" faded={!playable} glow={isSelected} />
+                  </motion.button>
+                );
+              })}
+            </AnimatePresence>
+          </div>
         </div>
       )}
 

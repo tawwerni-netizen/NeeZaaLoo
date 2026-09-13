@@ -1,0 +1,645 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--nz-color-bg-primary, #090a0f);
+  color: var(--nz-color-text-primary, #f0f2f5);
+}
+
+.main {
+  flex: 1;
+  padding-top: 2rem;
+  padding-bottom: 5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(255, 184, 0, 0.12);
+  border: 1px solid rgba(255, 184, 0, 0.3);
+  color: #ffb800;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.heroBadgeIcon {
+  font-size: 1rem;
+}
+
+.title {
+  font-family: var(--font-archivo), sans-serif;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  margin: 0 0 0.75rem 0;
+}
+
+.subtitle {
+  font-size: 1.05rem;
+  color: #94a3b8;
+  max-width: 650px;
+  margin: 0 auto 2rem auto;
+  line-height: 1.6;
+}
+
+/* Search Box */
+.searchWrap {
+  position: relative;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 1.2rem;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 1rem 3rem 1rem 3.2rem;
+  border-radius: 14px;
+  background: rgba(18, 22, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.searchInput:focus {
+  border-color: #ffb800;
+  box-shadow: 0 0 0 3px rgba(255, 184, 0, 0.25);
+}
+
+.searchClear {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 1rem;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.searchClear:hover {
+  color: #ffffff;
+}
+
+/* Strict Anti-Phishing Security Notice */
+.securityBanner {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.12) 0%, rgba(185, 28, 28, 0.06) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  margin-bottom: 2rem;
+}
+
+.securityIcon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.securityContent {
+  flex: 1;
+}
+
+.securityTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f87171;
+  margin: 0 0 0.35rem 0;
+}
+
+.securityBody {
+  font-size: 0.92rem;
+  color: #fca5a5;
+  margin: 0 0 0.35rem 0;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.securitySubtext {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Contacts & Actions Bar */
+.contactBar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.contactCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(18, 22, 34, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.contactIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.contactInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.contactLabel {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.contactLink {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffb800;
+  text-decoration: none;
+  font-family: var(--font-plex-mono), monospace;
+}
+
+.contactLink:hover {
+  text-decoration: underline;
+}
+
+.contactActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.ticketCtaBtn {
+  font-weight: 600;
+}
+
+.myTicketsBtn {
+  font-weight: 500;
+}
+
+/* Category Filter Navigation */
+.categoryNav {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.75rem;
+}
+
+.categoryScroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+}
+
+.categoryScroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.categoryScroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.categoryPill {
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(18, 22, 34, 0.5);
+  color: #94a3b8;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.categoryPill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.categoryPillActive {
+  background: #ffb800 !important;
+  color: #090a0f !important;
+  border-color: #ffb800 !important;
+  font-weight: 700;
+}
+
+/* FAQ Section */
+.faqSection {
+  margin-bottom: 4rem;
+}
+
+.faqHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.faqHeading {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.faqCount {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.faqCard {
+  border-radius: 12px;
+  background: rgba(18, 22, 34, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.faqCard:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(18, 22, 34, 0.75);
+}
+
+.faqCardExpanded {
+  border-color: rgba(255, 184, 0, 0.35);
+  background: rgba(18, 22, 34, 0.85);
+}
+
+.faqQuestionBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.15rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  outline: none;
+}
+
+.faqCategoryBadge {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.faqQuestionText {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.faqChevron {
+  font-size: 0.75rem;
+  color: #64748b;
+  transition: transform 0.2s;
+}
+
+.faqAnswerBody {
+  padding: 0 1.25rem 1.25rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 0.25rem;
+}
+
+.faqAnswerText {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  line-height: 1.65;
+  margin: 1rem 0 1rem 0;
+}
+
+.faqTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.faqTag {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: var(--font-plex-mono), monospace;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border-radius: 12px;
+  background: rgba(18, 22, 34, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.emptyText {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+/* Legal Policies Section */
+.legalSection {
+  padding: 2rem;
+  border-radius: 16px;
+  background: rgba(14, 17, 27, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legalHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.legalIcon {
+  font-size: 1.5rem;
+}
+
+.legalHeading {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.legalDescription {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0 0 1.5rem 0;
+}
+
+.policiesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.policyCard {
+  padding: 1.15rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.policyCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.policyCardTitle {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.policyVersionBadge {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 184, 0, 0.15);
+  color: #ffb800;
+  font-family: var(--font-plex-mono), monospace;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.policyCardType {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Ticket Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modalContainer {
+  background: #111420;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 540px;
+  padding: 1.75rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.modalCloseBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.modalCloseBtn:hover {
+  color: #ffffff;
+}
+
+.ticketForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formAlert {
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.formError {
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  font-size: 0.85rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.formLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.formInput,
+.formSelect,
+.formTextarea {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.formInput:focus,
+.formSelect:focus,
+.formTextarea:focus {
+  border-color: #ffb800;
+}
+
+.formSelect option {
+  background: #111420;
+  color: #ffffff;
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.modalSuccess {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.successIcon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem auto;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.2);
+  border: 2px solid #22c55e;
+  color: #22c55e;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.successText {
+  font-size: 1rem;
+  color: #cbd5e1;
+  margin-bottom: 1.5rem;
+}
+
+.successActions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .contactBar {
+    grid-template-columns: 1fr;
+  }
+  .contactActions {
+    justify-content: stretch;
+  }
+  .contactActions button,
+  .contactActions a {
+    flex: 1;
+  }
+  .legalSection {
+    padding: 1.25rem;
+  }
+}

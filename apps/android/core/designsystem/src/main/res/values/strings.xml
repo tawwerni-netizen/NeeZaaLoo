@@ -1,0 +1,56 @@
+<resources>
+    <string name="app_name">Nizalo</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_games">Games</string>
+    <string name="nav_tournaments">Tournaments</string>
+    <string name="nav_ranking">Ranking</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_wallet">Wallet</string>
+    <string name="nav_support">Support</string>
+
+    <!-- Game Names -->
+    <string name="game_chess">Chess</string>
+    <string name="game_checkers">Checkers</string>
+    <string name="game_dominoes">Dominoes</string>
+    <string name="game_backgammon">Backgammon</string>
+    <string name="game_connect_four">Connect Four</string>
+    <string name="game_seega">Seega</string>
+    <string name="game_xo">XO</string>
+    <string name="game_speed_math">Speed Math</string>
+    <string name="game_reversi">Reversi</string>
+    <string name="game_gomoku">Gomoku</string>
+
+    <!-- Modes -->
+    <string name="mode_vs_computer">VS Computer</string>
+    <string name="mode_friend">Play Friend</string>
+    <string name="mode_random">Random Duel</string>
+    <string name="mode_tournament">Tournament</string>
+
+    <!-- Difficulties -->
+    <string name="diff_easy">Easy</string>
+    <string name="diff_medium">Medium</string>
+    <string name="diff_hard">Hard</string>
+    <string name="diff_expert">Expert</string>
+
+    <!-- Auth & Legal -->
+    <string name="login_title">Sign In</string>
+    <string name="register_title">Create Account</string>
+    <string name="terms_checkbox">I agree to the Terms &amp; Conditions and Privacy Policy</string>
+    <string name="terms_required_error">You must accept the Terms &amp; Conditions to proceed</string>
+    <string name="policy_reacceptance_title">Policy Update Notice</string>
+    <string name="policy_reacceptance_msg">We have updated our policies. Please review and accept them to continue playing.</string>
+    <string name="accept_and_continue">Accept &amp; Continue</string>
+
+    <!-- Wallet -->
+    <string name="wallet_balance">Available Balance</string>
+    <string name="wallet_deposit">Deposit USDT</string>
+    <string name="wallet_withdraw">Withdraw USDT</string>
+    <string name="wallet_transactions">Transaction History</string>
+
+    <!-- Gameplay -->
+    <string name="spectator_badge">LIVE SPECTATOR</string>
+    <string name="your_turn">Your Turn</string>
+    <string name="opponent_turn">Opponent\'s Turn</string>
+    <string name="game_over">Match Finished</string>
+    <string name="reconnecting">Reconnecting to match…</string>
+</resources>

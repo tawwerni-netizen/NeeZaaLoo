@@ -80,9 +80,10 @@ export function Header() {
           <LanguageSwitcher />
           {loading ? null : player ? (
             <>
+              <LocaleLink href="/referrals" className={styles.navLink}>Referrals</LocaleLink>
               <LocaleLink href="/wallet" className={styles.navLink}>{t("nav.wallet")}</LocaleLink>
               <LocaleLink href="/profile" className={styles.navLink}>{player.handle}</LocaleLink>
-              <LocaleLink href="/support" className={styles.navLink}>{t("nav.support")}</LocaleLink>
+              <LocaleLink href="/help" className={styles.navLink}>{t("nav.support")}</LocaleLink>
               <span className={styles.navSoon} aria-disabled="true">
                 {t("nav.download_app")}<span className={styles.soon}>{t("home.download.badge")}</span>
               </span>
@@ -133,9 +134,10 @@ export function Header() {
             <div className={styles.mobileSecondary}>
               {loading ? null : player ? (
                 <>
+                  <LocaleLink href="/referrals" className={styles.mobileNavLink} onClick={closeMenu}>Referrals</LocaleLink>
                   <LocaleLink href="/wallet" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.wallet")}</LocaleLink>
                   <LocaleLink href="/profile" className={styles.mobileNavLink} onClick={closeMenu}>{player.handle}</LocaleLink>
-                  <LocaleLink href="/support" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.support")}</LocaleLink>
+                  <LocaleLink href="/help" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.support")}</LocaleLink>
                   <Button variant="ghost" onClick={() => { closeMenu(); void logout(); }}>{t("nav.log_out")}</Button>
                 </>
               ) : (

@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">Nizalo</string>
+    <string name="nav_home">首页</string>
+    <string name="nav_games">游戏</string>
+    <string name="nav_tournaments">锦标赛</string>
+    <string name="nav_ranking">天梯排行</string>
+    <string name="nav_profile">个人中心</string>
+    <string name="nav_wallet">钱包</string>
+    <string name="nav_support">帮助支持</string>
+
+    <string name="game_chess">国际象棋</string>
+    <string name="game_checkers">跳棋</string>
+    <string name="game_dominoes">多米诺骨牌</string>
+    <string name="game_backgammon">西洋双陆棋</string>
+    <string name="game_connect_four">四子棋</string>
+    <string name="game_seega">西加棋</string>
+    <string name="game_xo">井字棋</string>
+    <string name="game_speed_math">极速心算</string>
+    <string name="game_reversi">黑白棋</string>
+    <string name="game_gomoku">五子棋</string>
+
+    <string name="mode_vs_computer">人机对战</string>
+    <string name="mode_friend">好友对决</string>
+    <string name="mode_random">匹配对战</string>
+    <string name="mode_tournament">锦标赛</string>
+
+    <string name="diff_easy">简单</string>
+    <string name="diff_medium">普通</string>
+    <string name="diff_hard">困难</string>
+    <string name="diff_expert">专家</string>
+
+    <string name="login_title">登录</string>
+    <string name="register_title">注册账号</string>
+    <string name="terms_checkbox">我同意《服务条款》和《隐私政策》</string>
+    <string name="terms_required_error">必须同意条款方可继续</string>
+    <string name="policy_reacceptance_title">政策更新提示</string>
+    <string name="policy_reacceptance_msg">我们更新了平台政策。请阅读并同意后继续游戏。</string>
+    <string name="accept_and_continue">同意并继续</string>
+
+    <string name="wallet_balance">可用余额</string>
+    <string name="wallet_deposit">充值 USDT</string>
+    <string name="wallet_withdraw">提现 USDT</string>
+    <string name="wallet_transactions">交易记录</string>
+
+    <string name="spectator_badge">实时观战</string>
+    <string name="your_turn">轮到你走棋</string>
+    <string name="opponent_turn">对手回合</string>
+    <string name="game_over">比赛结束</string>
+    <string name="reconnecting">正在重新连接比赛…</string>
+</resources>

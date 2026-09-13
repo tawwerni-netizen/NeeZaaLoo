@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">Nizalo</string>
+    <string name="nav_home">Inicio</string>
+    <string name="nav_games">Juegos</string>
+    <string name="nav_tournaments">Torneos</string>
+    <string name="nav_ranking">Clasificación</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="nav_wallet">Billetera</string>
+    <string name="nav_support">Soporte</string>
+
+    <string name="game_chess">Ajedrez</string>
+    <string name="game_checkers">Damas</string>
+    <string name="game_dominoes">Dominó</string>
+    <string name="game_backgammon">Backgammon</string>
+    <string name="game_connect_four">Conecta Cuatro</string>
+    <string name="game_seega">Seega</string>
+    <string name="game_xo">Tres en raya (XO)</string>
+    <string name="game_speed_math">Cálculo Rápido</string>
+    <string name="game_reversi">Reversi</string>
+    <string name="game_gomoku">Gomoku</string>
+
+    <string name="mode_vs_computer">Contra la Máquina</string>
+    <string name="mode_friend">Jugar con Amigo</string>
+    <string name="mode_random">Duelo Aleatorio</string>
+    <string name="mode_tournament">Torneo</string>
+
+    <string name="diff_easy">Fácil</string>
+    <string name="diff_medium">Medio</string>
+    <string name="diff_hard">Difícil</string>
+    <string name="diff_expert">Experto</string>
+
+    <string name="login_title">Iniciar Sesión</string>
+    <string name="register_title">Crear Cuenta</string>
+    <string name="terms_checkbox">Acepto los Términos y Condiciones y la Política de Privacidad</string>
+    <string name="terms_required_error">Debe aceptar los términos para continuar</string>
+    <string name="policy_reacceptance_title">Aviso de Actualización de Políticas</string>
+    <string name="policy_reacceptance_msg">Hemos actualizado nuestras políticas. Revíselas y acéptelas para seguir jugando.</string>
+    <string name="accept_and_continue">Aceptar y Continuar</string>
+
+    <string name="wallet_balance">Saldo Disponible</string>
+    <string name="wallet_deposit">Depositar USDT</string>
+    <string name="wallet_withdraw">Retirar USDT</string>
+    <string name="wallet_transactions">Historial de Transacciones</string>
+
+    <string name="spectator_badge">ESPECTADOR EN VIVO</string>
+    <string name="your_turn">Tu Turno</string>
+    <string name="opponent_turn">Turno del Oponente</string>
+    <string name="game_over">Partida Finalizada</string>
+    <string name="reconnecting">Reconectando a la partida…</string>
+</resources>

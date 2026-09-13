@@ -16,7 +16,7 @@ import {
 
 const ALL_ON = Object.fromEntries(
   ["REGISTRATION", "MATCHMAKING", "CASH_MATCHES", "TOURNAMENTS", "DEPOSITS",
-   "WITHDRAWALS", "PROMOTIONS", "REGIONS"].map((k) => [k, true])
+   "WITHDRAWALS", "PROMOTIONS", "REGIONS", "REFERRALS"].map((k) => [k, true])
 );
 
 const admin = (roles, over = {}) => ({
@@ -108,10 +108,10 @@ describe("the capability grid", () => {
     // control.read only -- rail.manage stays finance-and-super-admin-only,
     // the same spread as economy.manage) since the Admin Payment &
     // Stablecoin Control Center's own capabilities were added.
-    SUPER_ADMIN: 30,
-    ADMIN: 16,
-    FINANCE_ADMIN: 14,
-    RISK_ADMIN: 14,
+    SUPER_ADMIN: 32,
+    ADMIN: 17,
+    FINANCE_ADMIN: 16,
+    RISK_ADMIN: 16,
     ANTI_CHEAT_MODERATOR: 6,
     CONTENT_MODERATOR: 2,
     SUPPORT: 3,

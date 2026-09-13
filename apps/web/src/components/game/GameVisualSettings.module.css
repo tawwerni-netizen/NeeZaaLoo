@@ -1,0 +1,204 @@
+.container {
+  position: relative;
+  display: inline-flex;
+  z-index: 30;
+}
+
+.triggerButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--nz-radius-md);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-1);
+  color: var(--nz-text-2);
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) var(--nz-ease-out);
+  box-shadow: var(--nz-shadow-1);
+}
+
+.triggerButton:hover {
+  color: var(--nz-text);
+  border-color: var(--nz-line-strong);
+  background: var(--nz-surface-2);
+  transform: translateY(-1px);
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + var(--nz-space-2));
+  right: 0;
+  width: 260px;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-4);
+  box-shadow: var(--nz-shadow-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-4);
+  animation: fadeIn var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+[dir="rtl"] .popover {
+  right: auto;
+  left: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.popoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--nz-line);
+  padding-bottom: var(--nz-space-2);
+}
+
+.popoverTitle {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  color: var(--nz-text);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--nz-text-3);
+  cursor: pointer;
+  padding: 0 4px;
+}
+.closeButton:hover {
+  color: var(--nz-text);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+}
+
+.sectionLabel {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  font-weight: 600;
+}
+
+.themeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--nz-space-2);
+}
+
+.themeOption {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  padding: var(--nz-space-2) var(--nz-space-3);
+  border-radius: var(--nz-radius-sm);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-2);
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.themeOption:hover {
+  border-color: var(--nz-line-strong);
+}
+
+.selectedTheme {
+  border-color: var(--nz-accent) !important;
+  background: var(--nz-accent-soft) !important;
+}
+
+.themeSwatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.themeName {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qualityRow {
+  display: flex;
+  gap: var(--nz-space-1);
+  background: var(--nz-surface-2);
+  padding: 3px;
+  border-radius: var(--nz-radius-md);
+  border: 1px solid var(--nz-line);
+}
+
+.qualityOption {
+  flex: 1;
+  padding: var(--nz-space-1) 0;
+  text-align: center;
+  font-size: var(--nz-text-xs);
+  border: none;
+  background: transparent;
+  color: var(--nz-text-2);
+  border-radius: var(--nz-radius-sm);
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.selectedQuality {
+  background: var(--nz-surface-1);
+  color: var(--nz-text);
+  font-weight: 600;
+  box-shadow: var(--nz-shadow-1);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggleSwitch {
+  width: 36px;
+  height: 20px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-3);
+  border: 1px solid var(--nz-line);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--nz-dur-fast) var(--nz-ease-out);
+  padding: 2px;
+}
+
+.toggleOn {
+  background: var(--nz-accent);
+  border-color: var(--nz-accent);
+}
+
+.toggleThumb {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  transition: transform var(--nz-dur-fast) var(--nz-ease-out);
+  transform: translateX(0);
+}
+
+.toggleOn .toggleThumb {
+  transform: translateX(16px);
+}

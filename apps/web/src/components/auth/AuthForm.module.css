@@ -126,3 +126,32 @@
 .secondaryLink:hover {
   color: var(--nz-accent);
 }
+
+.checkboxField {
+  margin: var(--nz-space-4) 0;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nz-space-3);
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text);
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--nz-accent);
+  cursor: pointer;
+}
+
+.checkboxLabel a {
+  color: var(--nz-accent);
+  text-decoration: underline;
+  font-weight: 500;
+}
+

@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">نيزالو</string>
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_games">الألعاب</string>
+    <string name="nav_tournaments">البطولات</string>
+    <string name="nav_ranking">التصنيف</string>
+    <string name="nav_profile">الملف الشخصي</string>
+    <string name="nav_wallet">المحفظة</string>
+    <string name="nav_support">الدعم والمساعدة</string>
+
+    <string name="game_chess">الشطرنج</string>
+    <string name="game_checkers">الداما</string>
+    <string name="game_dominoes">الدومينو</string>
+    <string name="game_backgammon">طاولة الزهر</string>
+    <string name="game_connect_four">أربعة على التوالي</string>
+    <string name="game_seega">السيجة</string>
+    <string name="game_xo">إكس أو (XO)</string>
+    <string name="game_speed_math">الحساب السريع</string>
+    <string name="game_reversi">ريفيرسي</string>
+    <string name="game_gomoku">جوموكو</string>
+
+    <string name="mode_vs_computer">ضد الكمبيوتر</string>
+    <string name="mode_friend">تحدي صديق</string>
+    <string name="mode_random">مباراة عشوائية</string>
+    <string name="mode_tournament">بطولة</string>
+
+    <string name="diff_easy">سهل</string>
+    <string name="diff_medium">متوسط</string>
+    <string name="diff_hard">صعب</string>
+    <string name="diff_expert">خبير</string>
+
+    <string name="login_title">تسجيل الدخول</string>
+    <string name="register_title">إنشاء حساب جديد</string>
+    <string name="terms_checkbox">أوافق على الشروط والأحكام وسياسة الخصوصية</string>
+    <string name="terms_required_error">يجب الموافقة على الشروط للمتابعة</string>
+    <string name="policy_reacceptance_title">إشعار تحديث السياسات</string>
+    <string name="policy_reacceptance_msg">لقد قمنا بتحديث سياساتنا. يرجى مراجعتها والموافقة عليها لمتابعة اللعب.</string>
+    <string name="accept_and_continue">موافقة ومتابعة</string>
+
+    <string name="wallet_balance">الرصيد المتاح</string>
+    <string name="wallet_deposit">إيداع USDT</string>
+    <string name="wallet_withdraw">سحب USDT</string>
+    <string name="wallet_transactions">سجل المعاملات</string>
+
+    <string name="spectator_badge">مشاهدة مباشرة</string>
+    <string name="your_turn">دورك للعب</string>
+    <string name="opponent_turn">دور الخصم</string>
+    <string name="game_over">انتهت المباراة</string>
+    <string name="reconnecting">جارٍ إعادة الاتصال بالمباراة…</string>
+</resources>
