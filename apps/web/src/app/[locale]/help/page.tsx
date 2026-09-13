@@ -330,9 +330,18 @@ export default function HelpCenterPage() {
 
         {/* Strict Anti-Phishing Security Notice */}
         <section className={styles.securityBanner} role="alert">
-          <div className={styles.securityIcon} aria-hidden="true">🛡️</div>
+          <div className={styles.securitySentinelMedia}>
+            <img
+              src="/images/security/security-anti-cheat-sentinel.jpg"
+              alt="Sentinel Anti-Cheat Security"
+              className={styles.securitySentinelImg}
+            />
+          </div>
           <div className={styles.securityContent}>
-            <h2 className={styles.securityTitle}>{t("help.security_notice_title")}</h2>
+            <div className={styles.securityHeaderRow}>
+              <span className={styles.securityShieldBadge}>🛡️ NIZALO SENTINEL</span>
+              <h2 className={styles.securityTitle}>{t("help.security_notice_title")}</h2>
+            </div>
             <p className={styles.securityBody}>{t("help.security_notice_body")}</p>
             <p className={styles.securitySubtext}>
               {helpText.securitySubtext}

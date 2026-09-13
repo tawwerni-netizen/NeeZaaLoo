@@ -61,11 +61,19 @@ export function GameModes() {
             );
           })}
           <div className={styles.arenaCard}>
-            <div className={styles.arenaCardHeader}>
-              <span className={styles.arenaLiveBadge}>
+            <div className={styles.arenaThumbnailWrapper}>
+              <img
+                src="/images/banners/arena-tournaments-card.jpg"
+                alt={dir === "rtl" ? "بطولات الأرينا والتحديات المباشرة" : "Pro Tournaments & Live Duels"}
+                className={styles.arenaThumbnailImg}
+              />
+              <span className={styles.arenaLiveBadgeOverlay}>
                 <span className={styles.pulseDot} />
                 LIVE ARENA
               </span>
+            </div>
+
+            <div className={styles.arenaCardHeader}>
               <h3 className={styles.cardTitle}>
                 <LocaleLink href="/tournaments">
                   {dir === "rtl" ? "بطولات الأرينا والتحديات المباشرة" : "Pro Tournaments & Live Duels"}

@@ -6,17 +6,33 @@ import { useI18n } from "@/lib/i18n/context";
 import styles from "./LearnTeaser.module.css";
 
 export function LearnTeaser() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
+  const isRtl = dir === "rtl";
+
   return (
-    <section className={styles.section}>
+    <section className={styles.section} dir={isRtl ? "rtl" : "ltr"}>
       <div className={`nz-container ${styles.inner}`}>
-        <div>
+        <div className={styles.copy}>
+          <span className={styles.badge}>
+            {isRtl ? "أدلة القواعد المعتمدة" : "SANCTIONED RULES"}
+          </span>
           <h2 className={styles.heading}>{t("home.learn.heading")}</h2>
           <p className={styles.body}>{t("home.learn.body")}</p>
+          <div className={styles.actions}>
+            <LocaleLink href="/learn">
+              <Button variant="secondary">{t("home.learn.cta")}</Button>
+            </LocaleLink>
+          </div>
         </div>
-        <LocaleLink href="/learn">
-          <Button variant="secondary">{t("home.learn.cta")}</Button>
-        </LocaleLink>
+
+        <div className={styles.visualWrapper}>
+          <img
+            src="/images/banners/banner-certified-skill.jpg"
+            alt="Nizalo Official Game Rules"
+            className={styles.teaserImg}
+          />
+          <div className={styles.imgOverlay} />
+        </div>
       </div>
     </section>
   );

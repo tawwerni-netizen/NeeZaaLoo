@@ -51,8 +51,18 @@ function RankContent() {
 
   return (
     <main className={`nz-container ${styles.wrap}`}>
-      <h1 className={styles.heading}>{t("rank.heading")}</h1>
-      <p className={styles.subtitle}>{t("rank.subtitle")}</p>
+      <div className={styles.heroBanner}>
+        <img
+          src="/images/banners/banner-global-leaderboard.jpg"
+          alt="Global Rankings"
+          className={styles.heroBannerImg}
+        />
+        <div className={styles.heroBannerOverlay}>
+          <span className={styles.heroBadge}>GLICKO-2 GLOBAL RATING</span>
+          <h1 className={styles.heading}>{t("rank.heading")}</h1>
+          <p className={styles.subtitle}>{t("rank.subtitle")}</p>
+        </div>
+      </div>
 
       <div className={styles.scoreCard}>
         <span className={`nz-num ${styles.scoreValue}`}>{skill.score ?? "—"}</span>

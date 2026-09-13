@@ -18,6 +18,7 @@ import { get } from "@/lib/api";
 import { useI18n } from "@/lib/i18n/context";
 import { formatDate } from "@/lib/i18n/format";
 import { getGame } from "@/lib/games";
+import { TournamentBannerSlider } from "@/components/tournaments/TournamentBannerSlider";
 import styles from "./tournaments.module.css";
 
 type TournamentRow = {
@@ -63,6 +64,9 @@ function TournamentsList() {
     <>
       <Header />
       <main className="nz-container">
+        {/* Large 5-Banner Tournament Showcase Slider */}
+        <TournamentBannerSlider />
+
         <h1 className={styles.heading}>{t("tournamentsPage.heading")}</h1>
         {visible && visible.length === 0 && <p className={styles.empty}>{t("tournamentsPage.empty")}</p>}
         <div className={styles.list}>

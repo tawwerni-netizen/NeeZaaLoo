@@ -1,24 +1,102 @@
 .section {
   padding-block: var(--nz-space-12);
   border-top: 1px solid var(--nz-line);
+  background: radial-gradient(circle at 80% 50%, rgba(245, 166, 35, 0.05) 0%, transparent 60%);
+  position: relative;
+  overflow: hidden;
 }
 
 .inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 420px;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--nz-space-6);
-  flex-wrap: wrap;
+  gap: var(--nz-space-8);
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+[dir="rtl"] .copy {
+  align-items: flex-start;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f5a623;
+  background: rgba(245, 166, 35, 0.12);
+  border: 1px solid rgba(245, 166, 35, 0.35);
+  padding: 4px 12px;
+  border-radius: 999px;
 }
 
 .heading {
-  font-size: var(--nz-text-xl);
-  margin: 0 0 6px;
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  font-weight: 800;
+  color: var(--nz-text);
+  margin: 0;
+  line-height: 1.25;
 }
 
 .body {
   font-size: var(--nz-text-md);
   color: var(--nz-text-2);
   margin: 0;
-  max-width: 56ch;
+  max-width: 54ch;
+  line-height: 1.6;
 }
+
+.actions {
+  margin-top: 8px;
+}
+
+.visualWrapper {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(245, 166, 35, 0.25);
+  aspect-ratio: 16 / 9;
+  background: #0d121f;
+}
+
+.visualWrapper:hover .teaserImg {
+  transform: scale(1.04);
+}
+
+.teaserImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.imgOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(245, 166, 35, 0.08) 100%);
+  pointer-events: none;
+}
+
+@media (max-width: 860px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: var(--nz-space-6);
+  }
+
+  .visualWrapper {
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+}
+
