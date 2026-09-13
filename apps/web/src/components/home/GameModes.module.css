@@ -15,23 +15,35 @@
 }
 
 .card, .comingSoon {
-  background: var(--nz-surface-1);
-  border: 1px solid var(--nz-line);
+  background: rgba(18, 22, 34, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--nz-radius-lg);
-  padding: var(--nz-space-6);
+  padding: var(--nz-space-5);
   display: flex;
   flex-direction: column;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s, box-shadow 0.25s;
 }
 
-.comingSoon {
-  background: transparent;
-  border-style: dashed;
-  color: var(--nz-text-2);
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.1);
 }
 
-.cardTitle {
-  font-size: var(--nz-text-xl);
-  margin-bottom: var(--nz-space-3);
+.thumbnailLink {
+  display: block;
+  margin-bottom: var(--nz-space-4);
+  text-decoration: none;
+}
+
+.cardTitle a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s;
+}
+
+.cardTitle a:hover {
+  color: #FFD700;
 }
 
 .cardDescription {

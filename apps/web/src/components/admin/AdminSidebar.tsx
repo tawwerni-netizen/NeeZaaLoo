@@ -1,21 +1,11 @@
 "use client";
 
-/**
- * The admin shell's left rail. Two of the items below lead somewhere real
- * today (Dashboard, Finance -- the existing Payment & Stablecoin Control
- * Center); the rest name real, planned surfaces this platform already has
- * backend services for, but no admin screen yet. Rendering them as live
- * links to a page that doesn't exist would be its own small dishonesty on
- * a dashboard whose entire point is "never show a value or a destination
- * that isn't real" -- so they render disabled, with a quiet "Soon" mark,
- * until each one actually ships.
- */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AdminIcon, type IconName } from "./AdminIcon";
 import styles from "./AdminSidebar.module.css";
 
-type NavItem = { label: string; icon: IconName; href?: string };
+type NavItem = { label: string; icon: IconName; href: string };
 type NavGroup = { label: string; items: NavItem[] };
 
 const GROUPS: NavGroup[] = [
@@ -23,54 +13,50 @@ const GROUPS: NavGroup[] = [
     label: "Workspace",
     items: [
       { label: "Dashboard", icon: "dashboard", href: "/admin" },
-      { label: "Players", icon: "players" },
-      { label: "Games", icon: "games" },
-      { label: "Matches", icon: "matches" },
-      { label: "Tournaments", icon: "tournaments" },
-      { label: "Live Arena", icon: "arena" },
+      { label: "Players", icon: "players", href: "/admin/players" },
+      { label: "Games", icon: "games", href: "/admin/games" },
+      { label: "Matches", icon: "matches", href: "/admin/matches" },
+      { label: "Tournaments", icon: "tournaments", href: "/admin/tournaments" },
+      { label: "Live Arena", icon: "arena", href: "/admin/arena" },
     ],
   },
   {
     label: "Finance",
     items: [
-      { label: "Finance", icon: "finance", href: "/admin/payments" },
-      { label: "Deposits", icon: "deposits" },
-      { label: "Withdrawals", icon: "withdrawals" },
+      { label: "Finance Control", icon: "finance", href: "/admin/payments" },
+      { label: "Deposits", icon: "deposits", href: "/admin/deposits" },
+      { label: "Withdrawals", icon: "withdrawals", href: "/admin/withdrawals" },
     ],
   },
   {
     label: "Trust & Safety",
     items: [
-      { label: "Risk", icon: "risk" },
-      { label: "Fair Play", icon: "fairplay" },
+      { label: "Risk Radar", icon: "risk", href: "/admin/risk" },
+      { label: "Fair Play & Anti-Cheat", icon: "fairplay", href: "/admin/fair-play" },
     ],
   },
   {
     label: "Community",
     items: [
-      { label: "Support", icon: "support" },
-      { label: "Chat", icon: "chat" },
-      { label: "Referrals", icon: "referrals" },
-      { label: "Store", icon: "store" },
-      { label: "Content / SEO", icon: "content" },
+      { label: "Support Tickets", icon: "support", href: "/admin/support" },
+      { label: "Live Chat Moderation", icon: "chat", href: "/admin/chat" },
+      { label: "Referrals & Affiliates", icon: "referrals", href: "/admin/referrals" },
+      { label: "Store & Inventory", icon: "store", href: "/admin/store" },
+      { label: "Content & SEO", icon: "content", href: "/admin/content" },
     ],
   },
   {
     label: "System",
     items: [
-      { label: "System Health", icon: "systemHealth" },
-      { label: "Settings", icon: "settings" },
-      { label: "RBAC", icon: "rbac" },
+      { label: "System Health", icon: "systemHealth", href: "/admin/health" },
+      { label: "Platform Settings", icon: "settings", href: "/admin/settings" },
+      { label: "RBAC & Permissions", icon: "rbac", href: "/admin/rbac" },
     ],
   },
 ];
 
 export function AdminSidebar({ adminHandle, open = false }: { adminHandle: string; open?: boolean }) {
   const pathname = usePathname();
-  // Strip the /{locale} prefix so an active-state comparison against a
-  // bare "/admin" href works regardless of which locale segment the admin
-  // happened to land on -- this shell is English-only, but the route
-  // itself still lives under [locale] like every other page.
   const path = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/";
 
   return (
@@ -88,16 +74,7 @@ export function AdminSidebar({ adminHandle, open = false }: { adminHandle: strin
           <div key={group.label} className={styles.group}>
             <div className={styles.groupLabel}>{group.label}</div>
             {group.items.map((item) => {
-              const active = !!item.href && (item.href === "/admin" ? path === "/admin" : path.startsWith(item.href));
-              if (!item.href) {
-                return (
-                  <span key={item.label} className={styles.navItemDisabled} aria-disabled="true">
-                    <AdminIcon name={item.icon} className={styles.navIcon} />
-                    {item.label}
-                    <span className={styles.soon}>Soon</span>
-                  </span>
-                );
-              }
+              const active = item.href === "/admin" ? path === "/admin" : path.startsWith(item.href);
               return (
                 <Link
                   key={item.label}
@@ -114,7 +91,9 @@ export function AdminSidebar({ adminHandle, open = false }: { adminHandle: strin
       </nav>
 
       <div className={styles.footer}>
-        <div className={styles.avatar} aria-hidden="true">{adminHandle.slice(0, 1).toUpperCase()}</div>
+        <div className={styles.avatar} aria-hidden="true">
+          {adminHandle.slice(0, 1).toUpperCase()}
+        </div>
         <div className={styles.footerText}>
           <span className={styles.footerName}>{adminHandle}</span>
           <span className={styles.footerRole}>Administrator</span>

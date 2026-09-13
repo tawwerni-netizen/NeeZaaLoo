@@ -49,8 +49,10 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <label className={styles.wrap}>
-      <span className="nz-sr-only">{t("settings.language")}</span>
+    <div className={styles.wrap}>
+      <span className={styles.iconPrefix} aria-hidden="true">
+        {LOCALE_FLAG[locale] || "🌐"}
+      </span>
       <select
         className={styles.select}
         value={locale}
@@ -61,6 +63,7 @@ export function LanguageSwitcher() {
           <option key={l.code} value={l.code}>{LOCALE_FLAG[l.code]} {l.nativeName}</option>
         ))}
       </select>
-    </label>
+      <span className={styles.chevron} aria-hidden="true">▾</span>
+    </div>
   );
 }

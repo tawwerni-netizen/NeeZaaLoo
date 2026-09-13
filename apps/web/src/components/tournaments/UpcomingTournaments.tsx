@@ -43,6 +43,8 @@ type Props = {
   viewAllHref?: string;
   viewAllText?: string;
   limit?: number;
+  bannerImage?: string;
+  banners?: Array<{ img: string; tag: string; title: string; desc: string }>;
 };
 
 function countdownFor(iso: string, locale: SupportedLocale): string {
@@ -54,9 +56,18 @@ function countdownFor(iso: string, locale: SupportedLocale): string {
   return formatRelativeTime(Math.round(diffHr / 24), "day", locale);
 }
 
-export function UpcomingTournaments({ variant = "cards", heading, emptyText, viewAllHref, viewAllText, limit = 4 }: Props) {
+export function UpcomingTournaments({ variant = "cards", heading, emptyText, viewAllHref, viewAllText, limit = 4, bannerImage, banners }: Props) {
   const { t, locale } = useI18n();
   const [rows, setRows] = useState<TournamentRow[] | null>(null);
+  const [bannerIdx, setBannerIdx] = useState(0);
+
+  useEffect(() => {
+    if (!banners || banners.length <= 1) return;
+    const timer = setInterval(() => {
+      setBannerIdx((prev) => (prev + 1) % banners.length);
+    }, 5500);
+    return () => clearInterval(timer);
+  }, [banners]);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,6 +150,42 @@ export function UpcomingTournaments({ variant = "cards", heading, emptyText, vie
           <h2 className={styles.heading}>{heading}</h2>
           {viewAllHref && <LocaleLink href={viewAllHref} className={styles.viewAll}>{viewAllText}</LocaleLink>}
         </div>
+
+        {banners && banners.length > 0 ? (() => {
+          const activeBanner = banners[bannerIdx] ?? banners[0]!;
+          return (
+            <div className={styles.featureBanner}>
+              <img src={activeBanner.img} alt={activeBanner.title} className={styles.featureBannerImg} />
+              <div className={styles.featureBannerOverlay}>
+                <span className={styles.bannerTag}>{activeBanner.tag}</span>
+                <h3 className={styles.bannerTitle}>{activeBanner.title}</h3>
+                <p className={styles.bannerDesc}>{activeBanner.desc}</p>
+                {banners.length > 1 && (
+                  <div className={styles.bannerDots}>
+                    {banners.map((_, i) => (
+                      <button
+                        key={i}
+                        aria-label={`Switch tournament banner ${i + 1}`}
+                        className={`${styles.bannerDot} ${bannerIdx === i ? styles.bannerDotActive : ""}`}
+                        onClick={() => setBannerIdx(i)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })() : bannerImage ? (
+          <div className={styles.featureBanner}>
+            <img src={bannerImage} alt="Daily Blitz Tournaments" className={styles.featureBannerImg} />
+            <div className={styles.featureBannerOverlay}>
+              <span className={styles.bannerTag}>⚡ Daily Blitz Stage</span>
+              <h3 className={styles.bannerTitle}>Real-Time Competitive Brackets</h3>
+              <p className={styles.bannerDesc}>Compete against verified players in high-stakes knockout brackets with live streaming.</p>
+            </div>
+          </div>
+        ) : null}
+
         {body}
       </div>
     </section>

@@ -1,0 +1,191 @@
+.thumbnailWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, #151b2a 0%, #080a10 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+}
+
+.thumbnailWrap:hover {
+  transform: translateY(-3px) scale(1.01);
+  border-color: rgba(255, 215, 0, 0.45);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(255, 215, 0, 0.15);
+}
+
+.bgArt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: transform 0.4s ease-out;
+}
+
+.bgArtImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+  filter: brightness(0.92) contrast(1.05);
+}
+
+.thumbnailWrap:hover .bgArt {
+  transform: scale(1.05);
+}
+
+.thumbnailWrap:hover .bgArtImage {
+  transform: scale(1.06);
+  filter: brightness(1) contrast(1.08);
+}
+
+.overlayGradients {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 10, 15, 0.1) 0%, rgba(7, 10, 15, 0.4) 60%, rgba(7, 10, 15, 0.95) 100%);
+  pointer-events: none;
+}
+
+.cornerBrackets {
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.badgeTopLeft {
+  position: absolute;
+  top: 10px;
+  inset-inline-start: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+}
+
+.badgeTopRight {
+  position: absolute;
+  top: 10px;
+  inset-inline-end: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+}
+
+.pillTag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(9, 11, 17, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-family: var(--font-plex-mono), monospace;
+}
+
+.goldTag {
+  border-color: rgba(255, 215, 0, 0.35);
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+}
+
+.cyanTag {
+  border-color: rgba(0, 229, 255, 0.35);
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.12);
+}
+
+.emeraldTag {
+  border-color: rgba(0, 230, 118, 0.35);
+  color: #00e676;
+  background: rgba(0, 230, 118, 0.12);
+}
+
+.centerHero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.emblemGlow {
+  filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.35));
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.thumbnailWrap:hover .emblemGlow {
+  filter: drop-shadow(0 0 26px rgba(255, 215, 0, 0.55));
+  transform: translateY(-2px);
+}
+
+.bottomBar {
+  position: absolute;
+  bottom: 10px;
+  inset-inline-start: 12px;
+  inset-inline-end: 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  z-index: 2;
+}
+
+.gameTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.gameSubtext {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-family: var(--font-plex-mono), monospace;
+  margin: 2px 0 0 0;
+}
+
+.liveIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: #00e676;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 230, 118, 0.12);
+  border: 1px solid rgba(0, 230, 118, 0.3);
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00e676;
+  box-shadow: 0 0 8px #00e676;
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}

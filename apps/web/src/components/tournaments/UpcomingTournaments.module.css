@@ -10,6 +10,87 @@
   margin-bottom: var(--nz-space-5);
 }
 
+.featureBanner {
+  position: relative;
+  border-radius: var(--nz-radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--nz-space-6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+}
+
+.featureBannerImg {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  display: block;
+}
+
+.featureBannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(14, 16, 21, 0.95) 0%, rgba(14, 16, 21, 0.6) 50%, rgba(14, 16, 21, 0.2) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--nz-space-6) var(--nz-space-8);
+}
+
+.bannerTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 4px 12px;
+  border-radius: var(--nz-radius-pill);
+  margin-bottom: 8px;
+}
+
+.bannerTitle {
+  font-size: var(--nz-text-xl);
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0 0 4px;
+}
+
+.bannerDesc {
+  font-size: var(--nz-text-sm);
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  max-width: 50ch;
+}
+
+.bannerDots {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.bannerDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.bannerDotActive {
+  width: 28px;
+  border-radius: 10px;
+  background: #F59E0B;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+
 .heading {
   font-size: var(--nz-text-2xl);
   margin: 0;

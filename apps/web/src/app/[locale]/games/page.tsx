@@ -19,6 +19,7 @@ import { Footer } from "@/components/Footer";
 import { LocaleLink } from "@/components/LocaleLink";
 import { useI18n } from "@/lib/i18n/context";
 import { listGames, type GamePlugin } from "@/lib/games";
+import { GameThumbnail } from "@/components/game/GameThumbnail";
 import styles from "./games.module.css";
 
 type Filter = "ALL" | "ALTERNATING" | "SIMULTANEOUS";
@@ -67,8 +68,19 @@ export default function GamesPage() {
 function GameCard({ game }: { game: GamePlugin }) {
   const { t } = useI18n();
   const name = t(`common.game_names.${game.nameKey}`);
+  const duration = t(`home.games.${game.nameKey}.duration`);
+  const mode = t(`home.games.${game.nameKey}.mode`);
+
   return (
     <div className={styles.card}>
+      <LocaleLink href={`/games/${game.id}`} className={styles.thumbnailLink}>
+        <GameThumbnail
+          gameId={game.id}
+          title={name}
+          duration={duration}
+          badge={game.turnModel === "SIMULTANEOUS" ? "SPEED" : "TURN-BASED"}
+        />
+      </LocaleLink>
       <div className={styles.cardHead}>
         <h2 className={styles.cardTitle}>
           <LocaleLink href={`/games/${game.id}`} className={styles.cardTitleLink}>{name}</LocaleLink>
@@ -79,8 +91,8 @@ function GameCard({ game }: { game: GamePlugin }) {
       </div>
       <p className={styles.cardBody}>{t(`home.games.${game.nameKey}.description`)}</p>
       <dl className={styles.meta}>
-        <div><dt>{t("home.games.duration_label")}</dt><dd>{t(`home.games.${game.nameKey}.duration`)}</dd></div>
-        <div><dt>{t("home.games.mode_label")}</dt><dd>{t(`home.games.${game.nameKey}.mode`)}</dd></div>
+        <div><dt>{t("home.games.duration_label")}</dt><dd>{duration}</dd></div>
+        <div><dt>{t("home.games.mode_label")}</dt><dd>{mode}</dd></div>
       </dl>
       {game.difficulties.length > 0 && (
         <div className={styles.difficulties}>

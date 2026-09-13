@@ -17,3 +17,5 @@ coverage/
 # these are generated on demand by loadOrGenerateKey and are not production
 # credentials, but a tracked key file is a tracked key file.
 .smoke-*
+.idea/
+*.tsbuildinfo

@@ -8,7 +8,9 @@
  * bearer token, surface what the server said.
  */
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ??
+  (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
 
 const ACCESS_TOKEN_KEY = "nz_access_token";
 const REFRESH_TOKEN_KEY = "nz_refresh_token";

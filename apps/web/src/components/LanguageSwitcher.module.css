@@ -1,25 +1,61 @@
 .wrap {
+  position: relative;
   display: inline-flex;
   align-items: center;
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-sm);
+  padding: 0 var(--nz-space-2);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.wrap:hover {
+  border-color: var(--nz-line-strong);
+  background: var(--nz-surface-3, var(--nz-surface-2));
+}
+
+.wrap:focus-within {
+  outline: var(--nz-focus);
+}
+
+.iconPrefix {
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  margin-inline-end: 4px;
+  pointer-events: none;
+  user-select: none;
 }
 
 .select {
   appearance: none;
-  background: var(--nz-surface-2);
-  color: var(--nz-text-2);
-  border: 1px solid var(--nz-line);
-  border-radius: var(--nz-radius-sm);
-  padding: var(--nz-space-2) var(--nz-space-3);
+  background: transparent;
+  color: var(--nz-text);
+  border: none;
+  padding: var(--nz-space-2) 0;
+  padding-inline-end: var(--nz-space-4);
   font-size: var(--nz-text-sm);
   font-family: var(--nz-font-ui);
+  font-weight: 500;
   cursor: pointer;
 }
 
-.select:hover {
-  color: var(--nz-text);
-  border-color: var(--nz-line-strong);
+.select:focus {
+  outline: none;
 }
 
-.select:focus-visible {
-  outline: var(--nz-focus);
+.select option {
+  background: #0f131a;
+  color: #f1f5f9;
+  padding: 8px 12px;
+}
+
+.chevron {
+  position: absolute;
+  inset-inline-end: 8px;
+  font-size: 0.75rem;
+  color: var(--nz-text-muted, #94a3b8);
+  pointer-events: none;
+  user-select: none;
 }

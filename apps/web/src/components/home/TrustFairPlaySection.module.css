@@ -47,16 +47,82 @@
   margin: 0;
 }
 
-.cta {
-  display: block;
-  text-align: center;
-  font-size: var(--nz-text-sm);
-  font-weight: 600;
-  color: var(--nz-accent);
-  text-decoration: none;
+.bannerCard {
+  position: relative;
+  border-radius: var(--nz-radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--nz-space-8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
 }
-.cta:hover { text-decoration: underline; }
+
+.bannerImg {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.bannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(14, 16, 21, 0.2) 0%, rgba(14, 16, 21, 0.85) 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: var(--nz-space-6);
+}
+
+.bannerText {
+  color: #FFFFFF;
+  flex: 1;
+}
+
+.bannerControls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dotBtn {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.dotBtnActive {
+  width: 28px;
+  border-radius: 10px;
+  background: #34D399;
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.6);
+}
+
+.bannerBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 3px 10px;
+  border-radius: var(--nz-radius-pill);
+  margin-bottom: 6px;
+}
+
+.bannerHeading {
+  font-size: var(--nz-text-lg);
+  font-weight: 700;
+  margin: 0;
+}
 
 @media (max-width: 860px) {
   .points { grid-template-columns: 1fr; }
+  .bannerImg { max-height: 180px; }
+  .bannerOverlay { flex-direction: column; align-items: flex-start; gap: 12px; }
 }

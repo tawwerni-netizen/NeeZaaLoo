@@ -430,14 +430,27 @@
 .policiesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
+  gap: 1.15rem;
 }
 
 .policyCard {
-  padding: 1.15rem;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: rgba(18, 22, 34, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: start;
+}
+
+.policyCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 0, 0.4);
+  background: rgba(25, 30, 48, 0.85);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(255, 215, 0, 0.1);
 }
 
 .policyCardHeader {
@@ -449,15 +462,18 @@
 }
 
 .policyCardTitle {
-  font-size: 0.98rem;
-  font-weight: 600;
-  color: #f1f5f9;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .policyVersionBadge {
   font-size: 0.72rem;
-  padding: 0.15rem 0.45rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 4px;
   background: rgba(255, 184, 0, 0.15);
   color: #ffb800;
@@ -467,9 +483,156 @@
 }
 
 .policyCardType {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 0.82rem;
+  color: #94a3b8;
   margin: 0;
+}
+
+.policyCardSummary {
+  font-size: 0.86rem;
+  color: #cbd5e1;
+  margin: 0.5rem 0 0 0;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.policyCardAction {
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffb800;
+}
+
+/* Legal Policy Reader Modal */
+.policyModalContainer {
+  background: #0d101b;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 820px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.policyModalHeader {
+  padding: 1.5rem 1.75rem 1rem 1.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  background: rgba(14, 18, 30, 0.95);
+}
+
+.policyModalHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.policyModalIcon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.policyModalTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.01em;
+}
+
+.policyModalMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.policyModalBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.policyModalDate {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-family: var(--font-plex-mono), monospace;
+}
+
+.policyModalBody {
+  padding: 1.75rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  line-height: 1.7;
+}
+
+.policyModalSummary {
+  font-size: 1.02rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-inline-start: 4px solid #ffb800;
+}
+
+.policySectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.policySectionTitle {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.policySectionParagraph {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.policyCallout {
+  padding: 0.85rem 1.15rem;
+  border-radius: 8px;
+  background: rgba(255, 184, 0, 0.1);
+  border: 1px solid rgba(255, 184, 0, 0.35);
+  color: #fed7aa;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.policyModalFooter {
+  padding: 1rem 1.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(14, 18, 30, 0.95);
 }
 
 /* Ticket Modal */

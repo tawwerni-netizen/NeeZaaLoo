@@ -98,43 +98,39 @@
   --nz-ease-weight: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ================= LIGHT THEME (default declaration) ================ */
-  --nz-bg:          #F7F8FA;
+  --nz-bg:          #F4F6F9;
   --nz-surface-1:   #FFFFFF;
-  --nz-surface-2:   #F0F2F5;
-  --nz-surface-3:   #E7EAEF;
-  --nz-line:        #E2E5EA;
-  --nz-line-strong: #C9CFD8;
+  --nz-surface-2:   #EBEFF5;
+  --nz-surface-3:   #DFE4EC;
+  --nz-line:        #DFE3E9;
+  --nz-line-strong: #CBD2DC;
 
-  --nz-text:        #0B0D10;
-  --nz-text-2:      #545B66;
-  --nz-text-3:      #767E8A;
-  --nz-text-inverse:#F2F4F7;
+  --nz-text:        #161920;
+  --nz-text-2:      #555F6D;
+  --nz-text-3:      #788292;
+  --nz-text-inverse:#F4F6F9;
 
-  --nz-accent:          #CC3A14;  /* deepened so white text clears AA */
-  --nz-accent-hover:    #B53311;
-  --nz-accent-press:    #9E2C0E;
+  --nz-accent:          #E04B20;  /* deepened so white text clears AA */
+  --nz-accent-hover:    #C93D14;
+  --nz-accent-press:    #A8300E;
   --nz-accent-contrast: #FFFFFF;
-  --nz-accent-soft:     rgba(204, 58, 20, 0.10);
-  --nz-accent-line:     rgba(204, 58, 20, 0.32);
+  --nz-accent-soft:     rgba(224, 75, 32, 0.08);
+  --nz-accent-line:     rgba(224, 75, 32, 0.28);
 
-  --nz-win:   #157F4A;
-  --nz-loss:  #C2282D;
-  --nz-draw:  #6B727E;
-  --nz-warn:  #9A6100;
-  --nz-info:  #1D4ED8;
+  --nz-win:   #16A34A;
+  --nz-loss:  #DC2626;
+  --nz-draw:  #64748B;
+  --nz-warn:  #D97706;
+  --nz-info:  #2563EB;
 
-  /* Gold deepens on Paper: #C6A867 is 2.2:1 here and fails as text, so
-     the light theme carries a darkened value and a separate ink value
-     that clears AA. Never use --nz-mat-gold for text. */
-  --nz-mat-gold:      #96793F;
-  --nz-mat-gold-ink:  #6E5726;
-  --nz-mat-gold-line: rgba(150, 121, 63, 0.38);
+  --nz-mat-gold:      #B08B3A;
+  --nz-mat-gold-ink:  #7A5E1E;
+  --nz-mat-gold-line: rgba(176, 139, 58, 0.32);
 
-  --nz-shadow-1: 0 1px 2px rgba(11, 13, 16, 0.06), 0 1px 1px rgba(11, 13, 16, 0.04);
-  --nz-shadow-2: 0 4px 12px rgba(11, 13, 16, 0.08);
-  --nz-shadow-3: 0 12px 32px rgba(11, 13, 16, 0.12);
-  /* A board sits ON its table, not in the page. Deeper than shadow-3. */
-  --nz-elev-board: 0 18px 48px rgba(11, 13, 16, 0.18);
+  --nz-shadow-1: 0 1px 3px rgba(16, 24, 40, 0.05);
+  --nz-shadow-2: 0 4px 14px rgba(16, 24, 40, 0.06);
+  --nz-shadow-3: 0 12px 30px rgba(16, 24, 40, 0.08);
+  --nz-elev-board: 0 16px 44px rgba(16, 24, 40, 0.12);
 
   --nz-focus: 0 0 0 2px var(--nz-bg), 0 0 0 4px var(--nz-accent);
 
@@ -145,39 +141,39 @@
 /* System default, unless the user explicitly chose light. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --nz-bg:          #0B0D10;
-    --nz-surface-1:   #14171C;
-    --nz-surface-2:   #1C2027;
-    --nz-surface-3:   #252A33;
-    --nz-line:        #2B313A;
-    --nz-line-strong: #3A424E;
+    --nz-bg:          #0E1015;
+    --nz-surface-1:   #161922;
+    --nz-surface-2:   #1E232F;
+    --nz-surface-3:   #272E3D;
+    --nz-line:        #252B37;
+    --nz-line-strong: #363E4E;
 
-    --nz-text:        #F2F4F7;
-    --nz-text-2:      #9BA3AF;
-    --nz-text-3:      #6B727E;
-    --nz-text-inverse:#0B0D10;
+    --nz-text:        #E8EBF2;
+    --nz-text-2:      #96A0B0;
+    --nz-text-3:      #646E7E;
+    --nz-text-inverse:#0E1015;
 
-    --nz-accent:          #FF5A2B;
-    --nz-accent-hover:    #FF7248;
-    --nz-accent-press:    #E8441A;
-    --nz-accent-contrast: #0B0D10;
-    --nz-accent-soft:     rgba(255, 90, 43, 0.14);
-    --nz-accent-line:     rgba(255, 90, 43, 0.38);
+    --nz-accent:          #FF6232;
+    --nz-accent-hover:    #FF7547;
+    --nz-accent-press:    #E55225;
+    --nz-accent-contrast: #FFFFFF;
+    --nz-accent-soft:     rgba(255, 98, 50, 0.12);
+    --nz-accent-line:     rgba(255, 98, 50, 0.32);
 
-    --nz-win:   #2FBF71;
-    --nz-loss:  #E5484D;
-    --nz-draw:  #8B93A1;
-    --nz-warn:  #F5A524;
-    --nz-info:  #3B82F6;
+    --nz-win:   #22C55E;
+    --nz-loss:  #EF4444;
+    --nz-draw:  #94A3B8;
+    --nz-warn:  #F59E0B;
+    --nz-info:  #38BDF8;
 
-    --nz-mat-gold:      #C6A867;
-    --nz-mat-gold-ink:  #D4B879;
-    --nz-mat-gold-line: rgba(198, 168, 103, 0.38);
+    --nz-mat-gold:      #D4AF37;
+    --nz-mat-gold-ink:  #F3CF68;
+    --nz-mat-gold-line: rgba(212, 175, 55, 0.32);
 
-    --nz-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
-    --nz-shadow-2: 0 4px 14px rgba(0, 0, 0, 0.55);
-    --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.6);
-    --nz-elev-board: 0 18px 48px rgba(0, 0, 0, 0.42);
+    --nz-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --nz-shadow-2: 0 4px 16px rgba(0, 0, 0, 0.45);
+    --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.55);
+    --nz-elev-board: 0 18px 48px rgba(0, 0, 0, 0.4);
 
     color-scheme: dark;
   }
@@ -185,39 +181,39 @@
 
 /* Explicit toggle wins over the system in both directions. */
 :root[data-theme="dark"] {
-  --nz-bg:          #0B0D10;
-  --nz-surface-1:   #14171C;
-  --nz-surface-2:   #1C2027;
-  --nz-surface-3:   #252A33;
-  --nz-line:        #2B313A;
-  --nz-line-strong: #3A424E;
+  --nz-bg:          #0E1015;
+  --nz-surface-1:   #161922;
+  --nz-surface-2:   #1E232F;
+  --nz-surface-3:   #272E3D;
+  --nz-line:        #252B37;
+  --nz-line-strong: #363E4E;
 
-  --nz-text:        #F2F4F7;
-  --nz-text-2:      #9BA3AF;
-  --nz-text-3:      #6B727E;
-  --nz-text-inverse:#0B0D10;
+  --nz-text:        #E8EBF2;
+  --nz-text-2:      #96A0B0;
+  --nz-text-3:      #646E7E;
+  --nz-text-inverse:#0E1015;
 
-  --nz-accent:          #FF5A2B;
-  --nz-accent-hover:    #FF7248;
-  --nz-accent-press:    #E8441A;
-  --nz-accent-contrast: #0B0D10;
-  --nz-accent-soft:     rgba(255, 90, 43, 0.14);
-  --nz-accent-line:     rgba(255, 90, 43, 0.38);
+  --nz-accent:          #FF6232;
+  --nz-accent-hover:    #FF7547;
+  --nz-accent-press:    #E55225;
+  --nz-accent-contrast: #FFFFFF;
+  --nz-accent-soft:     rgba(255, 98, 50, 0.12);
+  --nz-accent-line:     rgba(255, 98, 50, 0.32);
 
-  --nz-win:   #2FBF71;
-  --nz-loss:  #E5484D;
-  --nz-draw:  #8B93A1;
-  --nz-warn:  #F5A524;
-  --nz-info:  #3B82F6;
+  --nz-win:   #22C55E;
+  --nz-loss:  #EF4444;
+  --nz-draw:  #94A3B8;
+  --nz-warn:  #F59E0B;
+  --nz-info:  #38BDF8;
 
-  --nz-mat-gold:      #C6A867;
-  --nz-mat-gold-ink:  #D4B879;
-  --nz-mat-gold-line: rgba(198, 168, 103, 0.38);
+  --nz-mat-gold:      #D4AF37;
+  --nz-mat-gold-ink:  #F3CF68;
+  --nz-mat-gold-line: rgba(212, 175, 55, 0.32);
 
-  --nz-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --nz-shadow-2: 0 4px 14px rgba(0, 0, 0, 0.55);
-  --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.6);
-  --nz-elev-board: 0 18px 48px rgba(0, 0, 0, 0.42);
+  --nz-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --nz-shadow-2: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.55);
+  --nz-elev-board: 0 18px 48px rgba(0, 0, 0, 0.4);
 
   color-scheme: dark;
 }

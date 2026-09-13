@@ -88,24 +88,36 @@ export function Hero() {
           className={styles.visual}
           aria-hidden="true"
         >
-          <BoardGlyph />
+          <div className={styles.showcaseCard}>
+            <img
+              src="/images/banners/banner-global-arena.jpg"
+              alt="Nizalo Competitive Skill Arena"
+              className={styles.bannerImg}
+            />
+            <div className={styles.bannerOverlay} />
+            
+            <div className={styles.badgeArena}>
+              <span className={styles.pulsingDot} />
+              <span>LIVE SKILL ARENA</span>
+            </div>
+
+            <div className={styles.badgeCertified}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>100% FAIR PLAY</span>
+            </div>
+
+            <div className={styles.showcaseBottomBar}>
+              <div>
+                <h3 className={styles.showcaseTitle}>1v1 Blitz Tournaments</h3>
+                <p className={styles.showcaseMeta}>Instant USDT Settlement • Certified Anti-Cheat</p>
+              </div>
+              <span className={styles.tagFairPlay}>PROVE & WIN</span>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>
-  );
-}
-
-/** A restrained, geometric board motif -- orientation, not decoration. */
-function BoardGlyph() {
-  const cells = Array.from({ length: 64 });
-  return (
-    <div className={styles.board}>
-      {cells.map((_, i) => {
-        const row = Math.floor(i / 8);
-        const col = i % 8;
-        const dark = (row + col) % 2 === 1;
-        return <span key={i} className={dark ? styles.cellDark : styles.cellLight} />;
-      })}
-    </div>
   );
 }

@@ -28,6 +28,7 @@ import { Logo } from "./Logo";
 import { Button } from "./Button";
 import { LocaleLink } from "./LocaleLink";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthPopup } from "@/lib/auth-popup-context";
 import { useI18n } from "@/lib/i18n/context";
@@ -77,6 +78,7 @@ export function Header() {
         </nav>
 
         <div className={styles.secondary}>
+          <ThemeToggle />
           <LanguageSwitcher />
           {loading ? null : player ? (
             <>
@@ -130,7 +132,10 @@ export function Header() {
               ))}
             </nav>
             <div className={styles.mobileDivider} />
-            <div className={styles.mobileLanguage}><LanguageSwitcher /></div>
+            <div className={styles.mobileLanguage}>
+              <ThemeToggle />
+              <LanguageSwitcher />
+            </div>
             <div className={styles.mobileSecondary}>
               {loading ? null : player ? (
                 <>

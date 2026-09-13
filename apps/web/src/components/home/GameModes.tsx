@@ -12,6 +12,7 @@ import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
 import { useI18n } from "@/lib/i18n/context";
 import { listGames } from "@/lib/games";
+import { GameThumbnail } from "@/components/game/GameThumbnail";
 import styles from "./GameModes.module.css";
 
 export function GameModes() {
@@ -25,18 +26,30 @@ export function GameModes() {
         <div className={styles.grid}>
           {games.map((game) => {
             const name = t(`common.game_names.${game.nameKey}`);
+            const duration = t(`home.games.${game.nameKey}.duration`);
+            const mode = t(`home.games.${game.nameKey}.mode`);
             return (
               <div key={game.id} className={styles.card}>
-                <h3 className={styles.cardTitle}>{name}</h3>
+                <LocaleLink href={`/games/${game.id}`} className={styles.thumbnailLink}>
+                  <GameThumbnail
+                    gameId={game.id}
+                    title={name}
+                    duration={duration}
+                    badge={game.turnModel === "SIMULTANEOUS" ? "SPEED" : "TURN-BASED"}
+                  />
+                </LocaleLink>
+                <h3 className={styles.cardTitle}>
+                  <LocaleLink href={`/games/${game.id}`}>{name}</LocaleLink>
+                </h3>
                 <p className={styles.cardDescription}>{t(`home.games.${game.nameKey}.description`)}</p>
                 <dl className={styles.meta}>
                   <div>
                     <dt>{t("home.games.duration_label")}</dt>
-                    <dd>{t(`home.games.${game.nameKey}.duration`)}</dd>
+                    <dd>{duration}</dd>
                   </div>
                   <div>
                     <dt>{t("home.games.mode_label")}</dt>
-                    <dd>{t(`home.games.${game.nameKey}.mode`)}</dd>
+                    <dd>{mode}</dd>
                   </div>
                 </dl>
                 <LocaleLink href={`/play/${game.id}`}>
