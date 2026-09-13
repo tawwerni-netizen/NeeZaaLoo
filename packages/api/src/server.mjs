@@ -402,7 +402,7 @@ function buildRoutes() {
 
     // --- Auth ----------------------------------------------------------------
     { method: "POST", path: "/v1/auth/register", action: "player.register", anonymous: true,
-      handler: async ({ body, auth, ip, userAgent }) => {
+      handler: async ({ body, auth, welcomeEmail, ip, userAgent }) => {
         const { handle, email, password, referralCode, termsAccepted, locale, policyVersion } = body ?? {};
         if (typeof handle !== "string" || typeof password !== "string") {
           return { status: 400, body: errorBody("BAD_REQUEST") };
@@ -410,20 +410,30 @@ function buildRoutes() {
         if (termsAccepted === false) {
           return { status: 400, body: errorBody("TERMS_ACCEPTANCE_REQUIRED", "You must agree to the Terms & Conditions to register") };
         }
+        const normalizedEmail = typeof email === "string" && email.trim() ? email.trim() : null;
         const r = await auth.register({
           playerId: handle,
           handle,
-          email: typeof email === "string" && email.trim() ? email.trim() : null,
+          email: normalizedEmail,
           password,
           referralCode: referralCode ? String(referralCode) : null,
           termsAccepted: true,
           locale: locale ? String(locale) : "en",
           policyVersion: policyVersion ? String(policyVersion) : "1.0.0",
         }, { ip, userAgent });
-        return r.ok
-          ? { status: 201, body: { playerId: r.playerId } }
-          : { status: 400, body: errorBody(r.reason, r.detail) };
+        if (!r.ok) return { status: 400, body: errorBody(r.reason, r.detail) };
+        // Best-effort welcome email -- never blocks or fails the registration.
+        if (welcomeEmail && normalizedEmail) {
+          welcomeEmail.sendOnce({
+            playerId: r.playerId,
+            nickname: handle,
+            email: normalizedEmail,
+            locale: locale ? String(locale) : "en",
+          }, { ip, userAgent }).catch(() => {});
+        }
+        return { status: 201, body: { playerId: r.playerId } };
       } },
+
 
     { method: "POST", path: "/v1/auth/login", action: "player.login", anonymous: true,
       handler: async ({ body, auth, ip }) => {
