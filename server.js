@@ -7,6 +7,11 @@
  *   - Realtime Gateway (apps/gateway)-> 127.0.0.1:3010
  *   - Background Worker (apps/worker)-> 127.0.0.1:4001
  *   - Master Reverse Proxy           -> 0.0.0.0:PORT (default 3000)
+ *
+ * CRITICAL: The Master Proxy does NOT open its listening port until
+ * Next.js on port 3002 is verified READY and accepting connections.
+ * This prevents Hostinger deployment health-checks from hitting port
+ * 3000 during the 500ms startup gap and failing with ECONNREFUSED.
  */
 const { createServer } = require("node:http");
 const http = require("node:http");
@@ -57,7 +62,7 @@ const children = {};
 
 function startProcess(name, script, childPort, customCwd) {
   function launch() {
-    console.log(`[${name}] Starting on port ${childPort}...`);
+    console.log(`[${name}] Spawning on port ${childPort}...`);
     try {
       const childEnv = name === "Next.js"
         ? Object.assign({}, process.env, {
@@ -90,13 +95,13 @@ function startProcess(name, script, childPort, customCwd) {
   launch();
 }
 
-startProcess("Next.js", nextScript, nextPort, path.dirname(nextScript));
+startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
 startProcess("API",     apiScript,    apiPort);
 startProcess("Gateway", gwScript,     gwPort);
 startProcess("Worker",  workerScript, 4001);
 
 function shutdown() {
-  console.log("Shutting down child processes...");
+  console.log("Shutting down all child processes...");
   Object.keys(children).forEach((k) => {
     try { if (children[k]) children[k].kill(); } catch (e) {}
   });
@@ -106,7 +111,7 @@ process.on("SIGINT",  shutdown);
 process.on("SIGTERM", shutdown);
 
 // ---------------------------------------------------------------------------
-// Reverse Proxy
+// Reverse Proxy Helpers
 // ---------------------------------------------------------------------------
 function cleanHopByHopHeaders(headers) {
   const h = Object.assign({}, headers);
@@ -142,6 +147,7 @@ function proxyHttp(req, res, targetPort) {
       timeout:  30000,
     },
     (proxyRes) => {
+      console.log(`[HTTP ${proxyRes.statusCode}] ${req.method} ${req.url}`);
       const respHeaders = cleanHopByHopHeaders(proxyRes.headers);
       res.writeHead(proxyRes.statusCode, respHeaders);
       proxyRes.pipe(res, { end: true });
@@ -149,7 +155,7 @@ function proxyHttp(req, res, targetPort) {
   );
 
   proxyReq.on("timeout", () => {
-    console.error(`[Proxy->${targetPort}] TIMEOUT on ${req.method} ${req.url}`);
+    console.error(`[Proxy->${targetPort} TIMEOUT] ${req.method} ${req.url}`);
     proxyReq.destroy(new Error("ETIMEDOUT"));
   });
 
@@ -157,7 +163,7 @@ function proxyHttp(req, res, targetPort) {
     console.error(`[Proxy->${targetPort} Error] ${req.method} ${req.url}:`, err.message);
     if (!res.headersSent) {
       res.writeHead(502, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: { code: "BAD_GATEWAY", message: "Service temporarily unavailable, please retry" } }));
+      res.end(JSON.stringify({ error: { code: "BAD_GATEWAY", message: "Service starting up, please retry" } }));
     }
   });
 
@@ -168,6 +174,9 @@ function proxyHttp(req, res, targetPort) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Main Server Creation & WebSocket Proxy
+// ---------------------------------------------------------------------------
 const server = createServer((req, res) => {
   const url = req.url || "/";
 
@@ -225,9 +234,49 @@ server.on("upgrade", (req, socket, head) => {
   socket.end();
 });
 
-server.listen(port, hostname, () => {
-  console.log(`> Proxy ready on http://${hostname}:${port}`);
-  console.log(`  -> Next.js  :${nextPort}`);
-  console.log(`  -> API      :${apiPort}`);
-  console.log(`  -> Gateway  :${gwPort}`);
+// ---------------------------------------------------------------------------
+// Readiness Probe: Only listen on public port AFTER Next.js is ready!
+// ---------------------------------------------------------------------------
+function waitForNextReady(targetPort, maxAttempts, onReady) {
+  let attempts = 0;
+  function probe() {
+    attempts++;
+    const req = http.request(
+      { hostname: "127.0.0.1", port: targetPort, path: "/", method: "GET", timeout: 800 },
+      (res) => {
+        console.log(`[Readiness] Next.js on port ${targetPort} is READY (status=${res.statusCode}).`);
+        onReady();
+      }
+    );
+    req.on("error", () => {
+      if (attempts < maxAttempts) {
+        setTimeout(probe, 150);
+      } else {
+        console.warn(`[Readiness] Next.js probe reached max attempts. Starting server anyway...`);
+        onReady();
+      }
+    });
+    req.on("timeout", () => {
+      req.destroy();
+      if (attempts < maxAttempts) {
+        setTimeout(probe, 150);
+      } else {
+        onReady();
+      }
+    });
+    req.end();
+  }
+  probe();
+}
+
+console.log("[Bootstrap] Waiting for Next.js to become ready before opening public port...");
+waitForNextReady(nextPort, 60, () => {
+  server.listen(port, hostname, () => {
+    console.log(`========================================`);
+    console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
+    console.log(`  -> Next.js   : ${nextPort}`);
+    console.log(`  -> API       : ${apiPort}`);
+    console.log(`  -> Gateway   : ${gwPort}`);
+    console.log(`========================================`);
+  });
 });
