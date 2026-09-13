@@ -11,7 +11,7 @@ import styles from "./DownloadAppTeaser.module.css";
 export function DownloadAppTeaser() {
   const { t } = useI18n();
   return (
-    <section className={styles.section}>
+    <section className={styles.section} id="download">
       <div className={`nz-container ${styles.inner}`}>
         <span className={styles.badge}>{t("home.download.badge")}</span>
         <h2 className={styles.heading}>{t("home.download.heading")}</h2>

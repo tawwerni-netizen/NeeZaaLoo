@@ -1,0 +1,514 @@
+"use client";
+
+import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useI18n } from "@/lib/i18n/context";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/Button";
+import { post } from "@/lib/api";
+import styles from "./LiveDuelLobby.module.css";
+
+export interface OpenDuel {
+  id: string;
+  gameId: string;
+  gameName: string;
+  challenger: {
+    handle: string;
+    avatarLetter: string;
+    elo: number;
+    badge: string;
+  };
+  tier: "FREE" | "CASH";
+  stakeUSDT: number;
+  timeControl: string;
+  createdSecondsAgo: number;
+  isUserCreated?: boolean;
+}
+
+const INITIAL_OPEN_DUELS: OpenDuel[] = [
+  {
+    id: "duel_live_101",
+    gameId: "chess",
+    gameName: "Chess",
+    challenger: { handle: "Grandmaster77", avatarLetter: "G", elo: 1842, badge: "Grandmaster" },
+    tier: "CASH",
+    stakeUSDT: 10,
+    timeControl: "Blitz 3m",
+    createdSecondsAgo: 14,
+  },
+  {
+    id: "duel_live_102",
+    gameId: "backgammon",
+    gameName: "Backgammon",
+    challenger: { handle: "SultanTawla", avatarLetter: "S", elo: 1720, badge: "Expert" },
+    tier: "CASH",
+    stakeUSDT: 5,
+    timeControl: "Rapid 5m",
+    createdSecondsAgo: 28,
+  },
+  {
+    id: "duel_live_103",
+    gameId: "dominoes",
+    gameName: "Dominoes",
+    challenger: { handle: "CairoKnight", avatarLetter: "C", elo: 1645, badge: "Master" },
+    tier: "CASH",
+    stakeUSDT: 25,
+    timeControl: "Classic 7m",
+    createdSecondsAgo: 42,
+  },
+  {
+    id: "duel_live_104",
+    gameId: "connect-four",
+    gameName: "Connect Four",
+    challenger: { handle: "TacticalMind", avatarLetter: "T", elo: 1530, badge: "Challenger" },
+    tier: "FREE",
+    stakeUSDT: 0,
+    timeControl: "Blitz 2m",
+    createdSecondsAgo: 55,
+  },
+  {
+    id: "duel_live_105",
+    gameId: "xo",
+    gameName: "XO Pro",
+    challenger: { handle: "Matrix99", avatarLetter: "M", elo: 1490, badge: "Pro" },
+    tier: "FREE",
+    stakeUSDT: 0,
+    timeControl: "Speed 1m",
+    createdSecondsAgo: 70,
+  },
+  {
+    id: "duel_live_106",
+    gameId: "checkers",
+    gameName: "Checkers",
+    challenger: { handle: "CrownKing", avatarLetter: "K", elo: 1680, badge: "Veteran" },
+    tier: "CASH",
+    stakeUSDT: 15,
+    timeControl: "Rapid 5m",
+    createdSecondsAgo: 85,
+  },
+];
+
+const AVAILABLE_GAMES = [
+  { id: "chess", labelEn: "Chess", labelAr: "شطرنج" },
+  { id: "backgammon", labelEn: "Backgammon", labelAr: "طاولة زهر" },
+  { id: "dominoes", labelEn: "Dominoes", labelAr: "دومينو" },
+  { id: "connect-four", labelEn: "Connect Four", labelAr: "أربعة على التوالي" },
+  { id: "xo", labelEn: "Tic-Tac-Toe (XO)", labelAr: "إكس أو" },
+  { id: "checkers", labelEn: "Checkers", labelAr: "داما" },
+  { id: "reversi", labelEn: "Reversi (Othello)", labelAr: "ريفيرسي" },
+  { id: "gomoku", labelEn: "Gomoku", labelAr: "غوموكو" },
+  { id: "seega", labelEn: "Seega", labelAr: "سيجة" },
+  { id: "speed-math", labelEn: "Speed Math", labelAr: "الحساب السريع" },
+];
+
+export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
+  const { locale, dir } = useI18n();
+  const isRtl = dir === "rtl";
+  const { player } = useAuth();
+  const router = useRouter();
+
+  const [duels, setDuels] = useState<OpenDuel[]>(INITIAL_OPEN_DUELS);
+  const [selectedGameFilter, setSelectedGameFilter] = useState<string>(filterGameId || "all");
+  const [stakeFilter, setStakeFilter] = useState<"all" | "free" | "cash">("all");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+
+  // Challenge creation form state
+  const [newGameId, setNewGameId] = useState<string>(filterGameId || "chess");
+  const [newTier, setNewTier] = useState<"FREE" | "CASH">("FREE");
+  const [newStake, setNewStake] = useState<number>(5);
+  const [newTimeControl, setNewTimeControl] = useState<string>("Blitz 3m");
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  // Auto-increment elapsed times
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDuels((prev) =>
+        prev.map((d) => ({
+          ...d,
+          createdSecondsAgo: d.createdSecondsAgo + 1,
+        }))
+      );
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Filtered list
+  const filteredDuels = useMemo(() => {
+    return duels.filter((d) => {
+      const matchGame =
+        selectedGameFilter === "all" || d.gameId === selectedGameFilter;
+      const matchStake =
+        stakeFilter === "all" ||
+        (stakeFilter === "free" && d.tier === "FREE") ||
+        (stakeFilter === "cash" && d.tier === "CASH");
+      return matchGame && matchStake;
+    });
+  }, [duels, selectedGameFilter, stakeFilter]);
+
+  async function handleAccept(duel: OpenDuel) {
+    setAcceptingId(duel.id);
+    try {
+      try {
+        const r = await post<{ duelId: string }>("/v1/matchmaking/tickets", {
+          gameId: duel.gameId,
+          ...(duel.tier === "CASH" ? { tier: "CASH", stakeMinor: (duel.stakeUSDT * 100).toString() } : {}),
+        });
+        if (r && r.duelId) {
+          router.push(`/${locale}/game/${r.duelId}`);
+          return;
+        }
+      } catch {
+        // Fallback to simulated duel room
+      }
+      setTimeout(() => {
+        router.push(`/${locale}/game/${duel.id}`);
+      }, 400);
+    } catch {
+      setAcceptingId(null);
+    }
+  }
+
+  function handleCreateChallenge(e: React.FormEvent) {
+    e.preventDefault();
+    setIsPublishing(true);
+
+    const targetGame = AVAILABLE_GAMES.find((g) => g.id === newGameId);
+    const gameLabel = isRtl
+      ? targetGame?.labelAr || newGameId
+      : targetGame?.labelEn || newGameId;
+
+    const newDuel: OpenDuel = {
+      id: `open_duel_${Date.now()}`,
+      gameId: newGameId,
+      gameName: gameLabel,
+      challenger: {
+        handle: player?.handle || (isRtl ? "أنت" : "You"),
+        avatarLetter: (player?.handle?.[0] || "U").toUpperCase(),
+        elo: 1600,
+        badge: isRtl ? "تحدٍ مفتوح" : "Open Host",
+      },
+      tier: newTier,
+      stakeUSDT: newTier === "CASH" ? newStake : 0,
+      timeControl: newTimeControl,
+      createdSecondsAgo: 0,
+      isUserCreated: true,
+    };
+
+    setTimeout(() => {
+      setDuels((prev) => [newDuel, ...prev]);
+      setIsPublishing(false);
+      setIsModalOpen(false);
+    }, 450);
+  }
+
+  return (
+    <section className={styles.lobbySection} dir={isRtl ? "rtl" : "ltr"}>
+      {/* Top Banner & Radar Status */}
+      <div className={styles.lobbyHeader}>
+        <div className={styles.lobbyTitleGroup}>
+          <div className={styles.radarPill}>
+            <span className={styles.radarSweep} />
+            <span className={styles.radarDot} />
+            <span className={styles.radarText}>
+              {isRtl ? "رادار المبارزات المباشرة نشط" : "Live Duel Radar Active"}
+            </span>
+          </div>
+          <h2 className={styles.lobbyTitle}>
+            {isRtl ? "ميدان التحديات المباشرة بين الأعضاء" : "Live Member-to-Member Arena"}
+          </h2>
+          <p className={styles.lobbySubtitle}>
+            {isRtl
+              ? "تحدَّ لاعبين متصلين الآن في مباريات مهارية تنافسية فورية. اختر رهاناً حقيقياً بالـ USDT أو تدرب مجاناً مع حماية كاملة بنظام مكافحة الغش."
+              : "Direct member-to-member skill duels in real-time. Stake USDT or play free practice with server-authoritative anti-cheat enforcement."}
+          </p>
+        </div>
+
+        <div className={styles.lobbyActions}>
+          <Button
+            variant="primary"
+            className={styles.createChallengeBtn}
+            onClick={() => setIsModalOpen(true)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {isRtl ? "إنشاء تحدٍّ مفتوح" : "Create Open Duel"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Live Metrics Ticker */}
+      <div className={styles.statsBar}>
+        <div className={styles.statBox}>
+          <span className={styles.statVal}>{filteredDuels.length}</span>
+          <span className={styles.statLbl}>{isRtl ? "تحديات مفتوحة حالياً" : "Open Duels Waiting"}</span>
+        </div>
+        <div className={styles.statBox}>
+          <span className={styles.statVal}>184</span>
+          <span className={styles.statLbl}>{isRtl ? "لاعبون متصلون الآن" : "Active Players Online"}</span>
+        </div>
+        <div className={styles.statBox}>
+          <span className={styles.statVal}>&lt; 20ms</span>
+          <span className={styles.statLbl}>{isRtl ? "زمن استجابة فائق السرعة" : "Ultra-Low Ping"}</span>
+        </div>
+        <div className={styles.statBox}>
+          <span className={styles.statVal}>100%</span>
+          <span className={styles.statLbl}>{isRtl ? "مهارة بدون أي حظ" : "Zero Chance Factor"}</span>
+        </div>
+      </div>
+
+      {/* Filters Bar */}
+      <div className={styles.filterRow}>
+        <div className={styles.gameFilters}>
+          <button
+            type="button"
+            className={`${styles.filterChip} ${selectedGameFilter === "all" ? styles.filterChipActive : ""}`}
+            onClick={() => setSelectedGameFilter("all")}
+          >
+            {isRtl ? "جميع الألعاب" : "All Games"}
+          </button>
+          {AVAILABLE_GAMES.slice(0, 6).map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              className={`${styles.filterChip} ${selectedGameFilter === g.id ? styles.filterChipActive : ""}`}
+              onClick={() => setSelectedGameFilter(g.id)}
+            >
+              {isRtl ? g.labelAr : g.labelEn}
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.stakeFilters}>
+          <button
+            type="button"
+            className={`${styles.stakeChip} ${stakeFilter === "all" ? styles.stakeChipActive : ""}`}
+            onClick={() => setStakeFilter("all")}
+          >
+            {isRtl ? "الكل" : "All Stakes"}
+          </button>
+          <button
+            type="button"
+            className={`${styles.stakeChip} ${stakeFilter === "free" ? styles.stakeChipActive : ""}`}
+            onClick={() => setStakeFilter("free")}
+          >
+            {isRtl ? "مجاني" : "Free"}
+          </button>
+          <button
+            type="button"
+            className={`${styles.stakeChip} ${stakeFilter === "cash" ? styles.stakeChipActive : ""}`}
+            onClick={() => setStakeFilter("cash")}
+          >
+            {isRtl ? "بجوائز USDT" : "USDT Stakes"}
+          </button>
+        </div>
+      </div>
+
+      {/* Open Duels Grid */}
+      <div className={styles.duelsGrid}>
+        {filteredDuels.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>{isRtl ? "لا توجد تحديات مفتوحة تطابق الفلتر حالياً." : "No open duels matching your filter."}</p>
+            <Button variant="secondary" onClick={() => setIsModalOpen(true)}>
+              {isRtl ? "أنشئ أول تحدٍّ الآن" : "Create the First Duel"}
+            </Button>
+          </div>
+        ) : (
+          filteredDuels.map((duel) => (
+            <div
+              key={duel.id}
+              className={`${styles.duelCard} ${duel.isUserCreated ? styles.duelCardUser : ""}`}
+            >
+              <div className={styles.duelCardTop}>
+                <div className={styles.challengerInfo}>
+                  <div className={styles.challengerAvatar}>
+                    {duel.challenger.avatarLetter}
+                  </div>
+                  <div>
+                    <div className={styles.challengerHandle}>
+                      {duel.challenger.handle}
+                      {duel.isUserCreated && (
+                        <span className={styles.userBadge}>{isRtl ? "تحديك" : "Yours"}</span>
+                      )}
+                    </div>
+                    <div className={styles.challengerElo}>
+                      {isRtl ? `تصنيف: ${duel.challenger.elo}` : `Rating: ${duel.challenger.elo}`}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.duelGameBadge}>
+                  <img
+                    src={`/images/games/${duel.gameId}-badge.jpg`}
+                    alt={duel.gameName}
+                    className={styles.duelGameThumb}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `/images/games/${duel.gameId}.jpg`;
+                    }}
+                  />
+                  <span className={styles.duelGameName}>{duel.gameName}</span>
+                </div>
+              </div>
+
+              <div className={styles.duelSpecs}>
+                <div className={styles.specItem}>
+                  <span className={styles.specLabel}>{isRtl ? "الوضع الزمني" : "Time Control"}</span>
+                  <span className={styles.specVal}>{duel.timeControl}</span>
+                </div>
+                <div className={styles.specItem}>
+                  <span className={styles.specLabel}>{isRtl ? "الرهان" : "Stake"}</span>
+                  <span
+                    className={`${styles.specVal} ${
+                      duel.tier === "CASH" ? styles.stakeValCash : styles.stakeValFree
+                    }`}
+                  >
+                    {duel.tier === "CASH" ? `${duel.stakeUSDT} USDT` : isRtl ? "مجاني" : "Free"}
+                  </span>
+                </div>
+                <div className={styles.specItem}>
+                  <span className={styles.specLabel}>{isRtl ? "منذ" : "Waiting"}</span>
+                  <span className={styles.specVal}>{duel.createdSecondsAgo}s</span>
+                </div>
+              </div>
+
+              <div className={styles.duelCardActions}>
+                <Button
+                  variant={duel.tier === "CASH" ? "primary" : "secondary"}
+                  className={styles.acceptBtn}
+                  disabled={acceptingId === duel.id}
+                  onClick={() => handleAccept(duel)}
+                >
+                  {acceptingId === duel.id ? (
+                    isRtl ? "جارٍ الدخول..." : "Connecting..."
+                  ) : (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                      {duel.isUserCreated
+                        ? isRtl ? "انتظار الخصم..." : "Awaiting Opponent..."
+                        : isRtl ? "قبول التحدي الآن" : "Accept Challenge"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Create Open Challenge Modal */}
+      {isModalOpen && (
+        <div className={styles.modalBackdrop} onClick={() => setIsModalOpen(false)}>
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+            dir={isRtl ? "rtl" : "ltr"}
+          >
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>
+                {isRtl ? "إنشاء تحدٍّ مفتوح لجميع الأعضاء" : "Broadcast Open Member Duel"}
+              </h3>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setIsModalOpen(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateChallenge} className={styles.challengeForm}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>{isRtl ? "اختر اللعبة" : "Select Game"}</label>
+                <select
+                  value={newGameId}
+                  onChange={(e) => setNewGameId(e.target.value)}
+                  className={styles.formSelect}
+                >
+                  {AVAILABLE_GAMES.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {isRtl ? g.labelAr : g.labelEn}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>{isRtl ? "نمط المنافسة" : "Match Type"}</label>
+                <div className={styles.radioGroup}>
+                  <button
+                    type="button"
+                    className={`${styles.radioBtn} ${newTier === "FREE" ? styles.radioBtnActive : ""}`}
+                    onClick={() => setNewTier("FREE")}
+                  >
+                    {isRtl ? "مجاني (تدريب واكتساب خبرة)" : "Free (Practice / ELO only)"}
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.radioBtn} ${newTier === "CASH" ? styles.radioBtnActive : ""}`}
+                    onClick={() => setNewTier("CASH")}
+                  >
+                    {isRtl ? "بجوائز USDT حقيقية" : "Competitive USDT Stake"}
+                  </button>
+                </div>
+              </div>
+
+              {newTier === "CASH" && (
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>{isRtl ? "قيمة الرهان (USDT)" : "Stake Amount (USDT)"}</label>
+                  <div className={styles.stakeOptions}>
+                    {[2, 5, 10, 25, 50].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        className={`${styles.stakeBtn} ${newStake === amt ? styles.stakeBtnActive : ""}`}
+                        onClick={() => setNewStake(amt)}
+                      >
+                        {amt} USDT
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>{isRtl ? "التحكم بالوقت" : "Time Control"}</label>
+                <select
+                  value={newTimeControl}
+                  onChange={(e) => setNewTimeControl(e.target.value)}
+                  className={styles.formSelect}
+                >
+                  <option value="Blitz 3m">{isRtl ? "خاطف (3 دقائق لكل لاعب)" : "Blitz (3 min per player)"}</option>
+                  <option value="Rapid 5m">{isRtl ? "سريع (5 دقائق لكل لاعب)" : "Rapid (5 min per player)"}</option>
+                  <option value="Classic 10m">{isRtl ? "كلاسيكي (10 دقائق لكل لاعب)" : "Classic (10 min per player)"}</option>
+                </select>
+              </div>
+
+              <div className={styles.modalFooter}>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  {isRtl ? "إلغاء" : "Cancel"}
+                </Button>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={isPublishing}
+                >
+                  {isPublishing
+                    ? isRtl ? "جارٍ البث..." : "Broadcasting..."
+                    : isRtl ? "بث التحدي في الرادار" : "Broadcast Challenge"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

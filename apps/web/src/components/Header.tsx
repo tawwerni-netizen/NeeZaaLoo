@@ -86,9 +86,9 @@ export function Header() {
               <LocaleLink href="/wallet" className={styles.navLink}>{t("nav.wallet")}</LocaleLink>
               <LocaleLink href="/profile" className={styles.navLink}>{player.handle}</LocaleLink>
               <LocaleLink href="/help" className={styles.navLink}>{t("nav.support")}</LocaleLink>
-              <span className={styles.navSoon} aria-disabled="true">
-                {t("nav.download_app")}<span className={styles.soon}>{t("home.download.badge")}</span>
-              </span>
+              <LocaleLink href="/#download" className={styles.navLink}>
+                {t("nav.download_app")}
+              </LocaleLink>
               <Button variant="ghost" onClick={() => void logout()}>{t("nav.log_out")}</Button>
             </>
           ) : (

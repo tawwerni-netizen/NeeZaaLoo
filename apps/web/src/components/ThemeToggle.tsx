@@ -10,14 +10,12 @@ export function ThemeToggle({ className }: { className?: string }) {
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem("nizalo-theme") as "dark" | "light" | null;
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.setAttribute("data-theme", saved);
+    if (saved === "light") {
+      setTheme("light");
+      document.documentElement.setAttribute("data-theme", "light");
     } else {
-      const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const initial = isSystemDark ? "dark" : "light";
-      setTheme(initial);
-      document.documentElement.setAttribute("data-theme", initial);
+      setTheme("dark");
+      document.documentElement.setAttribute("data-theme", "dark");
     }
   }, []);
 

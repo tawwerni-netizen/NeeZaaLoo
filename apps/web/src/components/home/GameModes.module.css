@@ -14,9 +14,9 @@
   gap: var(--nz-space-6);
 }
 
-.card, .comingSoon {
-  background: rgba(18, 22, 34, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.card {
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
   border-radius: var(--nz-radius-lg);
   padding: var(--nz-space-5);
   display: flex;
@@ -28,6 +28,69 @@
   transform: translateY(-4px);
   border-color: rgba(255, 215, 0, 0.4);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.1);
+}
+
+.arenaCard {
+  background: linear-gradient(145deg, var(--nz-surface-1), var(--nz-surface-2));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-6);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 215, 0, 0.15);
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.arenaCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 215, 0, 0.55);
+}
+
+.arenaCardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-3);
+  margin-bottom: var(--nz-space-3);
+}
+
+.arenaLiveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--nz-radius-pill);
+  padding: 3px 10px;
+  width: fit-content;
+}
+
+.pulseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseLive 1.8s infinite;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.arenaCardFooter {
+  margin-top: var(--nz-space-5);
+  display: flex;
+  align-items: center;
 }
 
 .thumbnailLink {

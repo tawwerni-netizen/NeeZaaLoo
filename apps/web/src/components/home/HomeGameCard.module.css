@@ -1,18 +1,20 @@
-/* HomeGameCard.module.css */
-
 .card {
-  background: #1e293b;
-  border-radius: 0.5rem;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
   overflow: hidden;
   text-align: center;
-  color: #fff;
+  color: var(--nz-text);
   display: flex;
   flex-direction: column;
   height: 100%;
-  transition: transform 0.2s;
+  box-shadow: var(--nz-shadow-1);
+  transition: transform var(--nz-dur-fast) var(--nz-ease-out), border-color var(--nz-dur-fast) var(--nz-ease-out), box-shadow var(--nz-dur-fast) var(--nz-ease-out);
 }
 .card:hover {
   transform: translateY(-4px);
+  border-color: var(--nz-accent-line);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px var(--nz-accent-soft);
 }
 .link {
   display: flex;

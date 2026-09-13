@@ -16,17 +16,8 @@ import { SUPPORTED_LOCALES, type SupportedLocale } from "@/lib/i18n/locale";
 import { LOCALE_COOKIE, LOCALE_EXPLICIT_COOKIE, LOCALE_COOKIE_MAX_AGE_S } from "@/lib/i18n/constants";
 import styles from "./LanguageSwitcher.module.css";
 
-// A visible icon per language, per the brand's own language-selector spec --
-// these are convenience symbols for a LANGUAGE choice, not a claim that any
-// language belongs to one country; picking a widely-recognized flag for each
-// is a legibility aid, same as SUPPORTED_LOCALES' own nativeName already is.
-const LOCALE_FLAG: Record<SupportedLocale, string> = {
-  en: "🇬🇧", zh: "🇨🇳", hi: "🇮🇳", es: "🇪🇸", ar: "🇸🇦", fr: "🇫🇷",
-};
-
 function pathWithoutLocale(pathname: string): string {
   const segments = pathname.split("/");
-  // segments[0] is "" (leading slash), segments[1] is the locale segment.
   return "/" + segments.slice(2).join("/");
 }
 
@@ -51,7 +42,11 @@ export function LanguageSwitcher() {
   return (
     <div className={styles.wrap}>
       <span className={styles.iconPrefix} aria-hidden="true">
-        {LOCALE_FLAG[locale] || "🌐"}
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        </svg>
       </span>
       <select
         className={styles.select}
@@ -60,7 +55,7 @@ export function LanguageSwitcher() {
         aria-label={t("settings.language")}
       >
         {SUPPORTED_LOCALES.map((l) => (
-          <option key={l.code} value={l.code}>{LOCALE_FLAG[l.code]} {l.nativeName}</option>
+          <option key={l.code} value={l.code}>{l.nativeName}</option>
         ))}
       </select>
       <span className={styles.chevron} aria-hidden="true">▾</span>

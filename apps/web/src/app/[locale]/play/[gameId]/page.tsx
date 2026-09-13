@@ -19,6 +19,7 @@ import { Header } from "@/components/Header";
 import { RequireAuth } from "@/components/RequireAuth";
 import { MatchmakingFlow } from "@/components/matchmaking/MatchmakingFlow";
 import { ModeSelect, type PlayMode } from "@/components/play/ModeSelect";
+import { LiveDuelLobby } from "@/components/play/LiveDuelLobby";
 import { DifficultySelect } from "@/components/play/DifficultySelect";
 import { StakeSelect, type StakeChoice } from "@/components/play/StakeSelect";
 import { FriendChallenge } from "@/components/play/FriendChallenge";
@@ -84,7 +85,14 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
     <RequireAuth>
       <Header />
       <main className="nz-container">
-        {step.name === "mode" && <ModeSelect plugin={plugin} gameId={gameId} onSelect={handleMode} />}
+        {step.name === "mode" && (
+          <>
+            <ModeSelect plugin={plugin} gameId={gameId} onSelect={handleMode} />
+            <div style={{ marginTop: "48px" }}>
+              <LiveDuelLobby filterGameId={gameId} />
+            </div>
+          </>
+        )}
 
         {step.name === "difficulty" && (
           <DifficultySelect

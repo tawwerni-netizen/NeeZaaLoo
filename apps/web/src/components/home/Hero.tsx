@@ -86,15 +86,17 @@ export function Hero() {
         <motion.div
           {...stage(2, reduceMotion)}
           className={styles.visual}
-          aria-hidden="true"
         >
-          <div className={styles.showcaseCard}>
+          <div className={styles.showcaseGlowBackdrop} aria-hidden="true" />
+          <LocaleLink href="/tournaments" className={styles.showcaseCard}>
             <img
               src="/images/banners/banner-global-arena.jpg"
-              alt="Nizalo Competitive Skill Arena"
+              alt="Nizalo Competitive Skill Arena - 1v1 Blitz Tournaments"
               className={styles.bannerImg}
             />
             <div className={styles.bannerOverlay} />
+            <div className={styles.cyberCornerTL} />
+            <div className={styles.cyberCornerBR} />
             
             <div className={styles.badgeArena}>
               <span className={styles.pulsingDot} />
@@ -102,20 +104,25 @@ export function Hero() {
             </div>
 
             <div className={styles.badgeCertified}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                <polyline points="20 6 9 17 4 12" />
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
               </svg>
               <span>100% FAIR PLAY</span>
             </div>
 
             <div className={styles.showcaseBottomBar}>
-              <div>
+              <div className={styles.showcaseTextGroup}>
+                <div className={styles.showcaseTagRow}>
+                  <span className={styles.trophyIcon}>🏆</span>
+                  <span className={styles.showcaseSuper}>DAILY ARENA CUP</span>
+                </div>
                 <h3 className={styles.showcaseTitle}>1v1 Blitz Tournaments</h3>
-                <p className={styles.showcaseMeta}>Instant USDT Settlement • Certified Anti-Cheat</p>
+                <p className={styles.showcaseMeta}>Instant USDT Settlement • Certified Anti-Cheat • Single Elimination</p>
               </div>
-              <span className={styles.tagFairPlay}>PROVE & WIN</span>
+              <span className={styles.tagFairPlay}>PROVE & WIN ↗</span>
             </div>
-          </div>
+          </LocaleLink>
         </motion.div>
       </div>
     </section>

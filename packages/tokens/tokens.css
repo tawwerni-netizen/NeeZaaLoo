@@ -97,35 +97,77 @@
   --nz-ease-settle: cubic-bezier(0.2, 0.8, 0.2, 1);
   --nz-ease-weight: cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* ================= LIGHT THEME (default declaration) ================ */
-  --nz-bg:          #F4F6F9;
-  --nz-surface-1:   #FFFFFF;
-  --nz-surface-2:   #EBEFF5;
-  --nz-surface-3:   #DFE4EC;
-  --nz-line:        #DFE3E9;
-  --nz-line-strong: #CBD2DC;
+  /* ================= CALM LUXURY DARK THEME (Default declaration) ================
+     Tuned for visual comfort, zero glare, high legibility, and velvet cyber luxury. */
+  --nz-bg:          #0B0E14;
+  --nz-surface-1:   #121620;
+  --nz-surface-2:   #181F2C;
+  --nz-surface-3:   #202A3C;
+  --nz-line:        rgba(255, 255, 255, 0.08);
+  --nz-line-strong: rgba(255, 255, 255, 0.16);
 
-  --nz-text:        #161920;
-  --nz-text-2:      #555F6D;
-  --nz-text-3:      #788292;
-  --nz-text-inverse:#F4F6F9;
+  --nz-text:        #F1F5F9;
+  --nz-text-2:      #94A3B8;
+  --nz-text-3:      #64748B;
+  --nz-text-inverse:#0B0E14;
 
-  --nz-accent:          #E04B20;  /* deepened so white text clears AA */
-  --nz-accent-hover:    #C93D14;
-  --nz-accent-press:    #A8300E;
+  --nz-accent:          #FF5A2B;
+  --nz-accent-hover:    #FF7247;
+  --nz-accent-press:    #E54719;
   --nz-accent-contrast: #FFFFFF;
-  --nz-accent-soft:     rgba(224, 75, 32, 0.08);
-  --nz-accent-line:     rgba(224, 75, 32, 0.28);
+  --nz-accent-soft:     rgba(255, 90, 43, 0.12);
+  --nz-accent-line:     rgba(255, 90, 43, 0.35);
+
+  --nz-win:   #10B981;
+  --nz-loss:  #EF4444;
+  --nz-draw:  #94A3B8;
+  --nz-warn:  #F59E0B;
+  --nz-info:  #38BDF8;
+
+  --nz-mat-gold:      #F59E0B;
+  --nz-mat-gold-ink:  #FBBF24;
+  --nz-mat-gold-line: rgba(245, 158, 11, 0.35);
+
+  --nz-shadow-1: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --nz-shadow-2: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --nz-elev-board: 0 20px 48px rgba(0, 0, 0, 0.65);
+
+  --nz-focus: 0 0 0 2px var(--nz-bg), 0 0 0 4px var(--nz-accent);
+
+  color-scheme: dark;
+}
+
+/* ================= LIGHT THEME (Explicit toggle only) ================ */
+:root[data-theme="light"] {
+  --nz-bg:          #F8FAFC;
+  --nz-surface-1:   #FFFFFF;
+  --nz-surface-2:   #F1F5F9;
+  --nz-surface-3:   #E2E8F0;
+  --nz-line:        #E2E8F0;
+  --nz-line-strong: #CBD5E1;
+
+  --nz-text:        #0F172A;
+  --nz-text-2:      #475569;
+  --nz-text-3:      #64748B;
+  --nz-text-inverse:#F8FAFC;
+
+  --nz-accent:          #EA580C;
+  --nz-accent-hover:    #C2410C;
+  --nz-accent-press:    #9A3412;
+  --nz-accent-contrast: #FFFFFF;
+  --nz-accent-soft:     rgba(234, 88, 12, 0.08);
+  --nz-accent-line:     rgba(234, 88, 12, 0.28);
 
   --nz-win:   #16A34A;
   --nz-loss:  #DC2626;
   --nz-draw:  #64748B;
   --nz-warn:  #D97706;
-  --nz-info:  #2563EB;
+  --nz-info:  #0284C7;
 
-  --nz-mat-gold:      #B08B3A;
-  --nz-mat-gold-ink:  #7A5E1E;
-  --nz-mat-gold-line: rgba(176, 139, 58, 0.32);
+  --nz-mat-gold:      #D97706;
+  --nz-mat-gold-ink:  #B45309;
+  --nz-mat-gold-line: rgba(217, 119, 6, 0.32);
 
   --nz-shadow-1: 0 1px 3px rgba(16, 24, 40, 0.05);
   --nz-shadow-2: 0 4px 14px rgba(16, 24, 40, 0.06);
@@ -137,83 +179,41 @@
   color-scheme: light;
 }
 
-/* ===================== DARK THEME ===================== */
-/* System default, unless the user explicitly chose light. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --nz-bg:          #0E1015;
-    --nz-surface-1:   #161922;
-    --nz-surface-2:   #1E232F;
-    --nz-surface-3:   #272E3D;
-    --nz-line:        #252B37;
-    --nz-line-strong: #363E4E;
-
-    --nz-text:        #E8EBF2;
-    --nz-text-2:      #96A0B0;
-    --nz-text-3:      #646E7E;
-    --nz-text-inverse:#0E1015;
-
-    --nz-accent:          #FF6232;
-    --nz-accent-hover:    #FF7547;
-    --nz-accent-press:    #E55225;
-    --nz-accent-contrast: #FFFFFF;
-    --nz-accent-soft:     rgba(255, 98, 50, 0.12);
-    --nz-accent-line:     rgba(255, 98, 50, 0.32);
-
-    --nz-win:   #22C55E;
-    --nz-loss:  #EF4444;
-    --nz-draw:  #94A3B8;
-    --nz-warn:  #F59E0B;
-    --nz-info:  #38BDF8;
-
-    --nz-mat-gold:      #D4AF37;
-    --nz-mat-gold-ink:  #F3CF68;
-    --nz-mat-gold-line: rgba(212, 175, 55, 0.32);
-
-    --nz-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
-    --nz-shadow-2: 0 4px 16px rgba(0, 0, 0, 0.45);
-    --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.55);
-    --nz-elev-board: 0 18px 48px rgba(0, 0, 0, 0.4);
-
-    color-scheme: dark;
-  }
-}
-
-/* Explicit toggle wins over the system in both directions. */
+/* Explicit Dark theme reaffirmation */
 :root[data-theme="dark"] {
-  --nz-bg:          #0E1015;
-  --nz-surface-1:   #161922;
-  --nz-surface-2:   #1E232F;
-  --nz-surface-3:   #272E3D;
-  --nz-line:        #252B37;
-  --nz-line-strong: #363E4E;
+  --nz-bg:          #0B0E14;
+  --nz-surface-1:   #121620;
+  --nz-surface-2:   #181F2C;
+  --nz-surface-3:   #202A3C;
+  --nz-line:        rgba(255, 255, 255, 0.08);
+  --nz-line-strong: rgba(255, 255, 255, 0.16);
 
-  --nz-text:        #E8EBF2;
-  --nz-text-2:      #96A0B0;
-  --nz-text-3:      #646E7E;
-  --nz-text-inverse:#0E1015;
+  --nz-text:        #F1F5F9;
+  --nz-text-2:      #94A3B8;
+  --nz-text-3:      #64748B;
+  --nz-text-inverse:#0B0E14;
 
-  --nz-accent:          #FF6232;
-  --nz-accent-hover:    #FF7547;
-  --nz-accent-press:    #E55225;
+  --nz-accent:          #FF5A2B;
+  --nz-accent-hover:    #FF7247;
+  --nz-accent-press:    #E54719;
   --nz-accent-contrast: #FFFFFF;
-  --nz-accent-soft:     rgba(255, 98, 50, 0.12);
-  --nz-accent-line:     rgba(255, 98, 50, 0.32);
+  --nz-accent-soft:     rgba(255, 90, 43, 0.12);
+  --nz-accent-line:     rgba(255, 90, 43, 0.35);
 
-  --nz-win:   #22C55E;
+  --nz-win:   #10B981;
   --nz-loss:  #EF4444;
   --nz-draw:  #94A3B8;
   --nz-warn:  #F59E0B;
   --nz-info:  #38BDF8;
 
-  --nz-mat-gold:      #D4AF37;
-  --nz-mat-gold-ink:  #F3CF68;
-  --nz-mat-gold-line: rgba(212, 175, 55, 0.32);
+  --nz-mat-gold:      #F59E0B;
+  --nz-mat-gold-ink:  #FBBF24;
+  --nz-mat-gold-line: rgba(245, 158, 11, 0.35);
 
-  --nz-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --nz-shadow-2: 0 4px 16px rgba(0, 0, 0, 0.45);
-  --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.55);
-  --nz-elev-board: 0 18px 48px rgba(0, 0, 0, 0.4);
+  --nz-shadow-1: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --nz-shadow-2: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --nz-elev-board: 0 20px 48px rgba(0, 0, 0, 0.65);
 
   color-scheme: dark;
 }

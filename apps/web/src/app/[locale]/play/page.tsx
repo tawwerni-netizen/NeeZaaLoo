@@ -15,6 +15,7 @@
 import { Header } from "@/components/Header";
 import { RequireAuth } from "@/components/RequireAuth";
 import { LocaleLink } from "@/components/LocaleLink";
+import { LiveDuelLobby } from "@/components/play/LiveDuelLobby";
 import { useI18n } from "@/lib/i18n/context";
 import { listGames } from "@/lib/games";
 import styles from "./play.module.css";
@@ -35,6 +36,9 @@ export default function PlaySelectPage() {
     <RequireAuth>
       <Header />
       <main className="nz-container">
+        {/* Real-Time Member-to-Member Live Dueling Lobby */}
+        <LiveDuelLobby />
+
         <h1 className={styles.heading}>{t("play.select.heading")}</h1>
         <div className={styles.grid}>
           {games.map((game) => {

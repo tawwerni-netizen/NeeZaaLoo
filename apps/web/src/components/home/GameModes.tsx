@@ -16,7 +16,7 @@ import { GameThumbnail } from "@/components/game/GameThumbnail";
 import styles from "./GameModes.module.css";
 
 export function GameModes() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
   const games = listGames();
 
   return (
@@ -60,9 +60,30 @@ export function GameModes() {
               </div>
             );
           })}
-          <div className={styles.comingSoon}>
-            <h3 className={styles.cardTitle}>{t("home.games.coming_soon.title")}</h3>
-            <p className={styles.cardDescription}>{t("home.games.coming_soon.body")}</p>
+          <div className={styles.arenaCard}>
+            <div className={styles.arenaCardHeader}>
+              <span className={styles.arenaLiveBadge}>
+                <span className={styles.pulseDot} />
+                LIVE ARENA
+              </span>
+              <h3 className={styles.cardTitle}>
+                <LocaleLink href="/tournaments">
+                  {dir === "rtl" ? "بطولات الأرينا والتحديات المباشرة" : "Pro Tournaments & Live Duels"}
+                </LocaleLink>
+              </h3>
+            </div>
+            <p className={styles.cardDescription}>
+              {dir === "rtl"
+                ? "انضم إلى جولات تنافسية بنظام خروج المغلوب، وتحدَّ نخبة لاعبي المنصة في منافسات مهارية خالية من الحظ مع تصنيفات ELO رسمية."
+                : "Compete in single-elimination tournament brackets, challenge online members, and build your Global Skill rating."}
+            </p>
+            <div className={styles.arenaCardFooter}>
+              <LocaleLink href="/tournaments">
+                <Button variant="primary">
+                  {dir === "rtl" ? "دخول صالة البطولات ←" : "Enter Tournament Arena →"}
+                </Button>
+              </LocaleLink>
+            </div>
           </div>
         </div>
       </div>
