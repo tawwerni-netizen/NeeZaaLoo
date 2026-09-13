@@ -29,8 +29,21 @@
 }
 
 .flagIcon {
-  font-size: 1.1rem;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 15px;
+  flex: none;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.flagSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .langName {
@@ -51,19 +64,20 @@
 
 .dropdown {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   inset-inline-end: 0;
-  min-width: 170px;
+  min-width: 175px;
   background: var(--nz-surface-1);
-  border: 1px solid var(--nz-line-strong, rgba(255, 255, 255, 0.15));
+  border: 1px solid var(--nz-line-strong);
   border-radius: var(--nz-radius-md);
   padding: 6px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   animation: dropdownIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -108,8 +122,15 @@
 }
 
 .optionFlag {
-  font-size: 1.15rem;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 15px;
+  flex: none;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 .optionText {

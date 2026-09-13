@@ -6,16 +6,8 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { SUPPORTED_LOCALES, type SupportedLocale } from "@/lib/i18n/locale";
 import { LOCALE_COOKIE, LOCALE_EXPLICIT_COOKIE, LOCALE_COOKIE_MAX_AGE_S } from "@/lib/i18n/constants";
+import { FlagIcon } from "./FlagIcon";
 import styles from "./LanguageSwitcher.module.css";
-
-const LOCALE_ICONS: Record<SupportedLocale, string> = {
-  ar: "🇸🇦",
-  en: "🇬🇧",
-  zh: "🇨🇳",
-  hi: "🇮🇳",
-  es: "🇪🇸",
-  fr: "🇫🇷",
-};
 
 function pathWithoutLocale(pathname: string): string {
   const segments = pathname.split("/");
@@ -77,7 +69,6 @@ export function LanguageSwitcher() {
   }
 
   const currentLocale = (SUPPORTED_LOCALES.find((l) => l.code === locale) ?? SUPPORTED_LOCALES[0])!;
-  const currentIcon = LOCALE_ICONS[currentLocale.code] ?? "🌐";
 
   return (
     <div className={styles.wrap} ref={containerRef}>
@@ -91,7 +82,7 @@ export function LanguageSwitcher() {
         title={t("settings.language")}
       >
         <span className={styles.flagIcon} aria-hidden="true">
-          {currentIcon}
+          <FlagIcon locale={currentLocale.code} className={styles.flagSvg} />
         </span>
         <span className={styles.langName}>{currentLocale.nativeName}</span>
         <span className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ""}`} aria-hidden="true">
@@ -103,7 +94,6 @@ export function LanguageSwitcher() {
         <div className={styles.dropdown} role="listbox" aria-label={t("settings.language")}>
           {SUPPORTED_LOCALES.map((l) => {
             const isSelected = l.code === locale;
-            const icon = LOCALE_ICONS[l.code] ?? "🌐";
             return (
               <button
                 key={l.code}
@@ -114,7 +104,7 @@ export function LanguageSwitcher() {
                 onClick={() => onSelectLocale(l.code)}
               >
                 <span className={styles.optionFlag} aria-hidden="true">
-                  {icon}
+                  <FlagIcon locale={l.code} className={styles.flagSvg} />
                 </span>
                 <span className={styles.optionText}>{l.nativeName}</span>
                 {isSelected && (
