@@ -1,62 +1,49 @@
-/**
- * Hostinger's "Other" framework preset requires a root-level Entry File it
- * runs directly (node server.js) -- it does not run npm scripts. This is
- * that entry file: a thin custom server using Next's own programmatic API
- * to serve the real application in apps/web, using the monorepo's normal
- * root-level install (Root Directory: ./, Build Command: npm run build)
- * rather than the separate .next/hostinger flattened artifact, which stays
- * untouched and is not involved in this path at all.
+﻿/**
+ * Hostinger entry file -- node server.js (CommonJS, root-level).
  *
- * This file is deliberately CommonJS, and the repository root package.json
- * deliberately declares "type": "commonjs" -- do not "modernise" either one
- * back to ESM. Hostinger installs its own CommonJS runtime scaffolding
- * inside the deployed tree (hbuilds/config/preload-timestamp.js) and
- * require()s it before this server ever loads. Node resolves that file's
- * module type from the NEAREST parent package.json, which is this
- * repository's root -- so a root "type": "module" reclassifies Hostinger's
- * own CommonJS file as ESM. On Hostinger's Node 20 runtime, which predates
- * require(esm) support, that require() then dies with ERR_REQUIRE_ESM and
- * the site serves 503 before any application code runs. Node 22+ silently
- * tolerates it, so this never reproduces on a modern local Node -- verify
- * with `node --no-experimental-require-module server.js`, which forces the
- * Node 20 semantics. Every workspace under apps/ and packages/ declares its
- * own "type": "module" and all other source is .mjs, so both remain ESM
- * regardless of what the root says. Next's own build does exactly this same
- * defensive trick, writing .next/package.json as {"type":"commonjs"}.
+ * WHY THIS APPROACH: The Next.js programmatic API (require("next")) does NOT
+ * work with `output: "standalone"` -- Next.js itself warns and pages return
+ * 403 because they live in the standalone bundle, not where the API looks.
  *
- * dir is resolved explicitly to apps/web so this works regardless of the
- * process's cwd -- Next's own App Router, proxy.ts locale routing, dynamic
- * routes, public/, and .next/static all come from that same apps/web build
- * this server just points at, unmodified.
+ * Instead this process:
+ *   1. Spawns the pre-built Next.js standalone server as its own child
+ *      process on an internal port (NEXT_PORT, default 3002).
+ *   2. Spawns the REST API  (apps/api)     on API_PORT  (default 4000).
+ *   3. Spawns the Gateway   (apps/gateway) on WS_PORT   (default 3010).
+ *   4. Spawns the Worker    (apps/worker).
+ *   5. Listens on PORT (3000) and proxies:
+ *        /v1/*    -> API (4000)
+ *        /gateway -> Gateway WebSocket (3010)
+ *        *        -> Next.js (3002)
+ *
+ * Root package.json MUST stay "type":"commonjs" -- Hostinger pre-loads its
+ * own CJS scripts before this file and require()s them from this directory.
  */
 const { createServer } = require("node:http");
-const http = require("node:http");
-const { fork } = require("node:child_process");
-const path = require("node:path");
-const next = require("next");
+const http   = require("node:http");
+const { fork, spawn } = require("node:child_process");
+const path   = require("node:path");
 
 const here = __dirname;
-const dir = path.join(here, "apps", "web");
-
 process.env.NODE_ENV = "production";
 
 const hostname = process.env.HOSTNAME || "0.0.0.0";
-const port = parseInt(process.env.PORT, 10) || 3000;
+const port     = parseInt(process.env.PORT,      10) || 3000;
+const nextPort = parseInt(process.env.NEXT_PORT, 10) || 3002;
+const apiPort  = parseInt(process.env.API_PORT,  10) || 4000;
+const gwPort   = parseInt(process.env.WS_PORT,   10) || 3010;
 
-// Internal ports
-const apiPort = parseInt(process.env.API_PORT, 10) || 4000;
-const gwPort = parseInt(process.env.WS_PORT, 10) || 3010;
-
-const apiScript = path.join(here, "apps", "api", "src", "index.mjs");
-const gwScript = path.join(here, "apps", "gateway", "src", "index.mjs");
+const nextScript   = path.join(here, "apps", "web", ".next", "hostinger", "server.js");
+const apiScript    = path.join(here, "apps", "api", "src", "index.mjs");
+const gwScript     = path.join(here, "apps", "gateway", "src", "index.mjs");
 const workerScript = path.join(here, "apps", "worker", "src", "index.mjs");
 
 function getEnv(childPort) {
   return {
     ...process.env,
-    NODE_ENV: process.env.API_NODE_ENV || "development",
-    PORT: String(childPort),
-    WS_PORT: String(gwPort),
+    NODE_ENV:               process.env.API_NODE_ENV || "development",
+    PORT:                   String(childPort),
+    WS_PORT:                String(gwPort),
     DATABASE_URL:
       process.env.DATABASE_URL ||
       "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres",
@@ -67,151 +54,160 @@ function getEnv(childPort) {
     CORS_ORIGINS:
       process.env.CORS_ORIGINS ||
       "https://nizalo.com,https://app.nizalo.com,http://localhost:3000,http://127.0.0.1:3000",
-    AVATAR_STORAGE_DIR: process.env.AVATAR_STORAGE_DIR || path.join(here, "apps", "web", "public", "avatars"),
-    AVATAR_PUBLIC_BASE_URL: process.env.AVATAR_PUBLIC_BASE_URL || "/avatars",
+    AVATAR_STORAGE_DIR:
+      process.env.AVATAR_STORAGE_DIR ||
+      path.join(here, "apps", "web", "public", "avatars"),
+    AVATAR_PUBLIC_BASE_URL:
+      process.env.AVATAR_PUBLIC_BASE_URL || "/avatars",
   };
 }
 
-let apiChild = null;
-let gwChild = null;
-let workerChild = null;
+// ---------------------------------------------------------------------------
+// Child process launchers with auto-restart
+// ---------------------------------------------------------------------------
+let apiChild = null, gwChild = null, workerChild = null, nextChild = null;
 
-function startChild(name, script, portOrEnv) {
-  let child = null;
-  function spawn() {
+function startFork(name, script, childPort) {
+  function doFork() {
     try {
-      child = fork(script, [], {
+      const child = fork(script, [], {
         cwd: here,
-        env: getEnv(portOrEnv),
+        env: getEnv(childPort),
         stdio: "inherit",
       });
-
       child.on("exit", (code, signal) => {
-        console.warn(`[${name}] Process exited (code=${code}, signal=${signal}). Restarting in 2s...`);
-        setTimeout(spawn, 2000);
+        console.warn("[" + name + "] exited (code=" + code + ", signal=" + signal + "). Restarting in 2s...");
+        setTimeout(doFork, 2000);
       });
-      
-      if (name === "API") apiChild = child;
-      if (name === "Gateway") gwChild = child;
-      if (name === "Worker") workerChild = child;
-
+      if (name === "API")     apiChild    = child;
+      if (name === "Gateway") gwChild     = child;
+      if (name === "Worker")  workerChild = child;
     } catch (err) {
-      console.error(`[${name}] Failed to launch child process:`, err);
+      console.error("[" + name + "] Failed to launch:", err.message);
     }
   }
-  spawn();
+  doFork();
 }
 
-startChild("API", apiScript, apiPort);
-startChild("Gateway", gwScript, gwPort);
-startChild("Worker", workerScript, 4001); // Port doesn't really matter for worker except observability
+function startNext(port) {
+  function doSpawn() {
+    try {
+      const child = spawn(process.execPath, [nextScript], {
+        cwd: path.dirname(nextScript),
+        env: {
+          ...process.env,
+          PORT:     String(port),
+          HOSTNAME: "127.0.0.1",
+          NODE_ENV: "production",
+        },
+        stdio: "inherit",
+      });
+      child.on("exit", (code, signal) => {
+        console.warn("[Next.js] exited (code=" + code + ", signal=" + signal + "). Restarting in 2s...");
+        setTimeout(doSpawn, 2000);
+      });
+      nextChild = child;
+    } catch (err) {
+      console.error("[Next.js] Failed to launch:", err.message);
+    }
+  }
+  doSpawn();
+}
 
-process.on("SIGINT", () => {
-  if (apiChild) apiChild.kill();
-  if (gwChild) gwChild.kill();
-  if (workerChild) workerChild.kill();
-  process.exit(0);
-});
-process.on("SIGTERM", () => {
-  if (apiChild) apiChild.kill();
-  if (gwChild) gwChild.kill();
-  if (workerChild) workerChild.kill();
-  process.exit(0);
-});
+startNext(nextPort);
+startFork("API",     apiScript,    apiPort);
+startFork("Gateway", gwScript,     gwPort);
+startFork("Worker",  workerScript, 4001);
 
-const app = next({ dev: false, dir, hostname, port });
-const handle = app.getRequestHandler();
-
-app
-  .prepare()
-  .then(() => {
-    const upgradeHandler = app.getUpgradeHandler();
-    const server = createServer((req, res) => {
-      if (req.url && (req.url.startsWith("/v1/") || req.url === "/v1")) {
-        const proxyReq = http.request(
-          {
-            hostname: "127.0.0.1",
-            port: apiPort,
-            path: req.url,
-            method: req.method,
-            headers: { ...req.headers, host: `127.0.0.1:${apiPort}` },
-          },
-          (proxyRes) => {
-            res.writeHead(proxyRes.statusCode, proxyRes.headers);
-            proxyRes.pipe(res, { end: true });
-          }
-        );
-        proxyReq.on("error", (err) => {
-          console.error("[API Proxy Error]", err.message);
-          if (!res.headersSent) {
-            res.writeHead(502, { "Content-Type": "application/json" });
-            res.end(
-              JSON.stringify({
-                error: { code: "BAD_GATEWAY", message: "API service unavailable" },
-              })
-            );
-          }
-        });
-        req.pipe(proxyReq, { end: true });
-        return;
-      }
-      if (req.url && (req.url.startsWith("/gateway") || req.url === "/gateway")) {
-        res.writeHead(426, { "Content-Type": "text/plain", Upgrade: "WebSocket" });
-        res.end("Upgrade Required");
-        return;
-      }
-      handle(req, res);
-    });
-
-    server.on("upgrade", (req, socket, head) => {
-      if (req.url && (req.url.startsWith("/gateway") || req.url === "/gateway")) {
-        let newPath = req.url.replace(/^\/gateway/, "") || "/";
-
-        const proxyReq = http.request({
-          hostname: "127.0.0.1",
-          port: gwPort,
-          path: newPath,
-          method: req.method,
-          headers: req.headers,
-        });
-
-        proxyReq.on("upgrade", (proxyRes, proxySocket, proxyHead) => {
-          let responseHeaders = ["HTTP/1.1 101 Switching Protocols"];
-          for (let i = 0; i < proxyRes.rawHeaders.length; i += 2) {
-            responseHeaders.push(`${proxyRes.rawHeaders[i]}: ${proxyRes.rawHeaders[i + 1]}`);
-          }
-          socket.write(responseHeaders.join("\r\n") + "\r\n\r\n");
-          if (proxyHead && proxyHead.length) socket.write(proxyHead);
-          if (head && head.length) proxySocket.write(head);
-          proxySocket.on("error", () => socket.destroy());
-          socket.on("error", () => proxySocket.destroy());
-          proxySocket.on("close", () => socket.destroy());
-          socket.on("close", () => proxySocket.destroy());
-          proxySocket.pipe(socket);
-          socket.pipe(proxySocket);
-        });
-
-        proxyReq.on("error", (err) => {
-          console.error("[Gateway WS Proxy Error]", err.message);
-          socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
-        });
-
-        proxyReq.end();
-        return;
-      }
-
-      if (upgradeHandler) {
-        upgradeHandler(req, socket, head);
-      } else {
-        socket.end();
-      }
-    });
-
-    server.listen(port, hostname, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
-    });
-  })
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
+function shutdown() {
+  [apiChild, gwChild, workerChild, nextChild].forEach(function(c) {
+    try { if (c) c.kill(); } catch (e) {}
   });
+  process.exit(0);
+}
+process.on("SIGINT",  shutdown);
+process.on("SIGTERM", shutdown);
+
+// ---------------------------------------------------------------------------
+// HTTP proxy
+// ---------------------------------------------------------------------------
+function proxyHttp(req, res, targetPort) {
+  const proxyReq = http.request(
+    {
+      hostname: "127.0.0.1",
+      port:     targetPort,
+      path:     req.url,
+      method:   req.method,
+      headers:  Object.assign({}, req.headers, { host: "127.0.0.1:" + targetPort }),
+    },
+    function(proxyRes) {
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(res, { end: true });
+    }
+  );
+  proxyReq.on("error", function(err) {
+    console.error("[Proxy->" + targetPort + "]", err.message);
+    if (!res.headersSent) {
+      res.writeHead(502, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: { code: "BAD_GATEWAY", message: "Service starting, please retry" } }));
+    }
+  });
+  req.pipe(proxyReq, { end: true });
+}
+
+const server = createServer(function(req, res) {
+  const url = req.url || "/";
+  if (url.startsWith("/v1/") || url === "/v1") {
+    proxyHttp(req, res, apiPort);
+    return;
+  }
+  if (url.startsWith("/gateway")) {
+    res.writeHead(426, { "Content-Type": "text/plain", Upgrade: "WebSocket" });
+    res.end("Upgrade Required");
+    return;
+  }
+  proxyHttp(req, res, nextPort);
+});
+
+server.on("upgrade", function(req, socket, head) {
+  const url = req.url || "/";
+  if (url.startsWith("/gateway")) {
+    const newPath = url.replace(/^\/gateway/, "") || "/";
+    const proxyReq = http.request({
+      hostname: "127.0.0.1",
+      port:     gwPort,
+      path:     newPath,
+      method:   req.method,
+      headers:  req.headers,
+    });
+    proxyReq.on("upgrade", function(proxyRes, proxySocket, proxyHead) {
+      const lines = ["HTTP/1.1 101 Switching Protocols"];
+      for (let i = 0; i < proxyRes.rawHeaders.length; i += 2) {
+        lines.push(proxyRes.rawHeaders[i] + ": " + proxyRes.rawHeaders[i + 1]);
+      }
+      socket.write(lines.join("\r\n") + "\r\n\r\n");
+      if (proxyHead && proxyHead.length) socket.write(proxyHead);
+      if (head      && head.length)      proxySocket.write(head);
+      proxySocket.on("error", function() { socket.destroy(); });
+      socket.on("error",      function() { proxySocket.destroy(); });
+      proxySocket.on("close", function() { socket.destroy(); });
+      socket.on("close",      function() { proxySocket.destroy(); });
+      proxySocket.pipe(socket);
+      socket.pipe(proxySocket);
+    });
+    proxyReq.on("error", function(err) {
+      console.error("[Gateway WS Proxy]", err.message);
+      socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+    });
+    proxyReq.end();
+    return;
+  }
+  socket.end();
+});
+
+server.listen(port, hostname, function() {
+  console.log("> Proxy ready on http://" + hostname + ":" + port);
+  console.log("  -> Next.js  :" + nextPort);
+  console.log("  -> API      :" + apiPort);
+  console.log("  -> Gateway  :" + gwPort);
+});
