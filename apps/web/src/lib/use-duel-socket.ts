@@ -3,7 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { getTokens } from "./api";
 
-export const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL ?? "ws://localhost:3010";
+export function getGatewayUrl(): string {
+  if (process.env.NEXT_PUBLIC_GATEWAY_URL) {
+    return process.env.NEXT_PUBLIC_GATEWAY_URL;
+  }
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/gateway`;
+  }
+  return "ws://localhost:3010";
+}
+
+export const GATEWAY_URL = getGatewayUrl();
 
 // A disconnected socket retries on a short, fixed delay -- matching the
 // same RECONNECT_DELAY_MS the chat hook (use-chat-socket.ts) already
@@ -64,7 +74,8 @@ export function useDuelSocket(duelId: string) {
       const { accessToken } = getTokens();
       if (!accessToken) return;
 
-      ws = new WebSocket(GATEWAY_URL);
+      const gateway = getGatewayUrl();
+      ws = new WebSocket(gateway);
       socketRef.current = ws;
 
       ws.onopen = () => {

@@ -121,10 +121,14 @@ export function AdminTopbar({
         {alertCount > 0 && <span className={`${styles.badge} nz-num`}>{alertCount > 99 ? "99+" : alertCount}</span>}
       </button>
 
+      <Link href="/" className={styles.websiteLink}>
+        <AdminIcon name="dashboard" size={16} />
+        <span>Return to Website</span>
+      </Link>
+
       <div className={styles.identity}>
         <div className={styles.identityAvatar} aria-hidden="true">{adminHandle.slice(0, 1).toUpperCase()}</div>
         <span className={styles.identityName}>{adminHandle}</span>
-        <AdminIcon name="chevronDown" size={14} className={styles.identityChevron} />
       </div>
     </header>
   );

@@ -45,7 +45,7 @@ export const connectFourPlugin: GamePlugin = {
   supportsAI: true,
   difficulties: ["EASY", "MEDIUM", "HARD", "EXPERT"],
   supportsDraw: true,
-  cashEnabled: false, // a solved game -- see db/migrations/0028's own comment
+  cashEnabled: true, // a solved game -- see db/migrations/0028's own comment
   Board: ConnectFourBoardAdapter,
 };
 

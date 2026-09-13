@@ -139,15 +139,23 @@ async function main() {
   const rbac = createRbacService(db);
   const emailIdentity = createEmailIdentityService(db);
   const emailChallenge = createEmailChallengeService(db);
-  // No real email provider is wired yet -- this is the one remaining piece
-  // that must be supplied before production. createConsoleEmailProvider
-  // refuses to construct at all when NODE_ENV=production (see
-  // packages/email/src/provider.mjs), so a production deployment that
-  // reaches this line without a real provider configured fails to start
-  // instead of silently writing verification codes to a log file.
-  const emailProvider = process.env.NODE_ENV === "production"
-    ? createMockEmailProvider()
-    : createConsoleEmailProvider();
+  // Use SMTP if configured, else fallback to dev/mock providers
+  let emailProvider;
+  if (process.env.SMTP_HOST) {
+    emailProvider = createSmtpEmailProvider({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: process.env.SMTP_SECURE !== "false", // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      }
+    });
+  } else {
+    emailProvider = process.env.NODE_ENV === "production"
+      ? createMockEmailProvider()
+      : createConsoleEmailProvider();
+  }
   const emailServiceInstance = createEmailService({ provider: emailProvider });
   const emailVerification = createEmailVerificationFlow(db, { emailChallenge, emailIdentity, emailService: emailServiceInstance });
   const welcomeEmail = createWelcomeEmailFlow(db, { emailService: emailServiceInstance });

@@ -6,6 +6,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { useAuth } from "@/lib/auth-context";
 import { get, ApiError } from "@/lib/api";
 import { formatUsd } from "@/lib/money";
+import { useI18n } from "@/lib/i18n/context";
 import styles from "./referrals.module.css";
 
 type ReferralStats = {
@@ -42,6 +43,8 @@ export default function ReferralsPage() {
 }
 
 function ReferralContent() {
+  const { locale, dir } = useI18n();
+  const isRtl = dir === "rtl";
   const { player } = useAuth();
   const [data, setData] = useState<ReferralDashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,67 +99,67 @@ function ReferralContent() {
 
   if (loading) {
     return (
-      <main className={styles.page}>
-        <div className={styles.emptyState}>Loading referral dashboard...</div>
+      <main className={styles.page} dir={isRtl ? "rtl" : "ltr"}>
+        <div className={styles.emptyState}>{isRtl ? "جاري تحميل لوحة تحكم الإحالات..." : "Loading referral dashboard..."}</div>
       </main>
     );
   }
 
   if (error || !data) {
     return (
-      <main className={styles.page}>
+      <main className={styles.page} dir={isRtl ? "rtl" : "ltr"}>
         <div className={styles.emptyState}>
           {error === "CONTROL_DISABLED"
-            ? "Referrals are temporarily paused for platform maintenance."
-            : "Failed to load referral program details. Please try again later."}
+            ? (isRtl ? "برنامج الإحالات متوقف مؤقتاً لصيانة المنصة." : "Referrals are temporarily paused for platform maintenance.")
+            : (isRtl ? "فشل تحميل تفاصيل برنامج الإحالة. يرجى المحاولة مرة أخرى لاحقاً." : "Failed to load referral program details. Please try again later.")}
         </div>
       </main>
     );
   }
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} dir={isRtl ? "rtl" : "ltr"}>
       {/* Hero / Invite Banner */}
       <section className={styles.heroCard}>
         <h1 className={styles.heroTitle}>
-          Invite Friends. <span className={styles.heroGold}>Earn $1.00 Every Time.</span>
+          {isRtl ? "ادعُ أصدقاءك." : "Invite Friends."} <span className={styles.heroGold}>{isRtl ? "اكسب $1.00 في كل مرة." : "Earn $1.00 Every Time."}</span>
         </h1>
         <p className={styles.heroDesc}>
-          Share your permanent link. When your friend registers and makes their first qualifying deposit of $5 or more, you receive a $1.00 USD reward deposited straight into your balance.
+          {isRtl ? "شارك الرابط الدائم الخاص بك. عندما يسجل صديقك ويقوم بأول إيداع مؤهل بقيمة 5 دولارات أو أكثر، تحصل على مكافأة بقيمة 1.00 دولار أمريكي تودع مباشرة في رصيدك." : "Share your permanent link. When your friend registers and makes their first qualifying deposit of $5 or more, you receive a $1.00 USD reward deposited straight into your balance."}
         </p>
 
         <div className={styles.codeBox}>
           <span className={styles.codeBadge}>/r/{data.code}</span>
           <button type="button" className={styles.copyBtn} onClick={handleCopy}>
-            {copied ? "Copied Link!" : "Copy Invite Link"}
+            {copied ? (isRtl ? "تم نسخ الرابط!" : "Copied Link!") : (isRtl ? "نسخ رابط الإحالة" : "Copy Invite Link")}
           </button>
-          {copied && <span className={styles.copyToast}>✓ Link copied to clipboard</span>}
+          {copied && <span className={styles.copyToast}>{isRtl ? "✓ تم نسخ الرابط إلى الحافظة" : "✓ Link copied to clipboard"}</span>}
         </div>
       </section>
 
       {/* Metrics Cards */}
       <section className={styles.statsGrid}>
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Friends Referred</span>
+          <span className={styles.statLabel}>{isRtl ? "الأصدقاء المدعوون" : "Friends Referred"}</span>
           <span className={styles.statValue}>{data.stats.totalReferred}</span>
         </div>
 
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Confirmed Rewards</span>
+          <span className={styles.statLabel}>{isRtl ? "المكافآت المؤكدة" : "Confirmed Rewards"}</span>
           <span className={`${styles.statValue} ${styles.statGreen}`}>
             ${formatUsd(data.stats.confirmedRewardMinor)}
           </span>
         </div>
 
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Pending Rewards</span>
+          <span className={styles.statLabel}>{isRtl ? "المكافآت المعلقة" : "Pending Rewards"}</span>
           <span className={`${styles.statValue} ${styles.statAmber}`}>
             ${formatUsd(data.stats.pendingRewardMinor)}
           </span>
         </div>
 
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Under Review</span>
+          <span className={styles.statLabel}>{isRtl ? "قيد المراجعة" : "Under Review"}</span>
           <span className={`${styles.statValue} ${styles.statBlue}`}>
             ${formatUsd(data.stats.reviewRewardMinor)}
           </span>
@@ -165,39 +168,36 @@ function ReferralContent() {
 
       {/* History Table */}
       <section className={styles.historySection}>
-        <h2 className={styles.sectionTitle}>Referral History</h2>
-
+        <h2 className={styles.historyTitle}>{isRtl ? "سجل الإحالات" : "Referral History"}</h2>
         {data.history.length === 0 ? (
-          <div className={styles.emptyState}>
-            No referrals yet. Share your invite link above to get started!
+          <div className={styles.emptyHistory}>
+            {isRtl ? "لم تقم بدعوة أي شخص بعد. شارك الرابط الخاص بك أعلاه للبدء!" : "You haven't referred anyone yet. Share your link above to get started!"}
           </div>
         ) : (
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
+          <div className={styles.tableWrapper}>
+            <table className={styles.historyTable}>
               <thead>
                 <tr>
-                  <th>Referred Player</th>
-                  <th>Joined Date</th>
-                  <th>Status</th>
-                  <th>Deposit</th>
-                  <th>Reward</th>
+                  <th>{isRtl ? "الصديق" : "Friend"}</th>
+                  <th>{isRtl ? "تاريخ الانضمام" : "Joined"}</th>
+                  <th>{isRtl ? "الإيداع" : "Deposit"}</th>
+                  <th>{isRtl ? "الحالة" : "Status"}</th>
+                  <th>{isRtl ? "المكافأة" : "Reward"}</th>
                 </tr>
               </thead>
               <tbody>
-                {data.history.map((item) => (
-                  <tr key={item.attributionId}>
-                    <td>@{item.referredHandle}</td>
-                    <td>{new Date(item.attributedAt).toLocaleDateString()}</td>
-                    <td>{getStatusBadge(item.rewardState)}</td>
+                {data.history.map((h) => (
+                  <tr key={h.attributionId}>
+                    <td className={styles.handleCell}>@{h.referredHandle}</td>
+                    <td>{new Date(h.attributedAt).toLocaleDateString()}</td>
+                    <td>{h.depositAmountMinor ? `$${formatUsd(h.depositAmountMinor)}` : "—"}</td>
                     <td>
-                      {item.depositAmountMinor
-                        ? `$${formatUsd(item.depositAmountMinor)}`
-                        : "—"}
+                      <span className={`${styles.statusBadge} ${styles[`status${h.rewardState}`]}`}>
+                        {h.rewardState}
+                      </span>
                     </td>
-                    <td>
-                      {item.rewardState === "SETTLED"
-                        ? `+$${formatUsd(item.rewardAmountMinor)}`
-                        : `$${formatUsd(item.rewardAmountMinor)}`}
+                    <td className={styles.rewardCell}>
+                      +${formatUsd(h.rewardAmountMinor)}
                     </td>
                   </tr>
                 ))}

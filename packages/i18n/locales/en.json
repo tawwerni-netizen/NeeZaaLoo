@@ -102,7 +102,7 @@
         "mode": "1v1 · Ranked or free"
       },
       "seega": {
-        "description": "Place your stones, then box in the center. Flank an enemy piece between two of yours to capture it.",
+        "description": "Place your stones, then box in the center. Flank an enemy piece duelween two of yours to capture it.",
         "duration": "10–20 min",
         "mode": "1v1 · Ranked or free"
       },
@@ -375,14 +375,14 @@
     "difficulty": {
       "heading": "Choose a difficulty"
     },
-    "stake": {
-      "heading": "Choose your stake",
+    "prize": {
+      "heading": "Choose your prize",
       "free_only": "Free only",
-      "free_only_note": "Cash stakes aren't available for this game yet.",
+      "free_only_note": "Cash prizes aren't available for this game yet.",
       "free_title": "Free",
-      "free_description": "No stake — just the game.",
+      "free_description": "No prize — just the game.",
       "competitive_title": "Competitive",
-      "competitive_description": "Play for a real stake, released only once the match is won."
+      "competitive_description": "Play for a real prize, released only once the match is won."
     },
     "challenge": {
       "heading": "Challenge a friend",
@@ -405,10 +405,10 @@
       "error_self": "You can't challenge yourself.",
       "error_already_pending": "You already have a pending challenge with {handle}.",
       "error_blocked": "You can't challenge this player.",
-      "error_invalid_stake": "That stake amount isn't available.",
+      "error_invalid_prize": "That prize amount isn't available.",
       "error_generic": "Couldn't send the challenge. Try again.",
       "mode_free": "Free match",
-      "mode_competitive_stake": "Competitive — ${amount}",
+      "mode_competitive_prize": "Competitive — ${amount}",
       "popup_title": "{handle} challenged you",
       "meta_game": "Game",
       "meta_mode": "Mode"
@@ -794,7 +794,7 @@
     },
     "errors": {
       "invalid_category": "Please choose a category.",
-      "invalid_subject": "Please enter a subject between 1 and 200 characters.",
+      "invalid_subject": "Please enter a subject duelween 1 and 200 characters.",
       "invalid_content": "Please enter a message.",
       "reference_required": "Please enter a reference id for this category.",
       "reference_not_found": "We couldn't find that reference, or it doesn't belong to your account.",
@@ -932,7 +932,7 @@
     "review_heading": "Money decisions are never fully automated",
     "review_body": "Timing and behaviour are monitored, but no single automated signal ever restricts an account or holds funds on its own. A statistical finding is always sent to a person to review before any action is taken, and every such action can be appealed to a different reviewer.",
     "eligibility_heading": "Eligibility, stated honestly",
-    "eligibility_body": "Where competitive play involves a stake, participation and any resulting prize are subject to eligibility rules that vary by region. Nizalo is a game of skill — not an investment, and never a guaranteed income.",
+    "eligibility_body": "Where competitive play involves a prize, participation and any resulting prize are subject to eligibility rules that vary by region. Nizalo is a game of skill — not an investment, and never a guaranteed income.",
     "contact_cta": "Questions? Contact Support →"
   },
   "gamesPage": {
@@ -952,9 +952,9 @@
     "fact_turn_model": "Format",
     "fact_duration": "Typical duration",
     "fact_mode": "Mode",
-    "fact_stakes": "Stakes",
-    "stakes_free_only": "Free to play — competitive stakes are not yet enabled for this game.",
-    "stakes_enabled": "Free, or competitive with a real stake where eligible.",
+    "fact_prizes": "Prizes",
+    "prizes_free_only": "Free to play — competitive prizes are not yet enabled for this game.",
+    "prizes_enabled": "Free, or competitive with a real prize where eligible.",
     "difficulty_heading": "Play against the computer",
     "difficulty_body": "Four real difficulty levels, each a genuinely different opponent — never the same engine with a slower clock.",
     "no_ai_body": "This game doesn't offer a computer opponent yet — every match is against a real player.",
@@ -968,7 +968,7 @@
     "subhead": "Your real balance, straight from the ledger.",
     "available_label": "Available",
     "locked_label": "Locked",
-    "available_note": "Ready to stake or withdraw.",
+    "available_note": "Ready to prize or withdraw.",
     "locked_note": "Reserved by an in-progress match or a pending withdrawal.",
     "deposit_cta": "Deposit",
     "withdraw_cta": "Withdraw",

@@ -352,10 +352,12 @@ export default function HelpCenterPage() {
         {/* Quick Contacts & Actions Bar */}
         <section className={styles.contactBar}>
           <div className={styles.contactCard}>
-            <div className={styles.contactIcon} aria-hidden="true">📞</div>
+            <div className={styles.contactIcon} aria-hidden="true">💬</div>
             <div className={styles.contactInfo}>
-              <span className={styles.contactLabel}>{t("help.contact_phone_label")}</span>
-              <a href={`tel:${supportConfig.phone}`} className={styles.contactLink}>
+              <span className={styles.contactLabel}>
+                {locale === "ar" ? "الدعم من خلال واتساب" : "WhatsApp Support"}
+              </span>
+              <a href={`https://wa.me/${supportConfig.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
                 {supportConfig.phone}
               </a>
             </div>
@@ -704,7 +706,7 @@ export default function HelpCenterPage() {
                     id="ticket-ref"
                     type="text"
                     className={styles.formInput}
-                    placeholder="e.g. Transaction Hash, Duel ID, or Referral Code"
+                    placeholder={locale === "ar" ? "مثل رقم المعاملة، أو معرف المواجهة، أو كود الإحالة" : "e.g. Transaction Hash, Duel ID, or Referral Code"}
                     value={ticketRefId}
                     onChange={(e) => setTicketRefId(e.target.value)}
                     maxLength={100}
@@ -718,7 +720,7 @@ export default function HelpCenterPage() {
                   <textarea
                     id="ticket-description"
                     className={styles.formTextarea}
-                    placeholder="Please explain the details of the issue..."
+                    placeholder={locale === "ar" ? "يرجى شرح تفاصيل المشكلة..." : "Please explain the details of the issue..."}
                     value={ticketDescription}
                     onChange={(e) => setTicketDescription(e.target.value)}
                     required

@@ -4,7 +4,17 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { getTokens, get } from "./api";
 import type { ChatMessage, ChatHistoryResponse } from "./chat-types";
 
-export const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL ?? "ws://localhost:3010";
+export function getGatewayUrl(): string {
+  if (process.env.NEXT_PUBLIC_GATEWAY_URL) {
+    return process.env.NEXT_PUBLIC_GATEWAY_URL;
+  }
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/gateway`;
+  }
+  return "ws://localhost:3010";
+}
+
+export const GATEWAY_URL = getGatewayUrl();
 
 type ChannelSpec = { channel: "GLOBAL" } | { channel: "MATCH"; duelId: string } | { channel: "SPECTATOR"; duelId: string };
 
@@ -91,7 +101,7 @@ export function useChatChannel(spec: ChannelSpec) {
       const { accessToken } = getTokens();
       if (!accessToken) return;
 
-      const ws = new WebSocket(GATEWAY_URL);
+      const ws = new WebSocket(getGatewayUrl());
       socketRef.current = ws;
 
       ws.onopen = () => {

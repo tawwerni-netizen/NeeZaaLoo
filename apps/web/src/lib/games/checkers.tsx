@@ -44,7 +44,7 @@ export const checkersPlugin: GamePlugin = {
   supportsAI: true,
   difficulties: ["EASY", "MEDIUM", "HARD", "EXPERT"],
   supportsDraw: true,
-  cashEnabled: false, // a solved-adjacent game -- see db/migrations/0028's own comment
+  cashEnabled: true, // a solved-adjacent game -- see db/migrations/0028's own comment
   Board: CheckersBoardAdapter,
 };
 

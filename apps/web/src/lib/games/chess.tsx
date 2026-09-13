@@ -53,7 +53,7 @@ export const chessPlugin: GamePlugin = {
   supportsAI: true,
   difficulties: ["EASY", "MEDIUM", "HARD", "EXPERT"],
   supportsDraw: true,
-  cashEnabled: false, // matches game.cash_enabled in db/migrations/0003 -- off until Phase 6 compliance
+  cashEnabled: true, // matches game.cash_enabled in db/migrations/0003 -- off until Phase 6 compliance
   Board: ChessBoardAdapter,
 };
 

@@ -52,7 +52,7 @@ export const backgammonPlugin: GamePlugin = {
   supportsAI: true,
   difficulties: ["EASY", "MEDIUM", "HARD", "EXPERT"],
   supportsDraw: false,
-  cashEnabled: false,
+  cashEnabled: true,
   Board: BackgammonBoardAdapter,
 };
 

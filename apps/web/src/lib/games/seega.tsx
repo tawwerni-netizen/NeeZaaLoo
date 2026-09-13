@@ -49,7 +49,7 @@ export const seegaPlugin: GamePlugin = {
   // two players may reasonably agree a position is dead long before the
   // 40-move rule would end it for them.
   supportsDraw: true,
-  cashEnabled: false,
+  cashEnabled: true,
   Board: SeegaBoardAdapter,
 };
 

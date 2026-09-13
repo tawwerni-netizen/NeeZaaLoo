@@ -219,3 +219,6 @@
 @media (max-width: 560px) {
   .identityName { display: none; }
 }
+
+.websiteLink { display: flex; align-items: center; color: var(--text-2); font-size: 13px; text-decoration: none; padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border); transition: color 0.15s, border-color 0.15s; margin-right: 16px; }
+.websiteLink:hover { color: var(--text-1); border-color: var(--text-3); }

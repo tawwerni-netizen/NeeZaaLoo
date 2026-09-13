@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/Button";
-import { post } from "@/lib/api";
+import { get, post } from "@/lib/api";
 import styles from "./LiveDuelLobby.module.css";
 
 export interface OpenDuel {
@@ -25,68 +25,7 @@ export interface OpenDuel {
   isUserCreated?: boolean;
 }
 
-const INITIAL_OPEN_DUELS: OpenDuel[] = [
-  {
-    id: "duel_live_101",
-    gameId: "chess",
-    gameName: "Chess",
-    challenger: { handle: "Grandmaster77", avatarLetter: "G", elo: 1842, badge: "Grandmaster" },
-    tier: "CASH",
-    stakeUSDT: 10,
-    timeControl: "Blitz 3m",
-    createdSecondsAgo: 14,
-  },
-  {
-    id: "duel_live_102",
-    gameId: "backgammon",
-    gameName: "Backgammon",
-    challenger: { handle: "SultanTawla", avatarLetter: "S", elo: 1720, badge: "Expert" },
-    tier: "CASH",
-    stakeUSDT: 5,
-    timeControl: "Rapid 5m",
-    createdSecondsAgo: 28,
-  },
-  {
-    id: "duel_live_103",
-    gameId: "dominoes",
-    gameName: "Dominoes",
-    challenger: { handle: "CairoKnight", avatarLetter: "C", elo: 1645, badge: "Master" },
-    tier: "CASH",
-    stakeUSDT: 25,
-    timeControl: "Classic 7m",
-    createdSecondsAgo: 42,
-  },
-  {
-    id: "duel_live_104",
-    gameId: "connect-four",
-    gameName: "Connect Four",
-    challenger: { handle: "TacticalMind", avatarLetter: "T", elo: 1530, badge: "Challenger" },
-    tier: "FREE",
-    stakeUSDT: 0,
-    timeControl: "Blitz 2m",
-    createdSecondsAgo: 55,
-  },
-  {
-    id: "duel_live_105",
-    gameId: "xo",
-    gameName: "XO Pro",
-    challenger: { handle: "Matrix99", avatarLetter: "M", elo: 1490, badge: "Pro" },
-    tier: "FREE",
-    stakeUSDT: 0,
-    timeControl: "Speed 1m",
-    createdSecondsAgo: 70,
-  },
-  {
-    id: "duel_live_106",
-    gameId: "checkers",
-    gameName: "Checkers",
-    challenger: { handle: "CrownKing", avatarLetter: "K", elo: 1680, badge: "Veteran" },
-    tier: "CASH",
-    stakeUSDT: 15,
-    timeControl: "Rapid 5m",
-    createdSecondsAgo: 85,
-  },
-];
+const INITIAL_OPEN_DUELS: OpenDuel[] = [];
 
 const AVAILABLE_GAMES = [
   { id: "chess", labelEn: "Chess", labelAr: "شطرنج" },
@@ -108,6 +47,52 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   const router = useRouter();
 
   const [duels, setDuels] = useState<OpenDuel[]>(INITIAL_OPEN_DUELS);
+  const [lobbyStats, setLobbyStats] = useState({ activeMatches: 0, activePlayers: 0, openChallenges: 0 });
+  
+  useEffect(() => {
+    // Fetch real live matches to spectate in the lobby
+    get<{ duels: any[] }>("/v1/duels/live")
+      .then((res: any) => {
+        if (res && res.matches) {
+          const mapped = res.matches.map((d: any) => {
+            const gameObj = AVAILABLE_GAMES.find(g => g.id === d.gameId);
+            const gameName = isRtl ? (gameObj?.labelAr || d.gameId) : (gameObj?.labelEn || d.gameId);
+            return {
+              id: d.duelId,
+              gameId: d.gameId,
+              gameName: gameName,
+              challenger: {
+                handle: d.players?.[0]?.handle || "Player 1",
+                avatarLetter: (d.players?.[0]?.handle?.[0] || "P").toUpperCase(),
+                elo: Math.floor((d.players?.[0]?.ratingX100 || 160000) / 100),
+                badge: d.players?.[0]?.badge || "Player"
+              },
+              tier: "FREE" as const, // For now since we don't have tier in the live spectate output
+              stakeUSDT: 0,
+              timeControl: "Ongoing",
+              createdSecondsAgo: Math.floor((Date.now() - new Date(d.startedAt).getTime()) / 1000),
+              isUserCreated: false
+            };
+          });
+          setDuels(mapped);
+        }
+      })
+      .catch(console.error);
+
+    // Fetch real lobby stats (Active Players, Open Challenges, etc)
+    get<{ activeMatches: number; activePlayers: number; openChallenges: number }>("/v1/lobby/stats")
+      .then((res: any) => {
+        if (res) {
+          setLobbyStats({
+            activeMatches: res.activeMatches || 0,
+            activePlayers: res.activePlayers || 0,
+            openChallenges: res.openChallenges || 0
+          });
+        }
+      })
+      .catch(console.error);
+  }, [isRtl]);
+
   const [selectedGameFilter, setSelectedGameFilter] = useState<string>(filterGameId || "all");
   const [stakeFilter, setStakeFilter] = useState<"all" | "free" | "cash">("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -241,12 +226,12 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
       {/* Live Metrics Ticker */}
       <div className={styles.statsBar}>
         <div className={styles.statBox}>
-          <span className={styles.statVal}>{filteredDuels.length}</span>
+          <span className={styles.statVal}>{lobbyStats.openChallenges}</span>
           <span className={styles.statLbl}>{isRtl ? "تحديات مفتوحة حالياً" : "Open Duels Waiting"}</span>
         </div>
         <div className={styles.statBox}>
-          <span className={styles.statVal}>184</span>
-          <span className={styles.statLbl}>{isRtl ? "لاعبون متصلون الآن" : "Active Players Online"}</span>
+          <span className={styles.statVal}>{lobbyStats.activePlayers}</span>
+          <span className={styles.statLbl}>{isRtl ? "لاعبون نشطون الآن" : "Active Players Online"}</span>
         </div>
         <div className={styles.statBox}>
           <span className={styles.statVal}>&lt; 20ms</span>
@@ -458,19 +443,18 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
 
               {newTier === "CASH" && (
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>{isRtl ? "قيمة الرهان (USDT)" : "Stake Amount (USDT)"}</label>
-                  <div className={styles.stakeOptions}>
-                    {[2, 5, 10, 25, 50].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        className={`${styles.stakeBtn} ${newStake === amt ? styles.stakeBtnActive : ""}`}
-                        onClick={() => setNewStake(amt)}
-                      >
+                  <label className={styles.formLabel}>{isRtl ? "قيمة التحدي (USDT)" : "Stake Amount (USDT)"}</label>
+                  <select
+                    value={newStake}
+                    onChange={(e) => setNewStake(Number(e.target.value))}
+                    className={styles.formSelect}
+                  >
+                    {[2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000].map((amt) => (
+                      <option key={amt} value={amt}>
                         {amt} USDT
-                      </button>
+                      </option>
                     ))}
-                  </div>
+                  </select>
                 </div>
               )}
 

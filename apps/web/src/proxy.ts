@@ -30,7 +30,7 @@ export function proxy(request: NextRequest) {
   const isAsset = /\.[^/]+$/.test(pathname) || pathname.startsWith("/_next");
   if (isAsset) return NextResponse.next();
 
-  if (pathname.startsWith("/v1")) return NextResponse.next();
+  if (pathname.startsWith("/v1") || pathname.startsWith("/gateway")) return NextResponse.next();
 
   const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value ?? null;
   const locale = resolveLocale({
@@ -53,5 +53,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|v1|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|v1|gateway|_next/static|_next/image|favicon.ico).*)"],
 };

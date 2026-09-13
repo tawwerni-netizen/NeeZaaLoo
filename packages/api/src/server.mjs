@@ -713,10 +713,13 @@ function buildRoutes() {
         );
         if (!r.rows.length) return { body: {} };
         const email = await emailIdentity?.getByPlayerId(actor.id);
+        const roleRes = await db.query("SELECT role_code FROM role_assignment WHERE player_id = $1", [actor.id]);
+        const isAdmin = roleRes.rows.some(row => row.role_code === "SUPER_ADMIN" || row.role_code === "ADMIN");
         return { body: {
           ...r.rows[0],
           email: email?.email_display ?? null,
           emailVerified: Boolean(email?.verified_at),
+          isAdmin
         } };
       } },
 
@@ -1139,6 +1142,24 @@ function buildRoutes() {
     // actually open. Registered BEFORE /v1/duels/:id below: the router
     // matches routes in registration order and both paths have the same
     // segment count, so "live" would otherwise be swallowed as a :id.
+    { method: "GET", path: "/v1/lobby/stats", action: "duel.spectate", anonymous: true,
+      handler: async ({ db }) => {
+        const liveDuels = await db.query(
+          `SELECT count(DISTINCT d.id)::int AS matches,
+                  count(DISTINCT seat) FILTER (WHERE seat IS NOT NULL)::int AS players
+             FROM duel d, LATERAL (VALUES (d.seat_0), (d.seat_1)) AS s(seat)
+            WHERE d.status = 'LIVE'`
+        );
+        const openChallenges = await db.query(`SELECT count(*)::int AS tickets FROM matchmaking_ticket`);
+        return {
+          body: {
+            activeMatches: liveDuels.rows[0]?.matches || 0,
+            activePlayers: liveDuels.rows[0]?.players || 0,
+            openChallenges: openChallenges.rows[0]?.tickets || 0
+          }
+        };
+      } },
+
     { method: "GET", path: "/v1/duels/live", action: "duel.spectate", anonymous: true,
       handler: async ({ db, query }) => {
         const limit = Math.min(Math.max(1, Number(query.get("limit")) || 20), 50);
@@ -1869,6 +1890,29 @@ function buildRoutes() {
       } },
 
     // --- Admin ---------------------------------------------------------------
+    { method: "GET", path: "/v1/admin/players", action: "admin.user.read",
+      handler: async ({ db, query }) => {
+        const q = (query.q || "").trim();
+        const offset = parseInt(query.offset) || 0;
+        let sql = "SELECT id, handle, locale, created_at FROM player";
+        let params = [];
+        if (q) { sql += " WHERE handle ILIKE $1"; params.push(`%${q}%`); }
+        sql += " ORDER BY created_at DESC LIMIT 50 OFFSET " + (q ? "$2" : "$1");
+        if (q) params.push(offset); else params.push(offset);
+        const r = await db.query(sql, params);
+        
+        // Also get their roles
+        const ids = r.rows.map(r => r.id);
+        const roles = ids.length ? (await db.query("SELECT player_id, role_code FROM role_assignment WHERE player_id = ANY($1::text[])", [ids])).rows : [];
+        
+        const players = r.rows.map(p => ({
+          ...p,
+          roles: roles.filter(ro => ro.player_id === p.id).map(ro => ro.role_code)
+        }));
+
+        return { body: { players } };
+      } },
+
     { method: "GET", path: "/v1/admin/players/:id", action: "admin.user.read",
       subjectType: "player",
       handler: async ({ params, db }) => {

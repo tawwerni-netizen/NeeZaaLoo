@@ -58,3 +58,26 @@ export function createConsoleEmailProvider({ nodeEnv = process.env.NODE_ENV } = 
     },
   };
 }
+
+import nodemailer from "nodemailer";
+
+export function createSmtpEmailProvider(config) {
+  const transporter = nodemailer.createTransport(config);
+  return {
+    async send(message) {
+      try {
+        const info = await transporter.sendMail({
+          from: OFFICIAL_SENDER,
+          to: message.to,
+          subject: message.subject,
+          text: message.text,
+          html: message.html,
+        });
+        return { ok: true, providerMessageId: info.messageId };
+      } catch (error) {
+        console.error("[email:smtp] Delivery failed:", error);
+        return { ok: false, reason: "SMTP_DELIVERY_FAILED" };
+      }
+    }
+  };
+}

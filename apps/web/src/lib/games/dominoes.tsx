@@ -54,7 +54,7 @@ export const dominoesPlugin: GamePlugin = {
   supportsAI: true,
   difficulties: ["EASY", "MEDIUM", "HARD", "EXPERT"],
   supportsDraw: false,
-  cashEnabled: false,
+  cashEnabled: true,
   Board: DominoesBoardAdapter,
 };
 

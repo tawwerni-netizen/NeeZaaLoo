@@ -43,7 +43,7 @@ export const gomokuPlugin: GamePlugin = {
   supportsAI: true,
   difficulties: ["EASY", "MEDIUM", "HARD", "EXPERT"],
   supportsDraw: true,
-  cashEnabled: false,
+  cashEnabled: true,
   Board: GomokuBoardAdapter,
 };
 

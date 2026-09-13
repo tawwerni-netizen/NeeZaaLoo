@@ -90,9 +90,9 @@ export function Header() {
               <LocaleLink href="/wallet" className={styles.navLink}>{t("nav.wallet")}</LocaleLink>
               <LocaleLink href="/profile" className={styles.navLink}>{player.handle}</LocaleLink>
               <LocaleLink href="/help" className={styles.navLink}>{t("nav.support")}</LocaleLink>
-              <LocaleLink href="/#download" className={styles.navLink}>
-                {t("nav.download_app")}
-              </LocaleLink>
+              {player.isAdmin && (
+                <LocaleLink href="/admin" className={styles.navLink}>{t("nav.admin") || "Admin Dashboard"}</LocaleLink>
+              )}
               <Button variant="ghost" onClick={() => void logout()}>{t("nav.log_out")}</Button>
             </>
           ) : (
@@ -147,6 +147,9 @@ export function Header() {
                   <LocaleLink href="/wallet" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.wallet")}</LocaleLink>
                   <LocaleLink href="/profile" className={styles.mobileNavLink} onClick={closeMenu}>{player.handle}</LocaleLink>
                   <LocaleLink href="/help" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.support")}</LocaleLink>
+                  {player.isAdmin && (
+                    <LocaleLink href="/admin" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.admin") || "Admin Dashboard"}</LocaleLink>
+                  )}
                   <Button variant="ghost" onClick={() => { closeMenu(); void logout(); }}>{t("nav.log_out")}</Button>
                 </>
               ) : (

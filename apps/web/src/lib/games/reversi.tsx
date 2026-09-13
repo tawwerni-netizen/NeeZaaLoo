@@ -49,7 +49,7 @@ export const reversiPlugin: GamePlugin = {
   supportsAI: true,
   difficulties: ["EASY", "MEDIUM", "HARD", "EXPERT"],
   supportsDraw: false,
-  cashEnabled: false,
+  cashEnabled: true,
   Board: ReversiBoardAdapter,
 };
 
