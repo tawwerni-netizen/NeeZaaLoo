@@ -75,7 +75,7 @@ import { createReportService } from "../../../packages/chat/src/reports.mjs";
 import { createReferralService } from "../../../packages/referral/src/index.mjs";
 import { createConsentService } from "../../../packages/compliance/src/consent.mjs";
 import { createPgBus } from "../../../packages/realtime/src/bus.mjs";
-import { createEmailService, createConsoleEmailProvider, createMockEmailProvider } from "../../../packages/email/src/index.mjs";
+import { createEmailService, createConsoleEmailProvider, createMockEmailProvider, createSmtpEmailProvider } from "../../../packages/email/src/index.mjs";
 import { createApi } from "../../../packages/api/src/server.mjs";
 import {
   createLogger, createMetricsRegistry, createConsoleSink, createStructuredLogSink,
