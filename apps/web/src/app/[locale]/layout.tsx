@@ -63,6 +63,15 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={dir} className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} ${plexArabic.variable}`}>
+      <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/images/hero-showcase/showcase-chess-blitz.webp"
+          type="image/webp"
+          fetchPriority="high"
+        />
+      </head>
       <body>
         <I18nProvider locale={locale}>
           <AuthProvider>

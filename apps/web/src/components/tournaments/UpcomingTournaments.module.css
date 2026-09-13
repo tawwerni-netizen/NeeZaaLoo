@@ -20,6 +20,12 @@
   min-height: 250px;
 }
 
+.featureBannerPicture {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .featureBannerImg {
   width: 100%;
   height: 100%;

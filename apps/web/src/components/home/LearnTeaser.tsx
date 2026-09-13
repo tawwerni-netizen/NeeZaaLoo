@@ -26,11 +26,16 @@ export function LearnTeaser() {
         </div>
 
         <div className={styles.visualWrapper}>
-          <img
-            src="/images/banners/banner-certified-skill.jpg"
-            alt="Nizalo Official Game Rules"
-            className={styles.teaserImg}
-          />
+          <picture style={{ width: "100%", height: "100%", display: "block" }}>
+            <source srcSet="/images/banners/banner-certified-skill.webp" type="image/webp" />
+            <img
+              src="/images/banners/banner-certified-skill.jpg"
+              alt="Nizalo Official Game Rules"
+              className={styles.teaserImg}
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
           <div className={styles.imgOverlay} />
         </div>
       </div>

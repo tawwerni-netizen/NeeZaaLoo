@@ -205,6 +205,7 @@ export function Hero() {
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [loadedIndices, setLoadedIndices] = useState<number[]>([0]);
 
   const nextSlide = useCallback(() => {
     setCurrentIdx((prev) => (prev + 1) % SHOWCASE_SLIDES.length);
@@ -213,6 +214,18 @@ export function Hero() {
   const prevSlide = useCallback(() => {
     setCurrentIdx((prev) => (prev - 1 + SHOWCASE_SLIDES.length) % SHOWCASE_SLIDES.length);
   }, []);
+
+  // Preload upcoming slides on demand
+  useEffect(() => {
+    setLoadedIndices((prev) => {
+      const nextIdx = (currentIdx + 1) % SHOWCASE_SLIDES.length;
+      if (prev.includes(currentIdx) && prev.includes(nextIdx)) return prev;
+      const set = new Set(prev);
+      set.add(currentIdx);
+      set.add(nextIdx);
+      return Array.from(set);
+    });
+  }, [currentIdx]);
 
   // Automatic slideshow rotation every 4.2 seconds
   useEffect(() => {
@@ -286,17 +299,31 @@ export function Hero() {
             onMouseLeave={() => setIsPaused(false)}
           >
             <LocaleLink href={currentSlide.targetHref} className={styles.showcaseCard}>
-              {/* Stack of 10 slides with smooth opacity cross-fade */}
+              {/* Stack of slides with on-demand lazy mounting and WebP optimization */}
               <div className={styles.slidesStack}>
-                {SHOWCASE_SLIDES.map((slide, idx) => (
-                  <img
-                    key={slide.id}
-                    src={slide.image}
-                    alt={isRtl ? slide.titleAr : slide.titleEn}
-                    className={`${styles.bannerImg} ${idx === currentIdx ? styles.bannerImgActive : ""}`}
-                    loading={idx === 0 ? "eager" : "lazy"}
-                  />
-                ))}
+                {SHOWCASE_SLIDES.map((slide, idx) => {
+                  if (!loadedIndices.includes(idx)) return null;
+                  const webpSrc = slide.image.replace(/\.jpg$/, ".webp");
+                  const isActive = idx === currentIdx;
+                  return (
+                    <picture
+                      key={slide.id}
+                      className={`${styles.bannerPicture} ${isActive ? styles.bannerPictureActive : ""}`}
+                    >
+                      <source srcSet={webpSrc} type="image/webp" />
+                      <img
+                        src={slide.image}
+                        alt={isRtl ? slide.titleAr : slide.titleEn}
+                        className={styles.bannerImg}
+                        width={1240}
+                        height={520}
+                        loading={idx === 0 ? "eager" : "lazy"}
+                        decoding={idx === 0 ? "sync" : "async"}
+                        fetchPriority={idx === 0 ? "high" : "low"}
+                      />
+                    </picture>
+                  );
+                })}
               </div>
 
               <div className={styles.bannerOverlay} />

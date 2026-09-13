@@ -206,12 +206,11 @@
   background: #0b0e14;
 }
 
-.bannerImg {
+.bannerPicture {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   display: block;
   opacity: 0;
   transform: scale(1.03);
@@ -219,10 +218,17 @@
   pointer-events: none;
 }
 
-.bannerImgActive {
+.bannerPictureActive {
   opacity: 1;
   z-index: 1;
   transform: scale(1.02);
+}
+
+.bannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .bannerOverlay {

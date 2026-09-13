@@ -62,11 +62,16 @@ export function GameModes() {
           })}
           <div className={styles.arenaCard}>
             <div className={styles.arenaThumbnailWrapper}>
-              <img
-                src="/images/banners/arena-tournaments-card.jpg"
-                alt={dir === "rtl" ? "بطولات الأرينا والتحديات المباشرة" : "Pro Tournaments & Live Duels"}
-                className={styles.arenaThumbnailImg}
-              />
+              <picture style={{ width: "100%", height: "100%", display: "block" }}>
+                <source srcSet="/images/banners/arena-tournaments-card.webp" type="image/webp" />
+                <img
+                  src="/images/banners/arena-tournaments-card.jpg"
+                  alt={dir === "rtl" ? "بطولات الأرينا والتحديات المباشرة" : "Pro Tournaments & Live Duels"}
+                  className={styles.arenaThumbnailImg}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
               <span className={styles.arenaLiveBadgeOverlay}>
                 <span className={styles.pulseDot} />
                 LIVE ARENA

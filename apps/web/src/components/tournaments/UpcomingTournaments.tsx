@@ -155,7 +155,16 @@ export function UpcomingTournaments({ variant = "cards", heading, emptyText, vie
           const activeBanner = banners[bannerIdx] ?? banners[0]!;
           return (
             <div className={styles.featureBanner} dir={locale === "ar" ? "rtl" : "ltr"}>
-              <img src={activeBanner.img} alt={activeBanner.title} className={styles.featureBannerImg} />
+              <picture className={styles.featureBannerPicture}>
+                <source srcSet={activeBanner.img.replace(/\.jpg$/, ".webp")} type="image/webp" />
+                <img
+                  src={activeBanner.img}
+                  alt={activeBanner.title}
+                  className={styles.featureBannerImg}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
               <div className={styles.featureBannerOverlay}>
                 <div className={styles.bannerContentCard}>
                   <span className={styles.bannerTag}>{activeBanner.tag}</span>
@@ -181,7 +190,16 @@ export function UpcomingTournaments({ variant = "cards", heading, emptyText, vie
           );
         })() : bannerImage ? (
           <div className={styles.featureBanner} dir={locale === "ar" ? "rtl" : "ltr"}>
-            <img src={bannerImage} alt="Daily Blitz Tournaments" className={styles.featureBannerImg} />
+            <picture className={styles.featureBannerPicture}>
+              <source srcSet={bannerImage.replace(/\.jpg$/, ".webp")} type="image/webp" />
+              <img
+                src={bannerImage}
+                alt="Daily Blitz Tournaments"
+                className={styles.featureBannerImg}
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <div className={styles.featureBannerOverlay}>
               <div className={styles.bannerContentCard}>
                 <span className={styles.bannerTag}>⚡ Daily Blitz Stage</span>

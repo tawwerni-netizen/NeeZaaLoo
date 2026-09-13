@@ -20,6 +20,21 @@ const nextConfig = {
   // told the monorepo root explicitly, or a standalone build silently
   // drops those files.
   outputFileTracingRoot: path.join(here, "../.."),
+  compress: true,
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/images/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

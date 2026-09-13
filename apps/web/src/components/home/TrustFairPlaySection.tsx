@@ -65,11 +65,16 @@ export function TrustFairPlaySection() {
         </div>
 
         <div className={styles.bannerCard}>
-          <img
-            src={currentShield.img}
-            alt={currentShield.title}
-            className={styles.bannerImg}
-          />
+          <picture className={styles.bannerPicture}>
+            <source srcSet={currentShield.img.replace(/\.jpg$/, ".webp")} type="image/webp" />
+            <img
+              src={currentShield.img}
+              alt={currentShield.title}
+              className={styles.bannerImg}
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
           <div className={styles.bannerOverlay}>
             <div className={styles.bannerText}>
               <span className={styles.bannerBadge}>{currentShield.badge}</span>

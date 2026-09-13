@@ -456,7 +456,16 @@ export function ConversionBannerStrip() {
         </div>
 
         <div className={styles.carouselWrap}>
-          <img src={active.img} alt={active.title} className={styles.bannerImg} />
+          <picture className={styles.bannerPicture}>
+            <source srcSet={active.img.replace(/\.jpg$/, ".webp")} type="image/webp" />
+            <img
+              src={active.img}
+              alt={active.title}
+              className={styles.bannerImg}
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
           <div className={styles.bannerOverlay}>
             <div className={styles.bannerCopyCard}>
               <span className={styles.tagPill}>{active.tag}</span>
