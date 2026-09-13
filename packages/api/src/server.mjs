@@ -724,8 +724,9 @@ function buildRoutes() {
         );
         if (!r.rows.length) return { body: {} };
         const email = await emailIdentity?.getByPlayerId(actor.id);
-        const roleRes = await db.query("SELECT role_code FROM role_assignment WHERE player_id = $1", [actor.id]);
-        const isAdmin = roleRes.rows.some(row => row.role_code === "SUPER_ADMIN" || row.role_code === "ADMIN");
+        const rolesRes = await db.query("SELECT admin_roles($1) AS roles", [actor.id]);
+        const roles = rolesRes.rows[0]?.roles ?? [];
+        const isAdmin = roles.includes("SUPER_ADMIN") || roles.includes("ADMIN");
         return { body: {
           ...r.rows[0],
           email: email?.email_display ?? null,
@@ -1914,7 +1915,7 @@ function buildRoutes() {
         
         // Also get their roles
         const ids = r.rows.map(r => r.id);
-        const roles = ids.length ? (await db.query("SELECT player_id, role_code FROM role_assignment WHERE player_id = ANY($1::text[])", [ids])).rows : [];
+        const roles = ids.length ? (await db.query("SELECT admin_id AS player_id, role::text AS role_code FROM admin_role_grant WHERE admin_id = ANY($1::text[]) AND revoked_at IS NULL", [ids])).rows : [];
         
         const players = r.rows.map(p => ({
           ...p,
