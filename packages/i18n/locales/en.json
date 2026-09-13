@@ -213,6 +213,7 @@
       "submitting": "Creating account…",
       "switch_prompt": "Already have an account?",
       "switch_cta": "Log in",
+      "email_label": "Email Address",
       "nickname_label": "Nickname"
     },
     "login": {
@@ -223,7 +224,8 @@
       "submitting": "Logging in…",
       "switch_prompt": "New here?",
       "switch_cta": "Create an account",
-      "nickname_label": "Nickname",
+      "nickname_label": "Email or Nickname",
+      "identifier_label": "Email Address",
       "google_cta": "Continue with Google",
       "email_code_cta": "Email me a 6-character code",
       "forgot_password_cta": "Forgot password?",
@@ -232,7 +234,8 @@
     "errors": {
       "weak_password": "That password is too easy to guess. Use at least 10 characters, avoiding common words.",
       "handle_taken": "That handle is already taken. Try another.",
-      "bad_credentials": "Incorrect handle or password.",
+      "email_taken": "An account already exists with this email.",
+      "bad_credentials": "Incorrect email or password.",
       "locked_out": "Too many attempts. Try again in a few minutes.",
       "totp_required": "Enter your authenticator code to continue.",
       "totp_invalid": "That code didn’t work. Check your authenticator and try again.",

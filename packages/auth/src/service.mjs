@@ -65,7 +65,7 @@ export function createAuthService(db, {
 
   const svc = {
     /** Create an account. The password is never stored, logged, or echoed. */
-    async register({ playerId, handle, password, referralCode = null, termsAccepted = true, locale = "en", policyVersion = "1.0.0" }, ctx = {}) {
+    async register({ playerId, handle, email = null, password, referralCode = null, termsAccepted = true, locale = "en", policyVersion = "1.0.0" }, ctx = {}) {
       if (termsAccepted !== true) {
         return { ok: false, reason: AuthError.TERMS_ACCEPTANCE_REQUIRED };
       }
@@ -76,15 +76,29 @@ export function createAuthService(db, {
       const passwordHash = await argonHash(password, argon);
 
       return db.transaction(async (tx) => {
-        const exists = await tx.query("SELECT 1 FROM player WHERE handle = $1", [handle]);
+        const exists = await tx.query("SELECT 1 FROM player WHERE LOWER(handle) = LOWER($1)", [handle]);
         if (exists.rows.length) return { ok: false, reason: AuthError.HANDLE_TAKEN };
 
-        await tx.query("INSERT INTO player (id, handle) VALUES ($1,$2)", [playerId, handle]);
+        if (email) {
+          const normEmail = String(email).trim().toLowerCase();
+          const emailCheck = await tx.query("SELECT 1 FROM email_identity WHERE email = $1", [normEmail]);
+          if (emailCheck.rows.length) return { ok: false, reason: "EMAIL_TAKEN" };
+        }
+
+        await tx.query("INSERT INTO player (id, handle, locale) VALUES ($1,$2,$3)", [playerId, handle, locale || "en"]);
         await tx.query(
           "INSERT INTO credential (player_id, password_hash) VALUES ($1,$2)",
           [playerId, passwordHash]
         );
         await tx.query("SELECT ledger_open_user_wallet($1)", [playerId]);
+
+        if (email) {
+          const normEmail = String(email).trim().toLowerCase();
+          await tx.query(
+            "INSERT INTO email_identity (id, player_id, email, email_display) VALUES ($1,$2,$3,$4)",
+            [`eid_${randomUUID()}`, playerId, normEmail, String(email).trim()]
+          );
+        }
 
         const consentId = `lcn_${randomUUID()}`;
         const consentTime = new Date(now()).toISOString();
@@ -112,8 +126,7 @@ export function createAuthService(db, {
           if (rc.rows.length && rc.rows[0].is_active && rc.rows[0].player_id !== playerId) {
             await tx.query(
               `INSERT INTO referral_attribution (referred_player_id, referrer_player_id, referral_code)
-               VALUES ($1, $2, $3)
-               ON CONFLICT (referred_player_id) DO NOTHING`,
+               VALUES ($1, $2, $3)`,
               [playerId, rc.rows[0].player_id, cleanCode]
             );
           }
@@ -145,9 +158,12 @@ export function createAuthService(db, {
 
       const row = await db.query(
         `SELECT p.id, c.password_hash
-           FROM player p JOIN credential c ON c.player_id = p.id
-          WHERE p.handle = $1`,
-        [identifier]
+           FROM player p
+           JOIN credential c ON c.player_id = p.id
+           LEFT JOIN email_identity e ON e.player_id = p.id
+          WHERE LOWER(p.handle) = LOWER($1) OR LOWER(e.email) = LOWER($1)
+          LIMIT 1`,
+        [String(identifier ?? "").trim()]
       );
 
       // Always do the Argon2 work, even for an unknown handle, so response time

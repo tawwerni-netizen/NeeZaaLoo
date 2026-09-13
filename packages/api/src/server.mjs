@@ -403,7 +403,7 @@ function buildRoutes() {
     // --- Auth ----------------------------------------------------------------
     { method: "POST", path: "/v1/auth/register", action: "player.register", anonymous: true,
       handler: async ({ body, auth, ip, userAgent }) => {
-        const { handle, password, referralCode, termsAccepted, locale, policyVersion } = body ?? {};
+        const { handle, email, password, referralCode, termsAccepted, locale, policyVersion } = body ?? {};
         if (typeof handle !== "string" || typeof password !== "string") {
           return { status: 400, body: errorBody("BAD_REQUEST") };
         }
@@ -413,6 +413,7 @@ function buildRoutes() {
         const r = await auth.register({
           playerId: handle,
           handle,
+          email: typeof email === "string" && email.trim() ? email.trim() : null,
           password,
           referralCode: referralCode ? String(referralCode) : null,
           termsAccepted: true,

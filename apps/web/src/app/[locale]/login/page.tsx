@@ -62,11 +62,15 @@ export default function LoginPage() {
           {error && <p className={styles.error} role="alert">{error}</p>}
 
           <div className={styles.field}>
-            <label htmlFor="identifier">{t("auth.login.nickname_label")}</label>
+            <label htmlFor="identifier">
+              {locale === "ar" ? "البريد الإلكتروني" : (t("auth.login.identifier_label") || "Email Address")}
+            </label>
             <input
               id="identifier"
               name="identifier"
-              autoComplete="username"
+              type="text"
+              autoComplete="email username"
+              placeholder="name@example.com"
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}

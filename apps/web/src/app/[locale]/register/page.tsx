@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const { t, locale } = useI18n();
   const router = useRouter();
+  const [email, setEmail] = useState("");
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -30,7 +31,7 @@ export default function RegisterPage() {
     }
 
     setSubmitting(true);
-    const result = await register(handle, password, undefined, true);
+    const result = await register(handle, password, undefined, true, email);
     setSubmitting(false);
     if (result.ok) {
       router.push(`/${locale}/home`);
@@ -48,6 +49,20 @@ export default function RegisterPage() {
           <p className={styles.subtitle}>{t("auth.register.subtitle")}</p>
 
           {error && <p className={styles.error} role="alert">{error}</p>}
+
+          <div className={styles.field}>
+            <label htmlFor="email">{locale === "ar" ? "البريد الإلكتروني" : (t("auth.register.email_label") || "Email Address")}</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
 
           <div className={styles.field}>
             <label htmlFor="handle">{t("auth.register.nickname_label")}</label>
