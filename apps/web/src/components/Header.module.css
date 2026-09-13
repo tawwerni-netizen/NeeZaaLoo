@@ -33,23 +33,47 @@
 }
 
 .navLink, .navActive {
+  position: relative;
   font-size: var(--nz-text-sm);
   font-weight: 600;
   letter-spacing: var(--nz-tracking-caps);
   text-transform: uppercase;
   text-decoration: none;
   color: var(--nz-text-2);
-  padding: var(--nz-space-2) 0;
-  transition: color var(--nz-dur-fast) var(--nz-ease-out);
+  padding: var(--nz-space-2) 2px;
+  transition: color 0.2s ease, transform 0.2s ease;
   white-space: nowrap;
+}
+
+.navLink::after, .navActive::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #ff5a2b, #f59e0b);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .navLink:hover {
   color: var(--nz-text);
+  transform: translateY(-1px);
+}
+
+.navLink:hover::after {
+  transform: scaleX(0.7);
 }
 
 .navActive {
   color: var(--nz-accent);
+}
+
+.navActive::after {
+  transform: scaleX(1);
 }
 
 .navSoon {

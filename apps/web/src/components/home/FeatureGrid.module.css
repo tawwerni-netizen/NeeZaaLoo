@@ -20,20 +20,24 @@
   background: var(--nz-surface-1);
   text-decoration: none;
   color: inherit;
-  transition: border-color var(--nz-dur-fast) var(--nz-ease-out),
-              transform var(--nz-dur-fast) var(--nz-ease-out),
-              box-shadow var(--nz-dur-fast) var(--nz-ease-out);
+  transition: border-color 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
 }
+
 .card:hover {
   border-color: var(--nz-accent-line);
-  transform: translateY(-2px);
-  box-shadow: var(--nz-shadow-2);
+  transform: translateY(-5px) scale(1.015);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 90, 43, 0.12);
 }
 
 .glyph {
   font-size: 22px;
   line-height: 1;
   margin-block-end: var(--nz-space-1);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card:hover .glyph {
+  transform: scale(1.2) rotate(-4deg);
 }
 
 .title {

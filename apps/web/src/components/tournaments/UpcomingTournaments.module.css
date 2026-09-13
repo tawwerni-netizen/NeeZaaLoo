@@ -213,11 +213,13 @@
   padding: var(--nz-space-5);
   text-decoration: none;
   color: inherit;
-  transition: border-color var(--nz-dur-fast) var(--nz-ease-out);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .card:hover {
-  border-color: var(--nz-line-strong);
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 18px rgba(245, 158, 11, 0.12);
 }
 
 .cardTop {

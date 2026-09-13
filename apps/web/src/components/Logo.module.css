@@ -3,46 +3,25 @@
   align-items: center;
   line-height: 0;
   max-width: 100%;
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
-.logoImg,
-.logo img {
+.logo:hover {
+  transform: scale(1.03);
+  filter: drop-shadow(0 0 12px rgba(255, 90, 43, 0.25));
+}
+
+.logoImg {
   height: 28px;
   width: auto;
   max-width: 100%;
   display: block;
   object-fit: contain;
-}
-
-.logoDark {
-  display: block;
-}
-
-.logoLight {
-  display: none;
-}
-
-:global([data-theme="light"]) .logoDark {
-  display: none !important;
-}
-
-:global([data-theme="light"]) .logoLight {
-  display: block !important;
-}
-
-@media (prefers-color-scheme: light) {
-  :global(:root:not([data-theme="dark"])) .logoDark {
-    display: none;
-  }
-  :global(:root:not([data-theme="dark"])) .logoLight {
-    display: block;
-  }
+  transition: opacity 0.15s ease;
 }
 
 @media (max-width: 640px) {
-  .logoImg,
-  .logo img {
+  .logoImg {
     height: 24px;
   }
 }
-
