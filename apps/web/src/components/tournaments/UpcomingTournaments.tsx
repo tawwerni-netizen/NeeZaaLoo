@@ -154,34 +154,40 @@ export function UpcomingTournaments({ variant = "cards", heading, emptyText, vie
         {banners && banners.length > 0 ? (() => {
           const activeBanner = banners[bannerIdx] ?? banners[0]!;
           return (
-            <div className={styles.featureBanner}>
+            <div className={styles.featureBanner} dir={locale === "ar" ? "rtl" : "ltr"}>
               <img src={activeBanner.img} alt={activeBanner.title} className={styles.featureBannerImg} />
               <div className={styles.featureBannerOverlay}>
-                <span className={styles.bannerTag}>{activeBanner.tag}</span>
-                <h3 className={styles.bannerTitle}>{activeBanner.title}</h3>
-                <p className={styles.bannerDesc}>{activeBanner.desc}</p>
-                {banners.length > 1 && (
-                  <div className={styles.bannerDots}>
-                    {banners.map((_, i) => (
-                      <button
-                        key={i}
-                        aria-label={`Switch tournament banner ${i + 1}`}
-                        className={`${styles.bannerDot} ${bannerIdx === i ? styles.bannerDotActive : ""}`}
-                        onClick={() => setBannerIdx(i)}
-                      />
-                    ))}
-                  </div>
-                )}
+                <div className={styles.bannerContentCard}>
+                  <span className={styles.bannerTag}>{activeBanner.tag}</span>
+                  <h3 className={styles.bannerTitle}>{activeBanner.title}</h3>
+                  <p className={styles.bannerDesc}>
+                    <bdi>{activeBanner.desc}</bdi>
+                  </p>
+                  {banners.length > 1 && (
+                    <div className={styles.bannerDots}>
+                      {banners.map((_, i) => (
+                        <button
+                          key={i}
+                          aria-label={`Switch tournament banner ${i + 1}`}
+                          className={`${styles.bannerDot} ${bannerIdx === i ? styles.bannerDotActive : ""}`}
+                          onClick={() => setBannerIdx(i)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );
         })() : bannerImage ? (
-          <div className={styles.featureBanner}>
+          <div className={styles.featureBanner} dir={locale === "ar" ? "rtl" : "ltr"}>
             <img src={bannerImage} alt="Daily Blitz Tournaments" className={styles.featureBannerImg} />
             <div className={styles.featureBannerOverlay}>
-              <span className={styles.bannerTag}>⚡ Daily Blitz Stage</span>
-              <h3 className={styles.bannerTitle}>Real-Time Competitive Brackets</h3>
-              <p className={styles.bannerDesc}>Compete against verified players in high-stakes knockout brackets with live streaming.</p>
+              <div className={styles.bannerContentCard}>
+                <span className={styles.bannerTag}>⚡ Daily Blitz Stage</span>
+                <h3 className={styles.bannerTitle}>Real-Time Competitive Brackets</h3>
+                <p className={styles.bannerDesc}>Compete against verified players in high-stakes knockout brackets with live streaming.</p>
+              </div>
             </div>
           </div>
         ) : null}

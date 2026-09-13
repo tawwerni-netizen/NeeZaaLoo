@@ -7,7 +7,9 @@ export function Logo({ variant = "wordmark", className }: { variant?: "wordmark"
   return (
     <span className={`${styles.logo} ${className ?? ""}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={dark} alt="Nizalo" className={styles.logoImg} />
+      <img src={dark} alt="Nizalo" className={`${styles.logoImg} ${styles.logoDark}`} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={light} alt="Nizalo" className={`${styles.logoImg} ${styles.logoLight}`} />
     </span>
   );
 }

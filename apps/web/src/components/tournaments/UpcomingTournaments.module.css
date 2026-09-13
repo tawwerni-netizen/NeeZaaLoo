@@ -15,13 +15,16 @@
   border-radius: var(--nz-radius-lg);
   overflow: hidden;
   margin-bottom: var(--nz-space-6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+  min-height: 250px;
 }
 
 .featureBannerImg {
   width: 100%;
-  max-height: 240px;
+  height: 100%;
+  min-height: 250px;
+  max-height: 300px;
   object-fit: cover;
   display: block;
 }
@@ -29,11 +32,27 @@
 .featureBannerOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(14, 16, 21, 0.95) 0%, rgba(14, 16, 21, 0.6) 50%, rgba(14, 16, 21, 0.2) 100%);
+  background: linear-gradient(90deg, rgba(14, 16, 21, 0.95) 0%, rgba(14, 16, 21, 0.72) 45%, rgba(14, 16, 21, 0.2) 100%);
+  display: flex;
+  align-items: center;
+  padding: var(--nz-space-6) var(--nz-space-8);
+}
+
+[dir="rtl"] .featureBannerOverlay {
+  background: linear-gradient(270deg, rgba(14, 16, 21, 0.95) 0%, rgba(14, 16, 21, 0.72) 45%, rgba(14, 16, 21, 0.2) 100%);
+}
+
+.bannerContentCard {
+  max-width: 560px;
+  background: rgba(14, 16, 21, 0.88);
+  backdrop-filter: blur(16px);
+  padding: 20px 24px;
+  border-radius: var(--nz-radius-lg);
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: var(--nz-space-6) var(--nz-space-8);
+  gap: 8px;
 }
 
 .bannerTag {
@@ -47,30 +66,31 @@
   text-transform: uppercase;
   color: #F59E0B;
   background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid rgba(245, 158, 11, 0.35);
   padding: 4px 12px;
   border-radius: var(--nz-radius-pill);
-  margin-bottom: 8px;
+  margin-bottom: 2px;
 }
 
 .bannerTitle {
-  font-size: var(--nz-text-xl);
+  font-size: clamp(1.2rem, 2.4vw, 1.55rem);
   font-weight: 800;
   color: #FFFFFF;
-  margin: 0 0 4px;
+  margin: 0;
+  line-height: 1.25;
 }
 
 .bannerDesc {
   font-size: var(--nz-text-sm);
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.85);
   margin: 0;
-  max-width: 50ch;
+  line-height: 1.55;
 }
 
 .bannerDots {
   display: flex;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 8px;
 }
 
 .bannerDot {
@@ -89,6 +109,16 @@
   border-radius: 10px;
   background: #F59E0B;
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+
+@media (max-width: 640px) {
+  .featureBannerOverlay {
+    padding: var(--nz-space-4);
+  }
+  .bannerContentCard {
+    max-width: 100%;
+    padding: 16px;
+  }
 }
 
 .heading {

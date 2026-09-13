@@ -43,12 +43,26 @@
 .bannerOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(14, 16, 21, 0.95) 0%, rgba(14, 16, 21, 0.6) 55%, rgba(14, 16, 21, 0.15) 100%);
+  background: linear-gradient(90deg, rgba(14, 16, 21, 0.96) 0%, rgba(14, 16, 21, 0.72) 48%, rgba(14, 16, 21, 0.15) 100%);
+  display: flex;
+  align-items: center;
+  padding: var(--nz-space-6) var(--nz-space-8);
+}
+
+[dir="rtl"] .bannerOverlay {
+  background: linear-gradient(270deg, rgba(14, 16, 21, 0.96) 0%, rgba(14, 16, 21, 0.72) 48%, rgba(14, 16, 21, 0.15) 100%);
+}
+
+.bannerCopyCard {
+  max-width: 580px;
+  background: rgba(14, 16, 21, 0.88);
+  backdrop-filter: blur(16px);
+  padding: 24px 28px;
+  border-radius: var(--nz-radius-lg);
+  border: 1px solid rgba(255, 98, 50, 0.32);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: var(--nz-space-8) var(--nz-space-10);
-  max-width: 680px;
 }
 
 .tagPill {
@@ -65,11 +79,11 @@
   border: 1px solid rgba(255, 98, 50, 0.35);
   padding: 4px 12px;
   border-radius: var(--nz-radius-pill);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .bannerTitle {
-  font-size: var(--nz-text-2xl);
+  font-size: clamp(1.35rem, 2.5vw, 1.85rem);
   font-weight: 800;
   color: #FFFFFF;
   line-height: var(--nz-leading-tight);
@@ -77,10 +91,10 @@
 }
 
 .bannerDesc {
-  font-size: var(--nz-text-md);
-  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--nz-text-sm);
+  color: rgba(255, 255, 255, 0.82);
   line-height: var(--nz-leading-snug);
-  margin: 0 0 20px;
+  margin: 0 0 18px;
 }
 
 .ctaBtn {
@@ -140,11 +154,15 @@
 
 @media (max-width: 860px) {
   .bannerImg {
-    max-height: 280px;
+    min-height: 260px;
+    max-height: 320px;
   }
   .bannerOverlay {
-    padding: var(--nz-space-5);
-    max-width: none;
+    padding: var(--nz-space-4);
+  }
+  .bannerCopyCard {
+    max-width: 100%;
+    padding: 16px 20px;
   }
   .bannerTitle {
     font-size: var(--nz-text-lg);
@@ -152,5 +170,15 @@
   .bannerDesc {
     font-size: var(--nz-text-sm);
     margin-bottom: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .bannerCopyCard {
+    padding: 14px 16px;
+  }
+  .tagPill {
+    font-size: 10px;
+    padding: 3px 10px;
   }
 }

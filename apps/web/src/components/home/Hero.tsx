@@ -226,26 +226,32 @@ export function Hero() {
   const currentSlide = SHOWCASE_SLIDES[currentIdx] ?? SHOWCASE_SLIDES[0]!;
 
   return (
-    <section className={styles.hero}>
-      <div className={`nz-container ${styles.inner}`}>
-        <div className={styles.copy}>
-          <motion.p {...stage(0, reduceMotion)} className={styles.eyebrow}>
-            {t("home.hero.eyebrow")}
-          </motion.p>
+    <section className={styles.hero} dir={isRtl ? "rtl" : "ltr"}>
+      <div className={`nz-container ${styles.container}`}>
+        {/* Top Hero Statement / Copy Zone */}
+        <div className={styles.headerZone}>
+          <motion.div {...stage(0, reduceMotion)} className={styles.eyebrowWrap}>
+            <span className={styles.eyebrowBadge}>
+              <span className={styles.eyebrowBeacon} aria-hidden="true" />
+              <span>{t("home.hero.eyebrow")}</span>
+            </span>
+          </motion.div>
+
           <motion.h1 {...stage(1, reduceMotion)} className={styles.headline}>
-            {t("home.hero.headline_line1")}
-            <br />
-            {t("home.hero.headline_line2")}
+            <span>{t("home.hero.headline_line1")}</span>{" "}
+            <span className={styles.headlineAccent}>{t("home.hero.headline_line2")}</span>
           </motion.h1>
+
           <motion.p {...stage(2, reduceMotion)} className={styles.subhead}>
             {t("home.hero.subhead")}
           </motion.p>
+
           <motion.div {...stage(3, reduceMotion)} className={styles.actions}>
             <LocaleLink href="/register">
-              <Button variant="primary">{t("home.hero.cta_primary")}</Button>
+              <Button variant="primary" className={styles.primaryBtn}>{t("home.hero.cta_primary")}</Button>
             </LocaleLink>
             <LocaleLink href="/watch">
-              <Button variant="ghost">{t("home.hero.cta_secondary")}</Button>
+              <Button variant="ghost" className={styles.secondaryBtn}>{t("home.hero.cta_secondary")}</Button>
             </LocaleLink>
           </motion.div>
 
@@ -258,7 +264,7 @@ export function Hero() {
                   return (
                     <LocaleLink key={game.id} href={`/play/${game.id}`} className={styles.featuredChip}>
                       <span className={styles.featuredGlyph} aria-hidden="true">{name.slice(0, 1)}</span>
-                      {name}
+                      <span>{name}</span>
                     </LocaleLink>
                   );
                 })}
@@ -267,10 +273,10 @@ export function Hero() {
           )}
         </div>
 
-        {/* Dynamic 10-Slide Showcase Carousel */}
+        {/* Large Grand Full-Width Showcase Slider */}
         <motion.div
-          {...stage(2, reduceMotion)}
-          className={styles.visual}
+          {...stage(3, reduceMotion)}
+          className={styles.visualFullWidth}
         >
           <div className={styles.showcaseGlowBackdrop} aria-hidden="true" />
           
@@ -345,7 +351,7 @@ export function Hero() {
               }}
               aria-label={isRtl ? "الشريحة السابقة" : "Previous slide"}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
@@ -361,7 +367,7 @@ export function Hero() {
               }}
               aria-label={isRtl ? "الشريحة التالية" : "Next slide"}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
