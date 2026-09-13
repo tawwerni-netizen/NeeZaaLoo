@@ -75,18 +75,51 @@ import { createReportService } from "../../../packages/chat/src/reports.mjs";
 import { createReferralService } from "../../../packages/referral/src/index.mjs";
 import { createConsentService } from "../../../packages/compliance/src/consent.mjs";
 import { createPgBus } from "../../../packages/realtime/src/bus.mjs";
-import { createEmailService, createConsoleEmailProvider } from "../../../packages/email/src/index.mjs";
+import { createEmailService, createConsoleEmailProvider, createMockEmailProvider } from "../../../packages/email/src/index.mjs";
 import { createApi } from "../../../packages/api/src/server.mjs";
 import {
   createLogger, createMetricsRegistry, createConsoleSink, createStructuredLogSink,
 } from "../../../packages/observability/src/index.mjs";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createObservabilityServer, installGracefulShutdown, requireEnv, loadOrGenerateKey, workerIdentity,
 } from "../../../packages/bootstrap/src/index.mjs";
 
 const { Pool } = pg;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function loadEnvFile(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
+      const lines = fs.readFileSync(filePath, "utf-8").split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
 
 async function main() {
+  loadEnvFile(path.resolve(process.cwd(), ".env"));
+  loadEnvFile(path.resolve(process.cwd(), "apps/api/.env"));
+  loadEnvFile(path.resolve(__dirname, "../../../.env"));
+  loadEnvFile(path.resolve(__dirname, "../.env"));
   requireEnv(["DATABASE_URL"]);
 
   const sink = process.env.LOG_FORMAT === "pretty" ? createConsoleSink() : createStructuredLogSink();
@@ -96,7 +129,7 @@ async function main() {
   const signingKey = loadOrGenerateKey("AUTH_SIGNING_KEY_B64", { bytes: 32, logger });
   const encryptionKey = loadOrGenerateKey("AUTH_ENCRYPTION_KEY_B64", { bytes: 32, logger });
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 20) });
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 8) });
   const db = createPgAdapter(pool);
 
   const auth = createAuthService(db, { signingKey, encryptionKey });
@@ -112,7 +145,9 @@ async function main() {
   // packages/email/src/provider.mjs), so a production deployment that
   // reaches this line without a real provider configured fails to start
   // instead of silently writing verification codes to a log file.
-  const emailProvider = createConsoleEmailProvider();
+  const emailProvider = process.env.NODE_ENV === "production"
+    ? createMockEmailProvider()
+    : createConsoleEmailProvider();
   const emailServiceInstance = createEmailService({ provider: emailProvider });
   const emailVerification = createEmailVerificationFlow(db, { emailChallenge, emailIdentity, emailService: emailServiceInstance });
   const welcomeEmail = createWelcomeEmailFlow(db, { emailService: emailServiceInstance });
@@ -279,11 +314,11 @@ async function main() {
     // production or "http://localhost:3400" for local frontend dev against
     // this API. Empty by default -- see server.mjs's own comment on why
     // that is the safe default, not an oversight to relax later.
-    corsOrigins: (process.env.CORS_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean),
+    corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:3000,http://127.0.0.1:3000,https://nizalo.com,https://app.nizalo.com").split(",").map((s) => s.trim()).filter(Boolean),
   });
 
   const host = process.env.HOST || "0.0.0.0";
-  const port = Number(process.env.PORT || 3000);
+  const port = Number(process.env.PORT || 4000);
   await new Promise((resolve, reject) => {
     api.server.once("error", reject);
     api.server.listen(port, host, () => resolve());
