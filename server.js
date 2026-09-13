@@ -1,28 +1,17 @@
 ﻿/**
- * Hostinger entry file -- node server.js (CommonJS, root-level).
+ * Hostinger Production Entrypoint -- node server.js (CommonJS, root-level).
  *
- * WHY THIS APPROACH: The Next.js programmatic API (require("next")) does NOT
- * work with `output: "standalone"` -- Next.js itself warns and pages return
- * 403 because they live in the standalone bundle, not where the API looks.
- *
- * Instead this process:
- *   1. Spawns the pre-built Next.js standalone server as its own child
- *      process on an internal port (NEXT_PORT, default 3002).
- *   2. Spawns the REST API  (apps/api)     on API_PORT  (default 4000).
- *   3. Spawns the Gateway   (apps/gateway) on WS_PORT   (default 3010).
- *   4. Spawns the Worker    (apps/worker).
- *   5. Listens on PORT (3000) and proxies:
- *        /v1/*    -> API (4000)
- *        /gateway -> Gateway WebSocket (3010)
- *        *        -> Next.js (3002)
- *
- * Root package.json MUST stay "type":"commonjs" -- Hostinger pre-loads its
- * own CJS scripts before this file and require()s them from this directory.
+ * Architecture:
+ *   - Next.js Standalone (apps/web)  -> 127.0.0.1:3002
+ *   - REST API (apps/api)            -> 127.0.0.1:4000
+ *   - Realtime Gateway (apps/gateway)-> 127.0.0.1:3010
+ *   - Background Worker (apps/worker)-> 127.0.0.1:4001
+ *   - Master Reverse Proxy           -> 0.0.0.0:PORT (default 3000)
  */
 const { createServer } = require("node:http");
-const http   = require("node:http");
-const { fork, spawn } = require("node:child_process");
-const path   = require("node:path");
+const http = require("node:http");
+const { spawn } = require("node:child_process");
+const path = require("node:path");
 
 const here = __dirname;
 process.env.NODE_ENV = "production";
@@ -39,8 +28,7 @@ const gwScript     = path.join(here, "apps", "gateway", "src", "index.mjs");
 const workerScript = path.join(here, "apps", "worker", "src", "index.mjs");
 
 function getEnv(childPort) {
-  return {
-    ...process.env,
+  return Object.assign({}, process.env, {
     NODE_ENV:               process.env.API_NODE_ENV || "development",
     PORT:                   String(childPort),
     WS_PORT:                String(gwPort),
@@ -59,69 +47,58 @@ function getEnv(childPort) {
       path.join(here, "apps", "web", "public", "avatars"),
     AVATAR_PUBLIC_BASE_URL:
       process.env.AVATAR_PUBLIC_BASE_URL || "/avatars",
-  };
+  });
 }
 
 // ---------------------------------------------------------------------------
-// Child process launchers with auto-restart
+// Process Management
 // ---------------------------------------------------------------------------
-let apiChild = null, gwChild = null, workerChild = null, nextChild = null;
+const children = {};
 
-function startFork(name, script, childPort) {
-  function doFork() {
+function startProcess(name, script, childPort, customCwd) {
+  function launch() {
+    console.log(`[${name}] Starting on port ${childPort}...`);
     try {
-      const child = fork(script, [], {
-        cwd: here,
-        env: getEnv(childPort),
+      const childEnv = name === "Next.js"
+        ? Object.assign({}, process.env, {
+            PORT: String(childPort),
+            HOSTNAME: "127.0.0.1",
+            NODE_ENV: "production",
+          })
+        : getEnv(childPort);
+
+      const child = spawn(process.execPath, [script], {
+        cwd: customCwd || here,
+        env: childEnv,
         stdio: "inherit",
       });
-      child.on("exit", (code, signal) => {
-        console.warn("[" + name + "] exited (code=" + code + ", signal=" + signal + "). Restarting in 2s...");
-        setTimeout(doFork, 2000);
+
+      child.on("error", (err) => {
+        console.error(`[${name}] Spawn error:`, err.message);
       });
-      if (name === "API")     apiChild    = child;
-      if (name === "Gateway") gwChild     = child;
-      if (name === "Worker")  workerChild = child;
+
+      child.on("exit", (code, signal) => {
+        console.warn(`[${name}] Exited (code=${code}, signal=${signal}). Restarting in 2s...`);
+        setTimeout(launch, 2000);
+      });
+
+      children[name] = child;
     } catch (err) {
-      console.error("[" + name + "] Failed to launch:", err.message);
+      console.error(`[${name}] Launch failed:`, err.message);
     }
   }
-  doFork();
+  launch();
 }
 
-function startNext(port) {
-  function doSpawn() {
-    try {
-      const child = spawn(process.execPath, [nextScript], {
-        cwd: path.dirname(nextScript),
-        env: {
-          ...process.env,
-          PORT:     String(port),
-          HOSTNAME: "127.0.0.1",
-          NODE_ENV: "production",
-        },
-        stdio: "inherit",
-      });
-      child.on("exit", (code, signal) => {
-        console.warn("[Next.js] exited (code=" + code + ", signal=" + signal + "). Restarting in 2s...");
-        setTimeout(doSpawn, 2000);
-      });
-      nextChild = child;
-    } catch (err) {
-      console.error("[Next.js] Failed to launch:", err.message);
-    }
-  }
-  doSpawn();
-}
-
-startNext(nextPort);
-startFork("API",     apiScript,    apiPort);
-startFork("Gateway", gwScript,     gwPort);
-startFork("Worker",  workerScript, 4001);
+startProcess("Next.js", nextScript, nextPort, path.dirname(nextScript));
+startProcess("API",     apiScript,    apiPort);
+startProcess("Gateway", gwScript,     gwPort);
+startProcess("Worker",  workerScript, 4001);
 
 function shutdown() {
-  [apiChild, gwChild, workerChild, nextChild].forEach(function(c) {
-    try { if (c) c.kill(); } catch (e) {}
+  console.log("Shutting down child processes...");
+  Object.keys(children).forEach((k) => {
+    try { if (children[k]) children[k].kill(); } catch (e) {}
   });
   process.exit(0);
 }
@@ -129,47 +106,86 @@ process.on("SIGINT",  shutdown);
 process.on("SIGTERM", shutdown);
 
 // ---------------------------------------------------------------------------
-// HTTP proxy
+// Reverse Proxy
 // ---------------------------------------------------------------------------
+function cleanHopByHopHeaders(headers) {
+  const h = Object.assign({}, headers);
+  delete h["connection"];
+  delete h["keep-alive"];
+  delete h["transfer-encoding"];
+  delete h["te"];
+  delete h["upgrade"];
+  delete h["proxy-authorization"];
+  delete h["proxy-authenticate"];
+  return h;
+}
+
 function proxyHttp(req, res, targetPort) {
+  const pHeaders = Object.assign({}, req.headers);
+  const originalHost = req.headers["host"] || "nizalo.com";
+  pHeaders["host"] = originalHost;
+  pHeaders["x-forwarded-host"] = originalHost;
+  pHeaders["x-forwarded-proto"] = req.headers["x-forwarded-proto"] || "https";
+  if (req.socket.remoteAddress) {
+    pHeaders["x-forwarded-for"] = req.headers["x-forwarded-for"]
+      ? `${req.headers["x-forwarded-for"]}, ${req.socket.remoteAddress}`
+      : req.socket.remoteAddress;
+  }
+
   const proxyReq = http.request(
     {
       hostname: "127.0.0.1",
       port:     targetPort,
       path:     req.url,
       method:   req.method,
-      headers:  Object.assign({}, req.headers, { host: "127.0.0.1:" + targetPort }),
+      headers:  pHeaders,
+      timeout:  30000,
     },
-    function(proxyRes) {
-      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    (proxyRes) => {
+      const respHeaders = cleanHopByHopHeaders(proxyRes.headers);
+      res.writeHead(proxyRes.statusCode, respHeaders);
       proxyRes.pipe(res, { end: true });
     }
   );
-  proxyReq.on("error", function(err) {
-    console.error("[Proxy->" + targetPort + "]", err.message);
+
+  proxyReq.on("timeout", () => {
+    console.error(`[Proxy->${targetPort}] TIMEOUT on ${req.method} ${req.url}`);
+    proxyReq.destroy(new Error("ETIMEDOUT"));
+  });
+
+  proxyReq.on("error", (err) => {
+    console.error(`[Proxy->${targetPort} Error] ${req.method} ${req.url}:`, err.message);
     if (!res.headersSent) {
       res.writeHead(502, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: { code: "BAD_GATEWAY", message: "Service starting, please retry" } }));
+      res.end(JSON.stringify({ error: { code: "BAD_GATEWAY", message: "Service temporarily unavailable, please retry" } }));
     }
   });
-  req.pipe(proxyReq, { end: true });
+
+  if (req.method === "GET" || req.method === "HEAD") {
+    proxyReq.end();
+  } else {
+    req.pipe(proxyReq, { end: true });
+  }
 }
 
-const server = createServer(function(req, res) {
+const server = createServer((req, res) => {
   const url = req.url || "/";
+
   if (url.startsWith("/v1/") || url === "/v1") {
     proxyHttp(req, res, apiPort);
     return;
   }
+
   if (url.startsWith("/gateway")) {
     res.writeHead(426, { "Content-Type": "text/plain", Upgrade: "WebSocket" });
     res.end("Upgrade Required");
     return;
   }
+
   proxyHttp(req, res, nextPort);
 });
 
-server.on("upgrade", function(req, socket, head) {
+server.on("upgrade", (req, socket, head) => {
   const url = req.url || "/";
   if (url.startsWith("/gateway")) {
     const newPath = url.replace(/^\/gateway/, "") || "/";
@@ -180,34 +196,38 @@ server.on("upgrade", function(req, socket, head) {
       method:   req.method,
       headers:  req.headers,
     });
-    proxyReq.on("upgrade", function(proxyRes, proxySocket, proxyHead) {
+
+    proxyReq.on("upgrade", (proxyRes, proxySocket, proxyHead) => {
       const lines = ["HTTP/1.1 101 Switching Protocols"];
       for (let i = 0; i < proxyRes.rawHeaders.length; i += 2) {
-        lines.push(proxyRes.rawHeaders[i] + ": " + proxyRes.rawHeaders[i + 1]);
+        lines.push(`${proxyRes.rawHeaders[i]}: ${proxyRes.rawHeaders[i + 1]}`);
       }
       socket.write(lines.join("\r\n") + "\r\n\r\n");
       if (proxyHead && proxyHead.length) socket.write(proxyHead);
       if (head      && head.length)      proxySocket.write(head);
-      proxySocket.on("error", function() { socket.destroy(); });
-      socket.on("error",      function() { proxySocket.destroy(); });
-      proxySocket.on("close", function() { socket.destroy(); });
-      socket.on("close",      function() { proxySocket.destroy(); });
+      proxySocket.on("error", () => socket.destroy());
+      socket.on("error",     () => proxySocket.destroy());
+      proxySocket.on("close", () => socket.destroy());
+      socket.on("close",     () => proxySocket.destroy());
       proxySocket.pipe(socket);
       socket.pipe(proxySocket);
     });
-    proxyReq.on("error", function(err) {
-      console.error("[Gateway WS Proxy]", err.message);
+
+    proxyReq.on("error", (err) => {
+      console.error("[Gateway WS Proxy Error]", err.message);
       socket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
     });
+
     proxyReq.end();
     return;
   }
+
   socket.end();
 });
 
-server.listen(port, hostname, function() {
-  console.log("> Proxy ready on http://" + hostname + ":" + port);
-  console.log("  -> Next.js  :" + nextPort);
-  console.log("  -> API      :" + apiPort);
-  console.log("  -> Gateway  :" + gwPort);
+server.listen(port, hostname, () => {
+  console.log(`> Proxy ready on http://${hostname}:${port}`);
+  console.log(`  -> Next.js  :${nextPort}`);
+  console.log(`  -> API      :${apiPort}`);
+  console.log(`  -> Gateway  :${gwPort}`);
 });
