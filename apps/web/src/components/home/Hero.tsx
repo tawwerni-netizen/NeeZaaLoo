@@ -341,7 +341,7 @@ export function Hero() {
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   <polyline points="9 12 11 14 15 10" />
                 </svg>
-                <span>100% FAIR PLAY</span>
+                <span>{isRtl ? "100% لعب عادل" : "100% FAIR PLAY"}</span>
               </div>
 
               {/* Dynamic Bottom Bar */}
@@ -407,7 +407,7 @@ export function Hero() {
                   type="button"
                   role="tab"
                   aria-selected={idx === currentIdx}
-                  aria-label={`${slide.titleEn} (${idx + 1}/${SHOWCASE_SLIDES.length})`}
+                  aria-label={`${isRtl ? slide.titleAr : slide.titleEn} (${idx + 1}/${SHOWCASE_SLIDES.length})`}
                   className={`${styles.indicatorBar} ${idx === currentIdx ? styles.indicatorBarActive : ""}`}
                   onClick={(e) => {
                     e.preventDefault();

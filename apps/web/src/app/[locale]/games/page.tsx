@@ -78,7 +78,7 @@ function GameCard({ game }: { game: GamePlugin }) {
           gameId={game.id}
           title={name}
           duration={duration}
-          badge={game.turnModel === "SIMULTANEOUS" ? "SPEED" : "TURN-BASED"}
+          badge={game.turnModel === "SIMULTANEOUS" ? t("gamesPage.turn_model_simultaneous") : t("gamesPage.turn_model_alternating")}
         />
       </LocaleLink>
       <div className={styles.cardHead}>

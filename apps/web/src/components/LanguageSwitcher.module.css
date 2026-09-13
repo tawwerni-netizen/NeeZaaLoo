@@ -66,12 +66,15 @@
   position: absolute;
   top: calc(100% + 8px);
   inset-inline-end: 0;
-  min-width: 175px;
+  min-width: 180px;
+  max-height: min(320px, 60vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--nz-surface-1);
   border: 1px solid var(--nz-line-strong);
   border-radius: var(--nz-radius-md);
   padding: 6px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -79,12 +82,40 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   animation: dropdownIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--nz-line-strong) transparent;
+}
+
+.dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dropdown::-webkit-scrollbar-thumb {
+  background: var(--nz-line-strong);
+  border-radius: 4px;
+}
+
+.dropdownUp {
+  top: auto;
+  bottom: calc(100% + 8px);
+  animation: dropdownInUp 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes dropdownIn {
   from {
     opacity: 0;
     transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdownInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;

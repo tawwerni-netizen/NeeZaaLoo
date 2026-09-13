@@ -35,7 +35,7 @@ export function GameModes() {
                     gameId={game.id}
                     title={name}
                     duration={duration}
-                    badge={game.turnModel === "SIMULTANEOUS" ? "SPEED" : "TURN-BASED"}
+                    badge={game.turnModel === "SIMULTANEOUS" ? t("gamesPage.turn_model_simultaneous") : t("gamesPage.turn_model_alternating")}
                   />
                 </LocaleLink>
                 <h3 className={styles.cardTitle}>
@@ -74,7 +74,7 @@ export function GameModes() {
               </picture>
               <span className={styles.arenaLiveBadgeOverlay}>
                 <span className={styles.pulseDot} />
-                LIVE ARENA
+                {dir === "rtl" ? "أرينا حية" : "LIVE ARENA"}
               </span>
             </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useI18n } from "@/lib/i18n/context";
 import styles from "./GameThumbnail.module.css";
 
 interface GameThumbnailProps {
@@ -35,6 +36,8 @@ export function GameThumbnail({
   badge,
   variant = "square"
 }: GameThumbnailProps) {
+  const { dir } = useI18n();
+  const isRtl = dir === "rtl";
   const normId = gameId.replace(/_/g, "-");
 
   const renderGameArt = () => {
@@ -414,7 +417,7 @@ export function GameThumbnail({
 
       <div className={styles.badgeTopLeft}>
         <span className={`${styles.pillTag} ${badge === "LIVE" ? styles.emeraldTag : styles.goldTag}`}>
-          {badge || "1v1 DUEL"}
+          {badge || (isRtl ? "مواجهة 1v1" : "1v1 DUEL")}
         </span>
       </div>
 
@@ -429,7 +432,7 @@ export function GameThumbnail({
         </div>
         <div className={styles.liveIndicator}>
           <span className={styles.liveDot} />
-          <span>RANKED</span>
+          <span>{isRtl ? "مصنّف" : "RANKED"}</span>
         </div>
       </div>
     </div>

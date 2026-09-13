@@ -21,7 +21,7 @@
  * primary items plus secondary ones has no honest way to fit a phone
  * screen otherwise.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Logo } from "./Logo";
@@ -58,6 +58,10 @@ export function Header() {
 
   function closeMenu() { setMenuOpen(false); }
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   return (
     <header className={styles.header}>
       <div className={`nz-container ${styles.inner}`}>
@@ -82,7 +86,7 @@ export function Header() {
           <LanguageSwitcher />
           {loading ? null : player ? (
             <>
-              <LocaleLink href="/referrals" className={styles.navLink}>Referrals</LocaleLink>
+              <LocaleLink href="/referrals" className={styles.navLink}>{t("nav.referrals")}</LocaleLink>
               <LocaleLink href="/wallet" className={styles.navLink}>{t("nav.wallet")}</LocaleLink>
               <LocaleLink href="/profile" className={styles.navLink}>{player.handle}</LocaleLink>
               <LocaleLink href="/help" className={styles.navLink}>{t("nav.support")}</LocaleLink>
@@ -134,12 +138,12 @@ export function Header() {
             <div className={styles.mobileDivider} />
             <div className={styles.mobileLanguage}>
               <ThemeToggle />
-              <LanguageSwitcher />
+              <LanguageSwitcher dropDirection="up" onSelect={closeMenu} />
             </div>
             <div className={styles.mobileSecondary}>
               {loading ? null : player ? (
                 <>
-                  <LocaleLink href="/referrals" className={styles.mobileNavLink} onClick={closeMenu}>Referrals</LocaleLink>
+                  <LocaleLink href="/referrals" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.referrals")}</LocaleLink>
                   <LocaleLink href="/wallet" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.wallet")}</LocaleLink>
                   <LocaleLink href="/profile" className={styles.mobileNavLink} onClick={closeMenu}>{player.handle}</LocaleLink>
                   <LocaleLink href="/help" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.support")}</LocaleLink>

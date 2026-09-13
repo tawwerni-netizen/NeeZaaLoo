@@ -14,7 +14,12 @@ function pathWithoutLocale(pathname: string): string {
   return "/" + segments.slice(2).join("/");
 }
 
-export function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  dropDirection?: "down" | "up";
+  onSelect?: () => void;
+}
+
+export function LanguageSwitcher({ dropDirection = "down", onSelect }: LanguageSwitcherProps = {}) {
   const { locale, t } = useI18n();
   const { player, setLocale } = useAuth();
   const router = useRouter();
@@ -56,6 +61,7 @@ export function LanguageSwitcher() {
 
   function onSelectLocale(next: SupportedLocale) {
     setIsOpen(false);
+    onSelect?.();
     if (next === locale) return;
 
     document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE_S}; samesite=lax`;
@@ -91,7 +97,11 @@ export function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className={styles.dropdown} role="listbox" aria-label={t("settings.language")}>
+        <div
+          className={`${styles.dropdown} ${dropDirection === "up" ? styles.dropdownUp : ""}`}
+          role="listbox"
+          aria-label={t("settings.language")}
+        >
           {SUPPORTED_LOCALES.map((l) => {
             const isSelected = l.code === locale;
             return (

@@ -123,9 +123,12 @@
 .menuToggle:hover { background: var(--nz-surface-2); }
 
 .mobilePanel {
-  overflow: hidden;
+  max-height: calc(100dvh - 64px);
+  overflow-y: auto;
+  overflow-x: hidden;
   border-top: 1px solid var(--nz-line);
   background: var(--nz-bg);
+  -webkit-overflow-scrolling: touch;
 }
 
 .mobileNav {
@@ -153,11 +156,13 @@
 .mobileDivider { height: var(--nz-space-2); }
 
 .mobileLanguage {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--nz-space-3);
   padding: 0 var(--nz-space-4) var(--nz-space-3);
+  z-index: 100;
 }
 
 .mobileSecondary {

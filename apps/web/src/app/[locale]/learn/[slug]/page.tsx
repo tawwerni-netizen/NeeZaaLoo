@@ -142,7 +142,7 @@ export default function EditorialArticlePage({
           <div className={styles.metaInfo}>
             <span>{isRtl ? "هيئة تحرير Nizalo" : "Nizalo Editorial Board"}</span>
             <span>•</span>
-            <span>{article.type === "PILLAR" ? "8 min read" : "5 min read"}</span>
+            <span>{isRtl ? (article.type === "PILLAR" ? "قراءة 8 دقائق" : "قراءة 5 دقائق") : (article.type === "PILLAR" ? "8 min read" : "5 min read")}</span>
             <span>•</span>
             <span>{isRtl ? "مُحدّث لعام 2026" : "Updated 2026"}</span>
           </div>
@@ -229,23 +229,23 @@ export default function EditorialArticlePage({
                 {article.internalLinks.map((link, idx) => (
                   <li key={idx}>
                     <LocaleLink href={link} className={styles.sidebarLink}>
-                      → {link.replace("/", "").replace("-", " ").toUpperCase() || "HOME"}
+                      {isRtl ? "←" : "→"} {link.replace("/", "").replace("-", " ").toUpperCase() || "HOME"}
                     </LocaleLink>
                   </li>
                 ))}
                 <li>
                   <LocaleLink href="/games" className={styles.sidebarLink}>
-                    → {isRtl ? "دليل الألعاب الكامل" : "ALL SKILL GAMES"}
+                    {isRtl ? "←" : "→"} {isRtl ? "دليل الألعاب الكامل" : "ALL SKILL GAMES"}
                   </LocaleLink>
                 </li>
                 <li>
                   <LocaleLink href="/fair-play" className={styles.sidebarLink}>
-                    → {isRtl ? "ميثاق النزاهة واللعب النظيف" : "FAIR PLAY PROTOCOL"}
+                    {isRtl ? "←" : "→"} {isRtl ? "ميثاق النزاهة واللعب النظيف" : "FAIR PLAY PROTOCOL"}
                   </LocaleLink>
                 </li>
                 <li>
                   <LocaleLink href="/help" className={styles.sidebarLink}>
-                    → {isRtl ? "السياسات والشروط الرسمية" : "TERMS & POLICIES"}
+                    {isRtl ? "←" : "→"} {isRtl ? "السياسات والشروط الرسمية" : "TERMS & POLICIES"}
                   </LocaleLink>
                 </li>
               </ul>

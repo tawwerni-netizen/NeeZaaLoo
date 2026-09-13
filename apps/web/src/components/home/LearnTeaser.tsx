@@ -30,7 +30,7 @@ export function LearnTeaser() {
             <source srcSet="/images/banners/banner-certified-skill.webp" type="image/webp" />
             <img
               src="/images/banners/banner-certified-skill.jpg"
-              alt="Nizalo Official Game Rules"
+              alt={isRtl ? "قواعد ألعاب نيزالو الرسمية" : "Nizalo Official Game Rules"}
               className={styles.teaserImg}
               loading="lazy"
               decoding="async"

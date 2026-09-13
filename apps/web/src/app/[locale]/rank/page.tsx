@@ -40,7 +40,7 @@ export default function RankPage() {
 }
 
 function RankContent() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
   const [skill, setSkill] = useState<GlobalSkill | null>(null);
 
   useEffect(() => {
@@ -54,11 +54,13 @@ function RankContent() {
       <div className={styles.heroBanner}>
         <img
           src="/images/banners/banner-global-leaderboard.jpg"
-          alt="Global Rankings"
+          alt={dir === "rtl" ? "لوحة المتصدرين العالمية" : "Global Rankings"}
           className={styles.heroBannerImg}
         />
         <div className={styles.heroBannerOverlay}>
-          <span className={styles.heroBadge}>GLICKO-2 GLOBAL RATING</span>
+          <span className={styles.heroBadge}>
+            {dir === "rtl" ? "تصنيف جليكو-2 العالمي المعتمد" : "GLICKO-2 GLOBAL RATING"}
+          </span>
           <h1 className={styles.heading}>{t("rank.heading")}</h1>
           <p className={styles.subtitle}>{t("rank.subtitle")}</p>
         </div>
