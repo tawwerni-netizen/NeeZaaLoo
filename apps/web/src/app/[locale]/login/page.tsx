@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { authErrorKey } from "@/components/auth/error-messages";
 import { get, ApiError } from "@/lib/api";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 import styles from "@/components/auth/AuthForm.module.css";
 
 export default function LoginPage() {
@@ -142,12 +143,7 @@ function LoginForm() {
 
           <div className={styles.divider}><span>{t("auth.login.or_divider")}</span></div>
 
-          <Button
-            type="button" variant="secondary" className={styles.submit}
-            disabled={googleStarting} onClick={() => void onGoogleClick()}
-          >
-            {t("auth.login.google_cta")}
-          </Button>
+          <GoogleButton onError={(err) => setError(err)} />
 
           <LocaleLink href="/login/code" className={styles.secondaryLink}>
             {t("auth.login.email_code_cta")}

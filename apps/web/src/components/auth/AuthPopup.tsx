@@ -32,6 +32,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { get, ApiError } from "@/lib/api";
 import { transition } from "@/lib/motion";
 import { authErrorKey } from "@/components/auth/error-messages";
+import { GoogleButton } from "./GoogleButton";
 import styles from "./AuthPopup.module.css";
 
 const SEEN_KEY = "nz_auth_popup_seen_v1";
@@ -132,6 +133,15 @@ export function AuthPopup() {
             <h2 className={styles.title}>{t("authPopup.title")}</h2>
             <p className={styles.subtitle}>{t("authPopup.subtitle")}</p>
 
+            <div className={styles.googleWrap}>
+              <GoogleButton onError={(err) => setGoogleErrorKey(err)} />
+            </div>
+            {googleErrorKey && <p className={styles.error} role="alert">{googleErrorKey}</p>}
+
+            <div className={styles.divider}>
+              <span>{locale === "ar" ? "أو المتابعة التقليدية" : "Or continue with"}</span>
+            </div>
+
             <div className={styles.options}>
               <LocaleLink href="/login" className={styles.option} onClick={closePopup}>
                 <span className={styles.optionLabel}>{t("authPopup.sign_in")}</span>
@@ -142,15 +152,6 @@ export function AuthPopup() {
                 <span className={styles.optionBody}>{t("authPopup.create_account_body")}</span>
               </LocaleLink>
             </div>
-
-            <button
-              type="button" className={styles.google}
-              disabled={googleStarting} onClick={() => void onGoogleClick()}
-            >
-              <GoogleIcon />
-              {googleStarting ? t("auth.login.submitting") : t("authPopup.google")}
-            </button>
-            {googleErrorKey && <p className={styles.error} role="alert">{t(googleErrorKey)}</p>}
 
             <LocaleLink href="/login/code" className={styles.emailCode} onClick={closePopup}>
               {t("authPopup.email_code")}

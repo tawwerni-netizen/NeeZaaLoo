@@ -8,6 +8,7 @@ import { LocaleLink } from "@/components/LocaleLink";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { authErrorKey } from "@/components/auth/error-messages";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 import styles from "@/components/auth/AuthForm.module.css";
 
 export default function RegisterPage() {
@@ -116,6 +117,13 @@ export default function RegisterPage() {
           <Button type="submit" className={styles.submit} disabled={submitting || !agreeTerms}>
             {submitting ? t("auth.register.submitting") : t("auth.register.submit")}
           </Button>
+
+          <div className={styles.divider}><span>{t("auth.login.or_divider")}</span></div>
+
+          <GoogleButton
+            label={locale === "ar" ? "التسجيل السريع عبر حساب Google / Gmail" : "Quick Sign up with Google / Gmail"}
+            onError={(err) => setError(err)}
+          />
 
           <p className={styles.switch}>
             {t("auth.register.switch_prompt")} <LocaleLink href="/login">{t("auth.register.switch_cta")}</LocaleLink>

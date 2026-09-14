@@ -63,8 +63,36 @@
 .subtitle {
   font-size: var(--nz-text-sm);
   color: var(--nz-text-2);
-  margin: 0 0 var(--nz-space-6);
-  max-width: 30ch;
+  margin: 0 0 var(--nz-space-5);
+  max-width: 32ch;
+}
+
+.googleWrap {
+  width: 100%;
+  margin-bottom: var(--nz-space-4);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  margin-bottom: var(--nz-space-4);
+  color: var(--nz-text-3);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--nz-line);
+}
+
+.divider span {
+  padding: 0 10px;
 }
 
 .options {

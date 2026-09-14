@@ -187,6 +187,7 @@ const CATEGORY_KEYS = [
 
 export default function HelpCenterPage() {
   const { t, locale } = useI18n();
+  const isRtl = locale === "ar";
   const { player } = useAuth();
   const { openPopup } = useAuthPopup();
 
@@ -349,52 +350,111 @@ export default function HelpCenterPage() {
           </div>
         </section>
 
+        {/* Trust & Authority Strip */}
+        <section className={styles.trustStrip}>
+          <div className={styles.trustBadge}>
+            <span className={styles.trustIcon}>🛡️</span>
+            <div>
+              <span className={styles.trustTitle}>{isRtl ? "أمان مصرفي مشفر 256-Bit" : "256-Bit Bank Security"}</span>
+              <span className={styles.trustDesc}>{isRtl ? "حماية كاملة للبيانات والأرصدة" : "Certified secure infrastructure"}</span>
+            </div>
+          </div>
+          <div className={styles.trustDivider} />
+          <div className={styles.trustBadge}>
+            <span className={styles.trustIcon}>⚖️</span>
+            <div>
+              <span className={styles.trustTitle}>{isRtl ? "تحكيم آلي محايد 100%" : "100% Deterministic Engine"}</span>
+              <span className={styles.trustDesc}>{isRtl ? "لا مجال للتدخل البشري في النتائج" : "Audited server-clock verification"}</span>
+            </div>
+          </div>
+          <div className={styles.trustDivider} />
+          <div className={styles.trustBadge}>
+            <span className={styles.trustIcon}>⚡</span>
+            <div>
+              <span className={styles.trustTitle}>{isRtl ? "سرعة الرد: أقل من 5 دقائق" : "Response Time: < 5 Mins"}</span>
+              <span className={styles.trustDesc}>{isRtl ? "دعم مباشر على مدار الساعة" : "24/7 dedicated assistance"}</span>
+            </div>
+          </div>
+        </section>
+
         {/* Quick Contacts & Actions Bar */}
         <section className={styles.contactBar}>
-          <div className={styles.contactCard}>
-            <div className={styles.contactIcon} aria-hidden="true">💬</div>
+          <div className={`${styles.contactCard} ${styles.contactCardWhatsApp}`}>
+            <div className={styles.cardHeaderRow}>
+              <div className={styles.contactIcon} aria-hidden="true">💬</div>
+              <span className={styles.onlineBadge}>
+                <span className={styles.liveGreenDot} />
+                {locale === "ar" ? "متصل الآن للرد الفوري" : "Online - Instant Reply"}
+              </span>
+            </div>
             <div className={styles.contactInfo}>
               <span className={styles.contactLabel}>
-                {locale === "ar" ? "الدعم من خلال واتساب" : "WhatsApp Support"}
+                {locale === "ar" ? "الدعم المباشر عبر واتساب" : "Live WhatsApp Support"}
               </span>
-              <a href={`https://wa.me/${supportConfig.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
-                {supportConfig.phone}
-              </a>
+              <span className={styles.contactPhone}>{supportConfig.phone}</span>
             </div>
+            <a
+              href={`https://wa.me/${supportConfig.phone.replace(/[^0-9]/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.whatsAppActionBtn}
+            >
+              <span>🟢</span> {locale === "ar" ? "تحدث مع الدعم الفني الآن" : "Chat on WhatsApp Now"}
+            </a>
           </div>
 
-          <div className={styles.contactCard}>
-            <div className={styles.contactIcon} aria-hidden="true">✉️</div>
+          <div className={`${styles.contactCard} ${styles.contactCardEmail}`}>
+            <div className={styles.cardHeaderRow}>
+              <div className={styles.contactIcon} aria-hidden="true">✉️</div>
+              <span className={styles.officialBadge}>
+                {locale === "ar" ? "⚡ القناة الرسمية" : "⚡ Official Channel"}
+              </span>
+            </div>
             <div className={styles.contactInfo}>
               <span className={styles.contactLabel}>{t("help.contact_email_label")}</span>
-              <a href={`mailto:${supportConfig.email}`} className={styles.contactLink}>
-                {supportConfig.email}
-              </a>
+              <span className={styles.contactEmail}>{supportConfig.email}</span>
             </div>
+            <a
+              href={`mailto:${supportConfig.email}`}
+              className={styles.emailActionBtn}
+            >
+              <span>📨</span> {locale === "ar" ? "إرسال بريد إلكتروني" : "Send an Email"}
+            </a>
           </div>
 
-          <div className={styles.contactActions}>
-            <Button
-              variant="primary"
-              className={styles.ticketCtaBtn}
-              onClick={() => {
-                if (!player) {
-                  openPopup();
-                } else {
-                  setShowTicketModal(true);
-                  setTicketSuccessId(null);
-                  setTicketError(null);
-                }
-              }}
-            >
-              {t("help.open_ticket")}
-            </Button>
-
-            <LocaleLink href="/support">
-              <Button variant="ghost" className={styles.myTicketsBtn}>
-                {t("help.my_tickets")} →
+          <div className={styles.contactActionsCard}>
+            <div className={styles.ticketCardHeader}>
+              <span className={styles.ticketIcon}>🎫</span>
+              <h3 className={styles.ticketCardTitle}>{locale === "ar" ? "نظام التذاكر المباشرة" : "Direct Ticket System"}</h3>
+            </div>
+            <p className={styles.ticketCardDesc}>
+              {locale === "ar"
+                ? "تتبع طلبك رسمياً عبر لوحة التحكم مع توثيق كامل لكافة الردود."
+                : "Official traceable ticketing system linked to your account audit log."}
+            </p>
+            <div className={styles.ticketBtnRow}>
+              <Button
+                variant="primary"
+                className={styles.ticketCtaBtn}
+                onClick={() => {
+                  if (!player) {
+                    openPopup();
+                  } else {
+                    setShowTicketModal(true);
+                    setTicketSuccessId(null);
+                    setTicketError(null);
+                  }
+                }}
+              >
+                ➕ {t("help.open_ticket")}
               </Button>
-            </LocaleLink>
+
+              <LocaleLink href="/support">
+                <Button variant="ghost" className={styles.myTicketsBtn}>
+                  {t("help.my_tickets")} →
+                </Button>
+              </LocaleLink>
+            </div>
           </div>
         </section>
 
@@ -406,6 +466,7 @@ export default function HelpCenterPage() {
                 ? t("help.all_categories")
                 : t(`help.categories.${catKey}`);
               const isSelected = activeCategory === catKey;
+              const icon = catKey === "all" ? "🌐" : catKey === "account" ? "👤" : catKey === "wallet" ? "💳" : catKey === "games" ? "🎮" : catKey === "tournaments" ? "🏆" : "📜";
 
               return (
                 <button
@@ -414,7 +475,8 @@ export default function HelpCenterPage() {
                   className={`${styles.categoryPill} ${isSelected ? styles.categoryPillActive : ""}`}
                   onClick={() => setActiveCategory(catKey)}
                 >
-                  {label}
+                  <span className={styles.catIcon}>{icon}</span>
+                  <span>{label}</span>
                 </button>
               );
             })}

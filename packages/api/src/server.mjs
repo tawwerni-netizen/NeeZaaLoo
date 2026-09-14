@@ -1225,6 +1225,23 @@ function buildRoutes() {
     { method: "GET", path: "/v1/duels/live", action: "duel.spectate", anonymous: true,
       handler: async ({ db, query }) => {
         const limit = Math.min(Math.max(1, Number(query.get("limit")) || 20), 50);
+
+        // Auto-sweep stale or abandoned duels so dead games never get stuck in Live Arena
+        try {
+          await db.query(
+            `UPDATE duel
+                SET status = 'ABORTED'::duel_status,
+                    completed_at = COALESCE(completed_at, now())
+              WHERE status = 'LIVE'
+                AND (
+                  (started_at < now() - INTERVAL '10 minutes' AND (SELECT count(*) FROM duel_event de WHERE de.duel_id = duel.id) = 0)
+                  OR (started_at < now() - INTERVAL '2 hours')
+                )`
+          );
+        } catch {
+          // ignore background sweep errors
+        }
+
         const r = await db.query(
           `SELECT d.id, d.game_id, d.started_at, d.pairing_key,
                   pa.handle AS handle_0, pa.selected_badge_code AS badge_0,
@@ -1236,7 +1253,9 @@ function buildRoutes() {
              JOIN player pb ON pb.id = d.seat_1
              LEFT JOIN rating ra ON ra.player_id = d.seat_0 AND ra.game_id = d.game_id
              LEFT JOIN rating rb ON rb.player_id = d.seat_1 AND rb.game_id = d.game_id
-            WHERE d.status = 'LIVE' AND d.spectator_policy = 'OPEN'
+            WHERE d.status = 'LIVE'
+              AND d.spectator_policy = 'OPEN'
+              AND d.is_vs_computer = FALSE
             ORDER BY d.started_at DESC
             LIMIT $1`,
           [limit]
@@ -1505,19 +1524,36 @@ function buildRoutes() {
         return { status: 201, body: r };
       } },
 
-    { method: "GET", path: "/v1/leaderboard", action: "player.profile.read",
+    { method: "GET", path: "/v1/leaderboard", action: "player.profile.read", anonymous: true,
       handler: async ({ db, query }) => {
         // Per-game leaderboard, generic across any registered game -- not
         // just chess. The cross-game combination lives at /v1/leaderboard/global.
         const limit = Math.min(Number(query.get("limit") ?? 50) || 50, 200);
-        const gameId = query.get("game") ?? "chess";
-        const r = await db.query(
-          `SELECT r.player_id, p.handle, r.rating_x100, r.rd_x100, r.games_played
-             FROM rating r JOIN player p ON p.id = r.player_id
-            WHERE r.game_id = $2 AND r.games_played >= 10
-            ORDER BY r.rating_x100 DESC LIMIT $1`, [limit, gameId]
-        );
-        return { body: { gameId, entries: r.rows } };
+        const gameId = query.get("game");
+
+        let r;
+        if (gameId && gameId !== "all") {
+          r = await db.query(
+            `SELECT r.player_id, p.handle, p.avatar_key, p.selected_badge_code,
+                    r.rating_x100, r.rd_x100, r.games_played
+               FROM rating r JOIN player p ON p.id = r.player_id
+              WHERE r.game_id = $2 AND (p.is_ai IS FALSE OR p.is_ai IS NULL)
+              ORDER BY r.rating_x100 DESC, r.games_played DESC LIMIT $1`, [limit, gameId]
+          );
+        } else {
+          r = await db.query(
+            `SELECT p.id AS player_id, p.handle, p.avatar_key, p.selected_badge_code,
+                    COALESCE(MAX(r.rating_x100), 150000) AS rating_x100,
+                    COALESCE(SUM(r.games_played), 0)::int AS games_played
+               FROM player p
+               LEFT JOIN rating r ON r.player_id = p.id
+              WHERE (p.is_ai IS FALSE OR p.is_ai IS NULL)
+              GROUP BY p.id, p.handle, p.avatar_key, p.selected_badge_code
+              ORDER BY rating_x100 DESC, games_played DESC, p.created_at ASC
+              LIMIT $1`, [limit]
+          );
+        }
+        return { body: { gameId: gameId ?? "all", entries: r.rows } };
       } },
 
     // --- Global Skill Score ----------------------------------------------------
@@ -1534,10 +1570,41 @@ function buildRoutes() {
       handler: async ({ params, globalSkill }) => ({ body: await globalSkill.scoreFor(params.id) }) },
 
     { method: "GET", path: "/v1/leaderboard/global", action: "global_skill.read",
-      handler: async ({ globalSkill, query }) => {
+      handler: async ({ globalSkill, query, db }) => {
         const board = await globalSkill.leaderboard();
         const limit = Math.min(Number(query.get("limit") ?? 100) || 100, 500);
-        return { body: { entries: board.slice(0, limit) } };
+        let entries = board.slice(0, limit);
+        if (entries.length > 0) {
+          const ids = entries.map((e) => e.playerId);
+          const pRes = await db.query(
+            `SELECT id, handle, avatar_key, selected_badge_code FROM player WHERE id = ANY($1::text[])`,
+            [ids]
+          );
+          const pMap = new Map(pRes.rows.map((p) => [p.id, p]));
+          entries = entries.map((e) => ({
+            ...e,
+            handle: pMap.get(e.playerId)?.handle ?? "Player",
+            avatar_key: pMap.get(e.playerId)?.avatar_key ?? null,
+            selected_badge_code: pMap.get(e.playerId)?.selected_badge_code ?? null,
+          }));
+        } else {
+          // Fallback if no established ratings yet: display platform members
+          const pRes = await db.query(
+            `SELECT p.id AS "playerId", p.handle, p.avatar_key, p.selected_badge_code,
+                    COALESCE(MAX(r.rating_x100), 150000) / 100 AS score,
+                    COALESCE(SUM(r.games_played), 0)::int AS games_played,
+                    'CONTENDER' AS tier
+               FROM player p
+               LEFT JOIN rating r ON r.player_id = p.id
+              WHERE (p.is_ai IS FALSE OR p.is_ai IS NULL)
+              GROUP BY p.id, p.handle, p.avatar_key, p.selected_badge_code
+              ORDER BY score DESC, games_played DESC, p.created_at ASC
+              LIMIT $1`,
+            [limit]
+          );
+          entries = pRes.rows;
+        }
+        return { body: { entries } };
       } },
 
     // --- Notifications -----------------------------------------------------------

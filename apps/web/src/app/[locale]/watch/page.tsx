@@ -31,7 +31,7 @@ type LiveMatch = {
 };
 type LiveMatchesResponse = { matches: LiveMatch[] };
 
-const POLL_MS = 8000;
+const POLL_MS = 3000;
 
 export default function WatchPage() {
   return (
@@ -43,18 +43,28 @@ export default function WatchPage() {
 }
 
 function WatchContent() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [matches, setMatches] = useState<LiveMatch[] | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadMatches = async (isManual = false) => {
+    if (isManual) setRefreshing(true);
+    try {
+      const r = await get<LiveMatchesResponse>("/v1/duels/live");
+      setMatches(r.matches || []);
+    } catch {
+      setMatches((prev) => prev ?? []);
+    } finally {
+      if (isManual) setTimeout(() => setRefreshing(false), 400);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
-    const load = () => {
-      void get<LiveMatchesResponse>("/v1/duels/live")
-        .then((r) => { if (!cancelled) setMatches(r.matches); })
-        .catch(() => { if (!cancelled) setMatches((prev) => prev ?? []); });
-    };
-    load();
-    const interval = setInterval(load, POLL_MS);
+    loadMatches();
+    const interval = setInterval(() => {
+      if (!cancelled) void loadMatches();
+    }, POLL_MS);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
@@ -62,8 +72,28 @@ function WatchContent() {
     <div className={styles.wrap}>
       <div className={styles.headerRow}>
         <div>
+          <div className={styles.titleBadge}>
+            <span className={styles.livePulseDot} />
+            <span>{locale === "ar" ? "بث مباشر فوري" : "REALTIME ARENA FEED"}</span>
+          </div>
           <h1 className={styles.title}>{t("watch.title")}</h1>
           <p className={styles.subtitle}>{t("watch.subtitle")}</p>
+        </div>
+
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={`${styles.refreshBtn} ${refreshing ? styles.refreshing : ""}`}
+            onClick={() => void loadMatches(true)}
+            disabled={refreshing}
+            title={locale === "ar" ? "تحديث فوري للمباريات" : "Refresh matches"}
+          >
+            <span className={styles.refreshIcon}>🔄</span>
+            <span>{locale === "ar" ? "تحديث مباشر" : "Live Refresh"}</span>
+          </button>
+          <LocaleLink href="/play" className={styles.createDuelBtn}>
+            <span>⚔️ {locale === "ar" ? "أطلق مبارزة الآن" : "Start a Duel"}</span>
+          </LocaleLink>
         </div>
       </div>
 
@@ -73,8 +103,27 @@ function WatchContent() {
           <div className={styles.matchCardSkeleton} />
         </div>
       ) : matches.length === 0 ? (
-        <div className={styles.emptyCard}>
-          <p className={styles.empty}>{t("watch.empty")}</p>
+        <div className={styles.emptyArenaCard}>
+          <div className={styles.radarGraphic}>
+            <div className={styles.radarSweep} />
+            <span className={styles.radarIcon}>📡</span>
+          </div>
+          <h3 className={styles.emptyArenaTitle}>
+            {locale === "ar" ? "الساحة في انتظار أبطالها الآن!" : "The Arena Awaits Its Champions!"}
+          </h3>
+          <p className={styles.emptyArenaDesc}>
+            {locale === "ar"
+              ? "لا توجد مبارزات جارية في هذه اللحظة. بادر بإطلاق مبارزة جديدة وادعُ خصوماً حقيقيين لمواجهتك فوراً!"
+              : "No live duels in progress right now. Launch a duel and challenge real opponents instantly!"}
+          </p>
+          <div className={styles.emptyArenaActions}>
+            <LocaleLink href="/play" className={styles.heroPlayBtn}>
+              ⚔️ {locale === "ar" ? "ابدأ مبارزة الآن" : "Play & Challenge Now"}
+            </LocaleLink>
+            <LocaleLink href="/tournaments" className={styles.heroTourneyBtn}>
+              🏆 {locale === "ar" ? "تصفح البطولات المفتوحة" : "Explore Tournaments"}
+            </LocaleLink>
+          </div>
         </div>
       ) : (
         <div className={styles.grid}>

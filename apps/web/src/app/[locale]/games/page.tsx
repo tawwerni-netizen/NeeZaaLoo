@@ -66,14 +66,14 @@ export default function GamesPage() {
 }
 
 function GameCard({ game }: { game: GamePlugin }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const name = t(`common.game_names.${game.nameKey}`);
   const duration = t(`home.games.${game.nameKey}.duration`);
   const mode = t(`home.games.${game.nameKey}.mode`);
 
   return (
     <div className={styles.card}>
-      <LocaleLink href={`/games/${game.id}`} className={styles.thumbnailLink}>
+      <LocaleLink href={`/play/${game.id}`} className={styles.thumbnailLink}>
         <GameThumbnail
           gameId={game.id}
           title={name}
@@ -83,7 +83,7 @@ function GameCard({ game }: { game: GamePlugin }) {
       </LocaleLink>
       <div className={styles.cardHead}>
         <h2 className={styles.cardTitle}>
-          <LocaleLink href={`/games/${game.id}`} className={styles.cardTitleLink}>{name}</LocaleLink>
+          <LocaleLink href={`/play/${game.id}`} className={styles.cardTitleLink}>{name}</LocaleLink>
         </h2>
         <span className={styles.turnTag}>
           {game.turnModel === "SIMULTANEOUS" ? t("gamesPage.turn_model_simultaneous") : t("gamesPage.turn_model_alternating")}
@@ -101,7 +101,14 @@ function GameCard({ game }: { game: GamePlugin }) {
           ))}
         </div>
       )}
-      <LocaleLink href={`/play/${game.id}`} className={styles.cta}>{t("gamesPage.play_cta", { name })}</LocaleLink>
+      <div className={styles.cardActions}>
+        <LocaleLink href={`/play/${game.id}`} className={styles.playCta}>
+          <span>⚔️</span> {t("gamesPage.play_cta", { name })}
+        </LocaleLink>
+        <LocaleLink href={`/games/${game.id}`} className={styles.rulesCta}>
+          <span>📖</span> {locale === "ar" ? "القواعد والاستراتيجية" : "Rules & Guide"}
+        </LocaleLink>
+      </div>
     </div>
   );
 }

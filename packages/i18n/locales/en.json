@@ -30,16 +30,16 @@
     "copyright": "© {year} Nizalo. Your duel. Your proof."
   },
   "authPopup": {
-    "title": "Join the duel",
-    "subtitle": "Sign in or create a free account to play.",
+    "title": "Enter the Competitive Arena",
+    "subtitle": "Sign in or create your free account to compete for real cash prizes.",
     "sign_in": "Sign in",
-    "sign_in_body": "Already have an account.",
-    "create_account": "Create account",
-    "create_account_body": "New here — takes under a minute.",
-    "google": "Continue with Google",
+    "sign_in_body": "Already a player? Enter & resume winning.",
+    "create_account": "Create Champion Account",
+    "create_account_body": "Join in seconds • 100% Pure Skill.",
+    "google": "Continue with Google / Gmail",
     "email_code": "Sign in with an email code",
     "close_aria_label": "Close",
-    "footnote": "By continuing you agree this is a game of skill. Earn prizes through eligible skill competitions where permitted — never a guaranteed income."
+    "footnote": "By continuing, you agree to the platform rules. Nizalo is 100% deterministic skill competition with zero luck or gambling. Win real cash prizes based on your intellect."
   },
   "home": {
     "hero": {
