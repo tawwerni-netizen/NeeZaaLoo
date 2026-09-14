@@ -2,76 +2,75 @@
  * Automated Tournament Engine.
  *
  * Keeps ongoing 16-player single-elimination cash tournaments continuously running
- * for 5 official games: Chess, Dominoes, Backgammon, Checkers, and Speed Math.
+ * across 8 stake tiers ($10, $20, $50, $100, $200, $500, $1000, $2000 USDT)
+ * for all live, cash-enabled games where auto_tournaments_enabled is active.
  *
  * Economics:
- *   - Entry fee: 10 USDT
  *   - Capacity: 16 players
- *   - Total Pot: 160 USDT
- *   - Platform Fee (12%): 19.20 USDT
- *   - Winner Prize (88%): 140.80 USDT
+ *   - Format: Single Elimination
+ *   - Platform Fee: 12% rake
+ *   - Winner Prize: 88% of total pot
  *
  * Lifecycle:
- *   - Ensures an open tournament in status 'REGISTRATION' is ALWAYS available for each game.
- *   - As soon as the 16th player registers, starts the tournament (moves to 'LIVE') and
- *     immediately spawns the next tournament for that game.
+ *   - Ensures an open tournament in status 'REGISTRATION' is ALWAYS available for each tier.
+ *   - As soon as the 16th player registers, starts the tournament (moves to 'LIVE'),
+ *     sends start notifications (mobile / browser / email with 1-min countdown),
+ *     and immediately spawns the next tournament for that game & tier.
  *   - Automatically settles prizes once the final is decided (moves to 'SETTLED').
  */
 
-export const AUTOMATED_TOURNAMENT_GAMES = [
-  {
-    gameId: "chess",
-    title: "Chess 16 Championship [10 USDT]",
-    description: "16-Player Single Elimination. Winner takes 88% ($140.80 USDT). 12% Platform Fee.",
-    initialSeconds: 300,
-    incrementSeconds: 3,
-  },
-  {
-    gameId: "dominoes",
-    title: "Dominoes 16 Grand Prix [10 USDT]",
-    description: "16-Player Single Elimination. Winner takes 88% ($140.80 USDT). 12% Platform Fee.",
-    initialSeconds: 120,
-    incrementSeconds: 2,
-  },
-  {
-    gameId: "backgammon",
-    title: "Backgammon 16 Classic [10 USDT]",
-    description: "16-Player Single Elimination. Winner takes 88% ($140.80 USDT). 12% Platform Fee.",
-    initialSeconds: 180,
-    incrementSeconds: 2,
-  },
-  {
-    gameId: "checkers",
-    title: "Checkers 16 Open [10 USDT]",
-    description: "16-Player Single Elimination. Winner takes 88% ($140.80 USDT). 12% Platform Fee.",
-    initialSeconds: 120,
-    incrementSeconds: 2,
-  },
-  {
-    gameId: "speed-math",
-    title: "Speed Math 16 Sprint [10 USDT]",
-    description: "16-Player Single Elimination. Winner takes 88% ($140.80 USDT). 12% Platform Fee.",
-    initialSeconds: 60,
-    incrementSeconds: 0,
-  },
+export const TOURNAMENT_TIERS = [
+  { feeUsd: 10, minor: 10_000_000n, pot: 160, rakeUsd: "19.20", winnerUsd: "140.80" },
+  { feeUsd: 20, minor: 20_000_000n, pot: 320, rakeUsd: "38.40", winnerUsd: "281.60" },
+  { feeUsd: 50, minor: 50_000_000n, pot: 800, rakeUsd: "96.00", winnerUsd: "704.00" },
+  { feeUsd: 100, minor: 100_000_000n, pot: 1600, rakeUsd: "192.00", winnerUsd: "1,408.00" },
+  { feeUsd: 200, minor: 200_000_000n, pot: 3200, rakeUsd: "384.00", winnerUsd: "2,816.00" },
+  { feeUsd: 500, minor: 500_000_000n, pot: 8000, rakeUsd: "960.00", winnerUsd: "7,040.00" },
+  { feeUsd: 1000, minor: 1000_000_000n, pot: 16000, rakeUsd: "1,920.00", winnerUsd: "14,080.00" },
+  { feeUsd: 2000, minor: 2000_000_000n, pot: 32000, rakeUsd: "3,840.00", winnerUsd: "28,160.00" },
+];
+
+export const GAME_TIME_CONTROLS = {
+  chess: { initialSeconds: 300, incrementSeconds: 3 },
+  dominoes: { initialSeconds: 120, incrementSeconds: 2 },
+  backgammon: { initialSeconds: 180, incrementSeconds: 2 },
+  checkers: { initialSeconds: 120, incrementSeconds: 2 },
+  "speed-math": { initialSeconds: 60, incrementSeconds: 0 },
+  "connect-four": { initialSeconds: 120, incrementSeconds: 2 },
+  xo: { initialSeconds: 60, incrementSeconds: 1 },
+  seega: { initialSeconds: 180, incrementSeconds: 2 },
+  reversi: { initialSeconds: 180, incrementSeconds: 2 },
+  gomoku: { initialSeconds: 180, incrementSeconds: 2 },
+};
+
+export const DEFAULT_GAMES = [
+  { id: "chess", name: "Chess" },
+  { id: "dominoes", name: "Dominoes" },
+  { id: "backgammon", name: "Backgammon" },
+  { id: "checkers", name: "Checkers" },
+  { id: "speed-math", name: "Speed Math" },
 ];
 
 export function createAutomatedTournamentEngine(db, tournamentService) {
-  async function spawnTournament(gameDef) {
+  async function spawnTournament(gameId, gameName, tier) {
     const closesAt = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
+    const timeControl = GAME_TIME_CONTROLS[gameId] || { initialSeconds: 180, incrementSeconds: 2 };
+    const title = `${gameName} 16 Championship [$${tier.feeUsd} USDT]`;
+    const description = `16-Player Single Elimination. Winner takes 88% ($${tier.winnerUsd} USDT). 12% Platform Fee.`;
+
     const created = await tournamentService.create({
-      gameId: gameDef.gameId,
+      gameId,
       format: "SINGLE_ELIMINATION",
       tier: "CASH",
-      entryFeeMinor: 10000000n, // 10 USDT
+      entryFeeMinor: tier.minor,
       asset: "USDT",
       capacity: 16,
       minPlayers: 16,
-      timeControl: { initialSeconds: gameDef.initialSeconds, incrementSeconds: gameDef.incrementSeconds },
+      timeControl,
       registrationClosesAt: closesAt,
       scheduledStartsAt: closesAt,
-      title: gameDef.title,
-      description: gameDef.description,
+      title,
+      description,
       prizeStructure: [{ rank: 1, bps: 10000 }],
       createdBy: "system-automation",
       visibility: "PUBLIC",
@@ -89,36 +88,57 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
     const spawned = [];
     const settled = [];
 
-    for (const gameDef of AUTOMATED_TOURNAMENT_GAMES) {
-      try {
-        const existing = await db.query(
-          `SELECT t.id, t.status,
-                  (SELECT count(*)::int FROM tournament_registration tr
-                    WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS registered_count
-             FROM tournament t
-            WHERE t.game_id = $1 AND t.tier = 'CASH' AND t.capacity = 16 AND t.status = 'REGISTRATION'
-            ORDER BY t.created_at DESC LIMIT 1`,
-          [gameDef.gameId]
-        );
+    // Query games where auto_tournaments_enabled = TRUE, is_live = TRUE, and cash_enabled = TRUE
+    let activeGames;
+    try {
+      const gRes = await db.query(
+        `SELECT id, display_name FROM game 
+          WHERE auto_tournaments_enabled = TRUE 
+            AND is_live = TRUE 
+            AND cash_enabled = TRUE
+          ORDER BY id ASC`
+      );
+      activeGames = gRes.rows.length ? gRes.rows : DEFAULT_GAMES.map(g => ({ id: g.id, display_name: g.name }));
+    } catch {
+      activeGames = DEFAULT_GAMES.map(g => ({ id: g.id, display_name: g.name }));
+    }
 
-        if (existing.rows.length === 0) {
-          // No open tournament exists for this game -- spawn one!
-          const newId = await spawnTournament(gameDef);
-          if (newId) spawned.push({ gameId: gameDef.gameId, tournamentId: newId });
-        } else {
-          const row = existing.rows[0];
-          // If full (16/16), start it and immediately spawn the next tournament!
-          if (row.registered_count >= 16) {
-            const startRes = await tournamentService.start(row.id);
-            if (startRes.ok) {
-              started.push(row.id);
-              const nextId = await spawnTournament(gameDef);
-              if (nextId) spawned.push({ gameId: gameDef.gameId, tournamentId: nextId });
+    for (const game of activeGames) {
+      for (const tier of TOURNAMENT_TIERS) {
+        try {
+          const existing = await db.query(
+            `SELECT t.id, t.status,
+                    (SELECT count(*)::int FROM tournament_registration tr
+                      WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS registered_count
+               FROM tournament t
+              WHERE t.game_id = $1 
+                AND t.tier = 'CASH' 
+                AND t.entry_fee_minor = $2 
+                AND t.capacity = 16 
+                AND t.status = 'REGISTRATION'
+              ORDER BY t.created_at DESC LIMIT 1`,
+            [game.id, String(tier.minor)]
+          );
+
+          if (existing.rows.length === 0) {
+            // No open tournament exists for this game and tier -- spawn one!
+            const newId = await spawnTournament(game.id, game.display_name || game.name || game.id, tier);
+            if (newId) spawned.push({ gameId: game.id, tier: tier.feeUsd, tournamentId: newId });
+          } else {
+            const row = existing.rows[0];
+            // If full (16/16), start it and immediately spawn the next tournament!
+            if (row.registered_count >= 16) {
+              const startRes = await tournamentService.start(row.id);
+              if (startRes.ok) {
+                started.push(row.id);
+                const nextId = await spawnTournament(game.id, game.display_name || game.name || game.id, tier);
+                if (nextId) spawned.push({ gameId: game.id, tier: tier.feeUsd, tournamentId: nextId });
+              }
             }
           }
+        } catch {
+          // Continue to next tier/game
         }
-      } catch (err) {
-        // Continue processing other games
       }
     }
 
@@ -127,7 +147,7 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
       const completed = await db.query(
         `SELECT id FROM tournament
           WHERE status = 'COMPLETED' AND tier = 'CASH' AND capacity = 16
-          ORDER BY completed_at ASC LIMIT 5`
+          ORDER BY completed_at ASC LIMIT 10`
       );
       for (const row of completed.rows) {
         const sRes = await tournamentService.settlePrizes(row.id);
@@ -140,5 +160,6 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
     return { started, spawned, settled };
   }
 
-  return { tick, spawnTournament, games: AUTOMATED_TOURNAMENT_GAMES };
+  return { tick, spawnTournament, tiers: TOURNAMENT_TIERS };
 }
+

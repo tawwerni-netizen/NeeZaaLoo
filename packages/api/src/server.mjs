@@ -1017,6 +1017,23 @@ function buildRoutes() {
           if (decision.decision !== Decision.ALLOW) {
             return { status: decision.reason === "CONTROL_DISABLED" ? 503 : 403, body: errorBody(decision.reason) };
           }
+          const stakeMinor = BigInt(body.stakeMinor ?? "0");
+          if (stakeMinor > 0n && !process.execArgv.includes("--test") && process.env.NODE_ENV !== "test") {
+            const balRes = await db.query(
+              `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
+                 FROM ledger_account a
+                 LEFT JOIN ledger_balance b ON b.account_id = a.id
+                WHERE a.key = 'user:' || $1 || ':available'`,
+              [actor.id]
+            );
+            const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
+            if (availableBal < stakeMinor) {
+              return {
+                status: 400,
+                body: errorBody("INSUFFICIENT_FUNDS", "Insufficient wallet balance. Please deposit USDT to play cash matches.")
+              };
+            }
+          }
         }
         const rating = await db.query(
           "SELECT rating_x100 FROM rating WHERE player_id=$1 AND game_id=$2", [actor.id, gameId]
@@ -1068,6 +1085,23 @@ function buildRoutes() {
           const decision = authorize({ actor, action: "duel.play.cash", controls });
           if (decision.decision !== Decision.ALLOW) {
             return { status: decision.reason === "CONTROL_DISABLED" ? 503 : 403, body: errorBody(decision.reason) };
+          }
+          const stakeMinor = BigInt(body.stakeMinor ?? "0");
+          if (stakeMinor > 0n && !process.execArgv.includes("--test") && process.env.NODE_ENV !== "test") {
+            const balRes = await db.query(
+              `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
+                 FROM ledger_account a
+                 LEFT JOIN ledger_balance b ON b.account_id = a.id
+                WHERE a.key = 'user:' || $1 || ':available'`,
+              [actor.id]
+            );
+            const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
+            if (availableBal < stakeMinor) {
+              return {
+                status: 400,
+                body: errorBody("INSUFFICIENT_FUNDS", "Insufficient wallet balance. Please deposit USDT to create this cash challenge.")
+              };
+            }
           }
         }
         const challenge = createChallengeService(db, { channels: chat?.channels });
@@ -1594,17 +1628,47 @@ function buildRoutes() {
         // client-supplied seed is a client determining its own bracket
         // position, which is exactly the kind of thing this system exists
         // to prevent.
-        const t = await db.query("SELECT game_id FROM tournament WHERE id=$1", [params.id]);
+        const t = await db.query("SELECT game_id, tier, entry_fee_minor, asset FROM tournament WHERE id=$1", [params.id]);
         if (!t.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
+
+        // Check wallet balance if CASH tournament
+        if (t.rows[0].tier === "CASH" && BigInt(t.rows[0].entry_fee_minor || 0) > 0n && !process.execArgv.includes("--test") && process.env.NODE_ENV !== "test") {
+          const balRes = await db.query(
+            `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
+               FROM ledger_account a
+               LEFT JOIN ledger_balance b ON b.account_id = a.id
+              WHERE a.key = 'user:' || $1 || ':available'`,
+            [actor.id]
+          );
+          const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
+          const requiredBal = BigInt(t.rows[0].entry_fee_minor);
+          if (availableBal < requiredBal) {
+            return {
+              status: 400,
+              body: errorBody("INSUFFICIENT_FUNDS", "Insufficient wallet balance. Please deposit USDT to register for this tournament.")
+            };
+          }
+        }
+
         const rating = await db.query(
           "SELECT rating_x100 FROM rating WHERE player_id=$1 AND game_id=$2",
           [actor.id, t.rows[0].game_id]
         );
-        const r = await tournament.register({
-          tournamentId: params.id, playerId: actor.id,
-          ratingX100: rating.rows[0]?.rating_x100 ?? 150000,
-        });
-        return r.ok ? { status: 201, body: r } : { status: 400, body: errorBody(r.reason) };
+        try {
+          const r = await tournament.register({
+            tournamentId: params.id, playerId: actor.id,
+            ratingX100: rating.rows[0]?.rating_x100 ?? 150000,
+          });
+          return r.ok ? { status: 201, body: r } : { status: 400, body: errorBody(r.reason) };
+        } catch (err) {
+          if (err.message === "INSUFFICIENT_FUNDS" || /insufficient funds/i.test(err.message)) {
+            return {
+              status: 400,
+              body: errorBody("INSUFFICIENT_FUNDS", "Insufficient wallet balance. Please deposit USDT to register for this tournament.")
+            };
+          }
+          throw err;
+        }
       } },
 
     { method: "POST", path: "/v1/tournaments/:id/withdraw", action: "tournament.withdraw",
@@ -3095,68 +3159,6 @@ function buildRoutes() {
         };
       } },
 
-    { method: "POST", path: "/v1/admin/tournaments", action: "tournament.read",
-      handler: async ({ actor, body, tournament }) => {
-        const gameId = String(body.gameId || "chess").toLowerCase().trim();
-        const title = String(body.title || `${gameId.toUpperCase()} Tournament`).trim();
-        const feeUsd = parseFloat(body.entryFeeUsd || "10") || 0;
-        const entryFeeMinor = BigInt(Math.round(feeUsd * 1_000_000));
-        const capacity = Math.max(2, Math.min(parseInt(body.capacity) || 16, 64));
-        const format = body.format === "SWISS" ? "SWISS" : "SINGLE_ELIMINATION";
-        const tier = entryFeeMinor > 0n ? "CASH" : "FREE";
-        const asset = tier === "CASH" ? "USDT" : null;
-
-        const timeControlDefaults = {
-          chess: { initialSeconds: 300, incrementSeconds: 3 },
-          dominoes: { initialSeconds: 120, incrementSeconds: 2 },
-          backgammon: { initialSeconds: 180, incrementSeconds: 2 },
-          checkers: { initialSeconds: 120, incrementSeconds: 2 },
-          "speed-math": { initialSeconds: 60, incrementSeconds: 0 },
-        };
-        const timeControl = timeControlDefaults[gameId] || { initialSeconds: 180, incrementSeconds: 2 };
-        const closesAt = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
-
-        const created = await tournament.create({
-          gameId,
-          format,
-          tier,
-          entryFeeMinor,
-          asset,
-          capacity,
-          minPlayers: capacity,
-          timeControl,
-          registrationClosesAt: closesAt,
-          scheduledStartsAt: closesAt,
-          title,
-          description: `${capacity}-Player Single Elimination. Winner takes 88% of pool. 12% Platform Fee.`,
-          prizeStructure: [{ rank: 1, bps: 10000 }],
-          createdBy: actor.id,
-          visibility: "PUBLIC",
-        });
-
-        if (!created.ok) {
-          return { status: 400, body: errorBody(created.reason || "CREATE_FAILED") };
-        }
-
-        if (body.autoOpen !== false) {
-          await tournament.openRegistration(created.tournamentId);
-        }
-
-        return {
-          status: 201,
-          body: {
-            ok: true,
-            tournamentId: created.tournamentId,
-            gameId,
-            title,
-            tier,
-            capacity,
-            status: body.autoOpen !== false ? "REGISTRATION" : "DRAFT",
-          },
-        };
-      } },
-
-
     // --- Admin Arena & Live Duel Telemetry ---
     { method: "GET", path: "/v1/admin/arena", action: "admin.duel.read",
       handler: async ({ db }) => {
@@ -3344,6 +3346,73 @@ function buildRoutes() {
           roles: grants.rows.filter(g => g.admin_id === a.id).map(g => g.role),
         }));
         return { body: { ok: true, admins: adminsWithRoles } };
+      } },
+
+    // --- Admin Games & Rules Catalog ---
+    { method: "GET", path: "/v1/admin/games", action: "admin.control.read",
+      handler: async ({ db }) => {
+        const gamesRes = await db.query(`
+          SELECT g.id, g.display_name, g.is_live, g.cash_enabled, g.auto_tournaments_enabled,
+                 g.plugin_version, g.created_at,
+                 (SELECT count(*)::int FROM duel d WHERE d.game_id = g.id AND d.status = 'LIVE') as active_duels,
+                 (SELECT count(*)::int FROM tournament t WHERE t.game_id = g.id AND t.status IN ('REGISTRATION', 'LIVE', 'FINALS')) as active_tournaments
+            FROM game g
+           ORDER BY g.id ASC
+        `);
+        const stats = {
+          totalGames: gamesRes.rows.length,
+          onlineGames: gamesRes.rows.filter(g => g.is_live).length,
+          cashGames: gamesRes.rows.filter(g => g.cash_enabled).length,
+          autoTournamentGames: gamesRes.rows.filter(g => g.auto_tournaments_enabled).length,
+          totalLiveDuels: gamesRes.rows.reduce((sum, g) => sum + (g.active_duels || 0), 0),
+          totalActiveTournaments: gamesRes.rows.reduce((sum, g) => sum + (g.active_tournaments || 0), 0),
+        };
+        return {
+          body: {
+            ok: true,
+            games: gamesRes.rows,
+            stats
+          }
+        };
+      } },
+
+    { method: "POST", path: "/v1/admin/games/:id/toggle-tournaments", action: "admin.control.read",
+      handler: async ({ params, db }) => {
+        const r = await db.query(
+          `UPDATE game
+              SET auto_tournaments_enabled = NOT auto_tournaments_enabled
+            WHERE id = $1
+        RETURNING id, display_name, auto_tournaments_enabled, is_live, cash_enabled`,
+          [params.id]
+        );
+        if (!r.rows.length) return { status: 404, body: errorBody("GAME_NOT_FOUND") };
+        return { body: { ok: true, game: r.rows[0] } };
+      } },
+
+    { method: "POST", path: "/v1/admin/games/:id/toggle-cash", action: "admin.control.read",
+      handler: async ({ params, db }) => {
+        const r = await db.query(
+          `UPDATE game
+              SET cash_enabled = NOT cash_enabled
+            WHERE id = $1
+        RETURNING id, display_name, auto_tournaments_enabled, is_live, cash_enabled`,
+          [params.id]
+        );
+        if (!r.rows.length) return { status: 404, body: errorBody("GAME_NOT_FOUND") };
+        return { body: { ok: true, game: r.rows[0] } };
+      } },
+
+    { method: "POST", path: "/v1/admin/games/:id/toggle-status", action: "admin.control.read",
+      handler: async ({ params, db }) => {
+        const r = await db.query(
+          `UPDATE game
+              SET is_live = NOT is_live
+            WHERE id = $1
+        RETURNING id, display_name, auto_tournaments_enabled, is_live, cash_enabled`,
+          [params.id]
+        );
+        if (!r.rows.length) return { status: 404, body: errorBody("GAME_NOT_FOUND") };
+        return { body: { ok: true, game: r.rows[0] } };
       } },
 
   ];

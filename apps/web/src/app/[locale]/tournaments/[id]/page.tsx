@@ -52,6 +52,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const [registered, setRegistered] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -93,14 +94,20 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   async function register() {
     setBusy(true);
     setError(null);
+    setErrorCode(null);
     try {
       await post(`/v1/tournaments/${id}/register`);
       setRegistered(true);
       await refresh();
     } catch (e) {
       const code = e instanceof ApiError ? e.code : undefined;
+      setErrorCode(code ?? null);
       if (code === "ALREADY_REGISTERED") setRegistered(true);
-      setError(code && REGISTER_ERROR_KEYS[code] ? t(REGISTER_ERROR_KEYS[code]) : t("tournamentsPage.error_generic"));
+      if (code === "INSUFFICIENT_FUNDS") {
+        setError(e instanceof ApiError && e.message ? e.message : "Insufficient wallet balance. Please deposit USDT to register.");
+      } else {
+        setError(code && REGISTER_ERROR_KEYS[code] ? t(REGISTER_ERROR_KEYS[code]) : t("tournamentsPage.error_generic"));
+      }
     } finally {
       setBusy(false);
     }
@@ -193,7 +200,18 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
               </Button>
             )}
             {registered && !error && <span className={styles.registeredNote}>{t("tournamentsPage.registered")}</span>}
-            {error && <p className={styles.error} role="alert">{error}</p>}
+            {error && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", width: "100%" }}>
+                <p className={styles.error} role="alert">{error}</p>
+                {errorCode === "INSUFFICIENT_FUNDS" && (
+                  <LocaleLink href="/wallet">
+                    <Button variant="primary">
+                      💳 Deposit USDT to Wallet
+                    </Button>
+                  </LocaleLink>
+                )}
+              </div>
+            )}
           </div>
         )}
 

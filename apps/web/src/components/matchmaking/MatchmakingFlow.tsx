@@ -27,6 +27,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import { Countdown } from "@/components/game/Countdown";
+import { LocaleLink } from "@/components/LocaleLink";
 import type { StakeChoice } from "@/components/play/StakeSelect";
 import styles from "./MatchmakingFlow.module.css";
 
@@ -44,6 +45,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
 
   const [phase, setPhase] = useState<"queuing" | "waiting" | "matched" | "countdown" | "error">("queuing");
   const [error, setError] = useState<string | null>(null);
+  const [insufficientFunds, setInsufficientFunds] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [opponent, setOpponent] = useState<OpponentInfo | null>(null);
   const [duelId, setDuelId] = useState<string | null>(null);
@@ -63,6 +65,10 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
       } catch (e) {
         if (e instanceof ApiError && e.code === "ALREADY_QUEUED") {
           setPhase("waiting");
+        } else if (e instanceof ApiError && e.code === "INSUFFICIENT_FUNDS") {
+          setError(e.message || "Insufficient wallet balance. Please deposit USDT to play cash matches.");
+          setInsufficientFunds(true);
+          setPhase("error");
         } else {
           setError(t("matchmaking.join_error"));
           setPhase("error");
@@ -154,6 +160,51 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
         {phase === "error" && (
           <motion.div key="error" {...fade(reduceMotion)} className={styles.center}>
             <p className={styles.status} role="alert">{error}</p>
+            {insufficientFunds ? (
+              <div style={{ marginTop: "16px", display: "flex", gap: "10px", justifyContent: "center" }}>
+                <LocaleLink href="/wallet">
+                  <button
+                    type="button"
+                    style={{
+                      padding: "8px 20px",
+                      background: "#22c55e",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontSize: "14px",
+                    }}
+                  >
+                    💳 Deposit USDT
+                  </button>
+                </LocaleLink>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/${locale}/play`)}
+                  style={{
+                    padding: "8px 16px",
+                    background: "transparent",
+                    color: "var(--nz-text-2)",
+                    border: "1px solid var(--nz-border)",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  Back to Play
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className={styles.cancelLink}
+                onClick={() => router.push(`/${locale}/play`)}
+                style={{ marginTop: "12px" }}
+              >
+                {t("matchmaking.cancel")}
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

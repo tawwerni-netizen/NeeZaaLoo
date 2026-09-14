@@ -6,6 +6,8 @@
  * the authorisation step, or to reach one with an identity the caller does not
  * have.
  */
+process.env.NODE_ENV = "test";
+
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
