@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Hostinger Production Entrypoint -- node server.js (CommonJS, root-level).
  *
  * Architecture:
@@ -7,11 +7,6 @@
  *   - Realtime Gateway (apps/gateway)-> 127.0.0.1:3010
  *   - Background Worker (apps/worker)-> 127.0.0.1:4001
  *   - Master Reverse Proxy           -> 0.0.0.0:PORT (default 3000)
- *
- * CRITICAL: The Master Proxy does NOT open its listening port until
- * Next.js on port 3002 is verified READY and accepting connections.
- * This prevents Hostinger deployment health-checks from hitting port
- * 3000 during the 500ms startup gap and failing with ECONNREFUSED.
  */
 const { createServer } = require("node:http");
 const http = require("node:http");
@@ -126,7 +121,7 @@ function cleanHopByHopHeaders(headers) {
 }
 
 function proxyHttp(req, res, targetPort) {
-  const pHeaders = Object.assign({}, req.headers);
+  const pHeaders = cleanHopByHopHeaders(req.headers);
   const originalHost = req.headers["host"] || "nizalo.com";
   pHeaders["host"] = originalHost;
   pHeaders["x-forwarded-host"] = originalHost;
@@ -169,6 +164,7 @@ function proxyHttp(req, res, targetPort) {
 
   if (req.method === "GET" || req.method === "HEAD") {
     proxyReq.end();
+    req.resume(); // CRITICAL: consume incoming stream so socket doesn't hang
   } else {
     req.pipe(proxyReq, { end: true });
   }
@@ -179,6 +175,7 @@ function proxyHttp(req, res, targetPort) {
 // ---------------------------------------------------------------------------
 const server = createServer((req, res) => {
   const url = req.url || "/";
+  console.log(`[REQ] ${req.method} ${url}`);
 
   if (url.startsWith("/v1/") || url === "/v1") {
     proxyHttp(req, res, apiPort);
