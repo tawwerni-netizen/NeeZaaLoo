@@ -160,7 +160,17 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
 
         <div className={styles.metaRow}>
           <span>{t(`tournamentsPage.format.${tournament.format}`)}</span>
-          <span>{tournament.tier === "FREE" ? t("tournamentsPage.entry_free") : t("tournamentsPage.entry_fee", { amount: Number(tournament.entry_fee_minor) / 100, asset: tournament.asset ?? "" })}</span>
+          <span>
+            {tournament.tier === "FREE"
+              ? t("tournamentsPage.entry_free")
+              : `Entry: ${(Number(tournament.entry_fee_minor) / 1_000_000).toFixed(2)} ${tournament.asset ?? "USDT"}`}
+          </span>
+          <span style={{ color: "#10b981", fontWeight: 700 }}>
+            Winner Pool (88%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.88).toFixed(2)} USDT
+          </span>
+          <span style={{ color: "#818cf8" }}>
+            Platform Fee (12%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.12).toFixed(2)} USDT
+          </span>
           <span className="nz-num">{t("tournamentsPage.registered_count", { count: tournament.registeredCount, capacity: tournament.capacity })}</span>
           {startTarget && <span>{t("tournamentsPage.starts_at", { date: formatDate(startTarget, locale) })}</span>}
         </div>

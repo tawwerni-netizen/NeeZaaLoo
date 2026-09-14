@@ -47,6 +47,7 @@ import { BackgammonPlugin } from "../../../packages/game-backgammon/src/plugin.m
 import { SeegaPlugin } from "../../../packages/game-seega/src/plugin.mjs";
 import { ReversiPlugin } from "../../../packages/game-reversi/src/plugin.mjs";
 import { GomokuPlugin } from "../../../packages/game-gomoku/src/plugin.mjs";
+import { createEmailService, createConsoleEmailProvider, createMockEmailProvider, createSmtpEmailProvider } from "../../../packages/email/src/index.mjs";
 import {
   createLogger, createMetricsRegistry, createConsoleSink, createStructuredLogSink,
 } from "../../../packages/observability/src/index.mjs";
@@ -151,8 +152,20 @@ async function main() {
   // tournament.reportResult()), advances a round once every pairing in it
   // is decided, and auto-settles FREE-tier tournaments. Runs at the same
   // cadence as settlement/progression -- every step here is idempotent and
-  // status-gated, so a faster or slower tick is always safe.
-  const tournament = createTournamentService(db);
+  let emailProvider;
+  if (process.env.SMTP_HOST) {
+    emailProvider = createSmtpEmailProvider({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: process.env.SMTP_SECURE !== "false",
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+    });
+  } else {
+    emailProvider = process.env.NODE_ENV === "production" ? createMockEmailProvider() : createConsoleEmailProvider();
+  }
+  const emailService = createEmailService({ provider: emailProvider });
+
+  const tournament = createTournamentService(db, { emailService });
   const tournamentSweep = createTournamentSweep(db, tournament, settlement);
   const tournamentSweepIntervalMs = Number(process.env.TOURNAMENT_SWEEP_INTERVAL_MS || 3000);
   const tournamentSweepWorker = createTickLoop(() => tournamentSweep.sweepAll(), {

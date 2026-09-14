@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Archivo, IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import { IncomingChallengeWatcher } from "@/components/play/IncomingChallengeWatcher";
+import { TournamentReadyWatcher } from "@/components/tournaments/TournamentReadyWatcher";
 import { AuthPopupProvider } from "@/lib/auth-popup-context";
 import { AuthPopup, AuthPopupAutoOpen } from "@/components/auth/AuthPopup";
 import { PolicyReacceptanceModal } from "@/components/legal/PolicyReacceptanceModal";
@@ -78,6 +79,7 @@ export default async function LocaleLayout({
             <AuthPopupProvider>
               {children}
               <IncomingChallengeWatcher />
+              <TournamentReadyWatcher />
               <AuthPopupAutoOpen />
               <AuthPopup />
               <PolicyReacceptanceModal />

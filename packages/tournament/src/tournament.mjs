@@ -34,7 +34,7 @@ export const TournamentError = {
   NO_ECONOMY_RULE: "NO_ECONOMY_RULE",
 };
 
-export function createTournamentService(db, { now = () => Date.now() } = {}) {
+export function createTournamentService(db, { now = () => Date.now(), emailService = null } = {}) {
   const svc = {
     /** Create a tournament in DRAFT. Registration is opened as a separate step. */
     async create({
@@ -306,7 +306,7 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
     async start(tournamentId) {
       return db.transaction(async (tx) => {
         const t = await tx.query(
-          `SELECT format, game_id, time_control, swiss_rounds, min_players, status, ruleset_version
+          `SELECT format, game_id, time_control, swiss_rounds, min_players, status, ruleset_version, title
              FROM tournament WHERE id=$1 FOR UPDATE`,
           [tournamentId]
         );
@@ -345,6 +345,33 @@ export function createTournamentService(db, { now = () => Date.now() } = {}) {
             );
 
         await createRound(tx, tournamentId, 1, firstRoundPairings, tour.game_id, tour.time_control, tour.ruleset_version);
+
+        for (const pid of players) {
+          await notify(tx, pid, "TOURNAMENT_STARTING", "Tournament Starting Now!",
+            "Your 16-player bracket is starting. You have 1 minute to enter your match.",
+            { tournamentId, gameId: tour.game_id, roundNumber: 1, startsInSeconds: 60, startingAt: new Date(now()).toISOString() });
+        }
+
+        if (emailService) {
+          try {
+            const emailRows = await tx.query(
+              `SELECT ei.email, p.handle FROM email_identity ei
+                 JOIN player p ON p.id = ei.player_id
+                WHERE ei.player_id = ANY($1::text[])`,
+              [players]
+            );
+            for (const er of emailRows.rows) {
+              void emailService.sendTournamentStartingEmail({
+                to: er.email,
+                tournamentTitle: tour.title || "16-Player Tournament",
+                tournamentId,
+                startsInSeconds: 60,
+              }).catch(() => {});
+            }
+          } catch {
+            // Non-blocking email delivery
+          }
+        }
 
         await tx.query(
           `INSERT INTO tournament_event (tournament_id, event, actor_type, detail)

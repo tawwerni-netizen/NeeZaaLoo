@@ -72,7 +72,7 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
       scheduledStartsAt: closesAt,
       title: gameDef.title,
       description: gameDef.description,
-      prizeStructure: [{ place: 1, percent: 100 }],
+      prizeStructure: [{ rank: 1, bps: 10000 }],
       createdBy: "system-automation",
       visibility: "PUBLIC",
     });

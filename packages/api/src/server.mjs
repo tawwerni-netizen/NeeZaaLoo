@@ -3078,9 +3078,11 @@ function buildRoutes() {
         );
         const stats = await db.query(`
           SELECT
+            count(*)::int as total_tournaments,
             count(*) FILTER (WHERE status IN ('REGISTRATION', 'LIVE', 'FINALS'))::int as active_brackets,
-            COALESCE(sum(entry_fee_minor * capacity) FILTER (WHERE status IN ('REGISTRATION', 'LIVE', 'FINALS') AND tier = 'CASH'), 0)::text as prize_pool_minor,
-            (SELECT count(*)::int FROM tournament_registration WHERE created_at >= now() - interval '24 hours') as registrations_today,
+            COALESCE(sum(entry_fee_minor * capacity * 88 / 100) FILTER (WHERE status IN ('REGISTRATION', 'LIVE', 'FINALS') AND tier = 'CASH'), 0)::text as total_prize_pool_minor,
+            (SELECT count(DISTINCT tr2.player_id)::int FROM tournament_registration tr2) as total_players,
+            (SELECT count(*)::int FROM tournament_registration tr3 WHERE tr3.registered_at >= now() - interval '24 hours') as registrations_today,
             count(*) FILTER (WHERE status IN ('COMPLETED', 'SETTLED'))::int as completed_brackets
           FROM tournament
         `);
@@ -3090,6 +3092,67 @@ function buildRoutes() {
             tournaments: r.rows,
             stats: stats.rows[0]
           }
+        };
+      } },
+
+    { method: "POST", path: "/v1/admin/tournaments", action: "tournament.read",
+      handler: async ({ actor, body, tournament }) => {
+        const gameId = String(body.gameId || "chess").toLowerCase().trim();
+        const title = String(body.title || `${gameId.toUpperCase()} Tournament`).trim();
+        const feeUsd = parseFloat(body.entryFeeUsd || "10") || 0;
+        const entryFeeMinor = BigInt(Math.round(feeUsd * 1_000_000));
+        const capacity = Math.max(2, Math.min(parseInt(body.capacity) || 16, 64));
+        const format = body.format === "SWISS" ? "SWISS" : "SINGLE_ELIMINATION";
+        const tier = entryFeeMinor > 0n ? "CASH" : "FREE";
+        const asset = tier === "CASH" ? "USDT" : null;
+
+        const timeControlDefaults = {
+          chess: { initialSeconds: 300, incrementSeconds: 3 },
+          dominoes: { initialSeconds: 120, incrementSeconds: 2 },
+          backgammon: { initialSeconds: 180, incrementSeconds: 2 },
+          checkers: { initialSeconds: 120, incrementSeconds: 2 },
+          "speed-math": { initialSeconds: 60, incrementSeconds: 0 },
+        };
+        const timeControl = timeControlDefaults[gameId] || { initialSeconds: 180, incrementSeconds: 2 };
+        const closesAt = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
+
+        const created = await tournament.create({
+          gameId,
+          format,
+          tier,
+          entryFeeMinor,
+          asset,
+          capacity,
+          minPlayers: capacity,
+          timeControl,
+          registrationClosesAt: closesAt,
+          scheduledStartsAt: closesAt,
+          title,
+          description: `${capacity}-Player Single Elimination. Winner takes 88% of pool. 12% Platform Fee.`,
+          prizeStructure: [{ rank: 1, bps: 10000 }],
+          createdBy: actor.id,
+          visibility: "PUBLIC",
+        });
+
+        if (!created.ok) {
+          return { status: 400, body: errorBody(created.reason || "CREATE_FAILED") };
+        }
+
+        if (body.autoOpen !== false) {
+          await tournament.openRegistration(created.tournamentId);
+        }
+
+        return {
+          status: 201,
+          body: {
+            ok: true,
+            tournamentId: created.tournamentId,
+            gameId,
+            title,
+            tier,
+            capacity,
+            status: body.autoOpen !== false ? "REGISTRATION" : "DRAFT",
+          },
         };
       } },
 

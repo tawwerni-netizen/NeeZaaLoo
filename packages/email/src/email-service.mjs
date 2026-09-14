@@ -99,9 +99,30 @@ export function createEmailService({ provider, sender = OFFICIAL_SENDER, resourc
     return provider.send({ to, from: sender, subject: emailSubject, html, text, locale, template: "ticket_resolved", metadata: { ticketId } });
   }
 
+  async function sendTournamentStartingEmail({ to, locale, tournamentTitle, tournamentId, startsInSeconds = 60 }) {
+    const title = tournamentTitle || "16-Player Tournament";
+    const subject = `Tournament Starting: ${title}`;
+    const playUrl = `${appBaseUrl}/${locale ?? DEFAULT_LOCALE}/tournaments/${tournamentId}`;
+    const text = `Your tournament "${title}" is starting in ${startsInSeconds} seconds! Please be ready in your browser/app now.\n\nPlay: ${playUrl}`;
+    const html = `
+      <div style="font-family: sans-serif; background: #0b0e14; color: #fff; padding: 24px; border-radius: 8px;">
+        <h2 style="color: #6366f1; margin-top: 0;">Tournament Starting Soon!</h2>
+        <p>Your tournament <strong>${title}</strong> has reached full capacity (16/16) and starts in <strong>${startsInSeconds} seconds</strong>.</p>
+        <p style="margin: 24px 0;">
+          <a href="${playUrl}" style="background: #6366f1; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+            Enter Tournament Arena Now
+          </a>
+        </p>
+        <p style="color: #94a3b8; font-size: 13px;">Please enter within 1 minute so you do not forfeit your match.</p>
+      </div>
+    `;
+    return provider.send({ to, from: sender, subject, html, text, locale, template: "tournament_starting", metadata: { tournamentId } });
+  }
+
   return {
     sendWelcomeEmail, sendVerificationEmail, sendLoginCode,
     sendPasswordResetEmail, sendPasswordResetConfirmation,
     sendTicketCreatedEmail, sendTicketStaffRepliedEmail, sendTicketWaitingForUserEmail, sendTicketResolvedEmail,
+    sendTournamentStartingEmail,
   };
 }

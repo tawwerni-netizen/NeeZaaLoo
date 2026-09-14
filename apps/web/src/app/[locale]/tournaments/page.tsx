@@ -84,8 +84,17 @@ function TournamentsList() {
                 </div>
                 {row.title && <h2 className={styles.title}>{row.title}</h2>}
                 <div className={styles.cardMeta}>
-                  <span>{row.tier === "FREE" ? t("tournamentsPage.entry_free") : t("tournamentsPage.entry_fee", { amount: Number(row.entry_fee_minor) / 100, asset: row.asset ?? "" })}</span>
-                  <span className="nz-num">{t("tournamentsPage.registered_count", { count: row.registered_count, capacity: row.capacity })}</span>
+                  <span>
+                    {row.tier === "FREE"
+                      ? t("tournamentsPage.entry_free")
+                      : `${(Number(row.entry_fee_minor) / 1_000_000).toFixed(2)} ${row.asset || "USDT"}`}
+                  </span>
+                  <span style={{ color: "#10b981", fontWeight: 600 }}>
+                    Prize: ${((Number(row.entry_fee_minor || 0) / 1_000_000) * row.capacity * 0.88).toFixed(2)} USDT (88%)
+                  </span>
+                  <span className="nz-num">
+                    {t("tournamentsPage.registered_count", { count: row.registered_count, capacity: row.capacity })}
+                  </span>
                   {startTarget && <span>{t("tournamentsPage.starts_at", { date: formatDate(startTarget, locale) })}</span>}
                 </div>
                 <span className={styles.view}>{t("tournamentsPage.view")}</span>

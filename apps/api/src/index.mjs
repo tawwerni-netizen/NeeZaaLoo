@@ -134,7 +134,6 @@ async function main() {
 
   const auth = createAuthService(db, { signingKey, encryptionKey });
   const settlement = createSettlementService(db);
-  const tournament = createTournamentService(db);
   const globalSkill = createGlobalSkillService(db);
   const rbac = createRbacService(db);
   const emailIdentity = createEmailIdentityService(db);
@@ -157,6 +156,7 @@ async function main() {
       : createConsoleEmailProvider();
   }
   const emailServiceInstance = createEmailService({ provider: emailProvider });
+  const tournament = createTournamentService(db, { emailService: emailServiceInstance });
   const emailVerification = createEmailVerificationFlow(db, { emailChallenge, emailIdentity, emailService: emailServiceInstance });
   const welcomeEmail = createWelcomeEmailFlow(db, { emailService: emailServiceInstance });
   const emailLoginCode = createEmailLoginCodeFlow(db, { emailChallenge, emailIdentity, emailService: emailServiceInstance });
