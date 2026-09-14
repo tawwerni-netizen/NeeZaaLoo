@@ -253,12 +253,18 @@ export function createChallengeService(db, {
   async function listOutgoing(playerId) {
     await expireStale();
     const r = await db.query(
-      `SELECT dc.id, dc.game_id, dc.created_at, dc.expires_at, dc.tier, dc.stake_minor::text AS stake_minor, dc.asset,
+      `SELECT dc.id, dc.game_id, dc.created_at, dc.expires_at, dc.responded_at, dc.status,
+              dc.duel_id, dc.tier, dc.stake_minor::text AS stake_minor, dc.asset,
               dc.opponent_id, p.handle AS opponent_handle
          FROM duel_challenge dc JOIN player p ON p.id = dc.opponent_id
-        WHERE dc.challenger_id = $1 AND dc.status = 'PENDING' AND dc.expires_at > $2
+        WHERE dc.challenger_id = $1
+          AND (
+            (dc.status = 'PENDING' AND dc.expires_at > $2)
+            OR
+            (dc.status = 'ACCEPTED' AND dc.responded_at > $3)
+          )
         ORDER BY dc.created_at DESC`,
-      [playerId, new Date(now()).toISOString()]
+      [playerId, new Date(now()).toISOString(), new Date(now() - 60_000).toISOString()]
     );
     return r.rows;
   }

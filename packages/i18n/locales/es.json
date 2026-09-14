@@ -1063,6 +1063,20 @@
     "ticket_submit": "Enviar Ticket",
     "ticket_submitting": "Enviando...",
     "ticket_success": "¡Ticket enviado con éxito! Nuestro equipo responderá en breve.",
+    "ticket_strict_warning": "⚠️ Regla estricta: Nunca ingrese su contraseña, clave privada o código OTP.",
+    "ticket_subject_placeholder": "Resumen breve de su consulta",
+    "ticket_view_cta": "Ver ticket #{id} →",
+    "ticket_close_cta": "Cerrar",
+    "ticket_category_technical": "Problemas técnicos / Conexión",
+    "ticket_category_deposit_pending": "Depósito pendiente / USDT no recibido",
+    "ticket_category_withdrawal_pending": "Retiro pendiente",
+    "ticket_category_withdrawal_failed": "Retiro rechazado / Fallido",
+    "ticket_category_account": "Acceso a la cuenta / Ajustes",
+    "ticket_category_match_problem": "Problema en partida / Disputa de juego",
+    "ticket_category_tournament_problem": "Problema en torneo",
+    "ticket_category_anti_cheat": "Juego limpio / Reporte de trampa",
+    "ticket_category_abuse_report": "Abuso en chat / Acoso",
+    "ticket_category_other": "Otra consulta",
     "all_categories": "Todas las Categorías",
     "categories": {
       "account": "Cuenta",
@@ -1082,6 +1096,22 @@
       "chat": "Chat",
       "technical_issues": "Problemas Técnicos"
     }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "mark_all_read": "Marcar todo como leído",
+    "active_challenges": "Desafíos de partida activos",
+    "timeline": "Cronología y Actividad",
+    "empty": "No hay nuevas notificaciones",
+    "incoming_challenge": "¡{handle} te desafió a una partida de {game}!",
+    "outgoing_waiting": "Desafío enviado a {handle} en {game}. Esperando respuesta...",
+    "challenge_accepted": "¡{handle} aceptó tu desafío! La partida está comenzando...",
+    "join_match": "Entrar a la partida",
+    "accept": "Aceptar y Jugar",
+    "decline": "Rechazar",
+    "cancel": "Cancelar",
+    "expires_in": "Expira en {sec}s",
+    "clear": "Limpiar"
   },
   "tournamentsPage": {
     "heading": "Torneos y Campeonatos",

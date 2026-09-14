@@ -27,6 +27,12 @@ import { useI18n } from "@/lib/i18n/context";
 import { get } from "@/lib/api";
 import { ChallengePopup, type IncomingChallenge } from "./ChallengePopup";
 
+type OutgoingChallenge = {
+  id: string;
+  status?: string;
+  duel_id?: string | null;
+};
+
 export function IncomingChallengeWatcher() {
   const { player } = useAuth();
   const { locale } = useI18n();
@@ -37,12 +43,16 @@ export function IncomingChallengeWatcher() {
 
   const refresh = useCallback(async () => {
     try {
-      const r = await get<{ incoming: IncomingChallenge[] }>("/v1/challenges");
-      setIncoming(r.incoming);
+      const r = await get<{ incoming: IncomingChallenge[]; outgoing?: OutgoingChallenge[] }>("/v1/challenges");
+      setIncoming(r.incoming || []);
+      const accepted = (r.outgoing || []).find((c) => c.status === "ACCEPTED" && c.duel_id);
+      if (accepted && accepted.duel_id && !pathname.includes(`/game/${accepted.duel_id}`)) {
+        router.push(`/${locale}/game/${accepted.duel_id}`);
+      }
     } catch {
       // A transient poll failure is not fatal -- the next tick retries.
     }
-  }, []);
+  }, [locale, pathname, router]);
 
   useEffect(() => {
     if (!player || isAdminRoute) { setIncoming([]); return; }

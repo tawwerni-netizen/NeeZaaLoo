@@ -21,6 +21,7 @@
  * /game/[duelId] route every other mode uses.
  */
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { get, post, ApiError } from "@/lib/api";
 import { useI18n } from "@/lib/i18n/context";
@@ -32,6 +33,7 @@ type OutgoingRow = {
   id: string; game_id: string; created_at: string; expires_at: string;
   tier: "FREE" | "CASH"; stake_minor: string; asset: string | null;
   opponent_id: string; opponent_handle: string;
+  status?: string; duel_id?: string | null;
 };
 
 const ERROR_KEYS: Record<string, string> = {
@@ -46,7 +48,8 @@ export function FriendChallenge({ gameId, stake }: {
   gameId: string;
   stake?: StakeChoice;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -55,11 +58,17 @@ export function FriendChallenge({ gameId, stake }: {
   const refresh = useCallback(async () => {
     try {
       const r = await get<{ outgoing: OutgoingRow[] }>("/v1/challenges");
-      setOutgoing(r.outgoing.filter((c) => c.game_id === gameId));
+      const list = r.outgoing || [];
+      const accepted = list.find((c) => c.status === "ACCEPTED" && c.duel_id);
+      if (accepted && accepted.duel_id) {
+        router.push(`/${locale}/game/${accepted.duel_id}`);
+        return;
+      }
+      setOutgoing(list.filter((c) => c.game_id === gameId && (c.status === "PENDING" || !c.status)));
     } catch {
       // A transient poll failure is not fatal -- the next tick retries.
     }
-  }, [gameId]);
+  }, [gameId, locale, router]);
 
   useEffect(() => {
     void refresh();

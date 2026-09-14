@@ -1052,6 +1052,20 @@
     "ticket_submit": "Submit Ticket",
     "ticket_submitting": "Submitting...",
     "ticket_success": "Ticket submitted successfully! Our team will respond shortly.",
+    "ticket_strict_warning": "⚠️ Strict Rule: Never enter your password, private key, or OTP code.",
+    "ticket_subject_placeholder": "Brief summary of your inquiry",
+    "ticket_view_cta": "View Ticket #{id} →",
+    "ticket_close_cta": "Close",
+    "ticket_category_technical": "Technical Issues / Connection",
+    "ticket_category_deposit_pending": "Deposit Pending / Missing USDT",
+    "ticket_category_withdrawal_pending": "Withdrawal Pending",
+    "ticket_category_withdrawal_failed": "Withdrawal Rejected / Failed",
+    "ticket_category_account": "Account Access / Settings",
+    "ticket_category_match_problem": "Match Problem / Game Dispute",
+    "ticket_category_tournament_problem": "Tournament Issue",
+    "ticket_category_anti_cheat": "Fair Play / Cheat Report",
+    "ticket_category_abuse_report": "Chat Abuse / Harassment",
+    "ticket_category_other": "Other Inquiry",
     "all_categories": "All Categories",
     "categories": {
       "account": "Account",
@@ -1071,6 +1085,22 @@
       "chat": "Chat",
       "technical_issues": "Technical Issues"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Mark all as read",
+    "active_challenges": "Active Challenges",
+    "timeline": "Timeline & Activity",
+    "empty": "No new notifications",
+    "incoming_challenge": "{handle} challenged you in {game}!",
+    "outgoing_waiting": "Challenge sent to {handle} in {game}. Waiting for response...",
+    "challenge_accepted": "{handle} accepted your challenge! Starting match...",
+    "join_match": "Enter Match",
+    "accept": "Accept & Play",
+    "decline": "Decline",
+    "cancel": "Cancel",
+    "expires_in": "Expires in {sec}s",
+    "clear": "Clear"
   },
   "tournamentsPage": {
     "heading": "Tournaments & Championships",

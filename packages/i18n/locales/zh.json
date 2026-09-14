@@ -1063,6 +1063,20 @@
     "ticket_submit": "提交工单",
     "ticket_submitting": "正在提交...",
     "ticket_success": "工单已成功提交！我们的支持团队将尽快回复。",
+    "ticket_strict_warning": "⚠️ 严格规定：切勿输入您的密码、私钥或动态验证码 (OTP)。",
+    "ticket_subject_placeholder": "请简要概述您的问题",
+    "ticket_view_cta": "查看工单 #{id} →",
+    "ticket_close_cta": "关闭",
+    "ticket_category_technical": "技术与网络连接问题",
+    "ticket_category_deposit_pending": "充值待确认 / USDT 未到账",
+    "ticket_category_withdrawal_pending": "提现审核中",
+    "ticket_category_withdrawal_failed": "提现被拒 / 失败",
+    "ticket_category_account": "账户访问 / 安全设置",
+    "ticket_category_match_problem": "对战异常 / 比赛争议",
+    "ticket_category_tournament_problem": "锦标赛问题",
+    "ticket_category_anti_cheat": "公平竞技 / 举报作弊",
+    "ticket_category_abuse_report": "聊天骚扰 / 违规言论",
+    "ticket_category_other": "其他咨询",
     "all_categories": "所有类别",
     "categories": {
       "account": "账户",
@@ -1082,6 +1096,22 @@
       "chat": "聊天互动",
       "technical_issues": "技术问题"
     }
+  },
+  "notifications": {
+    "title": "通知中心",
+    "mark_all_read": "全部标记为已读",
+    "active_challenges": "进行中的对战邀请",
+    "timeline": "动态与时间线",
+    "empty": "暂无新通知",
+    "incoming_challenge": "{handle} 邀请您进行一局 {game} 对战！",
+    "outgoing_waiting": "已向 {handle} 发送 {game} 挑战，等待回应...",
+    "challenge_accepted": "{handle} 已接受您的挑战！比赛即将开始...",
+    "join_match": "进入比赛",
+    "accept": "接受并开始",
+    "decline": "拒绝",
+    "cancel": "取消",
+    "expires_in": "{sec}秒后过期",
+    "clear": "清除"
   },
   "tournamentsPage": {
     "heading": "锦标赛与冠军联赛",

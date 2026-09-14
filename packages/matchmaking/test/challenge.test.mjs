@@ -196,6 +196,20 @@ describe("accept() -- Free creates READY, Competitive creates RESERVED", () => {
     const r = await svc.accept(created.challengeId, "carol");
     assert.equal(r.reason, ChallengeError.NOT_YOUR_CHALLENGE);
   });
+
+  test("ACCEPT: challenger's listOutgoing returns the accepted challenge with duel_id so challenger joins synchronously", async () => {
+    const db = await fresh();
+    const svc = createChallengeService(db);
+    const created = await svc.create({ gameId: "chess", challengerId: "alice", opponentNickname: "bob" });
+    const accepted = await svc.accept(created.challengeId, "bob");
+    assert.equal(accepted.ok, true);
+
+    const outgoing = await svc.listOutgoing("alice");
+    const match = outgoing.find((c) => c.id === created.challengeId);
+    assert.ok(match, "accepted challenge is present in listOutgoing");
+    assert.equal(match.status, "ACCEPTED");
+    assert.equal(match.duel_id, accepted.duelId);
+  });
 });
 
 describe("decline() and cancel()", () => {

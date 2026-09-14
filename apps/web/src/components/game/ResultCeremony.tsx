@@ -112,12 +112,24 @@ export function ResultCeremony({
         <>
           <div className={styles.actions}>
             {vsComputer ? (
-              <Button variant="primary" onClick={onRematch} disabled={rematchBusy}>{t("game.rematch")}</Button>
+              <>
+                <Button variant="primary" onClick={onRematch} disabled={rematchBusy} className={styles.actionBtn}>{t("game.rematch")}</Button>
+                <LocaleLink href="/play" style={{ width: "100%" }}>
+                  <Button variant="secondary" className={styles.actionBtn}>{t("matchmaking.back_to_play")}</Button>
+                </LocaleLink>
+              </>
             ) : (
-              <LocaleLink href="/play"><Button variant="primary">{t("game.new_opponent")}</Button></LocaleLink>
+              <>
+                <LocaleLink href="/play" style={{ width: "100%" }}>
+                  <Button variant="primary" className={styles.actionBtn}>{t("game.new_opponent")}</Button>
+                </LocaleLink>
+                <LocaleLink href="/play" style={{ width: "100%" }}>
+                  <Button variant="secondary" className={styles.actionBtn}>{t("matchmaking.back_to_play")}</Button>
+                </LocaleLink>
+              </>
             )}
-            <LocaleLink href={`/support/new?category=MATCH_PROBLEM&referenceId=${encodeURIComponent(duelId)}`}>
-              <Button variant="ghost">{t("support.game_report_cta")}</Button>
+            <LocaleLink href={`/support/new?category=MATCH_PROBLEM&referenceId=${encodeURIComponent(duelId)}`} style={{ width: "100%" }}>
+              <Button variant="ghost" className={styles.actionBtn}>{t("support.game_report_cta")}</Button>
             </LocaleLink>
           </div>
 

@@ -1067,6 +1067,20 @@
     "ticket_submit": "إرسال التذكرة",
     "ticket_submitting": "جاري الإرسال...",
     "ticket_success": "تم إرسال التذكرة بنجاح! سيقوم فريق الدعم بالرد في أقرب وقت.",
+    "ticket_strict_warning": "⚠️ قاعدة صارمة: لا تقم أبدًا بإدخال كلمة المرور، أو المفتاح الخاص، أو رمز التحقق (OTP).",
+    "ticket_subject_placeholder": "ملخص موجز لاستفسارك",
+    "ticket_view_cta": "عرض التذكرة #{id} ←",
+    "ticket_close_cta": "إغلاق",
+    "ticket_category_technical": "مشاكل تقنية / الاتصال",
+    "ticket_category_deposit_pending": "إيداع معلق / رصيد USDT لم يصل",
+    "ticket_category_withdrawal_pending": "طلب سحب معلق",
+    "ticket_category_withdrawal_failed": "سحب مرفوض / فشل العملية",
+    "ticket_category_account": "الوصول للحساب / الإعدادات",
+    "ticket_category_match_problem": "مشكلة في المباراة / نزاع حول النتيجة",
+    "ticket_category_tournament_problem": "مشكلة في البطولة",
+    "ticket_category_anti_cheat": "اللعب النظيف / إبلاغ عن غش",
+    "ticket_category_abuse_report": "مضايقات في الدردشة / إساءة",
+    "ticket_category_other": "استفسار آخر",
     "all_categories": "جميع الأقسام",
     "categories": {
       "account": "الحساب",
@@ -1086,6 +1100,22 @@
       "chat": "المحادثة والدردشة",
       "technical_issues": "المشاكل التقنية"
     }
+  },
+  "notifications": {
+    "title": "مركز الإشعارات",
+    "mark_all_read": "تعيين الكل كمقروء",
+    "active_challenges": "تحديات ومباريات نشطة",
+    "timeline": "الجدول الزمني للنشاط",
+    "empty": "لا توجد إشعارات جديدة حالياً",
+    "incoming_challenge": "أرسل لك {handle} تحدياً في لعبة {game}!",
+    "outgoing_waiting": "تم إرسال دعوة إلى {handle} في {game}. بانتظار الرد...",
+    "challenge_accepted": "قبل {handle} التحدي! بدأت المباراة...",
+    "join_match": "دخول المباراة",
+    "accept": "قبول واللعب",
+    "decline": "رفض",
+    "cancel": "إلغاء",
+    "expires_in": "ينتهي خلال {sec} ثانية",
+    "clear": "مسح"
   },
   "tournamentsPage": {
     "heading": "البطولات والمنافسات الرسمية",

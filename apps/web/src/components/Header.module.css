@@ -103,8 +103,41 @@
 .secondary {
   display: flex;
   align-items: center;
-  gap: var(--nz-space-4);
+  gap: var(--nz-space-3);
   flex: none;
+}
+
+.walletPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--nz-radius-pill);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.walletPill:hover {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: #22c55e;
+  transform: translateY(-1px);
+}
+
+.walletIcon {
+  font-size: 14px;
+}
+
+.headerDivider {
+  width: 1px;
+  height: 20px;
+  background: var(--nz-line);
+  margin: 0 2px;
 }
 
 .menuToggle {

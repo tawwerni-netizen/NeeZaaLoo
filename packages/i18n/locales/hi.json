@@ -1063,6 +1063,20 @@
     "ticket_submit": "टिकट जमा करें",
     "ticket_submitting": "जमा हो रहा है...",
     "ticket_success": "टिकट सफलतापूर्वक जमा हो गया! हमारी टीम शीघ्र उत्तर देगी।",
+    "ticket_strict_warning": "⚠️ सख्त नियम: कभी भी अपना पासवर्ड, प्राइवेट की या OTP कोड दर्ज न करें।",
+    "ticket_subject_placeholder": "अपनी पूछताछ का संक्षिप्त विवरण",
+    "ticket_view_cta": "टिकट देखें #{id} →",
+    "ticket_close_cta": "बंद करें",
+    "ticket_category_technical": "तकनीकी समस्याएं / कनेक्टिविटी",
+    "ticket_category_deposit_pending": "जमा लंबित / गायब USDT",
+    "ticket_category_withdrawal_pending": "निकासी लंबित",
+    "ticket_category_withdrawal_failed": "निकासी अस्वीकृत / विफल",
+    "ticket_category_account": "खाता एक्सेस / सेटिंग्स",
+    "ticket_category_match_problem": "मैच समस्या / खेल विवाद",
+    "ticket_category_tournament_problem": "टूर्नामेंट समस्या",
+    "ticket_category_anti_cheat": "निष्पक्ष खेल / धोखाधड़ी रिपोर्ट",
+    "ticket_category_abuse_report": "चैट दुर्व्यवहार / उत्पीड़न",
+    "ticket_category_other": "अन्य पूछताछ",
     "all_categories": "सभी श्रेणियां",
     "categories": {
       "account": "खाता",
@@ -1082,6 +1096,22 @@
       "chat": "चैट",
       "technical_issues": "तकनीकी समस्याएं"
     }
+  },
+  "notifications": {
+    "title": "सूचना केंद्र",
+    "mark_all_read": "सभी को पढ़ा हुआ चिह्नित करें",
+    "active_challenges": "सक्रिय मैच चुनौतियां",
+    "timeline": "गतिविधि टाइमलाइन",
+    "empty": "कोई नई सूचना नहीं है",
+    "incoming_challenge": "{handle} ने आपको {game} में चुनौती दी है!",
+    "outgoing_waiting": "{handle} को {game} में चुनौती भेजी गई। प्रतीक्षा कर रहे हैं...",
+    "challenge_accepted": "{handle} ने आपकी चुनौती स्वीकार कर ली! मैच शुरू हो रहा है...",
+    "join_match": "मैच में प्रवेश करें",
+    "accept": "स्वीकार करें और खेलें",
+    "decline": "अस्वीकार करें",
+    "cancel": "रद्द करें",
+    "expires_in": "{sec} सेकंड में समाप्त",
+    "clear": "साफ़ करें"
   },
   "tournamentsPage": {
     "heading": "टूर्नामेंट और चैंपियनशिप",

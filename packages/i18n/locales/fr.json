@@ -1063,6 +1063,20 @@
     "ticket_submit": "Envoyer le Ticket",
     "ticket_submitting": "Envoi en cours...",
     "ticket_success": "Ticket envoyé avec succès ! Notre équipe vous répondra dans les plus brefs délais.",
+    "ticket_strict_warning": "⚠️ Règle stricte : Ne saisissez jamais votre mot de passe, clé privée ou code OTP.",
+    "ticket_subject_placeholder": "Bref résumé de votre demande",
+    "ticket_view_cta": "Voir le ticket #{id} →",
+    "ticket_close_cta": "Fermer",
+    "ticket_category_technical": "Problèmes techniques / Connexion",
+    "ticket_category_deposit_pending": "Dépôt en attente / USDT manquant",
+    "ticket_category_withdrawal_pending": "Retrait en attente",
+    "ticket_category_withdrawal_failed": "Retrait rejeté / Échoué",
+    "ticket_category_account": "Accès au compte / Paramètres",
+    "ticket_category_match_problem": "Problème de match / Litige de jeu",
+    "ticket_category_tournament_problem": "Problème de tournoi",
+    "ticket_category_anti_cheat": "Jeu équitable / Signalement de triche",
+    "ticket_category_abuse_report": "Abus de chat / Harcèlement",
+    "ticket_category_other": "Autre demande",
     "all_categories": "Toutes les Catégories",
     "categories": {
       "account": "Compte",
@@ -1082,6 +1096,22 @@
       "chat": "Messagerie",
       "technical_issues": "Problèmes Techniques"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Tout marquer comme lu",
+    "active_challenges": "Défis de match actifs",
+    "timeline": "Fil d'activité",
+    "empty": "Aucune nouvelle notification",
+    "incoming_challenge": "{handle} vous a défié sur {game} !",
+    "outgoing_waiting": "Défi envoyé à {handle} sur {game}. En attente...",
+    "challenge_accepted": "{handle} a accepté votre défi ! Le match commence...",
+    "join_match": "Rejoindre le match",
+    "accept": "Accepter & Jouer",
+    "decline": "Refuser",
+    "cancel": "Annuler",
+    "expires_in": "Expire dans {sec}s",
+    "clear": "Effacer"
   },
   "tournamentsPage": {
     "heading": "Tournois et Championnats",

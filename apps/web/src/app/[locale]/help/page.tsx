@@ -639,17 +639,17 @@ export default function HelpCenterPage() {
                 <p className={styles.successText}>{t("help.ticket_success")}</p>
                 <div className={styles.successActions}>
                   <LocaleLink href={`/support/${ticketSuccessId}`}>
-                    <Button variant="primary">View Ticket #{ticketSuccessId.slice(0, 8)} →</Button>
+                    <Button variant="primary">{t("help.ticket_view_cta", { id: ticketSuccessId.slice(0, 8) })}</Button>
                   </LocaleLink>
                   <Button variant="ghost" onClick={() => setShowTicketModal(false)}>
-                    Close
+                    {t("help.ticket_close_cta")}
                   </Button>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleTicketSubmit} className={styles.ticketForm}>
                 <div className={styles.formAlert}>
-                  <span>⚠️ Strict Rule: Never enter your password, private key, or OTP code.</span>
+                  <span>{t("help.ticket_strict_warning")}</span>
                 </div>
 
                 {ticketError && (
@@ -669,16 +669,16 @@ export default function HelpCenterPage() {
                     onChange={(e) => setTicketCategory(e.target.value)}
                     required
                   >
-                    <option value="TECHNICAL">Technical Issues / Connection</option>
-                    <option value="DEPOSIT_PENDING">Deposit Pending / Missing USDT</option>
-                    <option value="WITHDRAWAL_PENDING">Withdrawal Pending</option>
-                    <option value="WITHDRAWAL_FAILED">Withdrawal Rejected / Failed</option>
-                    <option value="ACCOUNT">Account Access / Settings</option>
-                    <option value="MATCH_PROBLEM">Match Problem / Game Dispute</option>
-                    <option value="TOURNAMENT_PROBLEM">Tournament Issue</option>
-                    <option value="ANTI_CHEAT">Fair Play / Cheat Report</option>
-                    <option value="ABUSE_REPORT">Chat Abuse / Harassment</option>
-                    <option value="OTHER">Other Inquiry</option>
+                    <option value="TECHNICAL">{t("help.ticket_category_technical")}</option>
+                    <option value="DEPOSIT_PENDING">{t("help.ticket_category_deposit_pending")}</option>
+                    <option value="WITHDRAWAL_PENDING">{t("help.ticket_category_withdrawal_pending")}</option>
+                    <option value="WITHDRAWAL_FAILED">{t("help.ticket_category_withdrawal_failed")}</option>
+                    <option value="ACCOUNT">{t("help.ticket_category_account")}</option>
+                    <option value="MATCH_PROBLEM">{t("help.ticket_category_match_problem")}</option>
+                    <option value="TOURNAMENT_PROBLEM">{t("help.ticket_category_tournament_problem")}</option>
+                    <option value="ANTI_CHEAT">{t("help.ticket_category_anti_cheat")}</option>
+                    <option value="ABUSE_REPORT">{t("help.ticket_category_abuse_report")}</option>
+                    <option value="OTHER">{t("help.ticket_category_other")}</option>
                   </select>
                 </div>
 
@@ -690,7 +690,7 @@ export default function HelpCenterPage() {
                     id="ticket-subject"
                     type="text"
                     className={styles.formInput}
-                    placeholder="Brief summary of your inquiry"
+                    placeholder={t("help.ticket_subject_placeholder")}
                     value={ticketSubject}
                     onChange={(e) => setTicketSubject(e.target.value)}
                     required

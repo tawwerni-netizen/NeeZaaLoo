@@ -1,0 +1,134 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.trigger:hover, .triggerActive {
+  background: var(--nz-surface-3);
+  border-color: var(--nz-line-strong);
+  transform: translateY(-1px);
+}
+
+.avatarCircle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff5a2b, #f59e0b);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+
+.handleText {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s ease;
+  color: var(--nz-text-3);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-end: 0;
+  min-width: 220px;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line-strong);
+  border-radius: var(--nz-radius-md);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  padding: 6px 0;
+  z-index: 150;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.menuHeader {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--nz-line);
+  margin-bottom: 4px;
+}
+
+.menuUserHandle {
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  color: var(--nz-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menuUserBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #22c55e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 14px;
+  font-size: var(--nz-text-sm);
+  font-weight: 500;
+  color: var(--nz-text-2);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  text-align: start;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.menuItem:hover {
+  background: var(--nz-surface-2);
+  color: var(--nz-text);
+}
+
+.divider {
+  height: 1px;
+  background: var(--nz-line);
+  margin: 4px 0;
+}
+
+.logoutItem {
+  color: #f87171;
+}
+
+.logoutItem:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}

@@ -29,6 +29,8 @@ import { Button } from "./Button";
 import { LocaleLink } from "./LocaleLink";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationCenter } from "./notifications/NotificationCenter";
+import { UserMenu } from "./UserMenu";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthPopup } from "@/lib/auth-popup-context";
 import { useI18n } from "@/lib/i18n/context";
@@ -82,25 +84,25 @@ export function Header() {
         </nav>
 
         <div className={styles.secondary}>
-          <ThemeToggle />
-          <LanguageSwitcher />
           {loading ? null : player ? (
             <>
-              <LocaleLink href="/referrals" className={styles.navLink}>{t("nav.referrals")}</LocaleLink>
-              <LocaleLink href="/wallet" className={styles.navLink}>{t("nav.wallet")}</LocaleLink>
-              <LocaleLink href="/profile" className={styles.navLink}>{player.handle}</LocaleLink>
-              <LocaleLink href="/help" className={styles.navLink}>{t("nav.support")}</LocaleLink>
-              {player.isAdmin && (
-                <LocaleLink href="/admin" className={styles.navLink}>{t("nav.admin") || "Admin Dashboard"}</LocaleLink>
-              )}
-              <Button variant="ghost" onClick={() => void logout()}>{t("nav.log_out")}</Button>
+              <LocaleLink href="/wallet" className={styles.walletPill}>
+                <span className={styles.walletIcon}>💳</span>
+                <span className={styles.walletLabel}>{t("nav.wallet")}</span>
+              </LocaleLink>
+              <NotificationCenter />
+              <UserMenu />
+              <div className={styles.headerDivider} />
             </>
           ) : (
             <>
               <Button variant="ghost" onClick={openPopup}>{t("nav.log_in")}</Button>
               <Button variant="primary" onClick={openPopup}>{t("nav.play_now")}</Button>
+              <div className={styles.headerDivider} />
             </>
           )}
+          <ThemeToggle />
+          <LanguageSwitcher />
         </div>
 
         <button
