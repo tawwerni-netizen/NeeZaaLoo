@@ -36,6 +36,7 @@ import { ChatMessageError } from "../../chat/src/messages.mjs";
 import { ModerationError } from "../../chat/src/moderation.mjs";
 import { BlockError } from "../../chat/src/blocks.mjs";
 import { ReportError } from "../../chat/src/reports.mjs";
+import { createDirectChatService } from "../../chat/src/direct.mjs";
 import { createConsentService, ConsentError } from "../../compliance/src/consent.mjs";
 
 async function poolBatch(tasks, concurrency = 3) {
@@ -264,9 +265,8 @@ export function createApi({
     // authorize() and on to handlers through `ctx.controls` so any secondary
     // check (e.g. a competitive challenge/ticket re-checked against
     // duel.play.cash on top of the route's own duel.play.free) read the
-    // SAME snapshot, rather than a second DB round-trip that could
-    // theoretically disagree with the first within one request.
     const controls = await loadControls();
+    const directChat = createDirectChatService(db);
     const ctx = {
       params, body: parsed.body, query: url.searchParams, actor,
       ip: req.socket.remoteAddress, userAgent: req.headers["user-agent"],
@@ -274,7 +274,7 @@ export function createApi({
       emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
       googleOAuth, googleFrontendOrigin, profile, support, ticketNotifications, chat, progression, now,
       mastery, streaks, dailyChallenges, recommendations, frames,
-      rails, railHealth, referral, referrals, consent: consentService, controls,
+      rails, railHealth, referral, referrals, consent: consentService, controls, directChat,
     };
 
     if (!route.anonymous && actor.type === "ANON") {
@@ -1439,6 +1439,69 @@ function buildRoutes() {
           ? await chat.reports.reportMessage({ reporterId: actor.id, messageId: body.messageId, category: body.category, reason: body.reason })
           : await chat.reports.reportPlayer({ reporterId: actor.id, subjectPlayerId: body.subjectPlayerId, category: body.category, reason: body.reason });
         if (!r.ok) return { status: chatErrorStatus(r.reason), body: errorBody(r.reason) };
+        return { status: 201, body: r };
+      } },
+
+    // --- Members, Friends & Direct Messaging (Nizalo Messenger) ---
+    { method: "GET", path: "/v1/members", action: "player.members.read",
+      handler: async ({ actor, query, directChat }) => {
+        const q = query.get("q") ?? "";
+        const limit = query.get("limit") ?? 50;
+        const members = await directChat.searchMembers({ query: q, currentUserId: actor?.id, limit });
+        return { body: { members } };
+      } },
+
+    { method: "GET", path: "/v1/friends", action: "player.friends.read",
+      handler: async ({ actor, directChat }) => {
+        const friends = await directChat.listFriends(actor.id);
+        return { body: { friends } };
+      } },
+
+    { method: "POST", path: "/v1/friends/request", action: "player.friends.write",
+      handler: async ({ actor, body, directChat }) => {
+        if (!body.target || typeof body.target !== "string") {
+          return { status: 400, body: errorBody("BAD_REQUEST", "target is required") };
+        }
+        const r = await directChat.sendFriendRequest(actor.id, body.target);
+        if (!r.ok) return { status: 400, body: errorBody(r.reason) };
+        return { status: 201, body: r };
+      } },
+
+    { method: "POST", path: "/v1/friends/remove", action: "player.friends.write",
+      handler: async ({ actor, body, directChat }) => {
+        if (!body.friendId || typeof body.friendId !== "string") {
+          return { status: 400, body: errorBody("BAD_REQUEST", "friendId is required") };
+        }
+        const r = await directChat.removeFriend(actor.id, body.friendId);
+        return { body: r };
+      } },
+
+    { method: "GET", path: "/v1/chat/direct/conversations", action: "player.chat.direct.read",
+      handler: async ({ actor, directChat }) => {
+        const conversations = await directChat.listConversations(actor.id);
+        return { body: { conversations } };
+      } },
+
+    { method: "GET", path: "/v1/chat/direct/:partnerId/messages", action: "player.chat.direct.read",
+      handler: async ({ actor, params, query, directChat }) => {
+        const limit = query.get("limit") ? Number(query.get("limit")) : 50;
+        const after = query.get("after") ? Number(query.get("after")) : null;
+        const messages = await directChat.getDirectMessages(actor.id, params.partnerId, { limit, after });
+        return { body: { messages } };
+      } },
+
+    { method: "POST", path: "/v1/chat/direct/:partnerId/messages", action: "player.chat.direct.write",
+      handler: async ({ actor, params, body, directChat }) => {
+        if (!body.content || typeof body.content !== "string") {
+          return { status: 400, body: errorBody("BAD_REQUEST", "content is required") };
+        }
+        const r = await directChat.sendDirectMessage({
+          senderId: actor.id,
+          receiverId: params.partnerId,
+          content: body.content,
+          clientMessageId: body.clientMessageId,
+        });
+        if (!r.ok) return { status: 400, body: errorBody(r.reason) };
         return { status: 201, body: r };
       } },
 

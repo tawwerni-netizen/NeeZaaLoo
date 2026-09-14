@@ -50,15 +50,39 @@ function HomeContent() {
   }
 
   return (
-    <main className="nz-container">
-      <section className={styles.welcome}>
-        <div>
-          <p className={styles.eyebrow}>{t("dashboard.welcome")}</p>
-          <h1 className={styles.name}>{player?.handle}</h1>
+    <main className={`nz-container ${styles.container}`}>
+      <section className={styles.heroBanner}>
+        <div className={styles.heroProfile}>
+          <div className={styles.heroAvatar}>
+            <span>{(player?.handle?.[0] ?? "U").toUpperCase()}</span>
+            <span className={styles.onlineDot} title="متصل" />
+          </div>
+          <div className={styles.heroText}>
+            <p className={styles.eyebrow}>{t("dashboard.welcome")}</p>
+            <h1 className={styles.name}>{player?.handle}</h1>
+          </div>
         </div>
-        <LocaleLink href="/play">
-          <Button variant="primary">{t("dashboard.play_now")}</Button>
-        </LocaleLink>
+
+        <div className={styles.heroActions}>
+          <LocaleLink href="/play" className={styles.actionBtnLink}>
+            <button type="button" className={styles.playNowBtn}>
+              <span className={styles.btnIcon}>⚔️</span>
+              <span>{t("dashboard.play_now")}</span>
+            </button>
+          </LocaleLink>
+          <LocaleLink href="/chat" className={styles.actionBtnLink}>
+            <button type="button" className={styles.chatBtn}>
+              <span className={styles.btnIcon}>💬</span>
+              <span>{locale === "ar" ? "شات الأعضاء" : "Members Chat"}</span>
+            </button>
+          </LocaleLink>
+          <LocaleLink href="/tournaments" className={styles.actionBtnLink}>
+            <button type="button" className={styles.tournamentsBtn}>
+              <span className={styles.btnIcon}>🏆</span>
+              <span>{t("dashboard.tournaments.title")}</span>
+            </button>
+          </LocaleLink>
+        </div>
       </section>
 
       <section className={styles.grid}>

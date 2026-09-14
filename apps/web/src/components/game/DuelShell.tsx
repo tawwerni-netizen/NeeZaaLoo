@@ -7,6 +7,7 @@
  * reconnect, spectator handling, and the chat slot.
  */
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { useDuelSocket } from "@/lib/use-duel-socket";
@@ -41,6 +42,11 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const [resignConfirmOpen, setResignConfirmOpen] = useState(false);
   const [rematchBusy, setRematchBusy] = useState(false);
   const [opponentNickname, setOpponentNickname] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (latest?.t !== "STATE") return;
@@ -206,17 +212,46 @@ export function DuelShell({ duelId }: { duelId: string }) {
           <p className={styles.playerLine}>{t("game.connecting")}</p>
         )}
 
-        {resignConfirmOpen && (
-          <div className={styles.confirmOverlay} role="dialog" aria-label={t("game.resign_confirm_title")}>
-            <div className={styles.confirmCard}>
-              <h2>{t("game.resign_confirm_title")}</h2>
-              <p>{t("game.resign_confirm_body")}</p>
+        {resignConfirmOpen && mounted && typeof document !== "undefined" && createPortal(
+          <div
+            className={styles.confirmOverlay}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("game.resign_confirm_title")}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setResignConfirmOpen(false);
+            }}
+          >
+            <div className={styles.confirmCard} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.confirmIcon}>🏳️</div>
+              <h2 className={styles.confirmTitle}>{t("game.resign_confirm_title")}</h2>
+              <p className={styles.confirmBody}>{t("game.resign_confirm_body")}</p>
               <div className={styles.confirmActions}>
-                <Button variant="secondary" onClick={() => { resign(); setResignConfirmOpen(false); }}>{t("game.confirm")}</Button>
-                <Button variant="ghost" onClick={() => setResignConfirmOpen(false)}>{t("game.cancel")}</Button>
+                <button
+                  type="button"
+                  className={styles.confirmBtn}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    resign();
+                    setResignConfirmOpen(false);
+                  }}
+                >
+                  {t("game.confirm")}
+                </button>
+                <button
+                  type="button"
+                  className={styles.cancelBtn}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setResignConfirmOpen(false);
+                  }}
+                >
+                  {t("game.cancel")}
+                </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         <p className={styles.playerLine}>

@@ -234,6 +234,11 @@ export const ACTIONS = {
   "player.chat.spectator.read": { capability: null },
   "player.chat.block":          { capability: null, selfOnly: true },
   "player.chat.report":         { capability: null },
+  "player.members.read":        { capability: null },
+  "player.friends.read":        { capability: null },
+  "player.friends.write":       { capability: null },
+  "player.chat.direct.read":    { capability: null },
+  "player.chat.direct.write":   { capability: null },
 };
 
 /**

@@ -133,6 +133,32 @@
   font-size: 14px;
 }
 
+.chatPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.chatPill:hover {
+  background: var(--nz-surface-3);
+  border-color: var(--nz-accent);
+  transform: translateY(-1px);
+}
+
+.chatIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+
 .headerDivider {
   width: 1px;
   height: 20px;
@@ -164,6 +190,27 @@
 
 .mobileWalletBtn:hover {
   background: rgba(34, 197, 94, 0.25);
+  transform: translateY(-1px);
+}
+
+.mobileChatBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text);
+  font-size: 16px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.mobileChatBtn:hover {
+  background: var(--nz-surface-3);
+  border-color: var(--nz-accent);
   transform: translateY(-1px);
 }
 

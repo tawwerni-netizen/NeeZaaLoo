@@ -50,6 +50,7 @@ export function Header() {
   const PRIMARY_NAV: NavItem[] = [
     { href: "/play", label: t("nav.play"), icon: "⚔️" },
     { href: "/games", label: t("nav.games"), icon: "🎮" },
+    { href: "/chat", label: t("nav.chat"), icon: "💬" },
     { href: "/tournaments", label: t("nav.tournaments"), icon: "🏆" },
     { href: "/watch", label: t("nav.watch"), icon: "📺" },
     { href: "/rank", label: t("nav.rank"), icon: "👑" },
@@ -91,6 +92,9 @@ export function Header() {
                 <span className={styles.walletIcon}>💳</span>
                 <span className={styles.walletLabel}>{t("nav.wallet")}</span>
               </LocaleLink>
+              <LocaleLink href="/chat" className={styles.chatPill} aria-label={t("nav.chat")}>
+                <span className={styles.chatIcon}>💬</span>
+              </LocaleLink>
               <NotificationCenter />
               <UserMenu />
               <div className={styles.headerDivider} />
@@ -112,6 +116,9 @@ export function Header() {
             <>
               <LocaleLink href="/wallet" className={styles.mobileWalletBtn} aria-label={t("nav.wallet")}>
                 <span className={styles.walletIcon}>💳</span>
+              </LocaleLink>
+              <LocaleLink href="/chat" className={styles.mobileChatBtn} aria-label={t("nav.chat")}>
+                <span className={styles.chatIcon}>💬</span>
               </LocaleLink>
               <NotificationCenter />
             </>
@@ -221,6 +228,10 @@ export function Header() {
                   {locale === "ar" ? "خدمات الحساب" : "Account Services"}
                 </div>
                 <div className={styles.mobileServicesGrid}>
+                  <LocaleLink href="/chat" className={styles.mobileServiceItem} onClick={closeMenu}>
+                    <span className={styles.serviceIcon}>💬</span>
+                    <span className={styles.serviceLabel}>{t("nav.chat")}</span>
+                  </LocaleLink>
                   <LocaleLink href="/wallet" className={styles.mobileServiceItem} onClick={closeMenu}>
                     <span className={styles.serviceIcon}>💳</span>
                     <span className={styles.serviceLabel}>{t("nav.wallet")}</span>
@@ -230,7 +241,7 @@ export function Header() {
                     <span className={styles.serviceLabel}>{t("nav.referrals")}</span>
                   </LocaleLink>
                   <LocaleLink href="/help" className={styles.mobileServiceItem} onClick={closeMenu}>
-                    <span className={styles.serviceIcon}>💬</span>
+                    <span className={styles.serviceIcon}>❓</span>
                     <span className={styles.serviceLabel}>{t("nav.support")}</span>
                   </LocaleLink>
                   {player.isAdmin && (

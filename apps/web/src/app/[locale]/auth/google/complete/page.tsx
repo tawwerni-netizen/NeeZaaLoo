@@ -82,10 +82,18 @@ function GoogleCompleteInner() {
 
   useEffect(() => {
     if (outcome === "session_direct") {
+      if (attempted.current) return;
+      attempted.current = true;
       if (access && refresh) {
-        applySession(access, refresh).then(() => {
-          router.replace(`/${locale}${returnTo ?? "/home"}`);
-        });
+        setStatus("working");
+        applySession(access, refresh)
+          .then(() => {
+            router.replace(`/${locale}${returnTo ?? "/home"}`);
+          })
+          .catch(() => {
+            setStatus("error");
+            setError(t(authErrorKey("BAD_STATE")));
+          });
       } else {
         router.replace(`/${locale}${returnTo ?? "/home"}`);
       }
@@ -103,8 +111,13 @@ function GoogleCompleteInner() {
     await finalize(totpCode);
   }
 
-  if (outcome === "session" && status === "working") {
-    return <p className={styles.subtitle}>{t("auth.google.completing")}</p>;
+  if ((outcome === "session" || outcome === "session_direct") && status === "working") {
+    return (
+      <div className={styles.card} style={{ textAlign: "center", padding: "40px 20px" }}>
+        <h1 className={styles.title}>{t("auth.google.completing") || "جاري إكمال تسجيل الدخول..."}</h1>
+        <p className={styles.subtitle}>{t("auth.login.submitting") || "يرجى الانتظار لحظات..."}</p>
+      </div>
+    );
   }
 
   if (outcome === "session" && status === "needs_totp") {
@@ -121,11 +134,11 @@ function GoogleCompleteInner() {
     );
   }
 
-  if (outcome === "session" && status === "error") {
+  if ((outcome === "session" || outcome === "session_direct") && status === "error") {
     return (
       <div className={styles.card}>
         <h1 className={styles.title}>{t("auth.google.error_title")}</h1>
-        <p className={styles.subtitle}>{error}</p>
+        <p className={styles.subtitle}>{error || t(authErrorKey("BAD_STATE"))}</p>
         <LocaleLink href="/login"><Button>{t("auth.forgot_password.back_to_login")}</Button></LocaleLink>
       </div>
     );
