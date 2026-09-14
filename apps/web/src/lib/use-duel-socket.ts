@@ -63,10 +63,12 @@ export function useDuelSocket(duelId: string) {
   // guess), and advanced from every EVENT after that.
   const versionRef = useRef(0);
   const nonceRef = useRef(0);
+  const joinRetriesRef = useRef(0);
 
   useEffect(() => {
     everConnectedRef.current = false;
     closedByUsRef.current = false;
+    joinRetriesRef.current = 0;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let ws: WebSocket;
 
@@ -89,6 +91,15 @@ export function useDuelSocket(duelId: string) {
           setConnected(true);
           setReconnecting(false);
           everConnectedRef.current = true;
+        } else if (msg.t === "ERROR") {
+          if (msg.code === "NO_SUCH_DUEL" && joinRetriesRef.current < 6) {
+            joinRetriesRef.current++;
+            setTimeout(() => {
+              if (socketRef.current?.readyState === WebSocket.OPEN) {
+                socketRef.current.send(JSON.stringify({ t: "JOIN", duelId }));
+              }
+            }, 500);
+          }
         } else if (msg.t === "STATE") {
           setSeat((msg.seat as number | null | undefined) ?? null);
           setDrawOfferBy((msg.drawOfferBy as number | null | undefined) ?? null);

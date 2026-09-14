@@ -17,7 +17,7 @@ type Player = { id: string; handle: string; locale: SupportedLocale; created_at:
 type AuthState = {
   player: Player | null;
   loading: boolean;
-  login: (identifier: string, password: string) => Promise<{ ok: true } | { ok: false; reason: string }>;
+  login: (identifier: string, password: string, remember?: boolean) => Promise<{ ok: true } | { ok: false; reason: string }>;
   register: (handle: string, password: string, referralCode?: string, termsAccepted?: boolean, email?: string) => Promise<{ ok: true } | { ok: false; reason: string }>;
   logout: () => Promise<void>;
   /** Saves a language preference to the signed-in player's account (PATCH /v1/me). */
@@ -30,7 +30,7 @@ type AuthState = {
    * own last two steps do. Not a second session mechanism: same tokens,
    * same storage, same /v1/me refresh.
    */
-  applySession: (accessToken: string, refreshToken: string) => Promise<void>;
+  applySession: (accessToken: string, refreshToken: string, remember?: boolean) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -52,9 +52,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const me = await get<Player>("/v1/me");
       setPlayer(me);
-    } catch {
-      clearTokens();
-      setPlayer(null);
+    } catch (err) {
+      // Only clear tokens if the backend explicitly rejected the credentials
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        clearTokens();
+        setPlayer(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -84,12 +87,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.replace(`/${player.locale}/${rest}`);
   }, [player, activeLocale, pathname, router]);
 
-  const login = useCallback(async (identifier: string, password: string) => {
+  const login = useCallback(async (identifier: string, password: string, remember: boolean = true) => {
     try {
       const r = await post<{ playerId: string; accessToken: string; refreshToken: string }>(
         "/v1/auth/login", { identifier, password }, { noRefresh: true }
       );
-      setTokens(r.accessToken, r.refreshToken);
+      setTokens(r.accessToken, r.refreshToken, remember);
       await refreshPlayer();
       return { ok: true as const };
     } catch (e) {
@@ -109,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         termsAccepted,
         locale: activeLocale,
       }, { noRefresh: true });
-      return login(email || handle, password);
+      return login(email || handle, password, true);
     } catch (e) {
       const reason = e instanceof ApiError ? (e.code ?? "REGISTER_FAILED") : "NETWORK_ERROR";
       return { ok: false as const, reason };
@@ -128,8 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPlayer(null);
   }, []);
 
-  const applySession = useCallback(async (accessToken: string, refreshToken: string) => {
-    setTokens(accessToken, refreshToken);
+  const applySession = useCallback(async (accessToken: string, refreshToken: string, remember: boolean = true) => {
+    setTokens(accessToken, refreshToken, remember);
     await refreshPlayer();
   }, [refreshPlayer]);
 

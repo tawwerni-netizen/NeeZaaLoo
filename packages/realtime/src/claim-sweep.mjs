@@ -28,8 +28,8 @@
 export async function sweepUnclaimableDuels(db, gw, { limit = 100 } = {}) {
   const r = await db.query(
     `SELECT id FROM duel
-      WHERE status = 'LIVE' AND (lease_owner IS NULL OR lease_expires_at < now())
-      ORDER BY started_at
+      WHERE status IN ('LIVE', 'READY') AND (lease_owner IS NULL OR lease_expires_at < now())
+      ORDER BY started_at NULLS FIRST, created_at
       LIMIT $1`,
     [limit]
   );

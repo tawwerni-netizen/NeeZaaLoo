@@ -23,6 +23,7 @@ import { LiveDuelLobby } from "@/components/play/LiveDuelLobby";
 import { DifficultySelect } from "@/components/play/DifficultySelect";
 import { StakeSelect, type StakeChoice } from "@/components/play/StakeSelect";
 import { FriendChallenge } from "@/components/play/FriendChallenge";
+import { TimeControlSelect, type TimeProfile } from "@/components/play/TimeControlSelect";
 import { getGame, type Difficulty } from "@/lib/games";
 import { post } from "@/lib/api";
 import { useI18n } from "@/lib/i18n/context";
@@ -30,6 +31,7 @@ import { useI18n } from "@/lib/i18n/context";
 type Step =
   | { name: "mode" }
   | { name: "difficulty" }
+  | { name: "time_control"; difficulty: Difficulty | null }
   | { name: "friend_stake" }
   | { name: "random_stake" }
   | { name: "friend"; stake: StakeChoice }
@@ -58,7 +60,7 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
       if (plugin!.difficulties.length > 0) {
         setStep({ name: "difficulty" });
       } else {
-        void startVsComputer(null);
+        setStep({ name: "time_control", difficulty: null });
       }
     } else if (mode === "FRIEND") {
       setStep({ name: "friend_stake" });
@@ -67,14 +69,16 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
     }
   }
 
-  async function startVsComputer(chosen: Difficulty | null) {
-    const use = chosen ?? difficulty;
-    if (!use) return;
+  async function startVsComputer(chosenDifficulty: Difficulty | null, chosenProfile: TimeProfile = "STANDARD") {
     setCreating(true);
     try {
       // FREE ONLY -- no stake, no tier, ever, in this request. A computer
       // opponent is never presented as a real-money opponent.
-      const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", { gameId, difficulty: use });
+      const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", {
+        gameId,
+        difficulty: chosenDifficulty ?? "MEDIUM",
+        timeProfile: chosenProfile,
+      });
       router.push(`/${locale}/game/${r.duelId}`);
     } finally {
       setCreating(false);
@@ -97,7 +101,17 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
         {step.name === "difficulty" && (
           <DifficultySelect
             plugin={plugin}
-            onSelect={(d) => { setDifficulty(d); void startVsComputer(d); }}
+            onSelect={(d) => {
+              setDifficulty(d);
+              setStep({ name: "time_control", difficulty: d });
+            }}
+          />
+        )}
+
+        {step.name === "time_control" && (
+          <TimeControlSelect
+            plugin={plugin}
+            onSelect={(profile) => void startVsComputer(step.difficulty, profile)}
           />
         )}
 

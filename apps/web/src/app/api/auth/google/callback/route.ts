@@ -70,12 +70,54 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/${locale}/login?error=email_not_provided`);
     }
 
-    const response = NextResponse.redirect(`${origin}/${locale}/home`);
+    const apiTarget = process.env.API_INTERNAL_URL || "http://127.0.0.1:4000";
+    let syncRes = await fetch(`${apiTarget}/v1/auth/google/sync-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: profile.email,
+        subject: profile.id || profile.sub,
+        name: profile.name,
+      }),
+    }).catch(() => null);
 
-    // Set auth cookie
-    response.cookies.set("nz_access_token", tokenData.access_token, {
+    if (!syncRes || !syncRes.ok) {
+      syncRes = await fetch(`${origin}/v1/auth/google/sync-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: profile.email,
+          subject: profile.id || profile.sub,
+          name: profile.name,
+        }),
+      }).catch(() => null);
+    }
+
+    if (!syncRes || !syncRes.ok) {
+      console.error("Failed to sync session with Nizalo backend:", syncRes ? await syncRes.text() : "no response");
+      return NextResponse.redirect(`${origin}/${locale}/login?error=sync_failed`);
+    }
+
+    const sessionData = await syncRes.json();
+    const accessToken = sessionData.accessToken;
+    const refreshToken = sessionData.refreshToken;
+
+    const targetUrl = `${origin}/${locale}/auth/google/complete?outcome=session_direct&access=${encodeURIComponent(accessToken)}&refresh=${encodeURIComponent(refreshToken)}`;
+    const response = NextResponse.redirect(targetUrl);
+
+    // Set persistent auth cookies for 30 days
+    const maxAge = 60 * 60 * 24 * 30; // 30 days
+    response.cookies.set("nz_access_token", accessToken, {
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge,
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
+    response.cookies.set("nz_refresh_token", refreshToken, {
+      path: "/",
+      maxAge,
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -83,7 +125,7 @@ export async function GET(request: Request) {
 
     response.cookies.set("nz_user_email", profile.email, {
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge,
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

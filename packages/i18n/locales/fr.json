@@ -399,7 +399,25 @@
       "mode_competitive_stake": "Compétitif — ${amount}",
       "popup_title": "{handle} vous a défié",
       "meta_game": "Jeu",
-      "meta_mode": "Mode"
+      "meta_mode": "Mode",
+      "error_invalid_prize": "That prize amount isn't available.",
+      "mode_competitive_prize": "Competitive — ${amount}"
+    },
+    "time_control": {
+      "heading": "Choose Match Duration",
+      "subheading": "Select the time pace that fits your playstyle",
+      "blitz": "Blitz",
+      "standard": "Standard",
+      "extended": "Extended"
+    },
+    "prize": {
+      "heading": "Choose your prize",
+      "free_only": "Free only",
+      "free_only_note": "Cash prizes aren't available for this game yet.",
+      "free_title": "Free",
+      "free_description": "No prize — just the game.",
+      "competitive_title": "Competitive",
+      "competitive_description": "Play for a real prize, released only once the match is won."
     }
   },
   "dashboard": {
@@ -961,7 +979,10 @@
     "leaderboard_heading": "Meilleurs joueurs",
     "leaderboard_signed_out": "Connecte-toi pour voir le vrai classement en direct de ce jeu.",
     "leaderboard_empty": "Pas encore assez de parties classées jouées pour afficher un classement.",
-    "leaderboard_games_played": "{count} classées"
+    "leaderboard_games_played": "{count} classées",
+    "fact_prizes": "Prizes",
+    "prizes_free_only": "Free to play — competitive prizes are not yet enabled for this game.",
+    "prizes_enabled": "Free, or competitive with a real prize where eligible."
   },
   "walletPage": {
     "heading": "Portefeuille",

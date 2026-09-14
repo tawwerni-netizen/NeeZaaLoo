@@ -77,18 +77,44 @@ export function StakeSelect({ plugin, onContinue }: {
       </div>
 
       {selected === "CASH" && (
-        <div className={styles.presetGrid}>
-          {STAKE_PRESETS_USD.map((usd) => (
-            <button
-              key={usd}
-              type="button"
-              className={`${styles.presetButton} ${stakeUsd === usd ? styles.presetButtonSelected : ""}`}
-              onClick={() => setStakeUsd(usd)}
-            >
-              ${usd}
-            </button>
-          ))}
-        </div>
+        <>
+          <div className={styles.presetGrid}>
+            {STAKE_PRESETS_USD.map((usd) => (
+              <button
+                key={usd}
+                type="button"
+                className={`${styles.presetButton} ${stakeUsd === usd ? styles.presetButtonSelected : ""}`}
+                onClick={() => setStakeUsd(usd)}
+              >
+                ${usd}
+              </button>
+            ))}
+          </div>
+
+          {stakeUsd !== null && (
+            <div className={styles.economicsCard}>
+              <div className={styles.economicsRow}>
+                <span>{t("play.stake.entry_fee") || "Entry Stake (USDT TRC20)"}</span>
+                <strong style={{ color: "#fff" }}>${stakeUsd.toFixed(2)} USDT</strong>
+              </div>
+              <div className={styles.economicsRow}>
+                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>{t("play.stake.platform_fee") || "Platform Operational Fee"}</span>
+                  <span className={styles.economicsBadge}>12% FIXED</span>
+                </span>
+                <span>-${(stakeUsd * 0.12).toFixed(2)} USDT</span>
+              </div>
+              <div className={styles.economicsRow}>
+                <span>{t("play.stake.net_prize_contrib") || "Your Net Prize Contribution"}</span>
+                <span>${(stakeUsd * 0.88).toFixed(2)} USDT</span>
+              </div>
+              <div className={styles.economicsTotal}>
+                <span>{t("play.stake.winner_payout") || "Winner Match Prize Pool"}</span>
+                <span>${(stakeUsd * 2 * 0.88).toFixed(2)} USDT</span>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <Button

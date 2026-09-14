@@ -415,6 +415,13 @@
       "popup_title": "{handle} challenged you",
       "meta_game": "Game",
       "meta_mode": "Mode"
+    },
+    "time_control": {
+      "heading": "Choose Match Duration",
+      "subheading": "Select the time pace that fits your playstyle",
+      "blitz": "Blitz",
+      "standard": "Standard",
+      "extended": "Extended"
     }
   },
   "dashboard": {

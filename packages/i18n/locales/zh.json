@@ -399,7 +399,25 @@
       "mode_competitive_stake": "竞技 — ${amount}",
       "popup_title": "{handle} 向你发起了挑战",
       "meta_game": "游戏",
-      "meta_mode": "模式"
+      "meta_mode": "模式",
+      "error_invalid_prize": "That prize amount isn't available.",
+      "mode_competitive_prize": "Competitive — ${amount}"
+    },
+    "time_control": {
+      "heading": "Choose Match Duration",
+      "subheading": "Select the time pace that fits your playstyle",
+      "blitz": "Blitz",
+      "standard": "Standard",
+      "extended": "Extended"
+    },
+    "prize": {
+      "heading": "Choose your prize",
+      "free_only": "Free only",
+      "free_only_note": "Cash prizes aren't available for this game yet.",
+      "free_title": "Free",
+      "free_description": "No prize — just the game.",
+      "competitive_title": "Competitive",
+      "competitive_description": "Play for a real prize, released only once the match is won."
     }
   },
   "dashboard": {
@@ -961,7 +979,10 @@
     "leaderboard_heading": "顶尖玩家",
     "leaderboard_signed_out": "登录后即可查看此游戏真实的实时排行榜。",
     "leaderboard_empty": "目前评级对局数量还不够,暂无法显示排行榜。",
-    "leaderboard_games_played": "{count} 局评级赛"
+    "leaderboard_games_played": "{count} 局评级赛",
+    "fact_prizes": "Prizes",
+    "prizes_free_only": "Free to play — competitive prizes are not yet enabled for this game.",
+    "prizes_enabled": "Free, or competitive with a real prize where eligible."
   },
   "walletPage": {
     "heading": "钱包",

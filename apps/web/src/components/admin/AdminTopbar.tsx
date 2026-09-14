@@ -3,7 +3,19 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { AdminIcon } from "./AdminIcon";
+import { get } from "@/lib/api";
 import styles from "./AdminTopbar.module.css";
+
+type PlatformEvent = {
+  id: string;
+  actor_id: string | null;
+  action: string;
+  subject_type: string;
+  subject_id: string | null;
+  created_at: string;
+  event_type: "AUDIT" | "SECURITY" | "TOURNAMENT";
+  detail?: string;
+};
 
 type SearchResult = {
   category: string;
@@ -37,17 +49,35 @@ export function AdminTopbar({
 }) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [events, setEvents] = useState<PlatformEvent[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    get<{ ok: boolean; events: PlatformEvent[] }>("/v1/admin/events?limit=25")
+      .then((res) => {
+        if (res.ok && res.events) {
+          setEvents(res.events);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const effectiveCount = events.length > 0 ? events.length : alertCount;
 
   const results = query.trim()
     ? SAMPLE_SEARCH_INDEX.filter(
@@ -116,10 +146,56 @@ export function AdminTopbar({
         )}
       </div>
 
-      <button type="button" className={styles.iconButton} aria-label={`${alertCount} alerts`}>
-        <AdminIcon name="bell" size={18} />
-        {alertCount > 0 && <span className={`${styles.badge} nz-num`}>{alertCount > 99 ? "99+" : alertCount}</span>}
-      </button>
+      <div style={{ position: "relative" }} ref={notifRef}>
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label={`${effectiveCount} platform alerts`}
+          onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+        >
+          <AdminIcon name="bell" size={18} />
+          {effectiveCount > 0 && <span className={`${styles.badge} nz-num`}>{effectiveCount > 99 ? "99+" : effectiveCount}</span>}
+        </button>
+
+        {isNotificationsOpen && (
+          <div className={styles.notificationsDropdown}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "6px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.5px" }}>Live Platform Events</span>
+              <span style={{ fontSize: "11px", color: "#10b981", fontWeight: 600 }}>Stream Active</span>
+            </div>
+            {events.length === 0 ? (
+              <div style={{ padding: "16px", textAlign: "center", color: "#64748b", fontSize: "13px" }}>
+                No recent platform alerts
+              </div>
+            ) : (
+              events.map((ev) => (
+                <div key={ev.id} className={styles.notificationItem}>
+                  <div className={styles.notificationHead}>
+                    <span
+                      className={`${styles.notificationType} ${
+                        ev.event_type === "SECURITY"
+                          ? styles.notificationTypeSecurity
+                          : ev.event_type === "TOURNAMENT"
+                          ? styles.notificationTypeTournament
+                          : styles.notificationTypeAudit
+                      }`}
+                    >
+                      {ev.event_type}
+                    </span>
+                    <span className={styles.notificationTime}>
+                      {new Date(ev.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <div className={styles.notificationAction}>{ev.action}</div>
+                  <div className={styles.notificationDetail}>
+                    {ev.subject_type}: {ev.subject_id || ev.actor_id || "System"}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
 
       <Link href="/" className={styles.websiteLink}>
         <AdminIcon name="dashboard" size={16} />

@@ -19,7 +19,8 @@
     "create_account": "إنشاء حساب",
     "download_app": "تحميل التطبيق",
     "referrals": "الإحالات",
-    "menu_aria_label": "القائمة"
+    "menu_aria_label": "القائمة",
+    "admin": "لوحة التحكم"
   },
   "footer": {
     "learn": "تعلّم",
@@ -402,7 +403,25 @@
       "mode_competitive_stake": "تنافسي — ${amount}",
       "popup_title": "تحدَّاك {handle}",
       "meta_game": "اللعبة",
-      "meta_mode": "الوضع"
+      "meta_mode": "الوضع",
+      "error_invalid_prize": "مبلغ الجائزة هذا غير متاح.",
+      "mode_competitive_prize": "تنافسي — ${amount}"
+    },
+    "time_control": {
+      "heading": "اختر مدة المباراة",
+      "subheading": "حدد سرعة الوقت المناسبة لأسلوب لعبك",
+      "blitz": "خاطف (Blitz)",
+      "standard": "رسمي (Standard)",
+      "extended": "ممتد (Extended)"
+    },
+    "prize": {
+      "heading": "اختر الجائزة",
+      "free_only": "مجاني فقط",
+      "free_only_note": "الجوائز المالية غير متاحة لهذه اللعبة بعد.",
+      "free_title": "مجاني",
+      "free_description": "بلا جوائز مالية — فقط متعة اللعب.",
+      "competitive_title": "تنافسي",
+      "competitive_description": "العب على جائزة حقيقية، تُمنح فور تحقيقك الفوز بالمباراة."
     }
   },
   "dashboard": {
@@ -964,7 +983,10 @@
     "leaderboard_heading": "أفضل اللاعبين",
     "leaderboard_signed_out": "سجّل الدخول لمشاهدة لوحة الصدارة الحقيقية والمباشرة لهذه اللعبة.",
     "leaderboard_empty": "لم تُلعب بعد مباريات تصنيف كافية لعرض لوحة صدارة.",
-    "leaderboard_games_played": "{count} مصنّفة"
+    "leaderboard_games_played": "{count} مصنّفة",
+    "fact_prizes": "الجوائز",
+    "prizes_free_only": "لعب مجاني — الجوائز التنافسية غير مفعلة بعد لهذه اللعبة.",
+    "prizes_enabled": "مجاني، أو تنافسي مع جائزة حقيقية للمؤهلين."
   },
   "walletPage": {
     "heading": "المحفظة",

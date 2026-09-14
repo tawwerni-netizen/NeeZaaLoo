@@ -17,6 +17,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [googleStarting, setGoogleStarting] = useState(false);
@@ -25,7 +26,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    const result = await login(identifier, password);
+    const result = await login(identifier, password, remember);
     setSubmitting(false);
     if (result.ok) {
       router.push(`/${locale}/home`);
@@ -88,6 +89,20 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 12px" }}>
+            <input
+              id="remember"
+              name="remember"
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#059669" }}
+            />
+            <label htmlFor="remember" style={{ fontSize: "14px", color: "var(--text-secondary, #94a3b8)", cursor: "pointer", userSelect: "none" }}>
+              {locale === "ar" ? "البقاء قيد تسجيل الدخول (تذكرني لمدة 30 يوماً)" : "Stay logged in / Remember password (30 days)"}
+            </label>
           </div>
 
           <Button type="submit" className={styles.submit} disabled={submitting}>

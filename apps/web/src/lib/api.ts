@@ -16,22 +16,62 @@ export const API_BASE =
 const ACCESS_TOKEN_KEY = "nz_access_token";
 const REFRESH_TOKEN_KEY = "nz_refresh_token";
 
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1] ?? "") : null;
+}
+
+function setCookie(name: string, value: string, days = 30) {
+  if (typeof document === "undefined") return;
+  const maxAge = days > 0 ? days * 24 * 60 * 60 : 0;
+  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
+}
+
+function removeCookie(name: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+}
+
 export function getTokens() {
   if (typeof window === "undefined") return { accessToken: null, refreshToken: null };
+  let accessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY);
+  let refreshToken = window.localStorage.getItem(REFRESH_TOKEN_KEY);
+
+  // Fallback to cookie if localStorage is empty
+  if (!accessToken) {
+    accessToken = getCookie(ACCESS_TOKEN_KEY);
+    if (accessToken) window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  }
+  if (!refreshToken) {
+    refreshToken = getCookie(REFRESH_TOKEN_KEY);
+    if (refreshToken) window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
+
   return {
-    accessToken: window.localStorage.getItem(ACCESS_TOKEN_KEY),
-    refreshToken: window.localStorage.getItem(REFRESH_TOKEN_KEY),
+    accessToken,
+    refreshToken,
   };
 }
 
-export function setTokens(accessToken: string, refreshToken: string) {
+export function setTokens(accessToken: string, refreshToken: string, remember: boolean = true) {
+  if (typeof window === "undefined") return;
   window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
   window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  // Persist into cookie for navigation resilience and 30-day "Stay logged in"
+  const days = remember ? 30 : 1;
+  setCookie(ACCESS_TOKEN_KEY, accessToken, days);
+  setCookie(REFRESH_TOKEN_KEY, refreshToken, days);
 }
 
 export function clearTokens() {
+  if (typeof window === "undefined") return;
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+  removeCookie(ACCESS_TOKEN_KEY);
+  removeCookie(REFRESH_TOKEN_KEY);
+  removeCookie("nz_user_email");
 }
 
 export class ApiError extends Error {

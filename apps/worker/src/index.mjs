@@ -35,6 +35,7 @@ import { createMasteryService } from "../../../packages/mastery/src/service.mjs"
 import { createStreakService } from "../../../packages/engagement/src/streaks.mjs";
 import { createTournamentService } from "../../../packages/tournament/src/tournament.mjs";
 import { createTournamentSweep } from "../../../packages/tournament/src/sweep.mjs";
+import { createAutomatedTournamentEngine } from "../../../packages/tournament/src/automated-engine.mjs";
 import { createReferralSweep } from "../../../packages/referral/src/index.mjs";
 import { ChessPlugin } from "../../../packages/game-chess/src/plugin.mjs";
 import { SpeedMathPlugin } from "../../../packages/game-speed-math/src/plugin.mjs";
@@ -152,6 +153,12 @@ async function main() {
     intervalMs: tournamentSweepIntervalMs,
   });
 
+  const automatedTournamentEngine = createAutomatedTournamentEngine(db, tournament);
+  const automatedTournamentIntervalMs = Number(process.env.AUTOMATED_TOURNAMENT_INTERVAL_MS || 5000);
+  const automatedTournamentWorker = createTickLoop(() => automatedTournamentEngine.tick(), {
+    intervalMs: automatedTournamentIntervalMs,
+  });
+
   // PLAY WITH FRIEND: "if no action within 30 seconds, EXPIRED -- the
   // system must log this automatically." A live client polling GET
   // /v1/challenges already flips a stale row lazily (challenge.mjs's own
@@ -184,6 +191,7 @@ async function main() {
       { name: "settlement_sweep", worker: settlementSweepWorker, intervalMs: settlementSweepIntervalMs },
       { name: "progression_sweep", worker: progressionSweepWorker, intervalMs: progressionSweepIntervalMs },
       { name: "tournament_sweep", worker: tournamentSweepWorker, intervalMs: tournamentSweepIntervalMs },
+      { name: "automated_tournament", worker: automatedTournamentWorker, intervalMs: automatedTournamentIntervalMs },
       { name: "challenge_expiry", worker: challengeExpiryWorker, intervalMs: challengeExpiryIntervalMs },
       { name: "referral_sweep", worker: referralSweepWorker, intervalMs: referralSweepIntervalMs },
     ],

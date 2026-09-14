@@ -104,3 +104,47 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.economicsCard {
+  background: var(--nz-surface-1, #131722);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--nz-radius-lg, 12px);
+  padding: 16px 20px;
+  max-width: 560px;
+  margin-bottom: var(--nz-space-6, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.economicsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--nz-text-2, #94a3b8);
+}
+
+.economicsTotal {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 10px;
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.economicsBadge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+

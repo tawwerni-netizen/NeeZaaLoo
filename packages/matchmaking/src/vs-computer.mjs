@@ -65,17 +65,12 @@ function resolveChallengeFor(gameId, difficulty, spawned, requestedTimeControl) 
 export function createVsComputerService(db) {
   return {
     async createDuel({
-      gameId, playerId, difficulty, timeControl,
+      gameId, playerId, difficulty, timeControl, timeProfile = "STANDARD",
     }) {
       if (!AI_SUPPORTED_GAMES.has(gameId)) {
         return { ok: false, reason: VsComputerError.UNSUPPORTED_GAME };
       }
-      // A per-game safe default, never chess's clock borrowed for every
-      // game -- see time-profiles.mjs. A caller (there is none in this
-      // codebase today) may still pass its own `timeControl`; Speed Math
-      // overrides it unconditionally just below regardless, since its
-      // difficulty already decides round length on its own.
-      timeControl ??= resolveTimeControl(gameId);
+      timeControl ??= resolveTimeControl(gameId, timeProfile || "STANDARD");
       if (!Object.values(Difficulty).includes(difficulty)) {
         return { ok: false, reason: VsComputerError.UNKNOWN_DIFFICULTY };
       }
@@ -93,8 +88,8 @@ export function createVsComputerService(db) {
       await db.query(
         `INSERT INTO duel
            (id, game_id, plugin_version, pairing_key, seat_0, seat_1,
-            tier, stake_minor, initial_state, seed, time_control, status, is_vs_computer)
-         VALUES ($1,$2,$3,$4,$5,$6,'FREE'::entry_tier,0,$7::jsonb,$8,$9::jsonb,'READY'::duel_status,TRUE)`,
+            tier, stake_minor, initial_state, seed, time_control, status, started_at, is_vs_computer)
+         VALUES ($1,$2,$3,$4,$5,$6,'FREE'::entry_tier,0,$7::jsonb,$8,$9::jsonb,'LIVE'::duel_status,now(),TRUE)`,
         [duelId, gameId, pluginVersion, `vs-computer:${duelId}`, playerId, botId,
           JSON.stringify(initialState), spawned.seed, JSON.stringify(resolvedTimeControl)]
       );

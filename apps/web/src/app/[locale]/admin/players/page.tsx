@@ -1,38 +1,58 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Button } from "@/components/Button";
+import { get, post } from "@/lib/api";
 import styles from "@/components/admin/AdminPageLayout.module.css";
 
 export default function AdminPlayersPage() {
   const [players, setPlayers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadPlayers();
-  }, [search]);
-
-  async function loadPlayers() {
+  const loadPlayers = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await fetch(`/v1/admin/players?q=${search}`);
-      const data = await res.json();
+      const q = encodeURIComponent(search.trim());
+      const data = await get<{ players: any[] }>(`/v1/admin/players${q ? `?q=${q}` : ""}`);
       if (data.players) setPlayers(data.players);
     } catch (e) {
-      console.error(e);
+      console.error("Failed to load players:", e);
+    } finally {
+      setLoading(false);
     }
-  }
+  }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadPlayers();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [loadPlayers]);
 
   async function promoteUser(id: string) {
     if (!window.confirm("Are you sure you want to promote this user to Admin?")) return;
     try {
-      await fetch(`/v1/admin/players/${id}/promote`, { method: "POST" });
+      await post(`/v1/admin/players/${id}/promote`);
       setActionNotice("User promoted to Admin successfully!");
       setTimeout(() => setActionNotice(null), 3000);
       loadPlayers();
     } catch (e) {
       alert("Failed to promote user");
+    }
+  }
+
+  async function demoteUser(id: string) {
+    if (!window.confirm("Are you sure you want to demote this user from Admin?")) return;
+    try {
+      await post(`/v1/admin/players/${id}/demote`);
+      setActionNotice("User demoted successfully!");
+      setTimeout(() => setActionNotice(null), 3000);
+      loadPlayers();
+    } catch (e) {
+      alert("Failed to demote user");
     }
   }
 
@@ -88,10 +108,16 @@ export default function AdminPlayersPage() {
                     )}
                   </td>
                   <td className={styles.alignRight}>
-                    {!(p.roles?.includes('ADMIN') || p.roles?.includes('SUPER_ADMIN')) && (
+                    {!(p.roles?.includes('ADMIN') || p.roles?.includes('SUPER_ADMIN')) ? (
                       <Button variant="ghost" onClick={() => promoteUser(p.id)}>
                         Promote to Admin
                       </Button>
+                    ) : p.roles?.includes('ADMIN') && !p.roles?.includes('SUPER_ADMIN') ? (
+                      <Button variant="ghost" onClick={() => demoteUser(p.id)}>
+                        Demote Admin
+                      </Button>
+                    ) : (
+                      <span style={{ fontSize: "11px", color: "var(--nz-text-3)" }}>Super Admin</span>
                     )}
                   </td>
                 </tr>

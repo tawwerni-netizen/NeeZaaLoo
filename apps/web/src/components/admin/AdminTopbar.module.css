@@ -222,3 +222,82 @@
 
 .websiteLink { display: flex; align-items: center; color: var(--text-2); font-size: 13px; text-decoration: none; padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border); transition: color 0.15s, border-color 0.15s; margin-right: 16px; }
 .websiteLink:hover { color: var(--text-1); border-color: var(--text-3); }
+
+.notificationsDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  background: #14171d;
+  border: 1px solid rgba(242, 237, 227, 0.15);
+  border-radius: var(--nz-radius-lg, 12px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.notificationItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s ease;
+}
+
+.notificationItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.notificationHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.notificationType {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.notificationTypeAudit {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.notificationTypeSecurity {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.notificationTypeTournament {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.notificationTime {
+  color: #64748b;
+}
+
+.notificationAction {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.notificationDetail {
+  font-size: 11px;
+  color: #94a3b8;
+  word-break: break-all;
+}

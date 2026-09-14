@@ -51,8 +51,11 @@ function GoogleCompleteInner() {
   const email = params.get("email");
   const reason = params.get("reason");
 
+  const access = params.get("access");
+  const refresh = params.get("refresh");
+
   const [status, setStatus] = useState<"working" | "needs_totp" | "done" | "error">(
-    outcome === "session" ? "working" : "done"
+    outcome === "session" || outcome === "session_direct" ? "working" : "done"
   );
   const [totpCode, setTotpCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -78,11 +81,21 @@ function GoogleCompleteInner() {
   }
 
   useEffect(() => {
+    if (outcome === "session_direct") {
+      if (access && refresh) {
+        applySession(access, refresh).then(() => {
+          router.replace(`/${locale}${returnTo ?? "/home"}`);
+        });
+      } else {
+        router.replace(`/${locale}${returnTo ?? "/home"}`);
+      }
+      return;
+    }
     if (outcome !== "session" || attempted.current) return;
     attempted.current = true;
     void finalize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [outcome]);
+  }, [outcome, access, refresh]);
 
   async function onTotpSubmit(e: FormEvent) {
     e.preventDefault();

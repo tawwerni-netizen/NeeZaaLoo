@@ -31,18 +31,42 @@ const INITIAL_GAMES: GameConfig[] = [
 
 export default function AdminGamesPage() {
   const [games, setGames] = useState<GameConfig[]>(INITIAL_GAMES);
+  const [search, setSearch] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
 
   function toggleGameStatus(id: string) {
     setGames((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, status: g.status === "ONLINE" ? "MAINTENANCE" : "ONLINE" } : g))
+      prev.map((g) => {
+        if (g.id === id) {
+          const newStatus = g.status === "ONLINE" ? "MAINTENANCE" : "ONLINE";
+          setNotice(`${g.name} status updated to ${newStatus}`);
+          setTimeout(() => setNotice(null), 3000);
+          return { ...g, status: newStatus };
+        }
+        return g;
+      })
     );
   }
 
   function toggleCash(id: string) {
     setGames((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, cashEnabled: !g.cashEnabled } : g))
+      prev.map((g) => {
+        if (g.id === id) {
+          const newCash = !g.cashEnabled;
+          setNotice(`${g.name} cash staking ${newCash ? "enabled" : "disabled"}`);
+          setTimeout(() => setNotice(null), 3000);
+          return { ...g, cashEnabled: newCash };
+        }
+        return g;
+      })
     );
   }
+
+  const filtered = games.filter(
+    (g) =>
+      g.name.toLowerCase().includes(search.toLowerCase()) ||
+      g.id.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <AdminPageLayout
@@ -50,15 +74,32 @@ export default function AdminGamesPage() {
       subtitle="Configure table limits, stake models, AI matchmaking, and game maintenance."
       breadcrumb={["Home", "Admin", "Games"]}
       stats={[
-        { label: "Active Games", value: "10 / 10", trend: "100% Operational" },
-        { label: "Cash-Eligible Games", value: "8", trend: "2 Free Solved Games" },
+        { label: "Active Games", value: `${games.filter(g => g.status === "ONLINE").length} / ${games.length}`, trend: "Operational" },
+        { label: "Cash-Eligible Games", value: `${games.filter(g => g.cashEnabled).length}`, trend: "Real Prizes" },
         { label: "Total Live Duels", value: "280", trend: "Real-time" },
         { label: "AI Engine Status", value: "HEALTHY", trend: "Latency < 45ms" },
       ]}
     >
+      {notice && (
+        <div style={{ padding: "10px 16px", background: "rgba(34, 197, 94, 0.1)", border: "1px solid #22c55e", borderRadius: "8px", marginBottom: "16px", color: "#22c55e", fontSize: "13px" }}>
+          ✓ {notice}
+        </div>
+      )}
+
+      <div className={styles.toolbar}>
+        <div className={styles.searchBox}>
+          <input
+            type="search"
+            placeholder="Search games by name or ID (chess, xo, etc.)..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className={styles.tableCard}>
         <div className={styles.tableHeader}>
-          <h2 className={styles.tableTitle}>Official 10 Game Plugins</h2>
+          <h2 className={styles.tableTitle}>Official 10 Game Plugins ({filtered.length})</h2>
         </div>
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
@@ -75,11 +116,11 @@ export default function AdminGamesPage() {
               </tr>
             </thead>
             <tbody>
-              {games.map((g) => (
+              {filtered.map((g) => (
                 <tr key={g.id}>
                   <td>
                     <strong>{g.name}</strong>
-                    <div style={{ fontSize: "11px", color: "#64748b" }}>{g.id}</div>
+                    <div style={{ fontSize: "11px", color: "var(--nz-text-3)" }}>{g.id}</div>
                   </td>
                   <td>
                     <span className={`${styles.badge} ${styles.badgeNeutral}`}>{g.turnModel}</span>
@@ -99,25 +140,29 @@ export default function AdminGamesPage() {
                   </td>
                   <td className="nz-num">{g.activeDuels}</td>
                   <td>
-                    <span className={`${styles.badge} ${g.status === "ONLINE" ? styles.badgeSuccess : styles.badgeDanger}`}>
+                    <span
+                      className={`${styles.badge} ${g.status === "ONLINE" ? styles.badgeSuccess : styles.badgeDanger}`}
+                    >
                       {g.status}
                     </span>
                   </td>
-                  <td style={{ display: "flex", gap: "6px" }}>
-                    <button
-                      type="button"
-                      className={styles.actionBtn}
-                      onClick={() => toggleCash(g.id)}
-                    >
-                      {g.cashEnabled ? "Disable Cash" : "Enable Cash"}
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.actionBtn} ${g.status === "ONLINE" ? styles.actionBtn : styles.actionBtnPrimary}`}
-                      onClick={() => toggleGameStatus(g.id)}
-                    >
-                      {g.status === "ONLINE" ? "Pause" : "Resume"}
-                    </button>
+                  <td>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <button
+                        type="button"
+                        className={styles.actionBtn}
+                        onClick={() => toggleGameStatus(g.id)}
+                      >
+                        {g.status === "ONLINE" ? "Pause" : "Activate"}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.actionBtn}
+                        onClick={() => toggleCash(g.id)}
+                      >
+                        {g.cashEnabled ? "Disable USDT" : "Enable USDT"}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

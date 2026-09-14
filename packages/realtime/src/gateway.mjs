@@ -674,6 +674,10 @@ export function createGateway({
       await lease.release(duelId, ownerId);
       return { ok: false, reason: "NO_SUCH_DUEL" };
     }
+    if (duel.status === DuelState.READY) {
+      await store.markLive(duel, now());
+      duel.status = DuelState.LIVE;
+    }
     duels.set(duelId, duel);
     leaseTokens.set(duelId, res.token);
     // Claiming is exactly the moment a VS_COMPUTER duel first becomes
@@ -774,7 +778,13 @@ export function createGateway({
         return handleChatMessage(conn, msg, t);
       }
 
-      const duel = duels.get(msg.duelId);
+      let duel = duels.get(msg.duelId);
+      if (!duel && lease && store && typeof msg.duelId === "string") {
+        const claimRes = await claimDuel(msg.duelId);
+        if (claimRes.ok) {
+          duel = duels.get(msg.duelId);
+        }
+      }
       if (!duel) return fail(conn, ErrorCode.NO_SUCH_DUEL);
       const plugin = plugins.get(duel.gameId);
 

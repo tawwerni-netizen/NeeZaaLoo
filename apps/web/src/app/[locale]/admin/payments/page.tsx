@@ -24,6 +24,7 @@ import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from
 import { RequireAuth } from "@/components/RequireAuth";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/Button";
+import { LocaleLink } from "@/components/LocaleLink";
 import { get, post, ApiError } from "@/lib/api";
 import styles from "./payments.module.css";
 
@@ -167,6 +168,12 @@ function AdminPaymentsContent() {
     <>
       <Header />
       <div className={styles.wrap}>
+        <div style={{ marginBottom: "16px" }}>
+          <LocaleLink href="/admin" style={{ display: "inline-flex", alignItems: "center", gap: "8px", color: "var(--nz-accent, #10b981)", textDecoration: "none", fontSize: "14px", fontWeight: 600 }}>
+            ← Back to Admin Dashboard
+          </LocaleLink>
+        </div>
+
         <h1 className={styles.title}>Payment &amp; Stablecoin Control Center</h1>
         <p className={styles.subtitle}>
           Live configuration for every payment rail and platform-wide pause. Every change here is
@@ -181,7 +188,14 @@ function AdminPaymentsContent() {
           </p>
         )}
         {loadError && !forbidden && (
-          <p className={styles.errorNotice}>Could not load the Control Center ({loadError}).</p>
+          <div className={styles.errorNotice} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <p>Could not load the Control Center ({loadError}).</p>
+            {loadError === "UNAUTHENTICATED" && (
+              <p style={{ fontSize: "13px", color: "var(--nz-text-2, #94a3b8)" }}>
+                Your session may have expired or requires Super Admin authentication. Please <LocaleLink href="/login" style={{ color: "#10b981", textDecoration: "underline" }}>log in as Super Admin</LocaleLink> to access financial controls.
+              </p>
+            )}
+          </div>
         )}
 
         {!forbidden && (
@@ -212,17 +226,15 @@ function AdminPaymentsContent() {
 
             <section className={styles.section}>
               <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Future rails</h2>
-                <p className={styles.sectionNote}>Not yet configured -- no row exists, so there is nothing to enable and nothing shown here is live.</p>
+                <h2 className={styles.sectionTitle}>Asset &amp; Network Policy</h2>
+                <p className={styles.sectionNote}>Nizalo is strictly locked to TRC20 USDT for zero-friction stablecoin settlements. No other crypto or fiat assets are permitted.</p>
               </div>
               <div className={styles.controlGrid}>
-                {FUTURE_RAILS.map((r) => (
-                  <div key={r.asset} className={styles.controlCard}>
-                    <div className={styles.controlLabel}>{r.asset}</div>
-                    <div className={styles.controlMeta}>{r.network}</div>
-                    <Badge state="disabled" label="Not configured" />
-                  </div>
-                ))}
+                <div className={styles.controlCard} style={{ borderColor: "rgba(16, 185, 129, 0.4)", background: "rgba(16, 185, 129, 0.05)" }}>
+                  <div className={styles.controlLabel} style={{ color: "#10b981" }}>USDT (Tether)</div>
+                  <div className={styles.controlMeta}>TRON Network (TRC-20)</div>
+                  <Badge state="active" label="EXCLUSIVE PLATFORM STANDARD" />
+                </div>
               </div>
             </section>
           </>
