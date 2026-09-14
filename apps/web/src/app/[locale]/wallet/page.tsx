@@ -99,12 +99,13 @@ function WalletContent() {
 
   function submitDeposit(e: React.FormEvent) {
     e.preventDefault();
-    if (!depositAmount || !depositTxHash) return;
+    const amt = parseFloat(depositAmount);
+    if (!depositAmount || !depositTxHash || isNaN(amt) || amt < 5) return;
     const newTx: TransactionRecord = {
       id: `DEP-${Date.now().toString().slice(-4)}`,
       type: "DEPOSIT",
       network: selectedNetwork,
-      amount: parseFloat(depositAmount).toFixed(2),
+      amount: amt.toFixed(2),
       addressOrHash: depositTxHash.slice(0, 10) + "...",
       status: "PENDING",
       timestamp: "Just now",
@@ -113,7 +114,7 @@ function WalletContent() {
     setShowDepositModal(false);
     setDepositAmount("");
     setDepositTxHash("");
-    setTxNotice(`Deposit of ${newTx.amount} USDT submitted for on-chain block confirmation.`);
+    setTxNotice(t("walletPage.deposit_submitted_notice", { amount: newTx.amount }));
     setTimeout(() => setTxNotice(null), 5000);
   }
 
@@ -134,7 +135,7 @@ function WalletContent() {
     setShowWithdrawModal(false);
     setWithdrawAmount("");
     setWithdrawAddress("");
-    setTxNotice(`Withdrawal request of ${newTx.amount} USDT queued for automated signature.`);
+    setTxNotice(t("walletPage.withdraw_submitted_notice", { amount: newTx.amount }));
     setTimeout(() => setTxNotice(null), 5000);
   }
 
@@ -211,25 +212,25 @@ function WalletContent() {
       {/* Recent On-Chain Transactions */}
       <section className={styles.txSection}>
         <div className={styles.txHeader}>
-          <h2 className={styles.txTitle}>Recent Ledger Transactions</h2>
+          <h2 className={styles.txTitle}>{t("walletPage.recent_tx_title")}</h2>
         </div>
         <div className={styles.txTableCard}>
           <table className={styles.txTable}>
             <thead>
               <tr>
-                <th>Transaction</th>
-                <th>Network</th>
-                <th>TxHash / Address</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date</th>
+                <th>{t("walletPage.th_transaction")}</th>
+                <th>{t("walletPage.th_network")}</th>
+                <th>{t("walletPage.th_tx_or_address")}</th>
+                <th>{t("walletPage.th_amount")}</th>
+                <th>{t("walletPage.th_status")}</th>
+                <th>{t("walletPage.th_date")}</th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((tx) => (
                 <tr key={tx.id}>
                   <td>
-                    <strong>{tx.type === "DEPOSIT" ? "📥 Deposit" : "📤 Withdrawal"}</strong>
+                    <strong>{tx.type === "DEPOSIT" ? `📥 ${t("walletPage.tx_type_deposit")}` : `📤 ${t("walletPage.tx_type_withdrawal")}`}</strong>
                     <div style={{ fontSize: "11px", color: "#64748b" }}>{tx.id}</div>
                   </td>
                   <td><span className={styles.assetBadge}>{tx.network}</span></td>
@@ -239,10 +240,10 @@ function WalletContent() {
                   </td>
                   <td>
                     <span className={tx.status === "CONFIRMED" ? styles.badgeSuccess : styles.badgeWarning}>
-                      {tx.status}
+                      {tx.status === "CONFIRMED" ? t("walletPage.status_confirmed") : t("walletPage.status_pending")}
                     </span>
                   </td>
-                  <td className="nz-num">{tx.timestamp}</td>
+                  <td className="nz-num">{tx.timestamp === "Just now" ? t("walletPage.time_just_now") : tx.timestamp}</td>
                 </tr>
               ))}
             </tbody>
@@ -255,7 +256,7 @@ function WalletContent() {
         <div className={styles.modalBackdrop} onClick={() => setShowDepositModal(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHead}>
-              <h3 className={styles.modalTitle}>Deposit USDT (Tether)</h3>
+              <h3 className={styles.modalTitle}>{t("walletPage.deposit_title")}</h3>
               <button type="button" className={styles.closeBtn} onClick={() => setShowDepositModal(false)}>✕</button>
             </div>
 
@@ -290,42 +291,42 @@ function WalletContent() {
                   <rect x="65" y="65" width="15" height="15" fill="#000" />
                 </svg>
               </div>
-              <span style={{ fontSize: "12px", color: "#94a3b8" }}>Scan QR code or copy address below</span>
+              <span style={{ fontSize: "12px", color: "#94a3b8" }}>{t("walletPage.scan_qr_hint")}</span>
               <div className={styles.addressBox}>
                 <span className={styles.addressText}>{OFFICIAL_TREASURY[selectedNetwork]}</span>
                 <button type="button" className={styles.copyBtn} onClick={() => handleCopy(OFFICIAL_TREASURY[selectedNetwork])}>
-                  {copied ? "Copied!" : "Copy"}
+                  {copied ? t("walletPage.copied") : t("walletPage.copy")}
                 </button>
               </div>
             </div>
 
             <form onSubmit={submitDeposit}>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Deposit Amount (USDT)</label>
+                <label className={styles.formLabel}>{t("walletPage.deposit_amount_label")}</label>
                 <input
                   type="number"
-                  min="10"
+                  min="5"
                   step="0.01"
                   required
-                  placeholder="Min 10.00 USDT"
+                  placeholder={t("walletPage.deposit_amount_placeholder")}
                   className={styles.formInput}
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
                 />
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Transaction Hash (TxID)</label>
+                <label className={styles.formLabel}>{t("walletPage.tx_hash_label")}</label>
                 <input
                   type="text"
                   required
-                  placeholder="Paste your blockchain transaction hash..."
+                  placeholder={t("walletPage.tx_hash_placeholder")}
                   className={styles.formInput}
                   value={depositTxHash}
                   onChange={(e) => setDepositTxHash(e.target.value)}
                 />
               </div>
               <button type="submit" className={styles.submitBtn}>
-                Submit Deposit Confirmation
+                {t("walletPage.submit_deposit")}
               </button>
             </form>
           </div>
@@ -337,7 +338,7 @@ function WalletContent() {
         <div className={styles.modalBackdrop} onClick={() => setShowWithdrawModal(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHead}>
-              <h3 className={styles.modalTitle}>Withdraw USDT</h3>
+              <h3 className={styles.modalTitle}>{t("walletPage.withdraw_title")}</h3>
               <button type="button" className={styles.closeBtn} onClick={() => setShowWithdrawModal(false)}>✕</button>
             </div>
 
@@ -356,11 +357,11 @@ function WalletContent() {
 
             <form onSubmit={submitWithdraw}>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Destination USDT ({selectedNetwork}) Address</label>
+                <label className={styles.formLabel}>{t("walletPage.withdraw_address_label", { net: selectedNetwork })}</label>
                 <input
                   type="text"
                   required
-                  placeholder={`Enter your ${selectedNetwork} wallet address...`}
+                  placeholder={t("walletPage.withdraw_address_placeholder")}
                   className={styles.formInput}
                   value={withdrawAddress}
                   onChange={(e) => setWithdrawAddress(e.target.value)}
@@ -368,9 +369,9 @@ function WalletContent() {
               </div>
               <div className={styles.formGroup}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                  <label className={styles.formLabel} style={{ margin: 0 }}>Amount (USDT)</label>
+                  <label className={styles.formLabel} style={{ margin: 0 }}>{t("walletPage.withdraw_amount_label")}</label>
                   <span style={{ fontSize: "12px", color: "#94a3b8" }}>
-                    Available: ${formatUsd(usdtBalance.available)}
+                    {t("walletPage.available_label")}: ${formatUsd(usdtBalance.available)}
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -379,7 +380,7 @@ function WalletContent() {
                     min="10"
                     step="0.01"
                     required
-                    placeholder="Min 10.00 USDT"
+                    placeholder={t("walletPage.withdraw_amount_placeholder")}
                     className={styles.formInput}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
@@ -396,15 +397,15 @@ function WalletContent() {
 
               <div style={{ background: "#0e1015", padding: "12px", borderRadius: "8px", marginBottom: "16px", fontSize: "12px", color: "#94a3b8", display: "flex", flexDirection: "column", gap: "4px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Platform Fee:</span>
+                  <span>{t("walletPage.fee_platform")}:</span>
                   <span style={{ color: "#22c55e", fontWeight: 700 }}>0.00 USDT (0%)</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Estimated Network Fee:</span>
+                  <span>{t("walletPage.fee_network")}:</span>
                   <span style={{ color: "#fff" }}>1.00 USDT</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #252b37", paddingTop: "4px", color: "#fff", fontWeight: 700 }}>
-                  <span>You Will Receive:</span>
+                  <span>{t("walletPage.fee_receive")}:</span>
                   <span style={{ color: "#f59e0b" }}>
                     {parseFloat(withdrawAmount) > 1 ? (parseFloat(withdrawAmount) - 1).toFixed(2) : "0.00"} USDT
                   </span>
@@ -412,7 +413,7 @@ function WalletContent() {
               </div>
 
               <button type="submit" className={styles.submitBtn}>
-                Confirm & Request Withdrawal
+                {t("walletPage.submit_withdraw")}
               </button>
             </form>
           </div>

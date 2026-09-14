@@ -508,11 +508,21 @@ export function createGateway({
       // draw, a timeout) or moved on in the time this timer was pending.
       if (duel.status !== DuelState.LIVE || duel.clock.toMove !== bot.seat) return;
       const t = now();
-      const move = adapter.chooseAction(duel.state, bot.seat, bot.difficulty, aiThinkMs, `${duel.duelId}:${duel.events.length}`);
-      if (!move) return;
-      const before = duel.events.length;
-      const res = runIntent(duel, plugin, { playerId: bot.playerId, intent: move }, t);
-      if (res.ok) await publishNewEvents(duel, plugin, before, t);
+      try {
+        const move = adapter.chooseAction(duel.state, bot.seat, bot.difficulty, aiThinkMs, `${duel.duelId}:${duel.events.length}`);
+        if (move === null || move === undefined) return;
+        const before = duel.events.length;
+        const res = runIntent(duel, plugin, { playerId: bot.playerId, intent: move }, t);
+        if (res.ok) {
+          await publishNewEvents(duel, plugin, before, t);
+        } else {
+          // eslint-disable-next-line no-console
+          console.error(`[AI BOT] runIntent rejected for duel ${duel.duelId} (${duel.gameId}):`, res.reason, "intent:", move);
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[AI BOT] chooseAction error for duel ${duel.duelId} (${duel.gameId}):`, err);
+      }
     }, aiMoveDelayMs);
     if (typeof timer.unref === "function") timer.unref();
     aiTimers.set(duel.duelId, timer);
@@ -542,19 +552,18 @@ export function createGateway({
       aiTimers.delete(duel.duelId);
       if (duel.status !== DuelState.LIVE) return;
       const t = now();
-      const progressIndex = duel.state.progress?.[bot.seat]?.index ?? 0;
-      const answer = adapter.chooseAction(duel.state, bot.seat, bot.difficulty, aiThinkMs, `${duel.duelId}:${progressIndex}`);
-      if (answer === null || answer === undefined) return; // the bot has nothing left of its own to answer
-      const before = duel.events.length;
-      const res = runIntent(duel, plugin, { playerId: bot.playerId, intent: answer }, t);
-      if (res.ok) await publishNewEvents(duel, plugin, before, t);
-      scheduleBotAnswerIfNeeded(duel, plugin);
-      // `answerDelayMs`, when the adapter provides one, is this game's own
-      // per-difficulty race pacing scaled off the SAME `aiMoveDelayMs` base
-      // every other game's bot uses (see game-speed-math/src/ai.mjs's own
-      // header) -- so a test harness overriding that base for speed still
-      // gets a proportionally fast delay, and falling back to the base
-      // itself keeps every ALTERNATING game's bot untouched.
+      try {
+        const progressIndex = duel.state.progress?.[bot.seat]?.index ?? 0;
+        const answer = adapter.chooseAction(duel.state, bot.seat, bot.difficulty, aiThinkMs, `${duel.duelId}:${progressIndex}`);
+        if (answer === null || answer === undefined) return; // the bot has nothing left of its own to answer
+        const before = duel.events.length;
+        const res = runIntent(duel, plugin, { playerId: bot.playerId, intent: answer }, t);
+        if (res.ok) await publishNewEvents(duel, plugin, before, t);
+        scheduleBotAnswerIfNeeded(duel, plugin);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[AI BOT] scheduleBotAnswerIfNeeded error for duel ${duel.duelId} (${duel.gameId}):`, err);
+      }
     }, adapter.answerDelayMs?.(bot.difficulty, aiMoveDelayMs) ?? aiMoveDelayMs);
     if (typeof timer.unref === "function") timer.unref();
     aiTimers.set(duel.duelId, timer);

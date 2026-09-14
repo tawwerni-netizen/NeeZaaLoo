@@ -66,7 +66,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
         if (e instanceof ApiError && e.code === "ALREADY_QUEUED") {
           setPhase("waiting");
         } else if (e instanceof ApiError && e.code === "INSUFFICIENT_FUNDS") {
-          setError(e.message || "Insufficient wallet balance. Please deposit USDT to play cash matches.");
+          setError(t("matchmaking.error_insufficient_funds"));
           setInsufficientFunds(true);
           setPhase("error");
         } else {
@@ -176,7 +176,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
                       fontSize: "14px",
                     }}
                   >
-                    💳 Deposit USDT
+                    💳 {t("matchmaking.deposit_usdt")}
                   </button>
                 </LocaleLink>
                 <button
@@ -192,7 +192,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
                     fontSize: "14px",
                   }}
                 >
-                  Back to Play
+                  {t("matchmaking.back_to_play")}
                 </button>
               </div>
             ) : (

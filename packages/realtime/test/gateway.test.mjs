@@ -16,6 +16,8 @@ import { ChessPlugin } from "../../game-chess/src/plugin.mjs";
 import { createChessAiAdapter } from "../../game-chess/src/ai.mjs";
 import { SpeedMathPlugin, DEFAULT_CONFIG as SPEED_MATH_DEFAULT_CONFIG } from "../../game-speed-math/src/plugin.mjs";
 import { createSpeedMathAiAdapter } from "../../game-speed-math/src/ai.mjs";
+import { XOPlugin } from "../../game-xo/src/plugin.mjs";
+import { createXoAiAdapter } from "../../game-xo/src/ai.mjs";
 import { createDuel, start, DuelState } from "../../duel-engine/src/duel.mjs";
 
 // A controllable clock: the tests must never depend on wall time.
@@ -101,7 +103,7 @@ const settle = () => new Promise((r) => setTimeout(r, 30));
 before(() => {
   sessions = new Map([["tok-alice", "alice"], ["tok-bob", "bob"], ["tok-eve", "eve"]]);
   duels = new Map();
-  plugins = new Map([["chess", ChessPlugin], ["speed-math", SpeedMathPlugin]]);
+  plugins = new Map([["chess", ChessPlugin], ["speed-math", SpeedMathPlugin], ["xo", XOPlugin]]);
   gw = createGateway({ sessions, duels, plugins, now });
 });
 
@@ -538,16 +540,19 @@ describe("VS_COMPUTER -- a bot moves through the SAME path a human's INTENT does
     aiDuels = new Map();
     aiGw = createGateway({
       sessions, duels: aiDuels, plugins, now,
-      aiAdapters: new Map([["chess", createChessAiAdapter()]]),
+      aiAdapters: new Map([
+        ["chess", createChessAiAdapter()],
+        ["xo", createXoAiAdapter()],
+      ]),
       aiMoveDelayMs: 10, // real timers, kept short so tests stay fast
     });
   });
   after(async () => { await aiGw.close(); });
 
-  function newVsComputerDuel(id, { humanSeat = 0, botId = "ai-easy" } = {}) {
+  function newVsComputerDuel(id, { humanSeat = 0, botId = "ai-easy", plugin = ChessPlugin } = {}) {
     const players = humanSeat === 0 ? ["alice", botId] : [botId, "alice"];
     const d = createDuel({
-      duelId: id, plugin: ChessPlugin, players,
+      duelId: id, plugin, players,
       seed: null, config: {}, timeControl: { initialMs: 300_000, incrementMs: 0 }, now: CLOCK,
     });
     d.vsComputer = true; // set exactly as store.hydrate() would from duel.is_vs_computer
@@ -581,6 +586,23 @@ describe("VS_COMPUTER -- a bot moves through the SAME path a human's INTENT does
     const botReply = await alice.next((m) => m.t === ServerMsg.EVENT && m.type === "INTENT_ACCEPTED" && m.payload.seat === 1);
     assert.match(botReply.payload.intent, /^[a-h][1-8][a-h][1-8][nbrq]?$/, "the bot answered with a real legal move");
     assert.equal(aiDuels.get("d-ai-reply").clock.toMove, 0, "and it is White's turn again");
+    await alice.close();
+  });
+
+  test("VS_COMPUTER: bot answers with a falsy move (cell 0 in XO) without dropping it", async () => {
+    newVsComputerDuel("d-ai-xo", { humanSeat: 0, botId: "ai-expert", plugin: XOPlugin });
+    const alice = await authed("tok-alice", aiGw);
+    alice.send({ t: "JOIN", duelId: "d-ai-xo" });
+    await alice.next((m) => m.t === ServerMsg.STATE);
+
+    // Human plays center (cell 4). Expert bot chooses corner cell 0 (a falsy number: 0).
+    alice.send({ t: "INTENT", duelId: "d-ai-xo", intent: 4 });
+    const own = await alice.next((m) => m.t === ServerMsg.EVENT && m.type === "INTENT_ACCEPTED" && m.payload.seat === 0);
+    assert.equal(own.payload.intent, 4);
+
+    const botReply = await alice.next((m) => m.t === ServerMsg.EVENT && m.type === "INTENT_ACCEPTED" && m.payload.seat === 1);
+    assert.equal(botReply.payload.intent, 0, "bot chose cell 0 and it was executed, not dropped");
+    assert.equal(aiDuels.get("d-ai-xo").clock.toMove, 0, "and it is human's turn again");
     await alice.close();
   });
 

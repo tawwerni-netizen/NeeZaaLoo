@@ -156,24 +156,27 @@
 .endZone {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
-  padding: var(--nz-space-2) var(--nz-space-3);
+  transform: translateY(-50%) translateZ(30px);
+  padding: var(--nz-space-3) var(--nz-space-4);
   border-radius: var(--nz-radius-pill);
   border: 2px solid var(--nz-brand-orange);
-  background: rgba(255, 90, 43, 0.2);
+  background: rgba(255, 90, 43, 0.4);
   color: #fff;
-  font-size: var(--nz-text-xs);
-  font-weight: 600;
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
   cursor: pointer;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 0 15px rgba(255, 90, 43, 0.6);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(255, 90, 43, 0.7);
   animation: pulseZone 1.2s infinite ease-in-out;
-  z-index: 10;
+  z-index: 100;
+  pointer-events: auto;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 @keyframes pulseZone {
-  0%, 100% { transform: translateY(-50%) scale(1); }
-  50% { transform: translateY(-50%) scale(1.06); }
+  0%, 100% { transform: translateY(-50%) translateZ(30px) scale(1); }
+  50% { transform: translateY(-50%) translateZ(30px) scale(1.08); }
 }
 
 .endLeft { left: 8px; }

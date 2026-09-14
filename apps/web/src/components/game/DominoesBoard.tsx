@@ -94,6 +94,11 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
   function handleTileClick(tile: Tile) {
     if (!canMove) return;
     if (mustPlayTile && !sameTile(tile, mustPlayTile)) return;
+    // Allow deselecting the active tile
+    if (selected && sameTile(tile, selected)) {
+      setSelected(null);
+      return;
+    }
     const ends = legalEndsFor(tile, line);
     if (ends.length === 0) return;
     if (ends[0] === "ANY") {
@@ -107,7 +112,11 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
     setSelected(tile);
   }
 
-  function handleEndClick(end: "LEFT" | "RIGHT") {
+  function handleEndClick(end: "LEFT" | "RIGHT", e?: React.SyntheticEvent) {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     if (!selected) return;
     onMove({ tile: selected, end });
     setSelected(null);
@@ -130,29 +139,48 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
 
       {/* 3D Felt Table Surface */}
       <div className={[styles.tableContainer, perspective3D ? styles.perspective : ""].join(" ")}>
-        <div className={styles.tableFelt}>
+        <div className={styles.tableFelt} onClick={() => setSelected(null)}>
           <div className={styles.lineViewport} dir="ltr">
-            <div className={styles.line}>
+            <div className={styles.line} onClick={(e) => e.stopPropagation()}>
               {line.tiles.length === 0 && <span className={styles.emptyHint}>{t("game.dominoes.empty_line")}</span>}
-              {line.tiles.map((lt, i) => (
-                <motion.div
-                  key={i}
-                  initial={i === line.tiles.length - 1 ? { scale: 1.15, y: -8, opacity: 0 } : false}
-                  animate={{ scale: 1, y: 0, opacity: 1 }}
-                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  <DominoTile values={lt.orientation} size="md" />
-                </motion.div>
-              ))}
+              {line.tiles.map((lt, i) => {
+                const isLeftEnd = i === 0 && selected && selectedEnds.includes("LEFT");
+                const isRightEnd = i === line.tiles.length - 1 && selected && selectedEnds.includes("RIGHT");
+                return (
+                  <motion.div
+                    key={i}
+                    initial={i === line.tiles.length - 1 ? { scale: 1.15, y: -8, opacity: 0 } : false}
+                    animate={{ scale: 1, y: 0, opacity: 1 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ cursor: (isLeftEnd || isRightEnd) ? "pointer" : "default" }}
+                    onClick={(e) => {
+                      if (isLeftEnd) handleEndClick("LEFT", e);
+                      else if (isRightEnd) handleEndClick("RIGHT", e);
+                    }}
+                  >
+                    <DominoTile values={lt.orientation} size="md" glow={Boolean(isLeftEnd || isRightEnd)} />
+                  </motion.div>
+                );
+              })}
             </div>
             {selected && selectedEnds.includes("LEFT") && (
-              <button type="button" className={[styles.endZone, styles.endLeft].join(" ")} onClick={() => handleEndClick("LEFT")}>
+              <button
+                type="button"
+                className={[styles.endZone, styles.endLeft].join(" ")}
+                onClick={(e) => handleEndClick("LEFT", e)}
+                onTouchEnd={(e) => handleEndClick("LEFT", e)}
+              >
                 <span className={styles.endZoneGlow} />
                 {t("game.dominoes.play_here")}
               </button>
             )}
             {selected && selectedEnds.includes("RIGHT") && (
-              <button type="button" className={[styles.endZone, styles.endRight].join(" ")} onClick={() => handleEndClick("RIGHT")}>
+              <button
+                type="button"
+                className={[styles.endZone, styles.endRight].join(" ")}
+                onClick={(e) => handleEndClick("RIGHT", e)}
+                onTouchEnd={(e) => handleEndClick("RIGHT", e)}
+              >
                 <span className={styles.endZoneGlow} />
                 {t("game.dominoes.play_here")}
               </button>
