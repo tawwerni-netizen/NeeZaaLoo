@@ -20,7 +20,7 @@
  * side's IncomingChallengeWatcher, which navigates into the SAME
  * /game/[duelId] route every other mode uses.
  */
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { get, post, ApiError } from "@/lib/api";
@@ -54,15 +54,20 @@ export function FriendChallenge({ gameId, stake }: {
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [outgoing, setOutgoing] = useState<OutgoingRow[]>([]);
+  const activeChallengeIdRef = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
       const r = await get<{ outgoing: OutgoingRow[] }>("/v1/challenges");
       const list = r.outgoing || [];
-      const accepted = list.find((c) => c.status === "ACCEPTED" && c.duel_id);
-      if (accepted && accepted.duel_id) {
-        router.push(`/${locale}/game/${accepted.duel_id}`);
-        return;
+      const targetId = activeChallengeIdRef.current;
+      if (targetId) {
+        const accepted = list.find((c) => c.id === targetId && c.status === "ACCEPTED" && c.duel_id);
+        if (accepted && accepted.duel_id) {
+          activeChallengeIdRef.current = null;
+          router.push(`/${locale}/game/${accepted.duel_id}`);
+          return;
+        }
       }
       setOutgoing(list.filter((c) => c.game_id === gameId && (c.status === "PENDING" || !c.status)));
     } catch {
@@ -80,11 +85,14 @@ export function FriendChallenge({ gameId, stake }: {
     setBusy(true);
     setError(null);
     try {
-      await post("/v1/challenges", {
+      const r = await post<{ challengeId: string; expiresAt: string }>("/v1/challenges", {
         gameId, opponentNickname: nickname,
         ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor } : {}),
       });
       setSentTo(nickname);
+      if (r.challengeId) {
+        activeChallengeIdRef.current = r.challengeId;
+      }
       await refresh();
     } catch (e) {
       const code = e instanceof ApiError ? e.code : undefined;
@@ -95,6 +103,9 @@ export function FriendChallenge({ gameId, stake }: {
   }
 
   async function cancel(challengeId: string) {
+    if (activeChallengeIdRef.current === challengeId) {
+      activeChallengeIdRef.current = null;
+    }
     await post(`/v1/challenges/${challengeId}/cancel`);
     await refresh();
   }

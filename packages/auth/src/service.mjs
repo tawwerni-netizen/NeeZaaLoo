@@ -42,6 +42,7 @@ export const AuthError = {
   COOLING_OFF: "COOLING_OFF",
   CREDENTIAL_ALREADY_SET: "CREDENTIAL_ALREADY_SET",
   TERMS_ACCEPTANCE_REQUIRED: "TERMS_ACCEPTANCE_REQUIRED",
+  ACCOUNT_DISABLED: "ACCOUNT_DISABLED",
 };
 
 const MAX_FAILURES = 10;                 // per 15-minute window, per identifier
@@ -157,7 +158,7 @@ export function createAuthService(db, {
       }
 
       const row = await db.query(
-        `SELECT p.id, c.password_hash
+        `SELECT p.id, p.disabled_at, c.password_hash
            FROM player p
            JOIN credential c ON c.player_id = p.id
            LEFT JOIN email_identity e ON e.player_id = p.id
@@ -183,6 +184,10 @@ export function createAuthService(db, {
           [identifier, ctx.ip ?? null]
         );
         return { ok: false, reason: AuthError.BAD_CREDENTIALS };
+      }
+
+      if (row.rows[0]?.disabled_at) {
+        return { ok: false, reason: AuthError.ACCOUNT_DISABLED };
       }
 
       const playerId = row.rows[0].id;
@@ -258,6 +263,11 @@ export function createAuthService(db, {
     async loginPasswordless({ playerId, totpCode = null, deviceFingerprint = null }, ctx = {}) {
       const t = now();
 
+      const playerCheck = await db.query("SELECT disabled_at FROM player WHERE id = $1", [playerId]);
+      if (playerCheck.rows[0]?.disabled_at) {
+        return { ok: false, reason: AuthError.ACCOUNT_DISABLED };
+      }
+
       const totpRow = await db.query(
         "SELECT secret_encrypted, key_id, confirmed_at, last_used_step FROM totp_secret WHERE player_id=$1",
         [playerId]
@@ -323,6 +333,12 @@ export function createAuthService(db, {
         const s = r.rows[0];
 
         if (s.revoked_at) return { ok: false, reason: AuthError.SESSION_REVOKED };
+
+        const playerCheck = await tx.query("SELECT disabled_at FROM player WHERE id = $1", [s.player_id]);
+        if (playerCheck.rows[0]?.disabled_at) {
+          await tx.query("UPDATE auth_session SET revoked_at = now(), revoked_reason = 'ACCOUNT_DISABLED' WHERE id = $1", [s.id]);
+          return { ok: false, reason: AuthError.ACCOUNT_DISABLED };
+        }
 
         if (s.rotated_at) {
           // Replay of a spent token. Burn the whole chain.

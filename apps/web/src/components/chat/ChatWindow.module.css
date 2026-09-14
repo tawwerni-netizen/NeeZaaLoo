@@ -159,6 +159,22 @@
   color: var(--nz-accent);
 }
 
+.actionLinkAdmin {
+  color: #f59e0b;
+}
+
+.actionLinkAdmin:hover {
+  color: #fbbf24;
+}
+
+.actionLinkDanger {
+  color: #ef4444;
+}
+
+.actionLinkDanger:hover {
+  color: #f87171;
+}
+
 .notice {
   padding: var(--nz-space-2) var(--nz-space-4);
   font-size: var(--nz-text-xs);

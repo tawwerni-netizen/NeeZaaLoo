@@ -260,7 +260,7 @@ export function Hero() {
           </motion.p>
 
           <motion.div {...stage(3, reduceMotion)} className={styles.actions}>
-            <LocaleLink href="/register">
+            <LocaleLink href="/play">
               <Button variant="primary" className={styles.primaryBtn}>{t("home.hero.cta_primary")}</Button>
             </LocaleLink>
             <LocaleLink href="/watch">

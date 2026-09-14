@@ -1,9 +1,9 @@
 .wrap {
-  --board-ground: #10382d;
-  --board-light: #e8e0cc;
-  --board-dark: #3b6655;
-  --board-accent: #ff5a2b;
-  --board-bevel: #1a1e24;
+  --board-ground: #0a0d14;
+  --board-light: #2b3548;
+  --board-dark: #141926;
+  --board-accent: #06b6d4;
+  --board-bevel: #121722;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,43 +27,43 @@
 
 .tableBevel {
   position: relative;
-  padding: 20px;
-  background: linear-gradient(145deg, #252a33 0%, #16191f 100%);
-  border-radius: var(--nz-radius-xl);
+  padding: 22px;
+  background: linear-gradient(145deg, #182030 0%, #0d121c 100%);
+  border-radius: 20px;
   box-shadow: 
-    0 12px 0 #0b0d10,
-    0 24px 45px rgba(0, 0, 0, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 0 20px rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+    0 16px 0 #07090f,
+    0 28px 50px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(56, 189, 248, 0.2),
+    inset 0 0 30px rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.15);
 }
 
 .rankNotations {
   position: absolute;
   left: 6px;
-  top: 20px;
-  bottom: 20px;
+  top: 22px;
+  bottom: 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
   font-family: var(--nz-font-num);
   font-size: 11px;
-  font-weight: 600;
-  color: var(--nz-text-3);
+  font-weight: 700;
+  color: #64748b;
   user-select: none;
 }
 
 .fileNotations {
   position: absolute;
-  bottom: 4px;
-  left: 20px;
-  right: 20px;
+  bottom: 5px;
+  left: 22px;
+  right: 22px;
   display: flex;
   justify-content: space-around;
   font-family: var(--nz-font-num);
   font-size: 11px;
-  font-weight: 600;
-  color: var(--nz-text-3);
+  font-weight: 700;
+  color: #64748b;
   user-select: none;
 }
 
@@ -73,10 +73,10 @@
   grid-template-rows: repeat(8, 1fr);
   width: min(84vw, 500px);
   aspect-ratio: 1 / 1;
-  border-radius: var(--nz-radius-sm);
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
-  border: 2px solid #0f1217;
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.6);
+  border: 2px solid #1e293b;
 }
 
 .square {
@@ -94,37 +94,39 @@
 .square:disabled { cursor: default; }
 
 .light {
-  background: radial-gradient(circle at 35% 35%, #f2ede4 0%, #ded4bf 100%);
-  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.06);
+  background: radial-gradient(circle at 35% 35%, #334055 0%, #263143 100%);
+  box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.04);
 }
 
 .dark {
-  background: radial-gradient(circle at 35% 35%, #497563 0%, #294e40 100%);
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.25);
+  background: radial-gradient(circle at 35% 35%, #18202d 0%, #101520 100%);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
 }
 
 .selected {
-  box-shadow: inset 0 0 0 3px var(--nz-brand-orange), inset 0 0 12px rgba(255, 90, 43, 0.4);
+  box-shadow: inset 0 0 0 2.5px #06b6d4, inset 0 0 16px rgba(6, 182, 212, 0.45);
+  background: radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.25) 0%, transparent 80%) !important;
 }
 
 .lastMove::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--nz-brand-orange);
-  opacity: 0.24;
+  background: #06b6d4;
+  opacity: 0.18;
+  box-shadow: inset 0 0 8px rgba(6, 182, 212, 0.35);
   pointer-events: none;
 }
 
 .inCheck {
-  box-shadow: inset 0 0 0 3px var(--nz-loss), inset 0 0 16px rgba(229, 72, 77, 0.6);
+  box-shadow: inset 0 0 0 3px #ef4444, inset 0 0 20px rgba(239, 68, 68, 0.7);
   animation: checkPulse 1.2s infinite ease-in-out;
 }
 
 @keyframes checkPulse {
-  0% { box-shadow: inset 0 0 0 3px var(--nz-loss), inset 0 0 8px rgba(229, 72, 77, 0.4); }
-  50% { box-shadow: inset 0 0 0 4px var(--nz-loss), inset 0 0 20px rgba(229, 72, 77, 0.8); }
-  100% { box-shadow: inset 0 0 0 3px var(--nz-loss), inset 0 0 8px rgba(229, 72, 77, 0.4); }
+  0% { box-shadow: inset 0 0 0 3px #ef4444, inset 0 0 10px rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: inset 0 0 0 4px #ef4444, inset 0 0 24px rgba(239, 68, 68, 0.9); }
+  100% { box-shadow: inset 0 0 0 3px #ef4444, inset 0 0 10px rgba(239, 68, 68, 0.5); }
 }
 
 .pieceContainer {
@@ -141,25 +143,38 @@
 
 .moveDot {
   position: absolute;
-  width: 24%;
-  height: 24%;
+  width: 22%;
+  height: 22%;
   border-radius: 999px;
-  background: var(--nz-brand-orange);
-  opacity: 0.75;
-  box-shadow: 0 0 8px rgba(255, 90, 43, 0.6);
+  background: #06b6d4;
+  opacity: 0.85;
+  box-shadow: 0 0 10px #06b6d4, 0 0 4px #fff;
   pointer-events: none;
   z-index: 3;
+  animation: dotPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes dotPulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
 }
 
 .captureRing {
   position: absolute;
-  inset: 8%;
+  inset: 10%;
   border-radius: 999px;
-  border: 3px solid var(--nz-loss);
-  box-shadow: 0 0 10px rgba(229, 72, 77, 0.5), inset 0 0 6px rgba(229, 72, 77, 0.3);
-  opacity: 0.85;
+  border: 2.5px dashed #f43f5e;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.6), inset 0 0 8px rgba(244, 63, 94, 0.35);
+  opacity: 0.9;
   pointer-events: none;
   z-index: 3;
+  animation: rotateTarget 6s linear infinite;
+}
+
+@keyframes rotateTarget {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .promoOverlay {

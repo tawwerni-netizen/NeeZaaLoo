@@ -73,31 +73,81 @@ function TournamentsList() {
           {visible?.map((row) => {
             const nameKey = getGame(row.game_id)?.nameKey ?? row.game_id;
             const startTarget = row.scheduled_starts_at ?? row.starts_at;
+            const entryFeeUsdt = Number(row.entry_fee_minor || 0) / 1_000_000;
+            const prizePool = (entryFeeUsdt * row.capacity * 0.88).toFixed(2);
+            const registeredPct = Math.min(100, Math.round(((row.registered_count || 0) / (row.capacity || 1)) * 100));
+            const imgPath = `/images/games/${row.game_id}-hero.webp`;
+
             return (
               <LocaleLink key={row.id} href={`/tournaments/${row.id}`} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <span className={styles.gameName}>{t(`common.game_names.${nameKey}`)}</span>
-                  <span className={styles.format}>{t(`tournamentsPage.format.${row.format}`)}</span>
-                  <span className={`${styles.statusPill} ${styles[`status_${row.status}`] ?? ""}`}>
-                    {t(`tournamentsPage.status.${row.status}`)}
-                  </span>
+                <div className={styles.cardBannerWrap}>
+                  <img
+                    src={imgPath}
+                    alt={t(`common.game_names.${nameKey}`)}
+                    className={styles.cardBannerImg}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "/images/games/chess-hero.webp";
+                    }}
+                  />
+                  <div className={styles.cardBannerOverlay} />
+                  <div className={styles.topPills}>
+                    <span className={styles.formatBadge}>
+                      <span>🏆</span>
+                      {t(`tournamentsPage.format.${row.format}`)}
+                    </span>
+                    <span className={`${styles.statusPill} ${styles[`status_${row.status}`] ?? ""}`}>
+                      {t(`tournamentsPage.status.${row.status}`)}
+                    </span>
+                  </div>
                 </div>
-                {row.title && <h2 className={styles.title}>{row.title}</h2>}
-                <div className={styles.cardMeta}>
-                  <span>
-                    {row.tier === "FREE"
-                      ? t("tournamentsPage.entry_free")
-                      : `${(Number(row.entry_fee_minor) / 1_000_000).toFixed(2)} ${row.asset || "USDT"}`}
-                  </span>
-                  <span style={{ color: "#10b981", fontWeight: 600 }}>
-                    Prize: ${((Number(row.entry_fee_minor || 0) / 1_000_000) * row.capacity * 0.88).toFixed(2)} USDT (88%)
-                  </span>
-                  <span className="nz-num">
-                    {t("tournamentsPage.registered_count", { count: row.registered_count, capacity: row.capacity })}
-                  </span>
-                  {startTarget && <span>{t("tournamentsPage.starts_at", { date: formatDate(startTarget, locale) })}</span>}
+
+                <div className={styles.cardBody}>
+                  <div className={styles.titleArea}>
+                    <div className={styles.gameNameRow}>
+                      <span>🎮</span>
+                      <span>{t(`common.game_names.${nameKey}`)}</span>
+                    </div>
+                    <h2 className={styles.title}>
+                      {row.title || t(`common.game_names.${nameKey}`) + " Championship"}
+                    </h2>
+                  </div>
+
+                  <div className={styles.prizeBox}>
+                    <div className={styles.prizeLabel}>
+                      <span>💰</span>
+                      <span>{locale === "ar" ? "مجموع الجوائز الفورية:" : "Total Prize Pool:"}</span>
+                    </div>
+                    <span className={styles.prizeAmount}>
+                      {Number(prizePool) > 0 ? `$${prizePool} USDT` : (locale === "ar" ? "كأس الشرف ونقاط تصنيف" : "Honor Trophy & ELO")}
+                    </span>
+                  </div>
+
+                  <div className={styles.progressSection}>
+                    <div className={styles.progressLabels}>
+                      <span>{t("tournamentsPage.registered_count", { count: row.registered_count, capacity: row.capacity })}</span>
+                      <span>{registeredPct}%</span>
+                    </div>
+                    <div className={styles.capacityBar}>
+                      <div className={styles.capacityFill} style={{ width: `${registeredPct}%` }} />
+                    </div>
+                  </div>
+
+                  <div className={styles.cardFooter}>
+                    <div className={styles.entryFee}>
+                      <span className={styles.entryFeeLabel}>{locale === "ar" ? "رسوم الاشتراك" : "Entry Fee"}</span>
+                      <span className={styles.entryFeeVal}>
+                        {row.tier === "FREE"
+                          ? (locale === "ar" ? "مجاناً 100%" : "Free Entry")
+                          : `${entryFeeUsdt.toFixed(2)} ${row.asset || "USDT"}`}
+                      </span>
+                    </div>
+
+                    <span className={styles.actionCta}>
+                      <span>{locale === "ar" ? "سجّل ونافس" : "Join Tournament"}</span>
+                      <span>⚔️</span>
+                    </span>
+                  </div>
                 </div>
-                <span className={styles.view}>{t("tournamentsPage.view")}</span>
               </LocaleLink>
             );
           })}

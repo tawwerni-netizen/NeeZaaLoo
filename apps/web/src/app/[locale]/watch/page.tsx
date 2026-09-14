@@ -25,13 +25,31 @@ import styles from "./watch.module.css";
 
 type LiveMatchPlayer = { handle: string; badge: string | null; ratingX100: number | null };
 type LiveMatch = {
-  duelId: string; gameId: string; startedAt: string;
-  isTournamentMatch: boolean; moveCount: number;
+  duelId: string;
+  gameId: string;
+  startedAt: string;
+  isTournamentMatch: boolean;
+  isVsComputer?: boolean;
+  moveCount: number;
   players: LiveMatchPlayer[];
 };
 type LiveMatchesResponse = { matches: LiveMatch[] };
 
 const POLL_MS = 3000;
+
+const WATCH_GAMES = [
+  { id: "all", nameEn: "All Games", nameAr: "جميع الألعاب", icon: "🌐" },
+  { id: "dominoes", nameEn: "Dominoes", nameAr: "الدومينو", icon: "🀄" },
+  { id: "chess", nameEn: "Chess", nameAr: "الشطرنج", icon: "♟️" },
+  { id: "backgammon", nameEn: "Backgammon", nameAr: "طاولة الزهر", icon: "🎲" },
+  { id: "xo", nameEn: "Tic-Tac-Toe", nameAr: "إكس أو", icon: "⚔️" },
+  { id: "checkers", nameEn: "Checkers", nameAr: "الداما", icon: "⚪" },
+  { id: "connect-four", nameEn: "Connect Four", nameAr: "أربعة على التوالي", icon: "🔴" },
+  { id: "speed-math", nameEn: "Speed Math", nameAr: "الحساب السريع", icon: "⚡" },
+  { id: "seega", nameEn: "Seega", nameAr: "السيجة", icon: "🏜️" },
+  { id: "reversi", nameEn: "Reversi", nameAr: "ريفيرسي", icon: "⚫" },
+  { id: "gomoku", nameEn: "Gomoku", nameAr: "جوموكو", icon: "⭕" },
+];
 
 export default function WatchPage() {
   return (
@@ -43,14 +61,25 @@ export default function WatchPage() {
 }
 
 function WatchContent() {
-  const { t, locale } = useI18n();
+  const { t, locale, dir } = useI18n();
+  const isRtl = dir === "rtl";
   const [matches, setMatches] = useState<LiveMatch[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedGame, setSelectedGame] = useState("all");
+  const [searchHandle, setSearchHandle] = useState("");
+  const [includeBots, setIncludeBots] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const loadMatches = async (isManual = false) => {
     if (isManual) setRefreshing(true);
     try {
-      const r = await get<LiveMatchesResponse>("/v1/duels/live");
+      const params = new URLSearchParams();
+      params.set("limit", "50");
+      if (selectedGame !== "all") params.set("gameId", selectedGame);
+      if (searchHandle.trim()) params.set("handle", searchHandle.trim());
+      if (includeBots) params.set("includeBots", "true");
+
+      const r = await get<LiveMatchesResponse>(`/v1/duels/live?${params.toString()}`);
       setMatches(r.matches || []);
     } catch {
       setMatches((prev) => prev ?? []);
@@ -66,7 +95,15 @@ function WatchContent() {
       if (!cancelled) void loadMatches();
     }, POLL_MS);
     return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+  }, [selectedGame, searchHandle, includeBots]);
+
+  const handleCopyLink = (duelId: string) => {
+    const url = `${window.location.origin}/${locale}/game/${duelId}`;
+    navigator.clipboard?.writeText(url).then(() => {
+      setCopiedId(duelId);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
 
   return (
     <div className={styles.wrap}>
@@ -74,7 +111,7 @@ function WatchContent() {
         <div>
           <div className={styles.titleBadge}>
             <span className={styles.livePulseDot} />
-            <span>{locale === "ar" ? "بث مباشر فوري" : "REALTIME ARENA FEED"}</span>
+            <span>{isRtl ? "بث مباشر فوري" : "REALTIME ARENA FEED"}</span>
           </div>
           <h1 className={styles.title}>{t("watch.title")}</h1>
           <p className={styles.subtitle}>{t("watch.subtitle")}</p>
@@ -86,14 +123,57 @@ function WatchContent() {
             className={`${styles.refreshBtn} ${refreshing ? styles.refreshing : ""}`}
             onClick={() => void loadMatches(true)}
             disabled={refreshing}
-            title={locale === "ar" ? "تحديث فوري للمباريات" : "Refresh matches"}
+            title={isRtl ? "تحديث فوري للمباريات" : "Refresh matches"}
           >
             <span className={styles.refreshIcon}>🔄</span>
-            <span>{locale === "ar" ? "تحديث مباشر" : "Live Refresh"}</span>
+            <span>{isRtl ? "تحديث مباشر" : "Live Refresh"}</span>
           </button>
           <LocaleLink href="/play" className={styles.createDuelBtn}>
-            <span>⚔️ {locale === "ar" ? "أطلق مبارزة الآن" : "Start a Duel"}</span>
+            <span>⚔️ {isRtl ? "أطلق مبارزة الآن" : "Start a Duel"}</span>
           </LocaleLink>
+        </div>
+      </div>
+
+      {/* Control Bar: Search & Game Tabs */}
+      <div className={styles.controlsBar}>
+        <div className={styles.controlsTopRow}>
+          <div className={styles.searchBox}>
+            <span className={styles.searchIcon}>🔍</span>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder={isRtl ? "ابحث عن اسم لاعب أو صديق بالاسم..." : "Search player or friend handle..."}
+              value={searchHandle}
+              onChange={(e) => setSearchHandle(e.target.value)}
+            />
+          </div>
+
+          <button
+            type="button"
+            className={`${styles.toggleBotsBtn} ${includeBots ? styles.toggleBotsBtnActive : ""}`}
+            onClick={() => setIncludeBots(!includeBots)}
+          >
+            <span>🤖</span>
+            <span>{isRtl ? "يشمل مباريات البوت والتدريب" : "Include Bot Matches"}</span>
+          </button>
+        </div>
+
+        {/* Scrollable Game Filter Tabs */}
+        <div className={styles.gameTabs}>
+          {WATCH_GAMES.map((g) => {
+            const active = selectedGame === g.id;
+            return (
+              <button
+                key={g.id}
+                type="button"
+                className={`${styles.gameTab} ${active ? styles.gameTabActive : ""}`}
+                onClick={() => setSelectedGame(g.id)}
+              >
+                <span>{g.icon}</span>
+                <span>{isRtl ? g.nameAr : g.nameEn}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -109,19 +189,19 @@ function WatchContent() {
             <span className={styles.radarIcon}>📡</span>
           </div>
           <h3 className={styles.emptyArenaTitle}>
-            {locale === "ar" ? "الساحة في انتظار أبطالها الآن!" : "The Arena Awaits Its Champions!"}
+            {isRtl ? "لا توجد مباريات جارية بهذه الفلاتر حالياً!" : "No Live Matches Found!"}
           </h3>
           <p className={styles.emptyArenaDesc}>
-            {locale === "ar"
-              ? "لا توجد مبارزات جارية في هذه اللحظة. بادر بإطلاق مبارزة جديدة وادعُ خصوماً حقيقيين لمواجهتك فوراً!"
-              : "No live duels in progress right now. Launch a duel and challenge real opponents instantly!"}
+            {searchHandle.trim()
+              ? (isRtl ? `لم نجد أي مباراة جارية حالياً للاعب "${searchHandle}". تأكد من صحة الاسم أو أن المباراة لا تزال جارية.` : `No active live match found for "${searchHandle}". Check handle spelling or wait for match to begin.`)
+              : (isRtl ? "لا توجد مبارزات جارية في هذه اللعبة حالياً. بادر ببدء نزالك الخاص أو اختر لعبة أخرى من الفلاتر!" : "No live duels in progress right now. Launch a duel and challenge real opponents instantly!")}
           </p>
           <div className={styles.emptyArenaActions}>
             <LocaleLink href="/play" className={styles.heroPlayBtn}>
-              ⚔️ {locale === "ar" ? "ابدأ مبارزة الآن" : "Play & Challenge Now"}
+              ⚔️ {isRtl ? "ابدأ مبارزة الآن" : "Play & Challenge Now"}
             </LocaleLink>
             <LocaleLink href="/tournaments" className={styles.heroTourneyBtn}>
-              🏆 {locale === "ar" ? "تصفح البطولات المفتوحة" : "Explore Tournaments"}
+              🏆 {isRtl ? "تصفح البطولات المفتوحة" : "Explore Tournaments"}
             </LocaleLink>
           </div>
         </div>
@@ -133,10 +213,17 @@ function WatchContent() {
               <div key={m.duelId} className={styles.matchCard}>
                 <div className={styles.cardTop}>
                   <span className={styles.gameName}>{t(`common.game_names.${nameKey}`)}</span>
-                  <span className={styles.liveBadge}>
-                    <span className={styles.liveDot} aria-hidden="true" />
-                    {t("watch.live_badge")}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {m.isVsComputer && (
+                      <span className={styles.botBadge}>
+                        <span>🤖</span> {isRtl ? "تدريب/حاسوب" : "VS BOT"}
+                      </span>
+                    )}
+                    <span className={styles.liveBadge}>
+                      <span className={styles.liveDot} aria-hidden="true" />
+                      {t("watch.live_badge")}
+                    </span>
+                  </div>
                 </div>
 
                 {m.isTournamentMatch && (
@@ -151,7 +238,17 @@ function WatchContent() {
 
                 <div className={styles.cardBottom}>
                   <span className={styles.moveCount}>{t("watch.move_count", { count: m.moveCount })}</span>
-                  <LocaleLink href={`/game/${m.duelId}`} className={styles.watchCta}>{t("watch.watch_cta")}</LocaleLink>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <button
+                      type="button"
+                      className={styles.copyLinkBtn}
+                      title={copiedId === m.duelId ? (isRtl ? "تم نسخ الرابط!" : "Copied!") : (isRtl ? "نسخ رابط المشاهدة" : "Copy spectator link")}
+                      onClick={() => handleCopyLink(m.duelId)}
+                    >
+                      {copiedId === m.duelId ? "✅" : "🔗"}
+                    </button>
+                    <LocaleLink href={`/game/${m.duelId}`} className={styles.watchCta}>{t("watch.watch_cta")}</LocaleLink>
+                  </div>
                 </div>
               </div>
             );

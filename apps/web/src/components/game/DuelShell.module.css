@@ -1,8 +1,92 @@
 .statusBar {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding-block: var(--nz-space-6);
   font-size: var(--nz-text-sm);
+}
+
+.statusActions {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+}
+
+.chatBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  padding: 6px 14px;
+  border-radius: var(--nz-radius-pill);
+  background: rgba(255, 90, 43, 0.12);
+  border: 1px solid rgba(255, 90, 43, 0.35);
+  color: var(--nz-text-1);
+  font-family: var(--nz-font-sans);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.chatBtn:hover {
+  background: rgba(255, 90, 43, 0.22);
+  border-color: var(--nz-brand-orange);
+  transform: translateY(-1px);
+}
+
+.chatBtnActive {
+  background: var(--nz-accent);
+  color: #fff;
+  border-color: var(--nz-accent);
+}
+
+.chatIcon {
+  font-size: 15px;
+}
+
+.chatLabel {
+  font-weight: 700;
+}
+
+.chatBadge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--nz-radius-pill);
+  background: #ff3344;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waitingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--nz-radius-pill);
+  background: rgba(250, 173, 20, 0.15);
+  border: 1px solid rgba(250, 173, 20, 0.4);
+  color: #fadb14;
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  animation: waitingPulse 1.8s infinite ease-in-out;
+}
+
+.waitingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #fadb14;
+  box-shadow: 0 0 6px #fadb14;
+}
+
+@keyframes waitingPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(0.97); }
 }
 
 .live { color: var(--nz-win); }
@@ -12,6 +96,7 @@
   display: flex;
   align-items: center;
   gap: var(--nz-space-3);
+  flex-wrap: wrap;
 }
 
 .spectatorBadge {

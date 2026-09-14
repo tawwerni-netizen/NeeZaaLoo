@@ -3,24 +3,26 @@
 
 .toggle {
   position: fixed;
-  right: var(--nz-space-6);
-  bottom: var(--nz-space-6);
+  inset-inline-end: max(var(--nz-space-6), env(safe-area-inset-right, 24px));
+  bottom: max(var(--nz-space-6), env(safe-area-inset-bottom, 24px));
   width: 52px;
   height: 52px;
   border-radius: var(--nz-radius-pill);
-  background: var(--nz-accent);
+  background: linear-gradient(135deg, var(--nz-accent) 0%, #ff7a45 100%);
   color: var(--nz-accent-contrast);
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--nz-shadow-3);
+  box-shadow: 0 4px 20px rgba(255, 90, 43, 0.45), var(--nz-shadow-3);
   cursor: pointer;
-  z-index: 40;
+  z-index: 999;
+  transition: transform var(--nz-dur-fast) ease, box-shadow var(--nz-dur-fast) ease;
 }
 
 .toggle:hover {
   background: var(--nz-accent-hover);
+  transform: scale(1.05);
 }
 
 .toggleBadge {
@@ -43,8 +45,8 @@
 
 .panel {
   position: fixed;
-  right: var(--nz-space-6);
-  bottom: var(--nz-space-6);
+  inset-inline-end: max(var(--nz-space-6), env(safe-area-inset-right, 24px));
+  bottom: max(var(--nz-space-6), env(safe-area-inset-bottom, 24px));
   width: 360px;
   height: 560px;
   max-height: calc(100dvh - var(--nz-space-8));
@@ -55,7 +57,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 40;
+  z-index: 999;
 }
 
 .minimized {
@@ -153,18 +155,17 @@
 /* --- Mobile: bottom sheet, full-screen overlay while open ---------------- */
 @media (max-width: 640px) {
   .toggle {
-    right: var(--nz-space-4);
-    bottom: var(--nz-space-4);
+    inset-inline-end: max(var(--nz-space-4), env(safe-area-inset-right, 16px));
+    bottom: max(calc(var(--nz-space-4) + 12px), env(safe-area-inset-bottom, 20px));
   }
 
   .panel {
     inset: 0;
-    right: 0;
-    bottom: 0;
     width: 100%;
     height: 100%;
     max-height: none;
     border-radius: 0;
+    z-index: 999;
   }
 
   .minimized {

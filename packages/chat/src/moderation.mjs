@@ -73,5 +73,24 @@ export function createModerationService(db, { now = () => Date.now() } = {}) {
     return r.rows;
   }
 
-  return { muteUser, unmuteUser, isMuted, listActiveMutesFor };
+  async function listActiveMutes({ limit = 50, offset = 0 } = {}) {
+    const t = new Date(now()).toISOString();
+    const lim = Math.min(Math.max(1, parseInt(limit) || 50), 100);
+    const off = Math.max(0, parseInt(offset) || 0);
+    const r = await db.query(
+      `SELECT m.id, m.target_id, m.moderator_id, m.reason, m.scope, m.starts_at, m.ends_at,
+              p.handle AS target_handle,
+              a.display_name AS moderator_name
+         FROM chat_mute m
+         LEFT JOIN player p ON p.id = m.target_id
+         LEFT JOIN admin_user a ON a.id = m.moderator_id
+        WHERE m.revoked_at IS NULL AND (m.ends_at IS NULL OR m.ends_at > $1)
+        ORDER BY m.starts_at DESC
+        LIMIT $2 OFFSET $3`,
+      [t, lim, off]
+    );
+    return r.rows;
+  }
+
+  return { muteUser, unmuteUser, isMuted, listActiveMutesFor, listActiveMutes };
 }

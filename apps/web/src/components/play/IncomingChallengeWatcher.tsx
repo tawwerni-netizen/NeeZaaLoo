@@ -20,7 +20,7 @@
  * actually logging in as an admin and watching the network tab, not by
  * inspection alone.
  */
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
@@ -40,13 +40,27 @@ export function IncomingChallengeWatcher() {
   const pathname = usePathname();
   const [incoming, setIncoming] = useState<IncomingChallenge[]>([]);
   const isAdminRoute = pathname.includes("/admin");
+  const handledDuelsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const match = pathname.match(/\/game\/([^/?]+)/);
+    if (match?.[1]) {
+      handledDuelsRef.current.add(match[1]);
+    }
+  }, [pathname]);
 
   const refresh = useCallback(async () => {
     try {
       const r = await get<{ incoming: IncomingChallenge[]; outgoing?: OutgoingChallenge[] }>("/v1/challenges");
       setIncoming(r.incoming || []);
       const accepted = (r.outgoing || []).find((c) => c.status === "ACCEPTED" && c.duel_id);
-      if (accepted && accepted.duel_id && !pathname.includes(`/game/${accepted.duel_id}`)) {
+      if (
+        accepted &&
+        accepted.duel_id &&
+        !handledDuelsRef.current.has(accepted.duel_id) &&
+        !pathname.includes(`/game/${accepted.duel_id}`)
+      ) {
+        handledDuelsRef.current.add(accepted.duel_id);
         router.push(`/${locale}/game/${accepted.duel_id}`);
       }
     } catch {
@@ -69,7 +83,10 @@ export function IncomingChallengeWatcher() {
   return (
     <ChallengePopup
       challenge={incoming[0]!}
-      onAccepted={(duelId) => router.push(`/${locale}/game/${duelId}`)}
+      onAccepted={(duelId) => {
+        handledDuelsRef.current.add(duelId);
+        router.push(`/${locale}/game/${duelId}`);
+      }}
       onDeclined={() => void refresh()}
       onExpired={() => void refresh()}
     />

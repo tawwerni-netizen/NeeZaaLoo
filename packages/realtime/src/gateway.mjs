@@ -232,10 +232,41 @@ export function createGateway({
    * explicit LEAVE or an abrupt close alike -- otherwise a seat's
    * occupancy count only ever grows across reconnects, turning every
    * ordinary drop-and-reconnect into a false CONCURRENT_SEAT signal. */
+  function broadcastPresence(duel) {
+    if (!duel) return;
+    const connectedSeats = [
+      (duel.seatConns?.[0]?.size ?? 0) > 0,
+      (duel.seatConns?.[1]?.size ?? 0) > 0,
+    ];
+    for (const c of room(duel.duelId)) {
+      send(c, {
+        t: "PRESENCE",
+        duelId: duel.duelId,
+        connectedSeats,
+      });
+    }
+  }
+
+  function projectClockSafe(duel, t) {
+    if (!duel.vsComputer && duel.events.length === 0) {
+      const bothConnected = (duel.seatConns?.[0]?.size ?? 0) > 0 && (duel.seatConns?.[1]?.size ?? 0) > 0;
+      if (!bothConnected) {
+        if (duel.clock.model === "SHARED") {
+          return { model: "SHARED", remainingMs: duel.clock.durationMs, paused: true };
+        }
+        return { remaining: [...duel.clock.remaining], toMove: duel.clock.toMove, paused: true };
+      }
+    }
+    return projectClock(duel, t);
+  }
+
   function unbindSeat(duel, conn) {
     if (!duel?.seatConns) return;
     const seat = duel.players.indexOf(conn.playerId);
-    if (seat >= 0) duel.seatConns[seat].delete(conn);
+    if (seat >= 0) {
+      duel.seatConns[seat].delete(conn);
+      broadcastPresence(duel);
+    }
   }
 
   function chatLimiterFor(playerId) {
@@ -436,7 +467,7 @@ export function createGateway({
       // notice, which is exactly why it went unnoticed until this game
       // got one.
       view: plugin.project(duel.state, viewer, seat >= 0 ? seat : null),
-      clock: projectClock(duel, t),
+      clock: projectClockSafe(duel, t),
       lastSeq: duel.events.length ? duel.events[duel.events.length - 1].seq : -1,
       // Sequence admission (A5): the event count right now -- a client
       // sends this back as `baseVersion` on its NEXT intent, so the
@@ -459,6 +490,10 @@ export function createGateway({
       // standing RIGHT NOW rather than only learning of it from a
       // DRAW_OFFERED event it was disconnected for and will never see.
       drawOfferBy: duel.drawOfferBy,
+      connectedSeats: [
+        (duel.seatConns?.[0]?.size ?? 0) > 0,
+        (duel.seatConns?.[1]?.size ?? 0) > 0,
+      ],
     };
   }
 
@@ -497,7 +532,14 @@ export function createGateway({
     if (duel.status !== DuelState.LIVE) return;
     if (duel.clock.model === "SHARED") return scheduleBotAnswerIfNeeded(duel, plugin);
     const bot = botSeat(duel);
-    if (!bot || duel.clock.toMove !== bot.seat) return;
+    if (!bot || duel.clock.toMove !== bot.seat) {
+      const existing = aiTimers.get(duel.duelId);
+      if (existing) {
+        clearTimeout(existing);
+        aiTimers.delete(duel.duelId);
+      }
+      return;
+    }
     const adapter = aiAdapters.get(duel.gameId);
     if (!adapter) return;
     if (aiTimers.has(duel.duelId)) return; // already scheduled for this turn
@@ -610,7 +652,7 @@ export function createGateway({
           // See stateFor()'s own comment on why the third argument here
           // is not optional for an imperfect-information game.
           view: plugin.project(duel.state, viewer, seat >= 0 ? seat : null),
-          clock: projectClock(duel, t),
+          clock: projectClockSafe(duel, t),
           // The event count INCLUDING this one -- see stateFor()'s own
           // comment on `version`. A client updates its `baseVersion`
           // baseline from this on every event it receives, not only from
@@ -832,7 +874,14 @@ export function createGateway({
             }
             const seat = duel.players.indexOf(conn.playerId);
             duel.seatConns ??= [new Set(), new Set()];
+            const wasBothConnected = (duel.seatConns[0]?.size ?? 0) > 0 && (duel.seatConns[1]?.size ?? 0) > 0;
             duel.seatConns[seat].add(conn);
+            const nowBothConnected = (duel.seatConns[0]?.size ?? 0) > 0 && (duel.seatConns[1]?.size ?? 0) > 0;
+            if (!duel.vsComputer && duel.events.length === 0 && !wasBothConnected && nowBothConnected) {
+              if (duel.clock.model === "SHARED") duel.clock.startedAt = t;
+              else duel.clock.turnStartedAt = t;
+              duel.startedAt = t;
+            }
             // Two LIVE connections bound to the SAME seat at the SAME
             // time is not reconnection (a genuine reconnect's old socket
             // is already gone) -- it is concurrent occupancy: account
@@ -845,6 +894,7 @@ export function createGateway({
                 concurrentSessions: duel.seatConns[seat].size,
               }).catch(() => {});
             }
+            broadcastPresence(duel);
           }
           conn.subscriptions.add(duel.duelId);
           room(duel.duelId).add(conn);

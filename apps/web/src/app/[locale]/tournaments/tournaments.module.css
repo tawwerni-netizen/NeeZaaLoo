@@ -1,97 +1,272 @@
 .heading {
   font-size: var(--nz-text-2xl);
-  padding-block: var(--nz-space-10) var(--nz-space-8);
+  padding-block: var(--nz-space-8) var(--nz-space-6);
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .empty {
   color: var(--nz-text-3);
   padding-bottom: var(--nz-space-16);
+  text-align: center;
+  font-size: 16px;
 }
 
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--nz-space-4);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--nz-space-6);
   padding-bottom: var(--nz-space-16);
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--nz-space-2);
-  background: var(--nz-surface-1);
-  border: 1px solid var(--nz-line);
-  border-radius: var(--nz-radius-lg);
-  padding: var(--nz-space-6) var(--nz-space-8);
+  background: var(--nz-surface-1, #11151f);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--nz-radius-xl, 16px);
+  overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: border-color var(--nz-dur-fast) var(--nz-ease-out), transform var(--nz-dur-fast) var(--nz-ease-out);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
 }
 
 .card:hover {
-  border-color: var(--nz-accent-line);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  border-color: rgba(255, 90, 43, 0.5);
+  box-shadow: 0 16px 40px rgba(255, 90, 43, 0.15), 0 0 0 1px rgba(255, 90, 43, 0.3);
 }
 
-.cardHeader {
+.cardBannerWrap {
+  position: relative;
+  width: 100%;
+  height: 170px;
+  overflow: hidden;
+  background: #0d111a;
+}
+
+.cardBannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  transition: transform 0.5s ease;
+}
+
+.card:hover .cardBannerImg {
+  transform: scale(1.06);
+}
+
+.cardBannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 17, 26, 0.2) 0%,
+    rgba(17, 21, 31, 0.7) 60%,
+    rgba(17, 21, 31, 1) 100%
+  );
+}
+
+.topPills {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   display: flex;
-  align-items: baseline;
-  gap: var(--nz-space-3);
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  z-index: 2;
 }
 
-.gameName {
-  font-size: var(--nz-text-lg);
+.formatBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--nz-radius-pill);
+  font-size: 11px;
   font-weight: 700;
-}
-
-.format {
-  color: var(--nz-text-3);
-  font-size: var(--nz-text-sm);
-}
-
-.title {
-  font-size: var(--nz-text-lg);
-  font-weight: 600;
-  margin: 0;
+  letter-spacing: 0.04em;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
 }
 
 .statusPill {
-  margin-inline-start: auto;
-  flex-shrink: 0;
-  padding: var(--nz-space-1) var(--nz-space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
   border-radius: var(--nz-radius-pill);
-  font-size: var(--nz-text-xs);
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: var(--nz-tracking-caps);
-  background: var(--nz-surface-2);
-  color: var(--nz-text-2);
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(8px);
 }
 
 .status_REGISTRATION {
-  background: var(--nz-accent-soft);
-  color: var(--nz-accent);
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
 }
 
 .status_LIVE {
-  background: color-mix(in srgb, var(--nz-loss) 16%, transparent);
-  color: var(--nz-loss);
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #f87171;
 }
 
 .status_FINALS {
-  background: color-mix(in srgb, var(--nz-warn) 18%, transparent);
-  color: var(--nz-warn);
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
 }
 
-.cardMeta {
+.cardBody {
   display: flex;
-  gap: var(--nz-space-6);
-  font-size: var(--nz-text-sm);
-  color: var(--nz-text-2);
+  flex-direction: column;
+  padding: 16px 20px 20px;
+  gap: 14px;
+  flex: 1;
 }
 
-.view {
-  font-size: var(--nz-text-sm);
-  font-weight: 600;
-  color: var(--nz-accent);
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
+
+.gameNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--nz-accent, #ff5a2b);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0;
+  color: #f8fafc;
+  line-height: 1.35;
+}
+
+.prizeBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(245, 158, 11, 0.04));
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: var(--nz-radius-lg, 12px);
+  padding: 10px 14px;
+}
+
+.prizeLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fde047;
+}
+
+.prizeAmount {
+  font-size: 16px;
+  font-weight: 800;
+  color: #facc15;
+  font-family: monospace;
+}
+
+.progressSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--nz-text-2, #94a3b8);
+}
+
+.capacityBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.capacityFill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  transition: width 0.3s ease;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: auto;
+}
+
+.entryFee {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.entryFeeLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--nz-text-3, #64748b);
+  letter-spacing: 0.05em;
+}
+
+.entryFeeVal {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.actionCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: var(--nz-radius-pill);
+  background: linear-gradient(135deg, #ff5a2b, #ff7849);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(255, 90, 43, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover .actionCta {
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(255, 90, 43, 0.5);
+}
+
+@media (max-width: 640px) {
+  .list {
+    grid-template-columns: 1fr;
+  }
+}
+

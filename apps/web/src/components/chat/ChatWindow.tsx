@@ -12,6 +12,7 @@
  */
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import type { useChatChannel } from "@/lib/use-chat-socket";
 import { post } from "@/lib/api";
@@ -39,12 +40,15 @@ type ChatWindowProps = {
 };
 
 export function ChatWindow({ channelKind, state, title: titleProp, hideTitle = false }: ChatWindowProps) {
+  const { player } = useAuth();
   const { t, locale } = useI18n();
   const router = useRouter();
   const { connected, messages, sendMessage, rejected, clearRejected } = state;
   const [draft, setDraft] = useState("");
   const [reportTarget, setReportTarget] = useState<ChatMessage | null>(null);
   const [blockTarget, setBlockTarget] = useState<{ id: string; nickname: string } | null>(null);
+  const [muteTarget, setMuteTarget] = useState<{ id: string; nickname: string } | null>(null);
+  const [banTarget, setBanTarget] = useState<{ id: string; nickname: string } | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -114,6 +118,42 @@ export function ChatWindow({ channelKind, state, title: titleProp, hideTitle = f
                     >
                       {t("chat.block_cta")}
                     </button>
+                    {player?.isAdmin && (
+                      <>
+                        <button
+                          type="button"
+                          className={`${styles.actionLink} ${styles.actionLinkDanger}`}
+                          onClick={async () => {
+                            if (confirm(locale === "ar" ? "هل أنت متأكد من حذف هذه الرسالة نهائياً؟" : "Are you sure you want to delete this message?")) {
+                              try {
+                                await post(`/v1/admin/chat/messages/${m.id}/delete`, {});
+                              } catch {
+                                alert("Failed to delete message");
+                              }
+                            }
+                          }}
+                          title={locale === "ar" ? "حذف الرسالة (مشرف)" : "Delete Message (Mod)"}
+                        >
+                          🗑️ {locale === "ar" ? "حذف" : "Delete"}
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.actionLink} ${styles.actionLinkAdmin}`}
+                          onClick={() => setMuteTarget({ id: m.senderId, nickname: m.nickname })}
+                          title={locale === "ar" ? "كتم اللاعب من الشات (مشرف)" : "Mute User from Chat (Mod)"}
+                        >
+                          🔇 {locale === "ar" ? "كتم" : "Mute"}
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.actionLink} ${styles.actionLinkDanger}`}
+                          onClick={() => setBanTarget({ id: m.senderId, nickname: m.nickname })}
+                          title={locale === "ar" ? "حظر اللاعب من الموقع نهائياً (مشرف)" : "Ban User from Platform (Mod)"}
+                        >
+                          🚫 {locale === "ar" ? "حظر" : "Ban"}
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -145,6 +185,12 @@ export function ChatWindow({ channelKind, state, title: titleProp, hideTitle = f
       )}
       {blockTarget && (
         <BlockPanel target={blockTarget} onDone={() => setBlockTarget(null)} onCancel={() => setBlockTarget(null)} />
+      )}
+      {muteTarget && (
+        <AdminMutePanel target={muteTarget} onDone={() => setMuteTarget(null)} onCancel={() => setMuteTarget(null)} />
+      )}
+      {banTarget && (
+        <AdminBanPanel target={banTarget} onDone={() => setBanTarget(null)} onCancel={() => setBanTarget(null)} />
       )}
     </div>
   );
@@ -225,6 +271,124 @@ function BlockPanel({ target, onDone, onCancel }: { target: { id: string; nickna
           <button type="button" disabled={submitting} onClick={onConfirm}>{t("chat.block_confirm_cta")}</button>
           <button type="button" onClick={onCancel}>{t("chat.cancel_cta")}</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminMutePanel({ target, onDone, onCancel }: { target: { id: string; nickname: string }; onDone: () => void; onCancel: () => void }) {
+  const { locale } = useI18n();
+  const [duration, setDuration] = useState<number>(3600000);
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function onConfirm(e: FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await post("/v1/admin/chat/mutes", {
+        targetId: target.id,
+        reason: reason.trim() || "Violation of chat rules",
+        scope: "ALL_CHAT",
+        durationMs: duration > 0 ? duration : null,
+      });
+      onDone();
+    } catch {
+      alert("Failed to mute player");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className={styles.overlay}>
+      <div className={styles.panel}>
+        <form onSubmit={onConfirm}>
+          <h3 className={styles.panelTitle} style={{ color: "#f59e0b" }}>
+            🔇 {locale === "ar" ? `كتم @${target.nickname} من الشات` : `Mute @${target.nickname} from Chat`}
+          </h3>
+          <div className={styles.field}>
+            <label>{locale === "ar" ? "المدة" : "Duration"}</label>
+            <select value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
+              <option value={3600000}>{locale === "ar" ? "ساعة واحدة" : "1 Hour"}</option>
+              <option value={86400000}>{locale === "ar" ? "24 ساعة (يوم)" : "24 Hours (1 Day)"}</option>
+              <option value={604800000}>{locale === "ar" ? "7 أيام" : "7 Days"}</option>
+              <option value={0}>{locale === "ar" ? "دائم" : "Permanent"}</option>
+            </select>
+          </div>
+          <div className={styles.field}>
+            <label>{locale === "ar" ? "السبب" : "Reason"}</label>
+            <input
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={locale === "ar" ? "سبب الكتم..." : "Reason for mute..."}
+              maxLength={500}
+            />
+          </div>
+          <div className={styles.panelActions}>
+            <button type="submit" disabled={submitting} style={{ background: "#f59e0b", color: "#000", fontWeight: 700 }}>
+              {locale === "ar" ? "تأكيد الكتم" : "Confirm Mute"}
+            </button>
+            <button type="button" onClick={onCancel}>
+              {locale === "ar" ? "إلغاء" : "Cancel"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AdminBanPanel({ target, onDone, onCancel }: { target: { id: string; nickname: string }; onDone: () => void; onCancel: () => void }) {
+  const { locale } = useI18n();
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function onConfirm(e: FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await post(`/v1/admin/players/${target.id}/ban`, {
+        reason: reason.trim() || "Banned by administrator",
+      });
+      onDone();
+    } catch {
+      alert("Failed to ban player. Super Admins cannot be banned.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className={styles.overlay}>
+      <div className={styles.panel}>
+        <form onSubmit={onConfirm}>
+          <h3 className={styles.panelTitle} style={{ color: "#ef4444" }}>
+            🚫 {locale === "ar" ? `حظر @${target.nickname} من الموقع` : `Ban @${target.nickname} from Platform`}
+          </h3>
+          <p style={{ fontSize: "12px", color: "var(--nz-text-3)", marginBottom: "12px", lineHeight: 1.4 }}>
+            {locale === "ar"
+              ? "سيتم إنهاء جميع الجلسات النشطة للمستخدم فوراً ومنعه من تسجيل الدخول أو استخدام الموقع."
+              : "All active user sessions will be revoked immediately and login access blocked."}
+          </p>
+          <div className={styles.field}>
+            <label>{locale === "ar" ? "سبب الحظر" : "Reason for Ban"}</label>
+            <input
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={locale === "ar" ? "سبب الحظر من الموقع..." : "Reason for site ban..."}
+              maxLength={500}
+            />
+          </div>
+          <div className={styles.panelActions}>
+            <button type="submit" disabled={submitting} style={{ background: "#ef4444", color: "#fff", fontWeight: 700 }}>
+              {locale === "ar" ? "تأكيد الحظر الكلي" : "Confirm Site Ban"}
+            </button>
+            <button type="button" onClick={onCancel}>
+              {locale === "ar" ? "إلغاء" : "Cancel"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

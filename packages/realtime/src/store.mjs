@@ -193,7 +193,7 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
             initialMs: cs.initialMs ?? row.time_control.initialMs,
             incrementMs: cs.incrementMs ?? (row.time_control.incrementMs ?? 0),
             remaining: cs.remaining ?? [row.time_control.initialMs, row.time_control.initialMs],
-            toMove: cs.toMove ?? 0,
+            toMove: cs.toMove ?? state.turn ?? 0,
             // Downtime is a platform fault and is NOT charged to the player on move.
             // The clock restarts from the moment play actually resumes. This is safe
             // because nothing a client does can trigger a recovery.

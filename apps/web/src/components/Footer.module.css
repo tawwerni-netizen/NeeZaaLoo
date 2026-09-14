@@ -1,34 +1,267 @@
 .footer {
-  border-top: 1px solid var(--nz-line);
-  padding-block: var(--nz-space-10);
-  margin-top: var(--nz-space-16);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(13, 17, 26, 0.95) 0%, #080b11 100%);
+  padding-block: var(--nz-space-16) var(--nz-space-8);
+  margin-top: var(--nz-space-20);
+  position: relative;
+  overflow: hidden;
+}
+
+.footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 90, 43, 0.4), transparent);
 }
 
 .inner {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
+  gap: var(--nz-space-12);
+}
+
+.topGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr;
   gap: var(--nz-space-8);
 }
 
-.links {
+.brandCol {
   display: flex;
-  gap: var(--nz-space-6);
-  flex: 1;
+  flex-direction: column;
+  gap: var(--nz-space-4);
 }
 
-.links a {
-  font-size: var(--nz-text-sm);
-  color: var(--nz-text-2);
+.brandDesc {
+  color: var(--nz-text-2, #94a3b8);
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 320px;
+}
+
+.trustBadgesRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.trustBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--nz-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.trustBadge18 {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  font-weight: 800;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-4);
+}
+
+.colTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colTitleDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nz-accent, #ff5a2b);
+}
+
+.linkList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.linkList a {
+  font-size: 13px;
+  color: var(--nz-text-2, #94a3b8);
   text-decoration: none;
+  transition: color 0.15s ease, transform 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.links a:hover {
-  color: var(--nz-text);
+.linkList a:hover {
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+:global([dir="rtl"]) .linkList a:hover {
+  transform: translateX(-3px);
+}
+
+.statusIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--nz-radius-pill);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  width: fit-content;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.paymentStrip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: var(--nz-radius-lg, 12px);
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.paymentMethods {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.paymentLabel {
+  font-size: 12px;
+  color: var(--nz-text-3, #64748b);
+  font-weight: 600;
+}
+
+.cryptoBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--nz-radius-md);
+  background: rgba(38, 161, 123, 0.15);
+  border: 1px solid rgba(38, 161, 123, 0.3);
+  color: #26a17b;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.networkPill {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.securityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.bottomBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--nz-space-6);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .copy {
-  font-size: var(--nz-text-xs);
-  color: var(--nz-text-3);
+  font-size: var(--nz-text-xs, 12px);
+  color: var(--nz-text-3, #64748b);
   margin: 0;
 }
+
+.legalLinks {
+  display: flex;
+  gap: var(--nz-space-5);
+}
+
+.legalLinks a {
+  font-size: var(--nz-text-xs, 12px);
+  color: var(--nz-text-3, #64748b);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.legalLinks a:hover {
+  color: var(--nz-text-1, #f8fafc);
+}
+
+@media (max-width: 1024px) {
+  .topGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--nz-space-8);
+  }
+  .brandCol {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .topGrid {
+    grid-template-columns: 1fr;
+    gap: var(--nz-space-6);
+  }
+  .paymentStrip {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .bottomBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+

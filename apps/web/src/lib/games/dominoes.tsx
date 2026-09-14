@@ -32,10 +32,10 @@ type DominoesView = {
 
 function DominoesBoardAdapter({ view, mySeat, canMove, onMove }: BoardProps) {
   const v = (view ?? {}) as DominoesView;
-  if (!v.line) return null;
+  const safeLine = v.line ?? { left: null, right: null, tiles: [] };
   return (
     <DominoesBoard
-      line={v.line}
+      line={safeLine}
       handCounts={v.handCounts ?? [0, 0]}
       hand={v.hand ?? null}
       mustPlayTile={v.mustPlayTile ?? null}

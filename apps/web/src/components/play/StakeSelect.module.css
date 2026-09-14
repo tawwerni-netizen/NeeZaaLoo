@@ -148,3 +148,113 @@
   text-transform: uppercase;
 }
 
+.balanceStatusRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 560px;
+  padding: 10px 14px;
+  margin-bottom: var(--nz-space-3);
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--nz-radius-md);
+  font-size: 14px;
+}
+
+.balanceLabel {
+  color: var(--nz-text-2, #94a3b8);
+}
+
+.balanceValueOk {
+  font-weight: 700;
+  color: #10b981;
+  font-family: monospace;
+}
+
+.balanceValueLow {
+  font-weight: 700;
+  color: #f43f5e;
+  font-family: monospace;
+}
+
+.insufficientBanner {
+  max-width: 560px;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  border-radius: var(--nz-radius-lg);
+  padding: 16px 18px;
+  margin-bottom: var(--nz-space-4);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.1);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.insufficientBannerHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fb7185;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.warningIcon {
+  font-size: 18px;
+}
+
+.insufficientBannerDesc {
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 14px 0;
+}
+
+.insufficientActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.depositCtaBtn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: var(--nz-radius-md);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.depositCtaBtn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.switchFreeBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--nz-radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.switchFreeBtn:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+

@@ -173,7 +173,18 @@ export function createApi({
         sessionId: res.claims.sid,
       };
     }
-    return { type: "PLAYER", id: playerId, sessionId: res.claims.sid };
+
+    const playerRow = await db.query(
+      "SELECT id, disabled_at FROM player WHERE id = $1",
+      [playerId]
+    );
+    if (!playerRow.rows.length) return { type: "ANON", id: null, tokenError: "NO_SUCH_PLAYER" };
+    return {
+      type: "PLAYER",
+      id: playerId,
+      sessionId: res.claims.sid,
+      disabled: playerRow.rows[0].disabled_at !== null,
+    };
   }
 
   const consentService = consent || (db ? createConsentService(db, { now }) : null);
@@ -984,27 +995,99 @@ function buildRoutes() {
     { method: "GET", path: "/v1/players/:id/wallet", action: "wallet.read",
       owner: ({ params }) => params.id,
       handler: async ({ params, db }) => {
-        const r = await db.query(
-          `SELECT a.key,
-                  ledger_natural_balance(a.normal_side, COALESCE(b.balance,0))::text AS balance,
-                  a.asset
-             FROM ledger_account a
-             LEFT JOIN ledger_balance b ON b.account_id = a.id
-            WHERE a.owner_type = 'USER' AND a.owner_id = $1
-            ORDER BY a.key`,
-          [params.id]
-        );
-        return { body: { accounts: r.rows } };
+        const [accountsRes, withdrawalsRes] = await Promise.all([
+          db.query(
+            `SELECT a.key,
+                    ledger_natural_balance(a.normal_side, COALESCE(b.balance,0))::text AS balance,
+                    a.asset
+               FROM ledger_account a
+               LEFT JOIN ledger_balance b ON b.account_id = a.id
+              WHERE a.owner_type = 'USER' AND a.owner_id = $1
+              ORDER BY a.key`,
+            [params.id]
+          ),
+          db.query(
+            `SELECT id, asset, network, destination, amount_minor::text, status::text, requested_at
+               FROM withdrawal
+              WHERE player_id = $1
+              ORDER BY requested_at DESC
+              LIMIT 20`,
+            [params.id]
+          ),
+        ]);
+        return { body: { accounts: accountsRes.rows, withdrawals: withdrawalsRes.rows } };
       } },
 
     { method: "POST", path: "/v1/players/:id/withdrawals", action: "wallet.withdraw",
       owner: ({ params }) => params.id,
-      handler: async () => ({
-        // The withdrawal state machine is not built yet. The route exists so
-        // that its policy, step-up and control gating are proven now, rather
-        // than bolted on beside a working payout path later.
-        status: 501, body: errorBody("NOT_IMPLEMENTED", "withdrawals are not yet available"),
-      }) },
+      handler: async ({ params, body, db }) => {
+        const rawAmount = body?.amountMinor ?? (body?.amount != null ? Math.round(Number(body.amount) * 1_000_000) : null);
+        const amountMinor = BigInt(rawAmount ?? 0);
+        if (amountMinor <= 0n) {
+          return { status: 400, body: errorBody("INVALID_AMOUNT", "Withdrawal amount must be greater than zero") };
+        }
+        if (amountMinor < 10_000_000n) {
+          return { status: 400, body: errorBody("BELOW_MINIMUM", "Minimum withdrawal is 10 USDT") };
+        }
+
+        const destination = String(body?.destination ?? body?.address ?? "").trim();
+        if (!destination) {
+          return { status: 400, body: errorBody("INVALID_DESTINATION", "Destination address is required") };
+        }
+        const network = String(body?.network ?? "TRC20").trim();
+        const asset = String(body?.asset ?? "USDT").trim();
+
+        // Strict ledger balance check:
+        const balRes = await db.query(
+          `SELECT COALESCE((
+             SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0))
+               FROM ledger_account a
+               LEFT JOIN ledger_balance b ON b.account_id = a.id
+              WHERE a.owner_type = 'USER' AND a.owner_id = $1 AND a.key = 'user:' || $1 || ':available'
+           ), 0)::bigint AS available`,
+          [params.id]
+        );
+        const available = BigInt(balRes.rows[0]?.available ?? 0);
+        if (available < amountMinor) {
+          return {
+            status: 400,
+            body: errorBody("INSUFFICIENT_FUNDS", "Insufficient available funds for withdrawal"),
+          };
+        }
+
+        const id = `wd_${randomUUID()}`;
+        try {
+          return await db.transaction(async (tx) => {
+            const posted = await tx.query(
+              `SELECT * FROM ledger_post($1, 'WITHDRAWAL_LOCK', 'SYSTEM', NULL, $2::jsonb, $3, NULL, 'withdrawal', $4)`,
+              [
+                `withdrawal:${id}:lock`,
+                JSON.stringify([
+                  { account: `user:${params.id}:available`, amount: amountMinor.toString() },
+                  { account: `user:${params.id}:locked`, amount: (-amountMinor).toString() },
+                ]),
+                asset,
+                id,
+              ]
+            );
+            const r = await tx.query(
+              `INSERT INTO withdrawal (id, player_id, asset, network, destination, amount_minor, status, lock_tx_id)
+               VALUES ($1, $2, $3, $4, $5, $6, 'REQUESTED', $7)
+               RETURNING id, player_id, asset, network, destination, amount_minor::text, status::text, requested_at`,
+              [id, params.id, asset, network, destination, amountMinor.toString(), posted.rows[0].transaction_id]
+            );
+            return {
+              status: 201,
+              body: { ok: true, withdrawal: r.rows[0] },
+            };
+          });
+        } catch (e) {
+          if (/insufficient funds/i.test(e.message)) {
+            return { status: 400, body: errorBody("INSUFFICIENT_FUNDS", "Insufficient available funds for withdrawal") };
+          }
+          throw e;
+        }
+      } },
 
     // --- Play ----------------------------------------------------------------
     // Generic across every game: the pool is chosen by whatever gameId the
@@ -1224,7 +1307,10 @@ function buildRoutes() {
 
     { method: "GET", path: "/v1/duels/live", action: "duel.spectate", anonymous: true,
       handler: async ({ db, query }) => {
-        const limit = Math.min(Math.max(1, Number(query.get("limit")) || 20), 50);
+        const limit = Math.min(Math.max(1, Number(query.get("limit")) || 30), 100);
+        const gameId = query.get("gameId") || null;
+        const handle = query.get("handle")?.trim() || null;
+        const includeBots = query.get("includeBots") === "true";
 
         // Auto-sweep stale or abandoned duels so dead games never get stuck in Live Arena
         try {
@@ -1243,22 +1329,25 @@ function buildRoutes() {
         }
 
         const r = await db.query(
-          `SELECT d.id, d.game_id, d.started_at, d.pairing_key,
+          `SELECT d.id, d.game_id, d.started_at, d.pairing_key, d.is_vs_computer,
                   pa.handle AS handle_0, pa.selected_badge_code AS badge_0,
-                  pb.handle AS handle_1, pb.selected_badge_code AS badge_1,
+                  COALESCE(pb.handle, CASE WHEN d.is_vs_computer THEN 'Computer AI' ELSE 'Player 2' END) AS handle_1,
+                  pb.selected_badge_code AS badge_1,
                   ra.rating_x100 AS rating_0, rb.rating_x100 AS rating_1,
                   (SELECT count(*)::int FROM duel_event de WHERE de.duel_id = d.id) AS move_count
              FROM duel d
              JOIN player pa ON pa.id = d.seat_0
-             JOIN player pb ON pb.id = d.seat_1
+             LEFT JOIN player pb ON pb.id = d.seat_1
              LEFT JOIN rating ra ON ra.player_id = d.seat_0 AND ra.game_id = d.game_id
              LEFT JOIN rating rb ON rb.player_id = d.seat_1 AND rb.game_id = d.game_id
             WHERE d.status = 'LIVE'
               AND d.spectator_policy = 'OPEN'
-              AND d.is_vs_computer = FALSE
+              AND ($2::text IS NULL OR d.game_id = $2)
+              AND ($3::text IS NULL OR pa.handle ILIKE '%' || $3 || '%' OR pb.handle ILIKE '%' || $3 || '%')
+              AND ($4::boolean IS TRUE OR d.is_vs_computer = FALSE OR ($3::text IS NOT NULL AND pa.handle ILIKE '%' || $3 || '%'))
             ORDER BY d.started_at DESC
             LIMIT $1`,
-          [limit]
+          [limit, gameId, handle, includeBots]
         );
         return {
           body: {
@@ -1266,6 +1355,7 @@ function buildRoutes() {
               duelId: row.id,
               gameId: row.game_id,
               startedAt: row.started_at,
+              isVsComputer: Boolean(row.is_vs_computer),
               // A tournament pairing's duel is keyed "tournament:<id>:r<n>:s<slot>"
               // (see tournament.mjs's createRound()) -- a real, safe signal the
               // Live Arena can use to badge "TOURNAMENT MATCH" without exposing
@@ -1274,7 +1364,11 @@ function buildRoutes() {
               moveCount: row.move_count,
               players: [
                 { handle: row.handle_0, badge: row.badge_0, ratingX100: row.rating_0 ?? null },
-                { handle: row.handle_1, badge: row.badge_1, ratingX100: row.rating_1 ?? null },
+                {
+                  handle: row.handle_1,
+                  badge: row.badge_1,
+                  ratingX100: row.is_vs_computer ? 160000 : (row.rating_1 ?? null)
+                },
               ],
             })),
           },
@@ -1458,69 +1552,6 @@ function buildRoutes() {
           ? await chat.reports.reportMessage({ reporterId: actor.id, messageId: body.messageId, category: body.category, reason: body.reason })
           : await chat.reports.reportPlayer({ reporterId: actor.id, subjectPlayerId: body.subjectPlayerId, category: body.category, reason: body.reason });
         if (!r.ok) return { status: chatErrorStatus(r.reason), body: errorBody(r.reason) };
-        return { status: 201, body: r };
-      } },
-
-    // --- Members, Friends & Direct Messaging (Nizalo Messenger) ---
-    { method: "GET", path: "/v1/members", action: "player.members.read",
-      handler: async ({ actor, query, directChat }) => {
-        const q = query.get("q") ?? "";
-        const limit = query.get("limit") ?? 50;
-        const members = await directChat.searchMembers({ query: q, currentUserId: actor?.id, limit });
-        return { body: { members } };
-      } },
-
-    { method: "GET", path: "/v1/friends", action: "player.friends.read",
-      handler: async ({ actor, directChat }) => {
-        const friends = await directChat.listFriends(actor.id);
-        return { body: { friends } };
-      } },
-
-    { method: "POST", path: "/v1/friends/request", action: "player.friends.write",
-      handler: async ({ actor, body, directChat }) => {
-        if (!body.target || typeof body.target !== "string") {
-          return { status: 400, body: errorBody("BAD_REQUEST", "target is required") };
-        }
-        const r = await directChat.sendFriendRequest(actor.id, body.target);
-        if (!r.ok) return { status: 400, body: errorBody(r.reason) };
-        return { status: 201, body: r };
-      } },
-
-    { method: "POST", path: "/v1/friends/remove", action: "player.friends.write",
-      handler: async ({ actor, body, directChat }) => {
-        if (!body.friendId || typeof body.friendId !== "string") {
-          return { status: 400, body: errorBody("BAD_REQUEST", "friendId is required") };
-        }
-        const r = await directChat.removeFriend(actor.id, body.friendId);
-        return { body: r };
-      } },
-
-    { method: "GET", path: "/v1/chat/direct/conversations", action: "player.chat.direct.read",
-      handler: async ({ actor, directChat }) => {
-        const conversations = await directChat.listConversations(actor.id);
-        return { body: { conversations } };
-      } },
-
-    { method: "GET", path: "/v1/chat/direct/:partnerId/messages", action: "player.chat.direct.read",
-      handler: async ({ actor, params, query, directChat }) => {
-        const limit = query.get("limit") ? Number(query.get("limit")) : 50;
-        const after = query.get("after") ? Number(query.get("after")) : null;
-        const messages = await directChat.getDirectMessages(actor.id, params.partnerId, { limit, after });
-        return { body: { messages } };
-      } },
-
-    { method: "POST", path: "/v1/chat/direct/:partnerId/messages", action: "player.chat.direct.write",
-      handler: async ({ actor, params, body, directChat }) => {
-        if (!body.content || typeof body.content !== "string") {
-          return { status: 400, body: errorBody("BAD_REQUEST", "content is required") };
-        }
-        const r = await directChat.sendDirectMessage({
-          senderId: actor.id,
-          receiverId: params.partnerId,
-          content: body.content,
-          clientMessageId: body.clientMessageId,
-        });
-        if (!r.ok) return { status: 400, body: errorBody(r.reason) };
         return { status: 201, body: r };
       } },
 
@@ -2151,7 +2182,7 @@ function buildRoutes() {
       handler: async ({ db, query }) => {
         const q = (query.get ? query.get("q") : query.q) ? (query.get ? query.get("q") : query.q).trim() : "";
         const offset = parseInt(query.get ? query.get("offset") : query.offset) || 0;
-        let sql = "SELECT id, handle, locale, created_at FROM player";
+        let sql = "SELECT id, handle, locale, created_at, disabled_at, disabled_reason, disabled_by FROM player";
         let params = [];
         if (q) {
           params.push(`%${q}%`);
@@ -2175,7 +2206,7 @@ function buildRoutes() {
 
     { method: "POST", path: "/v1/admin/players/:id/promote", action: "admin.user.read",
       subjectType: "player",
-      handler: async ({ params, actor, db }) => {
+      handler: async ({ params, actor, db, rbac }) => {
         if (actor.id === params.id) {
           return { status: 400, body: errorBody("CANNOT_PROMOTE_SELF", "Admins cannot grant roles to themselves") };
         }
@@ -2184,9 +2215,9 @@ function buildRoutes() {
         const p = player.rows[0];
 
         await db.query(
-          `INSERT INTO admin_user (id, email, display_name)
-           VALUES ($1, $2 || '@nizalo.internal', $2)
-           ON CONFLICT (id) DO NOTHING`,
+          `INSERT INTO admin_user (id, email, display_name, mfa_enrolled)
+           VALUES ($1, $2 || '@nizalo.internal', $2, TRUE)
+           ON CONFLICT (id) DO UPDATE SET mfa_enrolled = TRUE`,
           [p.id, p.handle]
         );
 
@@ -2196,6 +2227,33 @@ function buildRoutes() {
            ON CONFLICT DO NOTHING`,
           [p.id, actor.id]
         );
+
+        if (rbac) {
+          try {
+            const modRole = await db.query("SELECT id FROM role WHERE id = 'role_chat_mod' OR name = 'Chat Mod' LIMIT 1");
+            let roleId = modRole.rows[0]?.id;
+            if (!roleId) {
+              const created = await rbac.createRole({
+                id: "role_chat_mod",
+                name: "Chat Mod",
+                description: "Moderation capabilities for chat",
+                permissionCodes: ["CHAT_VIEW", "CHAT_DELETE", "CHAT_MUTE", "CHAT_REPORT_REVIEW"],
+                createdBy: actor.id,
+              });
+              roleId = created.id;
+            }
+            if (roleId) {
+              await db.query(
+                `INSERT INTO admin_custom_role_grant (admin_id, role_id, granted_by)
+                 VALUES ($1, $2, $3)
+                 ON CONFLICT (admin_id, role_id) DO NOTHING`,
+                [p.id, roleId, actor.id]
+              );
+            }
+          } catch {
+            // ignore if already granted or creation conflict
+          }
+        }
 
         return { body: { ok: true, playerId: p.id, handle: p.handle, role: "ADMIN" } };
       } },
@@ -2209,7 +2267,67 @@ function buildRoutes() {
             WHERE admin_id = $1 AND role = 'ADMIN' AND revoked_at IS NULL`,
           [params.id, actor.id]
         );
+        await db.query(
+          `DELETE FROM admin_custom_role_grant WHERE admin_id = $1`,
+          [params.id]
+        );
         return { body: { ok: true, playerId: params.id } };
+      } },
+
+    { method: "POST", path: "/v1/admin/players/:id/ban", action: "admin.content.moderate",
+      subjectType: "player",
+      handler: async ({ params, actor, body, db }) => {
+        if (actor.id === params.id) {
+          return { status: 400, body: errorBody("CANNOT_BAN_SELF", "Admins cannot ban themselves") };
+        }
+        const player = await db.query("SELECT id, handle, disabled_at FROM player WHERE id = $1", [params.id]);
+        if (!player.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
+
+        const targetRoles = (await db.query("SELECT admin_roles($1) AS roles", [params.id])).rows[0]?.roles ?? [];
+        if (targetRoles.includes("SUPER_ADMIN")) {
+          return { status: 403, body: errorBody("CANNOT_BAN_SUPER_ADMIN", "Super Admin accounts cannot be banned") };
+        }
+
+        const reason = (typeof body?.reason === "string" && body.reason.trim()) ? body.reason.trim() : "Banned by administrator";
+        const nowIso = new Date().toISOString();
+
+        await db.query(
+          `UPDATE player
+              SET disabled_at = $2, disabled_reason = $3, disabled_by = $4
+            WHERE id = $1`,
+          [params.id, nowIso, reason, actor.id]
+        );
+
+        await db.query(
+          `UPDATE auth_session
+              SET revoked_at = $2, revoked_reason = 'ACCOUNT_BANNED'
+            WHERE player_id = $1 AND revoked_at IS NULL`,
+          [params.id, nowIso]
+        );
+
+        return {
+          body: { ok: true, playerId: params.id, disabledAt: nowIso, reason },
+          audit: { event: "PLAYER_BANNED", targetId: params.id, reason },
+        };
+      } },
+
+    { method: "POST", path: "/v1/admin/players/:id/unban", action: "admin.content.moderate",
+      subjectType: "player",
+      handler: async ({ params, actor, db }) => {
+        const player = await db.query("SELECT id, handle, disabled_at FROM player WHERE id = $1", [params.id]);
+        if (!player.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
+
+        await db.query(
+          `UPDATE player
+              SET disabled_at = NULL, disabled_reason = NULL, disabled_by = NULL
+            WHERE id = $1`,
+          [params.id]
+        );
+
+        return {
+          body: { ok: true, playerId: params.id },
+          audit: { event: "PLAYER_UNBANNED", targetId: params.id },
+        };
       } },
 
     { method: "GET", path: "/v1/admin/deposits", action: "admin.wallet.read",
@@ -2432,7 +2550,7 @@ function buildRoutes() {
       subjectType: "player",
       handler: async ({ params, db }) => {
         const r = await db.query(
-          "SELECT id, handle, created_at FROM player WHERE id = $1", [params.id]
+          "SELECT id, handle, locale, created_at, disabled_at, disabled_reason, disabled_by FROM player WHERE id = $1", [params.id]
         );
         return r.rows.length ? { body: r.rows[0] } : { status: 404, body: errorBody("NOT_FOUND") };
       } },
@@ -2864,6 +2982,15 @@ function buildRoutes() {
         return { body: r, audit: { event: "CHAT_MESSAGE_DELETED", messageId: params.id, channelId: r.channelId } };
       } },
 
+    { method: "POST", path: "/v1/admin/chat/direct-messages/:id/delete", action: "admin.chat.delete",
+      subjectType: "direct_message",
+      handler: async ({ params, actor, directChat }) => {
+        if (!directChat) return { status: 503, body: errorBody("CHAT_UNAVAILABLE") };
+        const r = await directChat.moderateDeleteDirectMessage({ messageId: params.id, moderatorId: actor.id });
+        if (!r.ok) return { status: 400, body: errorBody(r.reason) };
+        return { body: r, audit: { event: "DIRECT_MESSAGE_DELETED", messageId: params.id } };
+      } },
+
     { method: "POST", path: "/v1/admin/chat/mutes", action: "admin.chat.mute",
       subjectType: "chat_mute",
       handler: async ({ actor, body, chat }) => {
@@ -2888,6 +3015,16 @@ function buildRoutes() {
 
     { method: "GET", path: "/v1/admin/chat/mutes/:targetId", action: "admin.chat.view",
       handler: async ({ params, chat }) => ({ body: { mutes: await chat.moderation.listActiveMutesFor(params.targetId) } }) },
+
+    { method: "GET", path: "/v1/admin/chat/mutes", action: "admin.chat.view",
+      handler: async ({ query, chat }) => ({
+        body: {
+          mutes: await chat.moderation.listActiveMutes({
+            limit: query.get("limit") || undefined,
+            offset: query.get("offset") || undefined,
+          }),
+        },
+      }) },
 
     { method: "GET", path: "/v1/admin/chat/reports", action: "admin.chat.view",
       handler: async ({ query, chat }) => ({

@@ -21,9 +21,12 @@
  * matchmaking.mjs/challenge.mjs both calling isValidStakeMinor() before
  * any of this ever reaches a ticket or a challenge row.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/Button";
 import { useI18n } from "@/lib/i18n/context";
+import { useAuth } from "@/lib/auth-context";
+import { get } from "@/lib/api";
 import type { GamePlugin } from "@/lib/games";
 import styles from "./StakeSelect.module.css";
 
@@ -36,9 +39,40 @@ export function StakeSelect({ plugin, onContinue }: {
   plugin: GamePlugin;
   onContinue: (choice: StakeChoice) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale, dir } = useI18n();
+  const isRtl = dir === "rtl";
+  const { player } = useAuth();
   const [selected, setSelected] = useState<"FREE" | "CASH" | null>(plugin.cashEnabled ? null : "FREE");
   const [stakeUsd, setStakeUsd] = useState<number | null>(null);
+  const [userBalanceUSDT, setUserBalanceUSDT] = useState<number | null>(null);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+
+  useEffect(() => {
+    if (!player?.id) {
+      setUserBalanceUSDT(0);
+      return;
+    }
+    setIsLoadingBalance(true);
+    get<{ accounts: { key: string; balance: string; asset: string }[] }>(`/v1/players/${player.id}/wallet`)
+      .then((res) => {
+        const usdtAcc = res?.accounts?.find(
+          (a) => a.asset === "USDT" && (a.key.endsWith(":available") || a.key.includes("available"))
+        );
+        if (usdtAcc) {
+          setUserBalanceUSDT(Number(usdtAcc.balance) / 1_000_000);
+        } else {
+          setUserBalanceUSDT(0);
+        }
+      })
+      .catch(() => {
+        setUserBalanceUSDT(0);
+      })
+      .finally(() => {
+        setIsLoadingBalance(false);
+      });
+  }, [player?.id]);
+
+  const hasInsufficientBalance = selected === "CASH" && stakeUsd !== null && (userBalanceUSDT !== null && userBalanceUSDT < stakeUsd);
 
   if (!plugin.cashEnabled) {
     return (
@@ -91,6 +125,48 @@ export function StakeSelect({ plugin, onContinue }: {
             ))}
           </div>
 
+          {userBalanceUSDT !== null && (
+            <div className={styles.balanceStatusRow}>
+              <span className={styles.balanceLabel}>
+                {isRtl ? "رصيدك المتاح حالياً:" : "Current Available Balance:"}
+              </span>
+              <span className={userBalanceUSDT >= (stakeUsd ?? 0) ? styles.balanceValueOk : styles.balanceValueLow}>
+                ${userBalanceUSDT.toFixed(2)} USDT
+              </span>
+            </div>
+          )}
+
+          {hasInsufficientBalance && (
+            <div className={styles.insufficientBanner}>
+              <div className={styles.insufficientBannerHeader}>
+                <span className={styles.warningIcon}>⚠️</span>
+                <strong>
+                  {isRtl ? "رصيد المحفظة غير كافٍ لدخول هذا النزال" : "Insufficient Wallet Balance"}
+                </strong>
+              </div>
+              <p className={styles.insufficientBannerDesc}>
+                {isRtl
+                  ? `النزال يتطلب رصيد $${stakeUsd} USDT بينما رصيدك الحالي $${userBalanceUSDT?.toFixed(2) || "0.00"} USDT. يرجى شحن محفظتك للمتابعة أو اختيار اللعب المجاني.`
+                  : `This match requires $${stakeUsd} USDT but your balance is $${userBalanceUSDT?.toFixed(2) || "0.00"} USDT. Please deposit to your wallet or switch to Free play.`}
+              </p>
+              <div className={styles.insufficientActions}>
+                <Link href={`/${locale}/wallet`} className={styles.depositCtaBtn}>
+                  {isRtl ? "💳 إيداع فوري في المحفظة" : "💳 Instant Deposit"}
+                </Link>
+                <button
+                  type="button"
+                  className={styles.switchFreeBtn}
+                  onClick={() => {
+                    setSelected("FREE");
+                    setStakeUsd(null);
+                  }}
+                >
+                  {isRtl ? "التبديل إلى اللعب المجاني" : "Switch to Free"}
+                </button>
+              </div>
+            </div>
+          )}
+
           {stakeUsd !== null && (
             <div className={styles.economicsCard}>
               <div className={styles.economicsRow}>
@@ -119,15 +195,17 @@ export function StakeSelect({ plugin, onContinue }: {
 
       <Button
         variant="primary"
-        disabled={selected === null || (selected === "CASH" && stakeUsd === null)}
+        disabled={selected === null || (selected === "CASH" && (stakeUsd === null || hasInsufficientBalance))}
         onClick={() => {
           if (selected === "FREE") onContinue({ tier: "FREE" });
-          else if (selected === "CASH" && stakeUsd !== null) {
+          else if (selected === "CASH" && stakeUsd !== null && !hasInsufficientBalance) {
             onContinue({ tier: "CASH", stakeMinor: (BigInt(stakeUsd) * USDT_MINOR).toString() });
           }
         }}
       >
-        {t("play.continue")}
+        {selected === "CASH" && hasInsufficientBalance
+          ? (isRtl ? "الرصيد غير كافٍ" : "Insufficient Balance")
+          : t("play.continue")}
       </Button>
     </div>
   );

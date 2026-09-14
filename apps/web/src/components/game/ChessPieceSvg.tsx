@@ -5,25 +5,25 @@ import React from "react";
 export function ChessPieceSvg({ type, colour }: { type: "k" | "q" | "r" | "b" | "n" | "p"; colour: "w" | "b" }) {
   const isWhite = colour === "w";
   const baseGrad = isWhite ? "url(#chess-white-grad)" : "url(#chess-black-grad)";
-  const strokeColor = isWhite ? "#4a4036" : "#0d0e11";
-  const highlightColor = isWhite ? "rgba(255, 255, 255, 0.85)" : "rgba(255, 255, 255, 0.25)";
+  const strokeColor = isWhite ? "#334155" : "#020617";
+  const highlightColor = isWhite ? "rgba(255, 255, 255, 0.9)" : "rgba(148, 163, 184, 0.35)";
 
   return (
-    <svg viewBox="0 0 100 100" width="100%" height="100%" className="chess-piece-svg" style={{ filter: isWhite ? "drop-shadow(0 4px 6px rgba(0,0,0,0.35))" : "drop-shadow(0 4px 8px rgba(0,0,0,0.65))" }}>
+    <svg viewBox="0 0 100 100" width="100%" height="100%" className="chess-piece-svg" style={{ filter: isWhite ? "drop-shadow(0 4px 8px rgba(0,0,0,0.45)) drop-shadow(0 0 2px rgba(255,255,255,0.2))" : "drop-shadow(0 4px 10px rgba(0,0,0,0.85)) drop-shadow(0 0 1px rgba(56,189,248,0.2))" }}>
       <defs>
-        <linearGradient id="chess-white-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="chess-white-grad" x1="15%" y1="0%" x2="85%" y2="100%">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="40%" stopColor="#F8F6F0" />
-          <stop offset="100%" stopColor="#D8CFBE" />
+          <stop offset="50%" stopColor="#F1F5F9" />
+          <stop offset="100%" stopColor="#CBD5E1" />
         </linearGradient>
-        <linearGradient id="chess-black-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3A3F4A" />
-          <stop offset="50%" stopColor="#1C2026" />
-          <stop offset="100%" stopColor="#0B0D10" />
+        <linearGradient id="chess-black-grad" x1="15%" y1="0%" x2="85%" y2="100%">
+          <stop offset="0%" stopColor="#384252" />
+          <stop offset="55%" stopColor="#1E2532" />
+          <stop offset="100%" stopColor="#0B0F17" />
         </linearGradient>
-        <radialGradient id="chess-specular" cx="35%" cy="30%" r="60%">
+        <radialGradient id="chess-specular" cx="35%" cy="25%" r="65%">
           <stop offset="0%" stopColor={highlightColor} />
-          <stop offset="60%" stopColor="transparent" />
+          <stop offset="65%" stopColor="transparent" />
         </radialGradient>
       </defs>
 

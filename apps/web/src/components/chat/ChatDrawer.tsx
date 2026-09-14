@@ -22,29 +22,50 @@ import styles from "./ChatDrawer.module.css";
 
 type DrawerMode = "closed" | "minimized" | "open";
 
-export function ChatDrawer({ channelKind, duelId, title }: {
+export function ChatDrawer({ channelKind, duelId, title, isOpen, onOpenChange, onUnreadChange }: {
   channelKind: "MATCH" | "SPECTATOR";
   duelId: string;
   title?: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onUnreadChange?: (unread: number) => void;
 }) {
   const { t } = useI18n();
   const spec = channelKind === "SPECTATOR"
     ? { channel: "SPECTATOR" as const, duelId }
     : { channel: "MATCH" as const, duelId };
   const state = useChatChannel(spec);
-  const [mode, setMode] = useState<DrawerMode>("closed");
+  const [mode, setMode] = useState<DrawerMode>(isOpen ? "open" : "closed");
   const [unread, setUnread] = useState(0);
   const seenCountRef = useRef(0);
+
+  useEffect(() => {
+    if (isOpen !== undefined) {
+      if (isOpen && mode === "closed") {
+        setMode("open");
+      } else if (!isOpen && mode !== "closed") {
+        setMode("closed");
+      }
+    }
+  }, [isOpen, mode]);
 
   useEffect(() => {
     if (mode === "open") {
       seenCountRef.current = state.messages.length;
       setUnread(0);
+      onUnreadChange?.(0);
       return;
     }
     const delta = state.messages.length - seenCountRef.current;
-    if (delta > 0) setUnread(delta);
-  }, [state.messages.length, mode]);
+    const nextUnread = delta > 0 ? delta : 0;
+    setUnread(nextUnread);
+    onUnreadChange?.(nextUnread);
+  }, [state.messages.length, mode, onUnreadChange]);
+
+  const updateMode = (nextMode: DrawerMode) => {
+    setMode(nextMode);
+    onOpenChange?.(nextMode !== "closed");
+  };
 
   const resolvedTitle = title ?? t(channelKind === "SPECTATOR" ? "chat.spectator_title" : "chat.match_title");
 
@@ -53,7 +74,7 @@ export function ChatDrawer({ channelKind, duelId, title }: {
       <button
         type="button"
         className={styles.toggle}
-        onClick={() => setMode("open")}
+        onClick={() => updateMode("open")}
         aria-label={unread > 0 ? t("chat.open_with_unread_cta", { count: unread }) : t("chat.open_cta")}
       >
         <ChatBubbleIcon />
@@ -70,7 +91,7 @@ export function ChatDrawer({ channelKind, duelId, title }: {
         <button
           type="button"
           className={styles.barTitleButton}
-          onClick={() => setMode(mode === "minimized" ? "open" : "minimized")}
+          onClick={() => updateMode(mode === "minimized" ? "open" : "minimized")}
         >
           <span className={styles.barTitle}>{resolvedTitle}</span>
           {unread > 0 && <span className={styles.barBadge}>{unread > 9 ? "9+" : unread}</span>}
@@ -79,7 +100,7 @@ export function ChatDrawer({ channelKind, duelId, title }: {
           <button
             type="button"
             className={styles.barButton}
-            onClick={() => setMode(mode === "minimized" ? "open" : "minimized")}
+            onClick={() => updateMode(mode === "minimized" ? "open" : "minimized")}
             aria-label={mode === "minimized" ? t("chat.expand_cta") : t("chat.minimize_cta")}
             title={mode === "minimized" ? t("chat.expand_cta") : t("chat.minimize_cta")}
           >
@@ -88,7 +109,7 @@ export function ChatDrawer({ channelKind, duelId, title }: {
           <button
             type="button"
             className={styles.barButton}
-            onClick={() => setMode("closed")}
+            onClick={() => updateMode("closed")}
             aria-label={t("chat.close_cta")}
             title={t("chat.close_cta")}
           >

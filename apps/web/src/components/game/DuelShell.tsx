@@ -43,22 +43,33 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const [rematchBusy, setRematchBusy] = useState(false);
   const [opponentNickname, setOpponentNickname] = useState<string>("");
   const [mounted, setMounted] = useState(false);
+  const [view, setView] = useState<unknown>(null);
+  const [clock, setClock] = useState<{ model?: string; remaining?: number[]; toMove?: number; remainingMs?: number } | null>(null);
+  const [connectedSeats, setConnectedSeats] = useState<[boolean, boolean] | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatUnread, setChatUnread] = useState(0);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (latest?.t !== "STATE") return;
-    const msg = latest as { players?: unknown; gameId?: unknown };
-    if (Array.isArray(msg.players)) setPlayers(msg.players as string[]);
-    if (typeof msg.gameId === "string") setGameId(msg.gameId);
+    if (!latest || typeof latest !== "object") return;
+    const msg = latest as Record<string, unknown>;
+    if (msg.t === "STATE") {
+      if (Array.isArray(msg.players)) setPlayers(msg.players as string[]);
+      if (typeof msg.gameId === "string") setGameId(msg.gameId);
+    }
+    if ("view" in msg && msg.view !== undefined && msg.view !== null) {
+      setView(msg.view);
+    }
+    if ("clock" in msg && msg.clock !== undefined && msg.clock !== null) {
+      setClock(msg.clock as { model?: string; remaining?: number[]; toMove?: number; remainingMs?: number });
+    }
+    if ("connectedSeats" in msg && Array.isArray(msg.connectedSeats)) {
+      setConnectedSeats(msg.connectedSeats as [boolean, boolean]);
+    }
   }, [latest]);
-
-  const view = latest && typeof latest === "object" && "view" in latest ? (latest as { view: unknown }).view : null;
-  const clock = latest && typeof latest === "object" && "clock" in latest
-    ? (latest as { clock: { model?: string; remaining?: number[]; toMove?: number; remainingMs?: number } }).clock
-    : null;
 
   const isSharedClock = clock?.model === "SHARED";
   const stateStatus = latest?.t === "STATE" ? (latest as { status?: unknown }).status : null;
@@ -91,6 +102,11 @@ export function DuelShell({ duelId }: { duelId: string }) {
 
   const vsComputer = players?.some((p) => BOT_IDS.has(p)) ?? false;
   const botId = players?.find((p) => BOT_IDS.has(p)) ?? null;
+  const opponentConnected = vsComputer
+    ? true
+    : opponentSeat !== null && connectedSeats
+    ? Boolean(connectedSeats[opponentSeat])
+    : true;
 
   useEffect(() => {
     if (!players || opponentSeat === null) return;
@@ -140,8 +156,31 @@ export function DuelShell({ duelId }: { duelId: string }) {
           <span className={styles.statusGroup}>
             <span className={connected ? styles.live : styles.offline}>{connectionLabel}</span>
             {isSpectator && <span className={styles.spectatorBadge}>{t("game.spectating")}</span>}
+            {!vsComputer && opponentSeat !== null && connectedSeats && !opponentConnected && !completed && (
+              <span className={styles.waitingBadge} title="في انتظار دخول الطرف الثاني للمبارزة">
+                <span className={styles.waitingDot} />
+                {locale === "ar" ? "في انتظار الخصم..." : "Waiting for opponent..."}
+              </span>
+            )}
           </span>
-          <GameVisualSettings />
+          <div className={styles.statusActions}>
+            {seat !== undefined && (
+              <button
+                type="button"
+                className={[styles.chatBtn, chatOpen ? styles.chatBtnActive : ""].join(" ")}
+                onClick={() => setChatOpen((prev) => !prev)}
+                aria-label={locale === "ar" ? "الدردشة" : "Chat"}
+                title={locale === "ar" ? "شات المباراة" : "Match Chat"}
+              >
+                <span className={styles.chatIcon}>💬</span>
+                <span className={styles.chatLabel}>{locale === "ar" ? "الشات" : "Chat"}</span>
+                {chatUnread > 0 && (
+                  <span className={styles.chatBadge}>{chatUnread > 9 ? "9+" : chatUnread}</span>
+                )}
+              </button>
+            )}
+            <GameVisualSettings />
+          </div>
         </div>
 
         {plugin?.supportsDraw && !isSpectator && !completed && drawOfferBy !== null && (
@@ -259,7 +298,13 @@ export function DuelShell({ duelId }: { duelId: string }) {
         </p>
 
         {seat !== undefined && (
-          <ChatDrawer channelKind={isSpectator ? "SPECTATOR" : "MATCH"} duelId={duelId} />
+          <ChatDrawer
+            channelKind={isSpectator ? "SPECTATOR" : "MATCH"}
+            duelId={duelId}
+            isOpen={chatOpen}
+            onOpenChange={setChatOpen}
+            onUnreadChange={setChatUnread}
+          />
         )}
       </main>
     </TableEnvironmentProvider>

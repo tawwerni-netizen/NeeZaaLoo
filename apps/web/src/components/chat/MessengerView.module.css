@@ -378,6 +378,90 @@
   border-color: rgba(239, 68, 68, 0.4);
 }
 
+.muteBtn {
+  color: #f59e0b;
+}
+.muteBtn:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: scale(1.05);
+}
+
+.banBtn {
+  color: #ef4444;
+}
+.banBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  transform: scale(1.05);
+}
+
+.headerMuteBtn {
+  padding: 7px 12px;
+  border-radius: var(--nz-radius-pill);
+  font-weight: 700;
+  font-size: var(--nz-text-xs);
+  cursor: pointer;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.headerMuteBtn:hover {
+  background: rgba(245, 158, 11, 0.25);
+  transform: scale(1.04);
+}
+
+.headerBanBtn {
+  padding: 7px 12px;
+  border-radius: var(--nz-radius-pill);
+  font-weight: 700;
+  font-size: var(--nz-text-xs);
+  cursor: pointer;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.headerBanBtn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: scale(1.04);
+}
+
+.msgModRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.msgModLink {
+  background: none;
+  border: none;
+  padding: 1px 5px;
+  font-size: 11px;
+  cursor: pointer;
+  color: #94a3b8;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.msgModLink:hover {
+  color: #ff6232;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.msgModLinkDanger {
+  color: #ef4444;
+}
+
+.msgModLinkDanger:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.15);
+}
+
 /* Chat Area */
 .chatArea {
   flex: 1;

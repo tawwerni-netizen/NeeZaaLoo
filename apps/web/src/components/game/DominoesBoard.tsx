@@ -26,8 +26,8 @@ function sameTile(a: Tile, b: Tile) {
   return a[0] === b[0] && a[1] === b[1];
 }
 
-function legalEndsFor(tile: Tile, line: Line): Array<"LEFT" | "RIGHT" | "ANY"> {
-  if (line.tiles.length === 0) return ["ANY"];
+function legalEndsFor(tile: Tile, line?: Line): Array<"LEFT" | "RIGHT" | "ANY"> {
+  if (!line || !Array.isArray(line.tiles) || line.tiles.length === 0) return ["ANY"];
   const ends: Array<"LEFT" | "RIGHT"> = [];
   if (tile[0] === line.left || tile[1] === line.left) ends.push("LEFT");
   if (tile[0] === line.right || tile[1] === line.right) ends.push("RIGHT");
@@ -62,20 +62,21 @@ function Pips({ value }: { value: number }) {
 }
 
 function DominoTile({
-  values, size = "md", faded = false, glow = false,
+  values = [0, 0], size = "md", faded = false, glow = false,
 }: {
-  values: [number, number]; size?: "sm" | "md" | "lg"; faded?: boolean; glow?: boolean;
+  values?: [number, number] | Tile; size?: "sm" | "md" | "lg"; faded?: boolean; glow?: boolean;
 }) {
+  const safeValues: [number, number] = Array.isArray(values) && values.length === 2 ? values : [0, 0];
   return (
     <div className={[styles.tile3d, styles[`tile-${size}`], faded ? styles.faded : "", glow ? styles.glow : ""].join(" ")}>
       {/* 3D Tile Face */}
       <div className={styles.tileFace}>
-        <div className={styles.half}><Pips value={values[0]} /></div>
+        <div className={styles.half}><Pips value={safeValues[0] ?? 0} /></div>
         <div className={styles.divider}>
           {/* Metallic brass center spinner rivet */}
           <span className={styles.spinnerRivet} />
         </div>
-        <div className={styles.half}><Pips value={values[1]} /></div>
+        <div className={styles.half}><Pips value={safeValues[1] ?? 0} /></div>
       </div>
     </div>
   );
@@ -123,14 +124,18 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
   }
 
   const opponentSeat = mySeat === null ? null : mySeat === 0 ? 1 : 0;
+  const oppCount = opponentSeat !== null && handCounts && typeof handCounts[opponentSeat] === "number"
+    ? Math.max(0, handCounts[opponentSeat])
+    : 0;
+  const safeTiles = Array.isArray(line?.tiles) ? line.tiles : [];
 
   return (
     <div className={styles.wrap}>
       {opponentSeat !== null && (
         <div className={styles.opponentRow}>
-          <span className={styles.handCountLabel}>{t("game.dominoes.tiles_left", { count: handCounts[opponentSeat] })}</span>
+          <span className={styles.handCountLabel}>{t("game.dominoes.tiles_left", { count: oppCount })}</span>
           <div className={styles.opponentTiles}>
-            {Array.from({ length: handCounts[opponentSeat] }).map((_, i) => (
+            {Array.from({ length: oppCount }).map((_, i) => (
               <div key={i} className={styles.tileBack} />
             ))}
           </div>
@@ -142,14 +147,15 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
         <div className={styles.tableFelt} onClick={() => setSelected(null)}>
           <div className={styles.lineViewport} dir="ltr">
             <div className={styles.line} onClick={(e) => e.stopPropagation()}>
-              {line.tiles.length === 0 && <span className={styles.emptyHint}>{t("game.dominoes.empty_line")}</span>}
-              {line.tiles.map((lt, i) => {
+              {safeTiles.length === 0 && <span className={styles.emptyHint}>{t("game.dominoes.empty_line")}</span>}
+              {safeTiles.map((lt, i) => {
                 const isLeftEnd = i === 0 && selected && selectedEnds.includes("LEFT");
-                const isRightEnd = i === line.tiles.length - 1 && selected && selectedEnds.includes("RIGHT");
+                const isRightEnd = i === safeTiles.length - 1 && selected && selectedEnds.includes("RIGHT");
+                const orientation = lt?.orientation ?? lt?.tile ?? [0, 0];
                 return (
                   <motion.div
                     key={i}
-                    initial={i === line.tiles.length - 1 ? { scale: 1.15, y: -8, opacity: 0 } : false}
+                    initial={i === safeTiles.length - 1 ? { scale: 1.15, y: -8, opacity: 0 } : false}
                     animate={{ scale: 1, y: 0, opacity: 1 }}
                     transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                     style={{ cursor: (isLeftEnd || isRightEnd) ? "pointer" : "default" }}
@@ -158,7 +164,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
                       else if (isRightEnd) handleEndClick("RIGHT", e);
                     }}
                   >
-                    <DominoTile values={lt.orientation} size="md" glow={Boolean(isLeftEnd || isRightEnd)} />
+                    <DominoTile values={orientation} size="md" glow={Boolean(isLeftEnd || isRightEnd)} />
                   </motion.div>
                 );
               })}

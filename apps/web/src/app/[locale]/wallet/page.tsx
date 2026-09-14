@@ -5,8 +5,8 @@ import { Header } from "@/components/Header";
 import { RequireAuth } from "@/components/RequireAuth";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
-import { get, ApiError } from "@/lib/api";
-import { formatUsd } from "@/lib/money";
+import { get, post, ApiError } from "@/lib/api";
+import { formatUsd, fromMinorUnits } from "@/lib/money";
 import styles from "./wallet.module.css";
 
 type Account = { key: string; balance: string; asset: string };
@@ -26,6 +26,14 @@ const OFFICIAL_TREASURY = {
   BEP20: "0x71C94911335b24c96570650CbeC96B87494aLo99",
   ERC20: "0x8A164aLo99USDTerc20TreasuryColdStorage01",
 };
+
+function isValidAddress(address: string, network: "TRC20" | "BEP20" | "ERC20"): boolean {
+  const trimmed = address.trim();
+  if (network === "TRC20") {
+    return /^T[1-9A-HJ-NP-za-km-z]{33}$/.test(trimmed);
+  }
+  return /^0x[a-fA-F0-9]{40}$/.test(trimmed);
+}
 
 export default function WalletPage() {
   return (
@@ -50,31 +58,42 @@ function WalletContent() {
   const [copied, setCopied] = useState(false);
   const [txNotice, setTxNotice] = useState<string | null>(null);
 
-  // Forms state
-  const [depositAmount, setDepositAmount] = useState("");
-  const [depositTxHash, setDepositTxHash] = useState("");
+  // Withdraw state
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawAddress, setWithdrawAddress] = useState("");
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Real in-app transactions
-  const [transactions, setTransactions] = useState<TransactionRecord[]>([
-    { id: "TX-9901", type: "DEPOSIT", network: "TRC20", amount: "50.00", addressOrHash: "0x4f12...99bc", status: "CONFIRMED", timestamp: "2026-09-12" },
-    { id: "TX-9902", type: "DEPOSIT", network: "TRC20", amount: "100.00", addressOrHash: "0x8a33...11de", status: "CONFIRMED", timestamp: "2026-09-10" },
-  ]);
+  // Real transactions list (from backend, starts empty)
+  const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
 
   const reload = useCallback(async () => {
     if (!player) return;
     try {
-      const r = await get<{ accounts: Account[] }>(`/v1/players/${player.id}/wallet`);
+      const r = await get<{ accounts: Account[]; withdrawals?: Array<{ id: string; asset: string; network: string; destination: string; amount_minor: string; status: string; requested_at: string }> }>(`/v1/players/${player.id}/wallet`);
       setAccounts(r.accounts);
       setForbidden(false);
       setErrorCode(null);
+
+      if (r.withdrawals && r.withdrawals.length > 0) {
+        const txs: TransactionRecord[] = r.withdrawals.map((w) => ({
+          id: w.id,
+          type: "WITHDRAWAL",
+          network: (w.network === "TRON" ? "TRC20" : w.network) as "TRC20" | "BEP20" | "ERC20",
+          amount: (Number(BigInt(w.amount_minor || "0")) / 1_000_000).toFixed(2),
+          addressOrHash: w.destination ? `${w.destination.slice(0, 8)}...${w.destination.slice(-6)}` : "—",
+          status: (w.status === "CONFIRMED" || w.status === "COMPLETED") ? "CONFIRMED" : "PENDING",
+          timestamp: w.requested_at ? new Date(w.requested_at).toLocaleDateString() : "Recently",
+        }));
+        setTransactions(txs);
+      } else {
+        setTransactions([]);
+      }
     } catch (e) {
       if (e instanceof ApiError && e.status === 403) { setForbidden(true); return; }
-      // If server is not responding to API, fallback to graceful demo available balance
       setAccounts([
-        { key: `player:${player.id}:USDT:available`, balance: "150000000", asset: "USDT" },
-        { key: `player:${player.id}:USDT:locked`, balance: "0", asset: "USDT" },
+        { key: `user:${player.id}:available`, balance: "0", asset: "USDT" },
+        { key: `user:${player.id}:locked`, balance: "0", asset: "USDT" },
       ]);
     }
   }, [player]);
@@ -89,7 +108,21 @@ function WalletContent() {
     byAsset.set(a.asset, entry);
   }
 
-  const usdtBalance = byAsset.get("USDT") ?? { available: "150000000", locked: "0" };
+  const usdtBalance = byAsset.get("USDT") ?? { available: "0", locked: "0" };
+  const availableUsdt = fromMinorUnits(usdtBalance.available);
+
+  const parsedWithdrawAmount = parseFloat(withdrawAmount);
+  const isAmountNumber = !isNaN(parsedWithdrawAmount) && parsedWithdrawAmount > 0;
+  const isAmountOverBalance = isAmountNumber && parsedWithdrawAmount > availableUsdt;
+  const isAmountBelowMin = isAmountNumber && parsedWithdrawAmount < 10;
+  const isAddressValid = withdrawAddress ? isValidAddress(withdrawAddress, selectedNetwork) : false;
+  const canSubmitWithdraw =
+    !isSubmitting &&
+    availableUsdt >= 10 &&
+    isAmountNumber &&
+    !isAmountOverBalance &&
+    !isAmountBelowMin &&
+    isAddressValid;
 
   function handleCopy(text: string) {
     void navigator.clipboard.writeText(text);
@@ -97,46 +130,66 @@ function WalletContent() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function submitDeposit(e: React.FormEvent) {
+  async function submitWithdraw(e: React.FormEvent) {
     e.preventDefault();
-    const amt = parseFloat(depositAmount);
-    if (!depositAmount || !depositTxHash || isNaN(amt) || amt < 5) return;
-    const newTx: TransactionRecord = {
-      id: `DEP-${Date.now().toString().slice(-4)}`,
-      type: "DEPOSIT",
-      network: selectedNetwork,
-      amount: amt.toFixed(2),
-      addressOrHash: depositTxHash.slice(0, 10) + "...",
-      status: "PENDING",
-      timestamp: "Just now",
-    };
-    setTransactions([newTx, ...transactions]);
-    setShowDepositModal(false);
-    setDepositAmount("");
-    setDepositTxHash("");
-    setTxNotice(t("walletPage.deposit_submitted_notice", { amount: newTx.amount }));
-    setTimeout(() => setTxNotice(null), 5000);
-  }
-
-  function submitWithdraw(e: React.FormEvent) {
-    e.preventDefault();
+    setWithdrawError(null);
     const amt = parseFloat(withdrawAmount);
-    if (!withdrawAddress || isNaN(amt) || amt < 10) return;
-    const newTx: TransactionRecord = {
-      id: `WD-${Date.now().toString().slice(-4)}`,
-      type: "WITHDRAWAL",
-      network: selectedNetwork,
-      amount: amt.toFixed(2),
-      addressOrHash: withdrawAddress.slice(0, 10) + "...",
-      status: "PENDING",
-      timestamp: "Just now",
-    };
-    setTransactions([newTx, ...transactions]);
-    setShowWithdrawModal(false);
-    setWithdrawAmount("");
-    setWithdrawAddress("");
-    setTxNotice(t("walletPage.withdraw_submitted_notice", { amount: newTx.amount }));
-    setTimeout(() => setTxNotice(null), 5000);
+
+    if (isNaN(amt) || amt < 10) {
+      setWithdrawError(locale === "ar" ? "الحد الأدنى للسحب هو 10.00 USDT." : "Minimum withdrawal is 10.00 USDT.");
+      return;
+    }
+
+    if (amt > availableUsdt) {
+      setWithdrawError(
+        locale === "ar"
+          ? `رصيدك المتاح ($${availableUsdt.toFixed(2)} USDT) غير كافٍ لسحب $${amt.toFixed(2)} USDT.`
+          : `Insufficient funds. Available balance is $${availableUsdt.toFixed(2)} USDT.`
+      );
+      return;
+    }
+
+    if (!isValidAddress(withdrawAddress, selectedNetwork)) {
+      setWithdrawError(
+        locale === "ar"
+          ? `عنوان المحفظة غير صالح لشبكة ${selectedNetwork}.`
+          : `Invalid wallet address for network ${selectedNetwork}.`
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await post<{ ok: boolean; withdrawal?: { id: string } }>(`/v1/players/${player?.id}/withdrawals`, {
+        amount: amt,
+        network: selectedNetwork,
+        destination: withdrawAddress.trim(),
+        asset: "USDT",
+      });
+
+      if (res.ok) {
+        setShowWithdrawModal(false);
+        setWithdrawAmount("");
+        setWithdrawAddress("");
+        setTxNotice(t("walletPage.withdraw_submitted_notice", { amount: amt.toFixed(2) }));
+        void reload();
+        setTimeout(() => setTxNotice(null), 6000);
+      }
+    } catch (err: unknown) {
+      const apiErr = err as { body?: { error?: { code?: string } }; message?: string; status?: number };
+      const code = apiErr?.body?.error?.code || apiErr?.message || "ERROR";
+      if (code === "INSUFFICIENT_FUNDS") {
+        setWithdrawError(locale === "ar" ? "رصيدك المتاح غير كافٍ لإتمام عملية السحب." : "Insufficient available balance in your wallet.");
+      } else if (code === "CONTROL_DISABLED") {
+        setWithdrawError(locale === "ar" ? "عمليات السحب متوقفة مؤقتاً لأعمال الصيانة الدورية." : "Withdrawals are temporarily paused for maintenance.");
+      } else if (code === "STEP_UP_REQUIRED" || apiErr?.status === 401) {
+        setWithdrawError(locale === "ar" ? "مطلوب تأكيد كلمة المرور كإجراء أمني لإتمام السحب." : "Security step-up authentication required.");
+      } else {
+        setWithdrawError(locale === "ar" ? `تعذر إتمام طلب السحب (${code}). يرجى التحقق من الرصيد.` : `Withdrawal request could not be completed (${code}).`);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -202,14 +255,17 @@ function WalletContent() {
         <button
           type="button"
           className={`${styles.actionButton} ${styles.withdrawBtn}`}
-          onClick={() => setShowWithdrawModal(true)}
+          onClick={() => {
+            setWithdrawError(null);
+            setShowWithdrawModal(true);
+          }}
         >
           <span>📤</span>
           {t("walletPage.withdraw_cta") || "Withdraw USDT"}
         </button>
       </div>
 
-      {/* Recent On-Chain Transactions */}
+      {/* Transactions History */}
       <section className={styles.txSection}>
         <div className={styles.txHeader}>
           <h2 className={styles.txTitle}>{t("walletPage.recent_tx_title")}</h2>
@@ -228,31 +284,39 @@ function WalletContent() {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((tx) => (
-                <tr key={tx.id}>
-                  <td>
-                    <strong>{tx.type === "DEPOSIT" ? `📥 ${t("walletPage.tx_type_deposit")}` : `📤 ${t("walletPage.tx_type_withdrawal")}`}</strong>
-                    <div style={{ fontSize: "11px", color: "#64748b" }}>{tx.id}</div>
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", padding: "36px 16px", color: "#64748b" }}>
+                    {t("walletPage.empty")}
                   </td>
-                  <td><span className={styles.assetBadge}>{tx.network}</span></td>
-                  <td><code>{tx.addressOrHash}</code></td>
-                  <td className="nz-num" style={{ color: tx.type === "DEPOSIT" ? "#22c55e" : "#e2e8f0", fontWeight: 700 }}>
-                    {tx.type === "DEPOSIT" ? `+$${tx.amount}` : `-$${tx.amount}`} USDT
-                  </td>
-                  <td>
-                    <span className={tx.status === "CONFIRMED" ? styles.badgeSuccess : styles.badgeWarning}>
-                      {tx.status === "CONFIRMED" ? t("walletPage.status_confirmed") : t("walletPage.status_pending")}
-                    </span>
-                  </td>
-                  <td className="nz-num">{tx.timestamp === "Just now" ? t("walletPage.time_just_now") : tx.timestamp}</td>
                 </tr>
-              ))}
+              ) : (
+                transactions.map((tx) => (
+                  <tr key={tx.id}>
+                    <td>
+                      <strong>{tx.type === "DEPOSIT" ? `📥 ${t("walletPage.tx_type_deposit")}` : `📤 ${t("walletPage.tx_type_withdrawal")}`}</strong>
+                      <div style={{ fontSize: "11px", color: "#64748b" }}>{tx.id}</div>
+                    </td>
+                    <td><span className={styles.assetBadge}>{tx.network}</span></td>
+                    <td><code>{tx.addressOrHash}</code></td>
+                    <td className="nz-num" style={{ color: tx.type === "DEPOSIT" ? "#22c55e" : "#e2e8f0", fontWeight: 700 }}>
+                      {tx.type === "DEPOSIT" ? `+$${tx.amount}` : `-$${tx.amount}`} USDT
+                    </td>
+                    <td>
+                      <span className={tx.status === "CONFIRMED" ? styles.badgeSuccess : styles.badgeWarning}>
+                        {tx.status === "CONFIRMED" ? t("walletPage.status_confirmed") : t("walletPage.status_pending")}
+                      </span>
+                    </td>
+                    <td className="nz-num">{tx.timestamp}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </section>
 
-      {/* Interactive Deposit Modal */}
+      {/* Official Crypto Deposit Modal */}
       {showDepositModal && (
         <div className={styles.modalBackdrop} onClick={() => setShowDepositModal(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -275,7 +339,7 @@ function WalletContent() {
             </div>
 
             <div className={styles.qrContainer}>
-              <div style={{ width: "120px", height: "120px", background: "#fff", padding: "8px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "130px", height: "130px", background: "#fff", padding: "8px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
                 <svg viewBox="0 0 100 100" width="100%" height="100%">
                   <rect width="100" height="100" fill="#fff" />
                   <rect x="10" y="10" width="25" height="25" fill="#000" />
@@ -301,40 +365,24 @@ function WalletContent() {
               </div>
             </div>
 
-            <form onSubmit={submitDeposit}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>{t("walletPage.deposit_amount_label")}</label>
-                <input
-                  type="number"
-                  min="5"
-                  step="0.01"
-                  required
-                  placeholder={t("walletPage.deposit_amount_placeholder")}
-                  className={styles.formInput}
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>{t("walletPage.tx_hash_label")}</label>
-                <input
-                  type="text"
-                  required
-                  placeholder={t("walletPage.tx_hash_placeholder")}
-                  className={styles.formInput}
-                  value={depositTxHash}
-                  onChange={(e) => setDepositTxHash(e.target.value)}
-                />
-              </div>
-              <button type="submit" className={styles.submitBtn}>
-                {t("walletPage.submit_deposit")}
-              </button>
-            </form>
+            <div style={{ background: "rgba(34, 197, 94, 0.08)", border: "1px solid rgba(34, 197, 94, 0.3)", borderRadius: "8px", padding: "12px 14px", marginBottom: "16px", fontSize: "13px", color: "#86efac", lineHeight: "1.5" }}>
+              ℹ️ {locale === "ar"
+                ? `أرسل فقط عملة USDT عبر شبكة (${selectedNetwork}) إلى هذا العنوان. سيتم إيداع الرصيد تلقائياً في حسابك فور تأكيد المعاملة على البلوكشين (1 - 3 دقائق). الحد الأدنى للإيداع: 5.00 USDT.`
+                : `Send only USDT via (${selectedNetwork}) to this address. Credits are deposited automatically to your account upon blockchain confirmation. Minimum deposit: 5.00 USDT.`}
+            </div>
+
+            <button
+              type="button"
+              className={styles.submitBtn}
+              onClick={() => setShowDepositModal(false)}
+            >
+              {locale === "ar" ? "تم، إغلاق" : "Done, Close"}
+            </button>
           </div>
         </div>
       )}
 
-      {/* Interactive Withdraw Modal */}
+      {/* Hardened Withdraw Modal */}
       {showWithdrawModal && (
         <div className={styles.modalBackdrop} onClick={() => setShowWithdrawModal(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -349,12 +397,30 @@ function WalletContent() {
                   key={net}
                   type="button"
                   className={`${styles.networkTab} ${selectedNetwork === net ? styles.networkTabActive : ""}`}
-                  onClick={() => setSelectedNetwork(net)}
+                  onClick={() => {
+                    setSelectedNetwork(net);
+                    setWithdrawError(null);
+                  }}
                 >
                   USDT-{net}
                 </button>
               ))}
             </div>
+
+            {/* Strict balance notification */}
+            {availableUsdt < 10 && (
+              <div style={{ padding: "12px 14px", background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.4)", borderRadius: "8px", color: "#f87171", fontSize: "13px", lineHeight: "1.5", marginBottom: "16px" }}>
+                ⚠️ {locale === "ar"
+                  ? `رصيدك المتاح ($${availableUsdt.toFixed(2)} USDT) أقل من الحد الأدنى للسحب (10.00 USDT). لا يمكن إدراج طلب سحب بدون توفر رصيد كافٍ في المحفظة.`
+                  : `Your available balance ($${availableUsdt.toFixed(2)} USDT) is below the minimum withdrawal amount (10.00 USDT). You cannot request a withdrawal without sufficient funds.`}
+              </div>
+            )}
+
+            {withdrawError && (
+              <div style={{ padding: "10px 14px", background: "rgba(239, 68, 68, 0.15)", border: "1px solid #ef4444", borderRadius: "8px", color: "#ef4444", fontSize: "13px", marginBottom: "14px", fontWeight: 600 }}>
+                ⛔ {withdrawError}
+              </div>
+            )}
 
             <form onSubmit={submitWithdraw}>
               <div className={styles.formGroup}>
@@ -365,35 +431,63 @@ function WalletContent() {
                   placeholder={t("walletPage.withdraw_address_placeholder")}
                   className={styles.formInput}
                   value={withdrawAddress}
-                  onChange={(e) => setWithdrawAddress(e.target.value)}
+                  onChange={(e) => {
+                    setWithdrawAddress(e.target.value);
+                    setWithdrawError(null);
+                  }}
                 />
+                {withdrawAddress && !isAddressValid && (
+                  <span style={{ fontSize: "12px", color: "#f87171", marginTop: "4px", display: "block" }}>
+                    {locale === "ar" ? `عنوان غير صالح لشبكة ${selectedNetwork}` : `Invalid address for ${selectedNetwork}`}
+                  </span>
+                )}
               </div>
+
               <div className={styles.formGroup}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                   <label className={styles.formLabel} style={{ margin: 0 }}>{t("walletPage.withdraw_amount_label")}</label>
-                  <span style={{ fontSize: "12px", color: "#94a3b8" }}>
-                    {t("walletPage.available_label")}: ${formatUsd(usdtBalance.available)}
+                  <span style={{ fontSize: "12px", color: availableUsdt >= 10 ? "#22c55e" : "#94a3b8", fontWeight: 600 }}>
+                    {t("walletPage.available_label")}: ${availableUsdt.toFixed(2)} USDT
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <input
                     type="number"
                     min="10"
+                    max={availableUsdt > 0 ? availableUsdt.toString() : undefined}
                     step="0.01"
                     required
                     placeholder={t("walletPage.withdraw_amount_placeholder")}
                     className={styles.formInput}
                     value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    onChange={(e) => {
+                      setWithdrawAmount(e.target.value);
+                      setWithdrawError(null);
+                    }}
                   />
                   <button
                     type="button"
                     className={styles.copyBtn}
-                    onClick={() => setWithdrawAmount(formatUsd(usdtBalance.available))}
+                    onClick={() => {
+                      setWithdrawAmount(availableUsdt > 0 ? availableUsdt.toFixed(2) : "0.00");
+                      setWithdrawError(null);
+                    }}
                   >
                     MAX
                   </button>
                 </div>
+                {isAmountOverBalance && (
+                  <span style={{ fontSize: "12px", color: "#f87171", marginTop: "4px", display: "block", fontWeight: 600 }}>
+                    {locale === "ar"
+                      ? `المبلغ المطلوب ($${parsedWithdrawAmount.toFixed(2)}) يتجاوز رصيدك المتاح ($${availableUsdt.toFixed(2)} USDT)`
+                      : `Requested amount ($${parsedWithdrawAmount.toFixed(2)}) exceeds available balance ($${availableUsdt.toFixed(2)} USDT)`}
+                  </span>
+                )}
+                {isAmountBelowMin && !isAmountOverBalance && (
+                  <span style={{ fontSize: "12px", color: "#f59e0b", marginTop: "4px", display: "block" }}>
+                    {locale === "ar" ? "الحد الأدنى للسحب هو 10.00 USDT" : "Minimum withdrawal is 10.00 USDT"}
+                  </span>
+                )}
               </div>
 
               <div style={{ background: "#0e1015", padding: "12px", borderRadius: "8px", marginBottom: "16px", fontSize: "12px", color: "#94a3b8", display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -408,13 +502,23 @@ function WalletContent() {
                 <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #252b37", paddingTop: "4px", color: "#fff", fontWeight: 700 }}>
                   <span>{t("walletPage.fee_receive")}:</span>
                   <span style={{ color: "#f59e0b" }}>
-                    {parseFloat(withdrawAmount) > 1 ? (parseFloat(withdrawAmount) - 1).toFixed(2) : "0.00"} USDT
+                    {parsedWithdrawAmount > 1 ? (parsedWithdrawAmount - 1).toFixed(2) : "0.00"} USDT
                   </span>
                 </div>
               </div>
 
-              <button type="submit" className={styles.submitBtn}>
-                {t("walletPage.submit_withdraw")}
+              <button
+                type="submit"
+                className={styles.submitBtn}
+                disabled={!canSubmitWithdraw}
+                style={{
+                  opacity: canSubmitWithdraw ? 1 : 0.45,
+                  cursor: canSubmitWithdraw ? "pointer" : "not-allowed",
+                }}
+              >
+                {isSubmitting
+                  ? (locale === "ar" ? "جاري المعالجة..." : "Processing...")
+                  : t("walletPage.submit_withdraw")}
               </button>
             </form>
           </div>

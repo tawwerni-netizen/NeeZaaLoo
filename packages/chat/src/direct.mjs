@@ -217,7 +217,7 @@ export function createDirectChatService(db) {
 
     if (after) {
       sql = `
-        SELECT id, sender_id, receiver_id, content, client_message_id, read_at, created_at
+        SELECT id, sender_id, receiver_id, content, client_message_id, read_at, created_at, deleted_at
         FROM direct_message
         WHERE ((sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1))
           AND id > $3
@@ -227,9 +227,9 @@ export function createDirectChatService(db) {
       params = [userId, partnerId, after, safeLimit];
     } else {
       sql = `
-        SELECT id, sender_id, receiver_id, content, client_message_id, read_at, created_at
+        SELECT id, sender_id, receiver_id, content, client_message_id, read_at, created_at, deleted_at
         FROM (
-          SELECT id, sender_id, receiver_id, content, client_message_id, read_at, created_at
+          SELECT id, sender_id, receiver_id, content, client_message_id, read_at, created_at, deleted_at
           FROM direct_message
           WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)
           ORDER BY id DESC
@@ -245,7 +245,8 @@ export function createDirectChatService(db) {
       id: String(r.id),
       senderId: r.sender_id,
       receiverId: r.receiver_id,
-      content: r.content,
+      content: r.deleted_at ? null : r.content,
+      removed: r.deleted_at !== null,
       isMine: r.sender_id === userId,
       readAt: r.read_at,
       createdAt: r.created_at,
@@ -256,6 +257,9 @@ export function createDirectChatService(db) {
     const trimmed = (content || "").trim();
     if (!trimmed) return { ok: false, reason: "EMPTY_MESSAGE" };
     if (trimmed.length > 2000) return { ok: false, reason: "TOO_LONG" };
+
+    const senderCheck = await db.query("SELECT disabled_at FROM player WHERE id = $1", [senderId]);
+    if (senderCheck.rows[0]?.disabled_at) return { ok: false, reason: "ACCOUNT_DISABLED" };
 
     const blocked = await db.query(
       `SELECT 1 FROM chat_block WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)`,
@@ -288,6 +292,18 @@ export function createDirectChatService(db) {
     };
   }
 
+  async function moderateDeleteDirectMessage({ messageId, moderatorId }) {
+    const res = await db.query(
+      `UPDATE direct_message SET deleted_at = now(), deleted_by = $2 WHERE id = $1 AND deleted_at IS NULL RETURNING id`,
+      [messageId, moderatorId]
+    );
+    if (!res.rows.length) {
+      const exists = await db.query("SELECT id FROM direct_message WHERE id = $1", [messageId]);
+      return { ok: false, reason: exists.rows.length ? "ALREADY_REMOVED" : "NOT_FOUND" };
+    }
+    return { ok: true, messageId: String(res.rows[0].id) };
+  }
+
   return {
     searchMembers,
     listFriends,
@@ -296,5 +312,6 @@ export function createDirectChatService(db) {
     listConversations,
     getDirectMessages,
     sendDirectMessage,
+    moderateDeleteDirectMessage,
   };
 }

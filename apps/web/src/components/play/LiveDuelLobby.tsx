@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/Button";
+import { LocaleLink } from "@/components/LocaleLink";
 import { get, post } from "@/lib/api";
 import styles from "./LiveDuelLobby.module.css";
 
@@ -139,6 +140,28 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   // Auto-increment elapsed times & auto-expire at 5 minutes (300 seconds)
   const [expiredNotice, setExpiredNotice] = useState<string | null>(null);
 
+  // User USDT balance verification
+  const [userBalanceUSDT, setUserBalanceUSDT] = useState<number | null>(null);
+  const [balanceWarningModal, setBalanceWarningModal] = useState<{ open: boolean; requiredStake: number } | null>(null);
+
+  useEffect(() => {
+    if (!player?.id) return;
+    get<{ accounts: { key: string; balance: string; asset: string }[] }>(`/v1/players/${player.id}/wallet`)
+      .then((res) => {
+        const usdtAcc = res?.accounts?.find(
+          (a) => a.asset === "USDT" && (a.key.endsWith(":available") || a.key.includes("available"))
+        );
+        if (usdtAcc) {
+          setUserBalanceUSDT(Number(usdtAcc.balance) / 1_000_000);
+        } else {
+          setUserBalanceUSDT(0);
+        }
+      })
+      .catch(() => {
+        setUserBalanceUSDT(0);
+      });
+  }, [player?.id]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setDuels((prev) => {
@@ -223,7 +246,15 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
 
   function handleCreateChallenge(e: React.FormEvent) {
     e.preventDefault();
-    setIsPublishing(true);
+    if (newTier === "CASH") {
+      const currentBal = userBalanceUSDT ?? 0;
+      if (currentBal < newStake) {
+        setIsPublishing(false);
+        setIsModalOpen(false);
+        setBalanceWarningModal({ open: true, requiredStake: newStake });
+        return;
+      }
+    }
 
     const targetGame = AVAILABLE_GAMES.find((g) => g.id === newGameId);
     const gameLabel = isRtl
@@ -686,6 +717,14 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
               {newTier === "CASH" && (
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>{isRtl ? "قيمة التحدي (USDT)" : "Stake Amount (USDT)"}</label>
+                  
+                  <div className={styles.currentBalanceDisplay}>
+                    <span>{isRtl ? "رصيدك المتاح حالياً:" : "Current Available Balance:"}</span>
+                    <strong className={(userBalanceUSDT ?? 0) >= newStake ? styles.sufficientBalance : styles.insufficientBalance}>
+                      {(userBalanceUSDT ?? 0).toFixed(2)} USDT
+                    </strong>
+                  </div>
+
                   <div className={styles.stakePills}>
                     {[2, 5, 10, 20, 50, 100, 200, 500].map((amt) => (
                       <button
@@ -698,6 +737,19 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                       </button>
                     ))}
                   </div>
+
+                  {(userBalanceUSDT ?? 0) < newStake && (
+                    <div className={styles.balanceWarningBanner}>
+                      <span>
+                        ⚠️ {isRtl
+                          ? `رصيدك الحالي (${(userBalanceUSDT ?? 0).toFixed(2)} USDT) غير كافٍ لهذا النزال (${newStake}.00 USDT). يرجى شحن الرصيد أولاً أو اختيار اللعب المجاني.`
+                          : `Your current balance (${(userBalanceUSDT ?? 0).toFixed(2)} USDT) is insufficient for this stake (${newStake}.00 USDT). Please deposit first or choose free practice.`}
+                      </span>
+                      <LocaleLink href="/wallet" className={styles.inlineDepositBtn}>
+                        💳 {isRtl ? "شحن المحفظة الآن" : "Deposit USDT"}
+                      </LocaleLink>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -725,14 +777,50 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                 <Button
                   variant="primary"
                   type="submit"
-                  disabled={isPublishing}
+                  disabled={isPublishing || (newTier === "CASH" && (userBalanceUSDT ?? 0) < newStake)}
                 >
                   {isPublishing
                     ? isRtl ? "جارٍ البث..." : "Broadcasting..."
+                    : newTier === "CASH" && (userBalanceUSDT ?? 0) < newStake
+                    ? isRtl ? "رصيد غير كافٍ" : "Insufficient Balance"
                     : isRtl ? "بث التحدي في الرادار" : "Broadcast Challenge"}
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Insufficient Balance Critical Modal */}
+      {balanceWarningModal?.open && (
+        <div className={styles.modalOverlay} onClick={() => setBalanceWarningModal(null)}>
+          <div className={styles.insufficientModalCard} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.warningIconGlow}>💳</div>
+            <h3 className={styles.warningModalTitle}>
+              {isRtl ? "رصيد المحفظة غير كافٍ" : "Insufficient Wallet Balance"}
+            </h3>
+            <p className={styles.warningModalDesc}>
+              {isRtl
+                ? `أنت تحاول دخول نزال برهان بقيمة ${balanceWarningModal.requiredStake}.00 USDT، بينما رصيدك المتاح حالياً هو ${(userBalanceUSDT ?? 0).toFixed(2)} USDT. لا يمكن دخول النزالات النقدية بدون رصيد مسبق.`
+                : `You are attempting to enter a duel with a ${balanceWarningModal.requiredStake}.00 USDT stake, but your available balance is ${(userBalanceUSDT ?? 0).toFixed(2)} USDT. Cash duels require sufficient pre-funded balance.`}
+            </p>
+            <div className={styles.warningModalActions}>
+              <LocaleLink href="/wallet" className={styles.depositCtaBtn}>
+                <span>💰</span>
+                <span>{isRtl ? "شحن المحفظة فوراً (إيداع USDT)" : "Deposit USDT Now"}</span>
+              </LocaleLink>
+              <button
+                type="button"
+                className={styles.playFreeAltBtn}
+                onClick={() => {
+                  setBalanceWarningModal(null);
+                  setNewTier("FREE");
+                  setIsModalOpen(true);
+                }}
+              >
+                {isRtl ? "اللعب في النمط المجاني (نقاط ELO)" : "Play in Free Mode (ELO)"}
+              </button>
+            </div>
           </div>
         </div>
       )}

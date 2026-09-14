@@ -391,6 +391,9 @@ export function authorize({ actor, action, resource = {}, controls = {}, approva
   }
 
   if (actor.type === "PLAYER") {
+    if (actor.disabled) {
+      return deny(action, "ACCOUNT_DISABLED", "this player account is disabled");
+    }
     if (spec.capability) {
       return deny(action, "ADMIN_ONLY", "this action requires an admin capability");
     }

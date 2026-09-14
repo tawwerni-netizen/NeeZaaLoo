@@ -370,4 +370,153 @@
   background: var(--nz-accent-soft);
   color: var(--nz-accent);
   text-decoration: none;
+  transition: all 0.15s ease;
 }
+
+.watchCta:hover {
+  background: var(--nz-accent);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.controlsBar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: var(--nz-space-6);
+  padding: 16px;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-xl);
+}
+
+.controlsTopRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  flex: 1;
+  min-width: 220px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  inset-inline-start: 12px;
+  font-size: 14px;
+  color: var(--nz-text-3);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 38px;
+  padding-inline-start: 36px;
+  padding-inline-end: 12px;
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-pill);
+  color: var(--nz-text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: var(--nz-accent);
+  box-shadow: 0 0 0 2px var(--nz-accent-soft);
+}
+
+.toggleBotsBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--nz-radius-pill);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-2);
+  color: var(--nz-text-2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleBotsBtnActive {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+}
+
+.gameTabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.gameTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.gameTab:hover {
+  border-color: var(--nz-line-strong);
+  color: var(--nz-text);
+}
+
+.gameTabActive {
+  background: var(--nz-accent-soft);
+  border-color: var(--nz-accent);
+  color: var(--nz-accent);
+  box-shadow: 0 0 10px var(--nz-accent-soft);
+}
+
+.botBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--nz-radius-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.copyLinkBtn {
+  background: transparent;
+  border: none;
+  color: var(--nz-text-3);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.copyLinkBtn:hover {
+  color: var(--nz-text);
+}
+
