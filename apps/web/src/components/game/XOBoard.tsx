@@ -38,33 +38,50 @@ export function XOMarkSvg({ mark }: { mark: number }) {
     <svg viewBox="0 0 100 100" width="100%" height="100%" className={styles.markSvg}>
       <defs>
         <linearGradient id="xo-x-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FF8566" />
-          <stop offset="50%" stopColor="#FF5A2B" />
-          <stop offset="100%" stopColor="#C4340E" />
+          <stop offset="0%" stopColor="#FFA07A" />
+          <stop offset="40%" stopColor="#FF5A2B" />
+          <stop offset="100%" stopColor="#E11D48" />
         </linearGradient>
         <linearGradient id="xo-o-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#60A5FA" />
-          <stop offset="50%" stopColor="#3B82F6" />
-          <stop offset="100%" stopColor="#1D4ED8" />
+          <stop offset="0%" stopColor="#67E8F9" />
+          <stop offset="40%" stopColor="#38BDF8" />
+          <stop offset="100%" stopColor="#2563EB" />
         </linearGradient>
-        <filter id="xo-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        <filter id="xo-glow-x" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4.5" result="blur1" />
+          <feGaussianBlur stdDeviation="9" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="xo-glow-o" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4.5" result="blur1" />
+          <feGaussianBlur stdDeviation="9" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
       </defs>
 
       {isX ? (
-        <g filter="url(#xo-glow)">
-          <line x1="22" y1="22" x2="78" y2="78" stroke="url(#xo-x-grad)" strokeWidth="12" strokeLinecap="round" />
-          <line x1="78" y1="22" x2="22" y2="78" stroke="url(#xo-x-grad)" strokeWidth="12" strokeLinecap="round" />
-          {/* Inner Core Highlight */}
-          <line x1="22" y1="22" x2="78" y2="78" stroke="rgba(255,255,255,0.6)" strokeWidth="3" strokeLinecap="round" />
-          <line x1="78" y1="22" x2="22" y2="78" stroke="rgba(255,255,255,0.6)" strokeWidth="3" strokeLinecap="round" />
+        <g filter="url(#xo-glow-x)">
+          {/* Radiant Outer Neon Strokes */}
+          <line x1="22" y1="22" x2="78" y2="78" stroke="url(#xo-x-grad)" strokeWidth="13" strokeLinecap="round" />
+          <line x1="78" y1="22" x2="22" y2="78" stroke="url(#xo-x-grad)" strokeWidth="13" strokeLinecap="round" />
+          {/* Pure Laser Core Highlight */}
+          <line x1="22" y1="22" x2="78" y2="78" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
+          <line x1="78" y1="22" x2="22" y2="78" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
         </g>
       ) : (
-        <g filter="url(#xo-glow)">
-          <circle cx="50" cy="50" r="28" fill="none" stroke="url(#xo-o-grad)" strokeWidth="11" />
-          <circle cx="50" cy="50" r="28" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="3" />
+        <g filter="url(#xo-glow-o)">
+          {/* Radiant Outer Neon Circle */}
+          <circle cx="50" cy="50" r="28" fill="none" stroke="url(#xo-o-grad)" strokeWidth="12" />
+          {/* Pure Laser Core Highlight */}
+          <circle cx="50" cy="50" r="28" fill="none" stroke="#FFFFFF" strokeWidth="3.5" />
         </g>
       )}
     </svg>

@@ -13,7 +13,7 @@
  * header on what belongs there), so they stay a small local map here.
  */
 import { Header } from "@/components/Header";
-import { RequireAuth } from "@/components/RequireAuth";
+import { Footer } from "@/components/Footer";
 import { LocaleLink } from "@/components/LocaleLink";
 import { LiveDuelLobby } from "@/components/play/LiveDuelLobby";
 import { GameThumbnail } from "@/components/game/GameThumbnail";
@@ -40,7 +40,7 @@ export default function PlaySelectPage() {
   const isRtl = dir === "rtl";
 
   return (
-    <RequireAuth>
+    <>
       <Header />
       <main className="nz-container">
         {/* Real-Time Member-to-Member Live Dueling Lobby */}
@@ -98,6 +98,7 @@ export default function PlaySelectPage() {
           })}
         </div>
       </main>
-    </RequireAuth>
+      <Footer />
+    </>
   );
 }

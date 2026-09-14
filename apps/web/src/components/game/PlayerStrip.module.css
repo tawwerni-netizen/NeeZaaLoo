@@ -2,18 +2,30 @@
   display: flex;
   align-items: center;
   gap: var(--nz-space-3);
-  padding: var(--nz-space-3) var(--nz-space-4);
-  border-radius: var(--nz-radius-md);
-  border: 1px solid var(--nz-line);
-  background: var(--nz-surface-1);
-  transition: border-color var(--nz-dur-fast) var(--nz-ease-out);
+  padding: 10px 16px;
+  border-radius: var(--nz-radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(22, 27, 34, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  width: min(88vw, 420px);
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-/* The turn indicator: the SAME accent used everywhere else it means "your
-   move" -- a single 2px rule, never a background wash. */
 .active {
-  border-color: var(--nz-accent);
-  box-shadow: 0 0 0 1px var(--nz-accent);
+  border-color: #ff5a2b;
+  box-shadow: 0 0 24px rgba(255, 90, 43, 0.4), inset 0 0 12px rgba(255, 90, 43, 0.15);
+  animation: turnPulse 2s ease-in-out infinite;
+}
+
+@keyframes turnPulse {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(255, 90, 43, 0.35), inset 0 0 10px rgba(255, 90, 43, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(255, 90, 43, 0.65), inset 0 0 18px rgba(255, 90, 43, 0.25);
+  }
 }
 
 .info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }

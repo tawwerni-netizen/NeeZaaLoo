@@ -44,6 +44,24 @@
   font-size: var(--nz-text-sm);
 }
 
+.duelArena {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+  padding: var(--nz-space-6) var(--nz-space-4);
+  border-radius: var(--nz-radius-2xl);
+  background: radial-gradient(ellipse 80% 50% at 50% 120%, rgba(255, 90, 43, 0.12) 0%, transparent 70%),
+              radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.12) 0%, transparent 70%),
+              linear-gradient(180deg, #0d1117 0%, #080a0e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-block: var(--nz-space-4);
+  width: 100%;
+}
+
 .actionsRow {
   display: flex;
   gap: var(--nz-space-3);

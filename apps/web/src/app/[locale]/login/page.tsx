@@ -1,7 +1,6 @@
 "use client";
-
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
@@ -12,9 +11,20 @@ import { get, ApiError } from "@/lib/api";
 import styles from "@/components/auth/AuthForm.module.css";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<><Header /><div className={styles.wrap} /></>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const { login } = useAuth();
   const { t, locale } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
+
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
@@ -29,7 +39,11 @@ export default function LoginPage() {
     const result = await login(identifier, password, remember);
     setSubmitting(false);
     if (result.ok) {
-      router.push(`/${locale}/home`);
+      if (returnTo && returnTo.startsWith("/")) {
+        router.push(returnTo);
+      } else {
+        router.push(`/${locale}/home`);
+      }
     } else {
       setError(t(authErrorKey(result.reason)));
     }

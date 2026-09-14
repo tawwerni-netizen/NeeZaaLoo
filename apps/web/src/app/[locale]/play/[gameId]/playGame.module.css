@@ -1,0 +1,221 @@
+.navBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--nz-space-3);
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(26, 32, 44, 0.7), rgba(15, 23, 42, 0.85));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--nz-radius-xl);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  margin-bottom: var(--nz-space-6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.leftGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line-strong);
+  color: var(--nz-text);
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: rgba(255, 90, 43, 0.15);
+  border-color: #ff5a2b;
+  color: #ff7849;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 90, 43, 0.2);
+}
+
+.gameBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px 4px 6px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+}
+
+.gameThumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gameTitle {
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  color: var(--nz-text);
+}
+
+/* Stepper Breadcrumb */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+}
+
+.stepItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--nz-radius-pill);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--nz-text-3);
+  font-weight: 600;
+  cursor: default;
+}
+
+.stepItemClickable {
+  cursor: pointer;
+}
+
+.stepItemClickable:hover {
+  color: var(--nz-text);
+  border-color: var(--nz-line);
+}
+
+.stepItemActive {
+  background: rgba(255, 90, 43, 0.12);
+  border-color: rgba(255, 90, 43, 0.4);
+  color: #ff7849;
+  font-weight: 700;
+}
+
+.stepItemCompleted {
+  color: var(--nz-text-2);
+}
+
+.stepSep {
+  color: var(--nz-text-3);
+  font-size: 11px;
+}
+
+/* Dominoes Variant Banner */
+.variantBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--nz-space-3);
+  padding: 14px 18px;
+  border-radius: var(--nz-radius-lg);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.05));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  margin-bottom: var(--nz-space-4);
+}
+
+.variantInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.variantIcon {
+  font-size: 24px;
+}
+
+.variantHeading {
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.variantDesc {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+}
+
+.variantTabs {
+  display: flex;
+  gap: 6px;
+}
+
+.variantTab, .variantTabActive {
+  padding: 6px 14px;
+  border-radius: var(--nz-radius-pill);
+  font-size: var(--nz-text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.variantTab {
+  background: var(--nz-surface-2);
+  color: var(--nz-text-2);
+  border-color: var(--nz-line);
+}
+
+.variantTab:hover {
+  color: var(--nz-text);
+  border-color: var(--nz-line-strong);
+}
+
+.variantTabActive {
+  background: #f59e0b;
+  color: #000;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+/* Creating State Overlay */
+.creatingOverlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nz-space-3);
+  padding: var(--nz-space-8);
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 90, 43, 0.2);
+  border-top-color: #ff5a2b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .navBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .leftGroup {
+    justify-content: space-between;
+  }
+  .stepper {
+    justify-content: center;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+}

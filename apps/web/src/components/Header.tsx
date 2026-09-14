@@ -37,7 +37,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import styles from "./Header.module.css";
 
-type NavItem = { href: string; label: string };
+type NavItem = { href: string; label: string; icon: string };
 
 export function Header() {
   const pathname = usePathname();
@@ -48,12 +48,12 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const PRIMARY_NAV: NavItem[] = [
-    { href: "/play", label: t("nav.play") },
-    { href: "/games", label: t("nav.games") },
-    { href: "/tournaments", label: t("nav.tournaments") },
-    { href: "/watch", label: t("nav.watch") },
-    { href: "/rank", label: t("nav.rank") },
-    { href: "/learn", label: t("nav.learn") },
+    { href: "/play", label: t("nav.play"), icon: "⚔️" },
+    { href: "/games", label: t("nav.games"), icon: "🎮" },
+    { href: "/tournaments", label: t("nav.tournaments"), icon: "🏆" },
+    { href: "/watch", label: t("nav.watch"), icon: "📺" },
+    { href: "/rank", label: t("nav.rank"), icon: "👑" },
+    { href: "/learn", label: t("nav.learn"), icon: "📖" },
   ];
 
   const isActive = (href: string) => pathname === `/${locale}${href}`;
@@ -83,6 +83,7 @@ export function Header() {
           ))}
         </nav>
 
+        {/* Desktop Secondary Actions */}
         <div className={styles.secondary}>
           {loading ? null : player ? (
             <>
@@ -105,60 +106,162 @@ export function Header() {
           <LanguageSwitcher />
         </div>
 
-        <button
-          type="button"
-          className={styles.menuToggle}
-          aria-label={t("nav.menu_aria_label")}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((v) => !v)}
-        >
-          <MenuIcon open={menuOpen} />
-        </button>
+        {/* Mobile Header Actions (Visible on mobile/tablet screens) */}
+        <div className={styles.mobileActions}>
+          {loading ? null : player ? (
+            <>
+              <LocaleLink href="/wallet" className={styles.mobileWalletBtn} aria-label={t("nav.wallet")}>
+                <span className={styles.walletIcon}>💳</span>
+              </LocaleLink>
+              <NotificationCenter />
+            </>
+          ) : (
+            <button
+              type="button"
+              className={styles.mobileHeaderPlayBtn}
+              onClick={openPopup}
+            >
+              {t("nav.play_now")}
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={styles.menuToggle}
+            aria-label={t("nav.menu_aria_label")}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <MenuIcon open={menuOpen} />
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
         {menuOpen && (
           <motion.div
             className={styles.mobilePanel}
-            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
             transition={transition.reveal}
           >
-            <nav className={styles.mobileNav} aria-label="Primary">
-              {PRIMARY_NAV.map((item, i) => (
-                <LocaleLink
-                  key={`m-${item.href}-${i}`}
-                  href={item.href}
-                  className={isActive(item.href) ? styles.mobileNavActive : styles.mobileNavLink}
-                  onClick={closeMenu}
-                >
-                  {item.label}
-                </LocaleLink>
-              ))}
-            </nav>
-            <div className={styles.mobileDivider} />
-            <div className={styles.mobileLanguage}>
-              <ThemeToggle />
-              <LanguageSwitcher dropDirection="up" onSelect={closeMenu} />
+            {/* User Profile Card or Guest Welcome Banner */}
+            {loading ? null : player ? (
+              <div className={styles.mobileUserCard}>
+                <div className={styles.mobileUserMain}>
+                  <div className={styles.mobileUserAvatar}>
+                    {player.handle ? player.handle.charAt(0).toUpperCase() : "U"}
+                  </div>
+                  <div className={styles.mobileUserInfo}>
+                    <div className={styles.mobileUserHandle}>{player.handle}</div>
+                    <div className={styles.mobileUserStatus}>
+                      <span className={styles.onlineDot} />
+                      <span>{locale === "ar" ? "متصل الآن" : "Online"}</span>
+                      {player.isAdmin && <span className={styles.adminTag}>Admin</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.mobileUserActions}>
+                  <LocaleLink href="/wallet" className={styles.mobileCardWalletBtn} onClick={closeMenu}>
+                    <span className={styles.walletIcon}>💳</span>
+                    <span>{t("nav.wallet")}</span>
+                  </LocaleLink>
+                  <LocaleLink href="/profile" className={styles.mobileCardProfileBtn} onClick={closeMenu}>
+                    <span>{locale === "ar" ? "الملف الشخصي" : "Profile"}</span>
+                  </LocaleLink>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.mobileGuestCard}>
+                <div className={styles.mobileGuestTitle}>
+                  {locale === "ar" ? "ميدان نزلو للمبارزات" : "Nizalo Duel Arena"}
+                </div>
+                <p className={styles.mobileGuestSubtitle}>
+                  {locale === "ar"
+                    ? "ألعاب مهارية معتمدة، تحكيم خادم فوري بدون أي عنصر حظ."
+                    : "100% skill-based games with instant server-side matchmaking."}
+                </p>
+                <div className={styles.mobileGuestButtons}>
+                  <Button variant="ghost" onClick={() => { closeMenu(); openPopup(); }}>
+                    {t("nav.log_in")}
+                  </Button>
+                  <Button variant="primary" onClick={() => { closeMenu(); openPopup(); }}>
+                    {t("nav.play_now")}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Primary Navigation Grid */}
+            <div className={styles.mobileNavSection}>
+              <div className={styles.mobileSectionTitle}>
+                {locale === "ar" ? "القائمة الرئيسية" : "Main Navigation"}
+              </div>
+              <div className={styles.mobileNavGrid}>
+                {PRIMARY_NAV.map((item, i) => (
+                  <LocaleLink
+                    key={`m-${item.href}-${i}`}
+                    href={item.href}
+                    className={isActive(item.href) ? styles.mobileNavTileActive : styles.mobileNavTile}
+                    onClick={closeMenu}
+                  >
+                    <span className={styles.mobileNavTileIcon}>{item.icon}</span>
+                    <span className={styles.mobileNavTileLabel}>{item.label}</span>
+                    {isActive(item.href) && <span className={styles.activeGlowDot} />}
+                  </LocaleLink>
+                ))}
+              </div>
             </div>
-            <div className={styles.mobileSecondary}>
-              {loading ? null : player ? (
-                <>
-                  <LocaleLink href="/referrals" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.referrals")}</LocaleLink>
-                  <LocaleLink href="/wallet" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.wallet")}</LocaleLink>
-                  <LocaleLink href="/profile" className={styles.mobileNavLink} onClick={closeMenu}>{player.handle}</LocaleLink>
-                  <LocaleLink href="/help" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.support")}</LocaleLink>
+
+            {/* Quick Services (If Logged in) */}
+            {player && (
+              <div className={styles.mobileServicesSection}>
+                <div className={styles.mobileSectionTitle}>
+                  {locale === "ar" ? "خدمات الحساب" : "Account Services"}
+                </div>
+                <div className={styles.mobileServicesGrid}>
+                  <LocaleLink href="/wallet" className={styles.mobileServiceItem} onClick={closeMenu}>
+                    <span className={styles.serviceIcon}>💳</span>
+                    <span className={styles.serviceLabel}>{t("nav.wallet")}</span>
+                  </LocaleLink>
+                  <LocaleLink href="/referrals" className={styles.mobileServiceItem} onClick={closeMenu}>
+                    <span className={styles.serviceIcon}>🎁</span>
+                    <span className={styles.serviceLabel}>{t("nav.referrals")}</span>
+                  </LocaleLink>
+                  <LocaleLink href="/help" className={styles.mobileServiceItem} onClick={closeMenu}>
+                    <span className={styles.serviceIcon}>💬</span>
+                    <span className={styles.serviceLabel}>{t("nav.support")}</span>
+                  </LocaleLink>
                   {player.isAdmin && (
-                    <LocaleLink href="/admin" className={styles.mobileNavLink} onClick={closeMenu}>{t("nav.admin") || "Admin Dashboard"}</LocaleLink>
+                    <LocaleLink href="/admin" className={styles.mobileServiceItem} onClick={closeMenu}>
+                      <span className={styles.serviceIcon}>🛡️</span>
+                      <span className={styles.serviceLabel}>{t("nav.admin") || "Admin"}</span>
+                    </LocaleLink>
                   )}
-                  <Button variant="ghost" onClick={() => { closeMenu(); void logout(); }}>{t("nav.log_out")}</Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="ghost" onClick={() => { closeMenu(); openPopup(); }}>{t("nav.log_in")}</Button>
-                  <Button variant="primary" onClick={() => { closeMenu(); openPopup(); }}>{t("nav.play_now")}</Button>
-                </>
+                </div>
+              </div>
+            )}
+
+            {/* Footer Bar: Theme, Language, and Logout */}
+            <div className={styles.mobileFooterBar}>
+              <div className={styles.mobileControls}>
+                <ThemeToggle />
+                <LanguageSwitcher dropDirection="up" onSelect={closeMenu} />
+              </div>
+              {player && (
+                <button
+                  type="button"
+                  className={styles.mobileLogoutBtn}
+                  onClick={() => { closeMenu(); void logout(); }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                  <span>{t("nav.log_out")}</span>
+                </button>
               )}
             </div>
           </motion.div>

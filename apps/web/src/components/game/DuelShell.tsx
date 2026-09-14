@@ -166,7 +166,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
             rematchBusy={rematchBusy}
           />
         ) : plugin && view ? (
-          <>
+          <div className={styles.duelArena}>
             {players && opponentSeat !== null && (
               <PlayerStrip
                 playerId={players[opponentSeat] ?? ""}
@@ -201,7 +201,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
                 <Button variant="secondary" onClick={() => setResignConfirmOpen(true)}>{t("game.resign")}</Button>
               </div>
             )}
-          </>
+          </div>
         ) : (
           <p className={styles.playerLine}>{t("game.connecting")}</p>
         )}

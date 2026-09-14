@@ -136,18 +136,49 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   const [newTimeControl, setNewTimeControl] = useState<string>("Blitz 3m");
   const [isPublishing, setIsPublishing] = useState(false);
 
-  // Auto-increment elapsed times
+  // Auto-increment elapsed times & auto-expire at 5 minutes (300 seconds)
+  const [expiredNotice, setExpiredNotice] = useState<string | null>(null);
+
   useEffect(() => {
     const timer = setInterval(() => {
-      setDuels((prev) =>
-        prev.map((d) => ({
-          ...d,
-          createdSecondsAgo: d.createdSecondsAgo + 1,
-        }))
-      );
+      setDuels((prev) => {
+        const expired = prev.filter((d) => d.createdSecondsAgo + 1 >= 300);
+        if (expired.some((d) => d.isUserCreated)) {
+          setExpiredNotice(
+            isRtl
+              ? "انتهت مهلة انتظار الخصم (5 دقائق) للمبارزة وتم إلغاؤها تلقائياً."
+              : "The 5-minute waiting window for your challenge expired and was closed."
+          );
+        }
+        return prev
+          .filter((d) => d.createdSecondsAgo + 1 < 300)
+          .map((d) => ({
+            ...d,
+            createdSecondsAgo: d.createdSecondsAgo + 1,
+          }));
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isRtl]);
+
+  function handleCancelDuel(duelId: string) {
+    setDuels((prev) => prev.filter((d) => d.id !== duelId));
+  }
+
+  async function handlePlayVsAi(duel: OpenDuel) {
+    setAcceptingId(duel.id);
+    try {
+      const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", {
+        gameId: duel.gameId,
+        difficulty: "MEDIUM",
+      });
+      if (r && r.duelId) {
+        router.push(`/${locale}/game/${r.duelId}`);
+      }
+    } catch {
+      setAcceptingId(null);
+    }
+  }
 
   // Filtered list
   const filteredDuels = useMemo(() => {
@@ -175,12 +206,17 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
           return;
         }
       } catch {
-        // Fallback to simulated duel room
+        // Fallback: start a real vs-computer match so player never encounters a blank screen
+        const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", {
+          gameId: duel.gameId,
+          difficulty: "MEDIUM",
+        });
+        if (r && r.duelId) {
+          router.push(`/${locale}/game/${r.duelId}`);
+          return;
+        }
       }
-      setTimeout(() => {
-        router.push(`/${locale}/game/${duel.id}`);
-      }, 400);
-    } catch {
+    } finally {
       setAcceptingId(null);
     }
   }
@@ -240,6 +276,20 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
       <span className={styles.cornerTechTR} />
       <span className={styles.cornerTechBL} />
       <span className={styles.cornerTechBR} />
+
+      {expiredNotice && (
+        <div className={styles.expiredAlert}>
+          <span>⚠️ {expiredNotice}</span>
+          <button
+            type="button"
+            className={styles.expiredAlertClose}
+            onClick={() => setExpiredNotice(null)}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Top Banner & Radar Status */}
       <div className={styles.lobbyHeader}>
@@ -436,6 +486,11 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
         ) : (
           filteredDuels.map((duel) => {
             const isHighElo = duel.challenger.elo >= 1600;
+            const remainingSeconds = Math.max(0, 300 - duel.createdSecondsAgo);
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
             return (
               <div
                 key={duel.id}
@@ -494,33 +549,61 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                     </span>
                   </div>
                   <div className={styles.specItem}>
-                    <span className={styles.specLabel}>{isRtl ? "الانتظار" : "Waiting"}</span>
+                    <span className={styles.specLabel}>{isRtl ? "مهلة الإنتظار" : "Waiting Window"}</span>
                     <span className={styles.specVal}>
-                      {duel.createdSecondsAgo}s {duel.createdSecondsAgo < 45 ? "🔥" : ""}
+                      {timeStr} {remainingSeconds <= 60 ? "⚠️" : "⏳"}
                     </span>
                   </div>
                 </div>
 
                 <div className={styles.duelCardActions}>
-                  <Button
-                    variant={duel.tier === "CASH" ? "primary" : "secondary"}
-                    className={styles.acceptBtn}
-                    disabled={acceptingId === duel.id}
-                    onClick={() => handleAccept(duel)}
-                  >
-                    {acceptingId === duel.id ? (
-                      isRtl ? "جارٍ الدخول..." : "Connecting..."
-                    ) : (
-                      <>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
-                        {duel.isUserCreated
-                          ? isRtl ? "انتظار الخصم..." : "Awaiting Opponent..."
-                          : isRtl ? "قبول التحدي الآن" : "Accept Challenge"}
-                      </>
-                    )}
-                  </Button>
+                  {duel.isUserCreated ? (
+                    <div className={styles.userDuelActions}>
+                      <div className={styles.waitingStatusPill}>
+                        <span className={styles.radarPing} />
+                        <span>
+                          {isRtl
+                            ? `في انتظار الخصم... (${timeStr})`
+                            : `Awaiting Opponent... (${timeStr})`}
+                        </span>
+                      </div>
+                      <div className={styles.userDuelButtons}>
+                        <button
+                          type="button"
+                          className={styles.instantAiBtn}
+                          onClick={() => void handlePlayVsAi(duel)}
+                          disabled={acceptingId === duel.id}
+                        >
+                          <span>⚡ {isRtl ? "بدء فوري ضد الحاسوب" : "Instant vs AI"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.cancelDuelBtn}
+                          onClick={() => handleCancelDuel(duel.id)}
+                        >
+                          <span>{isRtl ? "إلغاء التحدي" : "Cancel"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant={duel.tier === "CASH" ? "primary" : "secondary"}
+                      className={styles.acceptBtn}
+                      disabled={acceptingId === duel.id}
+                      onClick={() => void handleAccept(duel)}
+                    >
+                      {acceptingId === duel.id ? (
+                        isRtl ? "جارٍ الدخول..." : "Connecting..."
+                      ) : (
+                        <>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
+                          {isRtl ? "قبول التحدي الآن" : "Accept Challenge"}
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             );

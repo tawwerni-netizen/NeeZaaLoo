@@ -22,15 +22,15 @@
 
 .titaniumFrame {
   position: relative;
-  padding: 18px;
-  background: linear-gradient(145deg, #1e242c 0%, #101317 100%);
+  padding: 20px;
+  background: linear-gradient(145deg, #131722 0%, #0a0d14 100%);
   border-radius: var(--nz-radius-2xl);
-  border: 2px solid #2d3748;
+  border: 2px solid rgba(255, 90, 43, 0.45);
   box-shadow: 
-    0 10px 0 #0b0d10,
-    0 20px 40px rgba(0, 0, 0, 0.8),
-    inset 0 1px 1px rgba(255, 255, 255, 0.15),
-    inset 0 0 25px rgba(0, 0, 0, 0.9);
+    0 0 40px rgba(255, 90, 43, 0.22),
+    0 25px 60px rgba(0, 0, 0, 0.92),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2),
+    inset 0 0 35px rgba(0, 0, 0, 0.95);
 }
 
 .board {
@@ -38,13 +38,14 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 10px;
-  width: min(84vw, 400px);
+  gap: 12px;
+  width: min(84vw, 410px);
   aspect-ratio: 1 / 1;
-  background: #0b0d10;
-  padding: 10px;
-  border-radius: var(--nz-radius-lg);
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9);
+  background: radial-gradient(circle at 50% 50%, #0e131d 0%, #05070a 100%);
+  padding: 12px;
+  border-radius: var(--nz-radius-xl);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.9), 0 0 20px rgba(56, 189, 248, 0.1);
 }
 
 .cell {
@@ -52,20 +53,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 40% 40%, #1a1f26 0%, #111418 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--nz-radius-md);
+  background: radial-gradient(circle at 40% 40%, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--nz-radius-lg);
   padding: 0;
   cursor: pointer;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
-  transition: all var(--nz-dur-fast) var(--nz-ease-out);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cell:disabled { cursor: default; }
 
 .cell:not(:disabled):hover {
-  border-color: rgba(255, 90, 43, 0.4);
-  background: radial-gradient(circle at 40% 40%, #252b36 0%, #161a20 100%);
+  border-color: #ff5a2b;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 90, 43, 0.22) 0%, rgba(20, 26, 38, 0.95) 100%);
+  box-shadow: 0 0 22px rgba(255, 90, 43, 0.4), inset 0 0 10px rgba(255, 90, 43, 0.2);
+  transform: scale(1.025);
 }
 
 .markWrap {
@@ -80,18 +83,26 @@
 .markSvg {
   width: 100%;
   height: 100%;
+  filter: drop-shadow(0 0 8px rgba(255, 90, 43, 0.3));
 }
 
 .previewMarkWrap {
   width: 78%;
   height: 78%;
-  opacity: 0.35;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+  opacity: 0.4;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
 }
 
 .winningCell {
-  background: radial-gradient(circle at 40% 40%, #2e261b 0%, #1a160d 100%) !important;
-  border-color: rgba(198, 168, 103, 0.6) !important;
+  background: radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.35) 0%, rgba(30, 20, 10, 0.95) 100%) !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.6), inset 0 0 15px rgba(245, 158, 11, 0.3) !important;
+  animation: winPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes winPulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.04); filter: brightness(1.25); }
 }
 
 .winOverlay {
