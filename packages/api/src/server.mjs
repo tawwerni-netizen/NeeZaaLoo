@@ -3638,6 +3638,71 @@ function buildRoutes() {
         return { body: { ok: true, game: r.rows[0] } };
       } },
 
+    // --- Direct Chat, Members & Friends ---
+    { method: "GET", path: "/v1/members", action: "player.members.read",
+      handler: async ({ query, actor, directChat }) => {
+        const q = query.get("q") || "";
+        const limit = parseInt(query.get("limit") || "30", 10);
+        const members = await directChat.searchMembers({
+          query: q,
+          currentUserId: actor?.id,
+          limit,
+          includeSelf: Boolean(q),
+        });
+        return { body: { ok: true, members } };
+      } },
+
+    { method: "GET", path: "/v1/friends", action: "player.friends.read",
+      handler: async ({ actor, directChat }) => {
+        const friends = await directChat.listFriends(actor.id);
+        return { body: { ok: true, friends } };
+      } },
+
+    { method: "POST", path: "/v1/friends/request", action: "player.friends.write",
+      handler: async ({ body, actor, directChat }) => {
+        const target = body?.target || body?.friendId;
+        if (!target) return { status: 400, body: errorBody("TARGET_REQUIRED") };
+        const res = await directChat.sendFriendRequest(actor.id, target);
+        if (!res.ok) return { status: 400, body: errorBody(res.reason) };
+        return { body: res };
+      } },
+
+    { method: "POST", path: "/v1/friends/remove", action: "player.friends.write",
+      handler: async ({ body, actor, directChat }) => {
+        const friendId = body?.friendId;
+        if (!friendId) return { status: 400, body: errorBody("FRIEND_ID_REQUIRED") };
+        await directChat.removeFriend(actor.id, friendId);
+        return { body: { ok: true } };
+      } },
+
+    { method: "GET", path: "/v1/chat/direct/conversations", action: "player.chat.direct.read",
+      handler: async ({ actor, directChat }) => {
+        const conversations = await directChat.listConversations(actor.id);
+        return { body: { ok: true, conversations } };
+      } },
+
+    { method: "GET", path: "/v1/chat/direct/:partnerId/messages", action: "player.chat.direct.read",
+      handler: async ({ actor, params, query, directChat }) => {
+        const limit = parseInt(query.get("limit") || "50", 10);
+        const after = query.get("after") || null;
+        const messages = await directChat.getDirectMessages(actor.id, params.partnerId, { limit, after });
+        return { body: { ok: true, messages } };
+      } },
+
+    { method: "POST", path: "/v1/chat/direct/:partnerId/messages", action: "player.chat.direct.write",
+      handler: async ({ body, actor, params, directChat }) => {
+        const content = body?.content;
+        const clientMessageId = body?.clientMessageId;
+        const res = await directChat.sendDirectMessage({
+          senderId: actor.id,
+          receiverId: params.partnerId,
+          content,
+          clientMessageId,
+        });
+        if (!res.ok) return { status: 400, body: errorBody(res.reason) };
+        return { body: res };
+      } },
+
   ];
 }
 

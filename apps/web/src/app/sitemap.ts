@@ -34,7 +34,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // 1. Static Routes across all locales
   for (const route of STATIC_ROUTES) {
     for (const locale of LOCALES) {
-      const alternates: Record<string, string> = {};
+      const alternates: Record<string, string> = {
+        "x-default": `${BASE_URL}/en${route.path}`,
+      };
       for (const l of LOCALES) {
         alternates[l] = `${BASE_URL}/${l}${route.path}`;
       }
@@ -54,7 +56,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // 2. 10 Games Hub Pages across all locales
   for (const gameSlug of GAME_SLUGS) {
     for (const locale of LOCALES) {
-      const alternates: Record<string, string> = {};
+      const alternates: Record<string, string> = {
+        "x-default": `${BASE_URL}/en/games/${gameSlug}`,
+      };
       for (const l of LOCALES) {
         alternates[l] = `${BASE_URL}/${l}/games/${gameSlug}`;
       }
@@ -74,7 +78,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // 3. 100 Editorial Articles across all locales
   for (const article of EDITORIAL_ARTICLES_MAP) {
     for (const locale of LOCALES) {
-      const alternates: Record<string, string> = {};
+      const alternates: Record<string, string> = {
+        "x-default": `${BASE_URL}/en/learn/${article.slug}`,
+      };
       for (const l of LOCALES) {
         alternates[l] = `${BASE_URL}/${l}/learn/${article.slug}`;
       }

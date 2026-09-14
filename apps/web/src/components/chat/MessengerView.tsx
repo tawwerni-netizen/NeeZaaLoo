@@ -21,6 +21,7 @@ interface Member {
   friendStatus: string | null;
   isFriend: boolean;
   isPending: boolean;
+  isSelf?: boolean;
 }
 
 interface Conversation {
@@ -381,6 +382,9 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
                       </div>
                       <div className={styles.memberMeta}>
                         <span className={styles.memberName}>{m.handle}</span>
+                        {m.isSelf && (
+                          <span className={styles.selfTag}>⭐ {locale === "ar" ? "أنت (حسابك الشخصي)" : "You (Your Account)"}</span>
+                        )}
                         {m.bio && <span className={styles.memberBio}>{m.bio}</span>}
                         {m.isFriend && (
                           <span className={styles.friendTag}>✓ {locale === "ar" ? "صديق" : "Friend"}</span>
@@ -389,33 +393,39 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
                     </div>
 
                     <div className={styles.memberActions}>
-                      <button
-                        type="button"
-                        className={styles.msgBtn}
-                        title={locale === "ar" ? "مراسلة فورية" : "Send message"}
-                        onClick={() => {
-                          setActivePartner({ id: m.id, handle: m.handle, avatar: m.avatarKey });
-                        }}
-                      >
-                        💬
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.duelBtn}
-                        title={locale === "ar" ? "تحدي مبارزة" : "Challenge duel"}
-                        onClick={() => handleChallenge(m.handle)}
-                      >
-                        ⚔️
-                      </button>
-                      {!m.isFriend && (
-                        <button
-                          type="button"
-                          className={styles.addFriendBtn}
-                          title={locale === "ar" ? "إضافة صديق" : "Add friend"}
-                          onClick={() => handleAddFriend(m)}
-                        >
-                          ➕
-                        </button>
+                      {!m.isSelf ? (
+                        <>
+                          <button
+                            type="button"
+                            className={styles.msgBtn}
+                            title={locale === "ar" ? "مراسلة فورية" : "Send message"}
+                            onClick={() => {
+                              setActivePartner({ id: m.id, handle: m.handle, avatar: m.avatarKey });
+                            }}
+                          >
+                            💬
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.duelBtn}
+                            title={locale === "ar" ? "تحدي مبارزة" : "Challenge duel"}
+                            onClick={() => handleChallenge(m.handle)}
+                          >
+                            ⚔️
+                          </button>
+                          {!m.isFriend && (
+                            <button
+                              type="button"
+                              className={styles.addFriendBtn}
+                              title={locale === "ar" ? "إضافة صديق" : "Add friend"}
+                              onClick={() => handleAddFriend(m)}
+                            >
+                              ➕
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <span className={styles.selfIndicator}>👑 {locale === "ar" ? "نشط الآن" : "Online"}</span>
                       )}
                     </div>
                   </div>

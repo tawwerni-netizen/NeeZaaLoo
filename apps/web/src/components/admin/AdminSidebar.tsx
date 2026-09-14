@@ -55,7 +55,15 @@ const GROUPS: NavGroup[] = [
   },
 ];
 
-export function AdminSidebar({ adminHandle, open = false }: { adminHandle: string; open?: boolean }) {
+export function AdminSidebar({
+  adminHandle,
+  open = false,
+  onClose,
+}: {
+  adminHandle: string;
+  open?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
   const path = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/";
 
@@ -67,6 +75,16 @@ export function AdminSidebar({ adminHandle, open = false }: { adminHandle: strin
           <span className={styles.brandName}>Nizalo</span>
           <span className={styles.brandSub}>Admin</span>
         </div>
+        {onClose && (
+          <button
+            type="button"
+            className={styles.mobileCloseBtn}
+            onClick={onClose}
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       <nav className={styles.nav}>

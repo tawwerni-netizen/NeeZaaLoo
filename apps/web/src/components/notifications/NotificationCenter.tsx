@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
@@ -51,12 +51,18 @@ export function NotificationCenter() {
   const { player } = useAuth();
   const { locale, t } = useI18n();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [open, setOpen] = useState(false);
   const [incoming, setIncoming] = useState<IncomingChallenge[]>([]);
   const [outgoing, setOutgoing] = useState<OutgoingChallenge[]>([]);
   const [busyActionId, setBusyActionId] = useState<string | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Close on route navigation
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   const refresh = useCallback(async () => {
     if (!player) return;
@@ -76,17 +82,21 @@ export function NotificationCenter() {
     return () => clearInterval(interval);
   }, [player, refresh]);
 
-  // Click outside to close
+  // Click / Touch outside to close
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    function handleOutside(e: MouseEvent | TouchEvent) {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
     if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("mousedown", handleOutside);
+      document.addEventListener("touchstart", handleOutside, { passive: true });
     }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+    };
   }, [open]);
 
   async function handleAccept(challengeId: string) {
@@ -153,21 +163,31 @@ export function NotificationCenter() {
 
       <AnimatePresence>
         {open && (
-          <motion.div
-            className={styles.panel}
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.15 }}
-          >
-            <div className={styles.panelHead}>
-              <h3 className={styles.panelTitle}>{t("notifications.title")}</h3>
-              {(incoming.length > 0 || outgoing.length > 0) && (
-                <button type="button" className={styles.clearBtn} onClick={() => setOpen(false)}>
+          <>
+            <div
+              className={styles.backdrop}
+              onClick={() => setOpen(false)}
+              onTouchStart={() => setOpen(false)}
+              aria-hidden="true"
+            />
+            <motion.div
+              className={styles.panel}
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+              transition={{ duration: 0.15 }}
+            >
+              <div className={styles.panelHead}>
+                <h3 className={styles.panelTitle}>{t("notifications.title")}</h3>
+                <button
+                  type="button"
+                  className={styles.clearBtn}
+                  onClick={() => setOpen(false)}
+                  aria-label={locale === "ar" ? "إغلاق" : "Close"}
+                >
                   ✕
                 </button>
-              )}
-            </div>
+              </div>
 
             <div className={styles.panelBody}>
               {/* Accepted Match Challenges (Ready to Enter) */}
@@ -285,8 +305,9 @@ export function NotificationCenter() {
               )}
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+        </>
+      )}
+    </AnimatePresence>
+  </div>
+);
 }

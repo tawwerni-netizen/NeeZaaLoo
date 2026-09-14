@@ -225,3 +225,26 @@
   text-align: center;
   gap: 8px;
 }
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9998;
+}
+
+@media (max-width: 640px) {
+  .panel {
+    position: fixed;
+    top: 66px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    max-height: 75vh;
+    z-index: 9999;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+  }
+}

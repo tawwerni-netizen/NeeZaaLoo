@@ -30,7 +30,18 @@ export function AdminPageLayout({
   return (
     <RequireAuth>
       <div className={styles.layout}>
-        <AdminSidebar adminHandle={player?.handle ?? "admin"} open={sidebarOpen} />
+        <AdminSidebar
+          adminHandle={player?.handle ?? "admin"}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+        {sidebarOpen && (
+          <div
+            className={styles.scrim}
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
         <div className={styles.main}>
           <AdminTopbar
             breadcrumb={breadcrumb}

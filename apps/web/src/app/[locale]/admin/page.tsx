@@ -151,7 +151,11 @@ function AdminDashboardContent() {
 
   return (
     <div className={styles.shell} dir="ltr">
-      <AdminSidebar adminHandle={player?.handle ?? "admin"} open={sidebarOpen} />
+      <AdminSidebar
+        adminHandle={player?.handle ?? "admin"}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
       {sidebarOpen && <div className={styles.scrim} onClick={() => setSidebarOpen(false)} />}
 
       <div className={styles.main}>

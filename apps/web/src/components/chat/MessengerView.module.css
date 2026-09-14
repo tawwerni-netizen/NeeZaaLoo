@@ -746,3 +746,37 @@
     max-width: 90%;
   }
 }
+
+.selfTag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  padding: 2px 7px;
+  border-radius: var(--nz-radius-pill);
+  margin-top: 2px;
+}
+
+.selfIndicator {
+  font-size: 11px;
+  color: #22c55e;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: var(--nz-radius-pill);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.friendTag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 2px 7px;
+  border-radius: var(--nz-radius-pill);
+  margin-top: 2px;
+}

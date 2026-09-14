@@ -12,6 +12,8 @@ export function createDirectChatService(db) {
     const q = (query || "").trim().toLowerCase();
     const safeLimit = Math.min(Math.max(1, Number(limit) || 20), 100);
 
+    const includeSelf = Boolean(arguments[0]?.includeSelf);
+
     let sql;
     let params;
 
@@ -27,16 +29,20 @@ export function createDirectChatService(db) {
           f.user_id AS friend_initiator
         FROM player p
         LEFT JOIN email_identity e ON e.player_id = p.id
+        LEFT JOIN oauth_identity o ON o.player_id = p.id
         LEFT JOIN friendship f ON (
           (f.user_id = $1 AND f.friend_id = p.id) OR
           (f.user_id = p.id AND f.friend_id = $1)
         )
         WHERE p.is_ai = FALSE
-          AND ($1 IS NULL OR p.id <> $1)
+          AND ($4 = TRUE OR $1 IS NULL OR p.id <> $1)
           AND (
             LOWER(p.handle) LIKE '%' || $2 || '%' OR
-            LOWER(COALESCE(e.email, '')) LIKE '%' || $2 || '%'
+            LOWER(COALESCE(e.email, '')) LIKE '%' || $2 || '%' OR
+            LOWER(COALESCE(o.email, '')) LIKE '%' || $2 || '%' OR
+            LOWER(p.id) = $2
           )
+        GROUP BY p.id, p.handle, p.avatar_key, p.selected_badge_code, p.bio, f.status, f.user_id
         ORDER BY
           CASE WHEN LOWER(p.handle) = $2 THEN 0
                WHEN LOWER(p.handle) LIKE $2 || '%' THEN 1
@@ -44,7 +50,7 @@ export function createDirectChatService(db) {
           p.handle ASC
         LIMIT $3
       `;
-      params = [currentUserId, q, safeLimit];
+      params = [currentUserId, q, safeLimit, includeSelf];
     } else {
       sql = `
         SELECT
@@ -61,11 +67,11 @@ export function createDirectChatService(db) {
           (f.user_id = p.id AND f.friend_id = $1)
         )
         WHERE p.is_ai = FALSE
-          AND ($1 IS NULL OR p.id <> $1)
+          AND ($3 = TRUE OR $1 IS NULL OR p.id <> $1)
         ORDER BY p.handle ASC
         LIMIT $2
       `;
-      params = [currentUserId, safeLimit];
+      params = [currentUserId, safeLimit, includeSelf];
     }
 
     const res = await db.query(sql, params);
@@ -79,6 +85,7 @@ export function createDirectChatService(db) {
       isFriend: row.friend_status === "ACCEPTED",
       isPending: row.friend_status === "PENDING",
       isInitiator: row.friend_initiator === currentUserId,
+      isSelf: row.id === currentUserId,
     }));
   }
 

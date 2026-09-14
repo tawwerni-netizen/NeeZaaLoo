@@ -53,6 +53,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: var(--nz-space-4);
 }
 
@@ -334,17 +336,35 @@
   margin: 0;
 }
 
+.scrollHint {
+  display: none;
+  font-size: 11px;
+  color: var(--nz-text-3);
+  background: var(--nz-surface-2);
+  padding: 3px 8px;
+  border-radius: var(--nz-radius-pill);
+  border: 1px solid var(--nz-line);
+}
+
+@media (max-width: 640px) {
+  .scrollHint {
+    display: inline-block;
+  }
+}
+
 .txTableCard {
   background: var(--nz-surface-1);
   border: 1px solid var(--nz-line);
   border-radius: var(--nz-radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .txTable {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
-  text-align: left;
+  text-align: start;
   font-size: 13px;
 }
 
@@ -354,12 +374,15 @@
   font-weight: 600;
   color: var(--nz-text-2);
   border-bottom: 1px solid var(--nz-line);
+  text-align: start;
+  white-space: nowrap;
 }
 
 .txTable td {
   padding: 14px 16px;
   border-bottom: 1px solid var(--nz-line);
   color: var(--nz-text);
+  white-space: nowrap;
 }
 
 .badgeSuccess {

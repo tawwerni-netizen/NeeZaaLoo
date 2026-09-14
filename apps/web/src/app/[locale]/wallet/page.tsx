@@ -38,7 +38,7 @@ export default function WalletPage() {
 
 function WalletContent() {
   const { player } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [accounts, setAccounts] = useState<Account[] | null>(null);
   const [forbidden, setForbidden] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -213,6 +213,7 @@ function WalletContent() {
       <section className={styles.txSection}>
         <div className={styles.txHeader}>
           <h2 className={styles.txTitle}>{t("walletPage.recent_tx_title")}</h2>
+          <span className={styles.scrollHint}>↔ {locale === "ar" ? "اسحب للتمرير" : "Swipe to scroll"}</span>
         </div>
         <div className={styles.txTableCard}>
           <table className={styles.txTable}>

@@ -485,3 +485,24 @@
     gap: var(--nz-space-6);
   }
 }
+
+@media (max-width: 640px) {
+  .heading {
+    font-size: clamp(1.4rem, 6vw, 1.85rem);
+    line-height: 1.25;
+    word-break: break-word;
+    unicode-bidi: isolate;
+  }
+  .tagline {
+    font-size: var(--nz-text-sm);
+  }
+  .factsBar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+  .badgeTag {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+}
