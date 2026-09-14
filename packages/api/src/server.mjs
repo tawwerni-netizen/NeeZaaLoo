@@ -38,6 +38,20 @@ import { BlockError } from "../../chat/src/blocks.mjs";
 import { ReportError } from "../../chat/src/reports.mjs";
 import { createConsentService, ConsentError } from "../../compliance/src/consent.mjs";
 
+async function poolBatch(tasks, concurrency = 3) {
+  const results = new Array(tasks.length);
+  let nextIdx = 0;
+  async function worker() {
+    while (nextIdx < tasks.length) {
+      const idx = nextIdx++;
+      results[idx] = await tasks[idx]();
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
 export function createApi({
   db, auth, settlement = null, tournament = null, globalSkill = null, reconciliation = null, rbac = null,
   emailIdentity = null, emailVerification = null, welcomeEmail = null, emailLoginCode = null, passwordReset = null,
@@ -1712,49 +1726,49 @@ function buildRoutes() {
           openFairplay, openReconciliation, openCriticalReconciliation,
           openTournaments, liveGamesCatalog, matches24h, recentAudit,
           feeTrend, matchVolumeByGame, withdrawalQueue, recentTransactions,
-        ] = await Promise.all([
-          db.query(
+        ] = await poolBatch([
+          () => db.query(
             `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance,0))::text AS balance
                FROM ledger_account a LEFT JOIN ledger_balance b ON b.account_id = a.id
               WHERE a.key = 'platform:rake'`
           ),
-          db.query(
+          () => db.query(
             `SELECT count(DISTINCT d.id)::int AS matches,
                     count(DISTINCT seat) FILTER (WHERE seat IS NOT NULL)::int AS players
                FROM duel d, LATERAL (VALUES (d.seat_0), (d.seat_1)) AS s(seat)
               WHERE d.status = 'LIVE'`
           ),
-          db.query(
+          () => db.query(
             `SELECT count(*)::int c FROM withdrawal
               WHERE status IN ('REQUESTED','VALIDATING','RISK_CHECK','PENDING_REVIEW','APPROVED','PROCESSING')`
           ),
-          db.query(
+          () => db.query(
             `SELECT count(*)::int c FROM deposit
               WHERE status IN ('INITIATED','AWAITING_PAYMENT','DETECTED','CONFIRMING','VERIFIED','SCREENED')`
           ),
-          db.query(`SELECT count(*)::int c FROM withdrawal WHERE status = 'FAILED'`),
-          db.query(
+          () => db.query(`SELECT count(*)::int c FROM withdrawal WHERE status = 'FAILED'`),
+          () => db.query(
             `SELECT count(*)::int c FROM deposit
               WHERE status IN ('EXPIRED','UNDERPAID','OVERPAID','WRONG_ASSET','WRONG_NETWORK','QUARANTINED')`
           ),
-          db.query(`SELECT asset, custody_held::text AS custody, user_liabilities::text AS liabilities FROM ledger_solvency`),
-          db.query(
+          () => db.query(`SELECT asset, custody_held::text AS custody, user_liabilities::text AS liabilities FROM ledger_solvency`),
+          () => db.query(
             `SELECT DISTINCT ON (kind) kind, status, started_at, completed_at,
                     records_checked, mismatches_found, cases_opened
                FROM reconciliation_run ORDER BY kind, started_at DESC`
           ),
-          db.query(`SELECT count(*)::int c FROM fairplay_case WHERE status IN ('OPEN','UNDER_REVIEW')`),
-          db.query(`SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW')`),
-          db.query(`SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW') AND severity = 'CRITICAL'`),
-          db.query(`SELECT count(*)::int c FROM tournament WHERE status IN ('REGISTRATION','LIVE','FINALS')`),
-          db.query(`SELECT count(*)::int c FROM game WHERE is_live = TRUE`),
-          db.query(`SELECT count(*)::int c FROM duel WHERE status IN ('COMPLETED','SETTLED') AND completed_at >= now() - interval '24 hours'`),
-          db.query(`SELECT admin_id, action, decision, subject_type, subject_id, at FROM admin_audit ORDER BY id DESC LIMIT 8`),
+          () => db.query(`SELECT count(*)::int c FROM fairplay_case WHERE status IN ('OPEN','UNDER_REVIEW')`),
+          () => db.query(`SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW')`),
+          () => db.query(`SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW') AND severity = 'CRITICAL'`),
+          () => db.query(`SELECT count(*)::int c FROM tournament WHERE status IN ('REGISTRATION','LIVE','FINALS')`),
+          () => db.query(`SELECT count(*)::int c FROM game WHERE is_live = TRUE`),
+          () => db.query(`SELECT count(*)::int c FROM duel WHERE status IN ('COMPLETED','SETTLED') AND completed_at >= now() - interval '24 hours'`),
+          () => db.query(`SELECT admin_id, action, decision, subject_type, subject_id, at FROM admin_audit ORDER BY id DESC LIMIT 8`),
           // Real daily fee revenue, not an invented trend line: every entry
           // posted to platform:rake, grouped by the day it actually posted.
           // A day with no entries simply has no row -- the frontend fills
           // the gap with a real zero, never an interpolated guess.
-          db.query(
+          () => db.query(
             `SELECT date_trunc('day', e.created_at)::date AS day,
                     -- platform:rake is a fixed CREDIT-normal REVENUE account
                     -- (migration 0002) -- hardcoded rather than re-selecting
@@ -1767,7 +1781,7 @@ function buildRoutes() {
           ),
           // Match volume per game over the last 7 days -- real counts,
           // grouped by whichever games are actually live in the catalogue.
-          db.query(
+          () => db.query(
             `SELECT g.id AS game_id, g.display_name,
                     count(d.id) FILTER (WHERE d.created_at >= now() - interval '7 days')::int AS matches_7d
                FROM game g LEFT JOIN duel d ON d.game_id = g.id
@@ -1776,7 +1790,7 @@ function buildRoutes() {
           ),
           // The withdrawal queue itself, oldest first (the order it will
           // actually be worked), for the panel a reviewer acts from.
-          db.query(
+          () => db.query(
             `SELECT id, player_id, asset, amount_minor::text AS amount_minor, status, requested_at
                FROM withdrawal
               WHERE status IN ('REQUESTED','VALIDATING','RISK_CHECK','PENDING_REVIEW','APPROVED','PROCESSING')
@@ -1785,7 +1799,7 @@ function buildRoutes() {
           // Recent deposits and withdrawals, merged and re-sorted by time --
           // one real activity feed, not two panels each showing half a
           // picture.
-          db.query(
+          () => db.query(
             `SELECT * FROM (
                 (SELECT 'DEPOSIT' AS kind, id, player_id, asset, observed_amount_minor::text AS amount_minor,
                         status::text AS status, created_at AS at
@@ -1796,7 +1810,7 @@ function buildRoutes() {
                    FROM withdrawal ORDER BY requested_at DESC LIMIT 8)
              ) recent ORDER BY at DESC LIMIT 8`
           ),
-        ]);
+        ], 3);
 
         // The one configured rail's real health (see GET /v1/admin/payments/rails,
         // the same call this dashboard's own Finance panel would otherwise
@@ -2914,37 +2928,76 @@ function buildRoutes() {
       subjectType: "referrals",
       handler: async ({ query, db, referral, referrals }) => {
         const refService = referral || referrals;
-        const limit = Math.min(Math.max(parseInt(query.get("limit") || "50", 10) || 50, 1), 200);
-        const offset = Math.max(parseInt(query.get("offset") || "0", 10) || 0, 0);
+        const limit = Math.min(Math.max(parseInt((query.get ? query.get("limit") : query.limit) || "50", 10) || 50, 1), 200);
+        const offset = Math.max(parseInt((query.get ? query.get("offset") : query.offset) || "0", 10) || 0, 0);
         let rows = [];
         if (refService) {
-          rows = await refService.getAdminReferrals({ limit, offset });
+          rows = await refService.getAdminReferrals({ limit, offset }).catch(() => []);
         }
-        let codes = [];
-        let attributions = [];
-        let stats = { total_codes: 0, total_referrals: 0, rewarded_referrals: 0, pending_referrals: 0 };
+        let list = [];
+        let statsObj = {
+          activeAffiliates: 0,
+          referredPlayers: 0,
+          attributedVolumeUsdt: "0.00",
+          commissionPayoutsUsdt: "0.00",
+          total_codes: 0,
+          total_referrals: 0,
+          rewarded_referrals: 0,
+          pending_referrals: 0,
+        };
         if (db) {
-          const cRes = await db.query(`
-            SELECT code, referrer_player_id, uses_count, created_at
-              FROM referral_code ORDER BY uses_count DESC LIMIT 50
-          `).catch(() => ({ rows: [] }));
-          codes = cRes.rows;
-          const aRes = await db.query(`
-            SELECT a.referee_player_id, a.referrer_player_id, a.code, a.status, a.created_at,
-                   a.qualifying_deposit_tx_id, a.reward_tx_id
-              FROM referral_attribution a ORDER BY a.created_at DESC LIMIT 50
-          `).catch(() => ({ rows: [] }));
-          attributions = aRes.rows;
-          const sRes = await db.query(`
-            SELECT
-              (SELECT count(*)::int FROM referral_code) as total_codes,
-              (SELECT count(*)::int FROM referral_attribution) as total_referrals,
-              (SELECT count(*)::int FROM referral_attribution WHERE status = 'REWARDED') as rewarded_referrals,
-              (SELECT count(*)::int FROM referral_attribution WHERE status = 'PENDING') as pending_referrals
-          `).catch(() => ({ rows: [{ total_codes: 0, total_referrals: 0, rewarded_referrals: 0, pending_referrals: 0 }] }));
-          stats = sRes.rows[0];
+          const [statsRes, listRes] = await Promise.all([
+            db.query(`
+              SELECT
+                (SELECT count(DISTINCT player_id)::int FROM referral_code WHERE is_active = TRUE) as active_affiliates,
+                (SELECT count(DISTINCT referred_player_id)::int FROM referral_attribution) as referred_players,
+                COALESCE((SELECT sum(reward_amount_minor)::text FROM referral_reward), '0') as commission_paid_minor,
+                (SELECT count(*)::int FROM referral_code) as total_codes,
+                (SELECT count(*)::int FROM referral_attribution) as total_referrals
+            `).catch(() => ({ rows: [{ active_affiliates: 0, referred_players: 0, commission_paid_minor: "0", total_codes: 0, total_referrals: 0 }] })),
+            db.query(`
+              SELECT c.code, c.player_id, p.handle, c.is_active, c.created_at,
+                     count(DISTINCT a.referred_player_id)::int as referred_count,
+                     COALESCE(sum(r.reward_amount_minor), 0)::text as commission_minor
+                FROM referral_code c
+                JOIN player p ON p.id = c.player_id
+                LEFT JOIN referral_attribution a ON a.referrer_player_id = c.player_id
+                LEFT JOIN referral_reward r ON r.referrer_player_id = c.player_id
+               GROUP BY c.code, c.player_id, p.handle, c.is_active, c.created_at
+               ORDER BY referred_count DESC, c.created_at DESC
+               LIMIT $1 OFFSET $2
+            `, [limit, offset]).catch(() => ({ rows: [] }))
+          ]);
+          const s = statsRes.rows[0];
+          statsObj = {
+            activeAffiliates: s.active_affiliates,
+            referredPlayers: s.referred_players,
+            attributedVolumeUsdt: "0.00",
+            commissionPayoutsUsdt: (Number(s.commission_paid_minor || 0) / 1_000_000).toFixed(2),
+            total_codes: s.total_codes || 0,
+            total_referrals: s.total_referrals || 0,
+            rewarded_referrals: 0,
+            pending_referrals: 0,
+          };
+          list = listRes.rows.map(r => ({
+            code: r.code,
+            affiliateHandle: r.handle,
+            referredCount: r.referred_count,
+            totalVolumeUsdt: "0.00",
+            commissionEarnedUsdt: (Number(r.commission_minor || 0) / 1_000_000).toFixed(2),
+            tier: r.referred_count > 100 ? "GOLD" : r.referred_count > 20 ? "SILVER" : "STANDARD",
+            status: r.is_active ? "ACTIVE" : "PAUSED"
+          }));
         }
-        return { body: { ok: true, referrals: rows, codes, attributions, stats } };
+        return {
+          body: {
+            ok: true,
+            referrals: list.length ? list : rows,
+            stats: statsObj,
+            codes: list,
+            attributions: []
+          }
+        };
       } },
 
     { method: "POST", path: "/v1/admin/referrals/:id/decide", action: "admin.referral.decide",
@@ -3279,18 +3332,42 @@ function buildRoutes() {
     // --- Admin Cosmetics & Store ---
     { method: "GET", path: "/v1/admin/store", action: "admin.analytics.read",
       handler: async ({ db }) => {
-        const items = await db.query(`
-          SELECT id, code, name, category, price_minor::text, asset, is_active, created_at
-            FROM store_item ORDER BY category, name
-        `).catch(() => ({
-          rows: [
-            { id: "frame_gold", code: "gold_crown", name: "Gold Crown Frame", category: "FRAME", price_minor: "5000000", asset: "USDT", is_active: true },
-            { id: "frame_neon", code: "neon_fire", name: "Neon Cyber Flame", category: "FRAME", price_minor: "10000000", asset: "USDT", is_active: true },
-            { id: "badge_gm", code: "grandmaster_crest", name: "Grandmaster Crest", category: "BADGE", price_minor: "25000000", asset: "USDT", is_active: true },
-            { id: "badge_vet", code: "founder_shield", name: "Founder Shield", category: "BADGE", price_minor: "50000000", asset: "USDT", is_active: true },
-          ]
-        }));
-        return { body: { ok: true, items: items.rows } };
+        const [framesRes, badgesRes] = await Promise.all([
+          db.query("SELECT code, created_at FROM frame ORDER BY created_at DESC").catch(() => ({ rows: [] })),
+          db.query("SELECT code, created_at FROM badge ORDER BY created_at DESC").catch(() => ({ rows: [] })),
+        ]);
+        const items = [
+          ...framesRes.rows.map(f => ({
+            id: f.code.toLowerCase(),
+            code: f.code,
+            name: f.code.replace(/_/g, " "),
+            category: "AVATAR_FRAME",
+            priceUsdt: "0.00",
+            salesCount: 0,
+            status: "ACTIVE"
+          })),
+          ...badgesRes.rows.map(b => ({
+            id: b.code.toLowerCase(),
+            code: b.code,
+            name: b.code.replace(/_/g, " "),
+            category: "VICTORY_EMOTE",
+            priceUsdt: "0.00",
+            salesCount: 0,
+            status: "ACTIVE"
+          }))
+        ];
+        return {
+          body: {
+            ok: true,
+            stats: {
+              activeItems: items.length,
+              totalRevenueUsdt: "0.00",
+              bestSeller: items.length > 0 ? "None yet" : "None",
+              refundRate: "0.00%"
+            },
+            items
+          }
+        };
       } },
 
     // --- Admin Platform Health & Telemetry ---

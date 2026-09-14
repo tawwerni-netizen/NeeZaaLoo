@@ -1,61 +1,155 @@
+.sectionHeader {
+  margin-top: var(--nz-space-6);
+  margin-bottom: var(--nz-space-6);
+}
+
+.sectionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(201, 169, 110, 0.12);
+  border: 1px solid rgba(201, 169, 110, 0.35);
+  padding: 3px 10px;
+  border-radius: var(--nz-radius-pill, 999px);
+  margin-bottom: var(--nz-space-2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--nz-accent, #c9a96e);
+}
+
+.badgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nz-accent, #c9a96e);
+  box-shadow: 0 0 6px var(--nz-accent, #c9a96e);
+}
+
 .heading {
-  font-size: var(--nz-text-2xl);
-  padding-block: var(--nz-space-10) var(--nz-space-8);
+  font-size: var(--nz-text-2xl, 26px);
+  font-weight: 800;
+  color: var(--nz-text);
+  margin: 0 0 var(--nz-space-2);
+}
+
+.subheading {
+  font-size: var(--nz-text-sm, 14px);
+  color: var(--nz-text-2);
+  margin: 0;
+  max-width: 640px;
+  line-height: 1.6;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--nz-space-6);
   padding-bottom: var(--nz-space-16);
 }
 
 .card {
-  display: block;
+  display: flex;
+  flex-direction: column;
   background: var(--nz-surface-1);
   border: 1px solid var(--nz-line);
-  border-radius: var(--nz-radius-lg);
-  padding: var(--nz-space-8);
+  border-radius: var(--nz-radius-xl, 16px);
+  overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: border-color var(--nz-dur-fast) var(--nz-ease-out), transform var(--nz-dur-fast) var(--nz-ease-out);
+  transition: border-color var(--nz-dur-fast) var(--nz-ease-out), transform var(--nz-dur-fast) var(--nz-ease-out), box-shadow var(--nz-dur-fast) var(--nz-ease-out);
 }
 
 .card:hover {
-  border-color: var(--nz-accent-line);
-  transform: translateY(-2px);
+  border-color: rgba(201, 169, 110, 0.45);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(201, 169, 110, 0.12);
+}
+
+.thumbWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.cardContent {
+  padding: var(--nz-space-5);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--nz-space-4);
 }
 
 .cardTitle {
-  font-size: var(--nz-text-xl);
-  margin: 0 0 var(--nz-space-5);
+  font-size: var(--nz-text-lg, 18px);
+  font-weight: 700;
+  margin: 0;
+  color: var(--nz-text);
+}
+
+.difficultyBadge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: rgba(201, 169, 110, 0.15);
+  color: var(--nz-accent, #c9a96e);
+  border: 1px solid rgba(201, 169, 110, 0.3);
 }
 
 .meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--nz-space-4);
-  margin: 0 0 var(--nz-space-6);
+  gap: var(--nz-space-3);
+  margin: 0 0 var(--nz-space-5);
+  background: var(--nz-surface-2);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  border-radius: var(--nz-radius-md, 8px);
+  border: 1px solid var(--nz-line);
 }
 
 .meta dt {
-  font-size: var(--nz-text-xs);
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: var(--nz-tracking-caps);
   color: var(--nz-text-3);
-  margin-bottom: var(--nz-space-1);
+  margin-bottom: 2px;
 }
 
 .meta dd {
   margin: 0;
-  font-size: var(--nz-text-sm);
+  font-size: 12.5px;
   font-weight: 600;
+  color: var(--nz-text);
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: var(--nz-space-2);
 }
 
 .cta {
-  font-size: var(--nz-text-sm);
-  font-weight: 600;
+  font-size: var(--nz-text-sm, 14px);
+  font-weight: 700;
   color: var(--nz-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s ease;
+}
+
+.card:hover .cta {
+  transform: translateX(4px);
 }
 
 @media (max-width: 640px) {
