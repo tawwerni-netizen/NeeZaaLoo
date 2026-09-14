@@ -1,14 +1,35 @@
+/* ==========================================================================
+   Live Member-to-Member Arena (ميدان التحديات المباشرة بين الأعضاء)
+   Cyberpunk Esports Atmosphere with Luxury Gold & Neon Ambient Lighting
+   ========================================================================== */
+
 .lobbySection {
   margin-bottom: var(--nz-space-8);
   padding: var(--nz-space-6);
-  background: var(--nz-surface-1);
-  border: 1px solid var(--nz-line);
+  background: radial-gradient(circle at 50% -20%, rgba(201, 169, 110, 0.08) 0%, var(--nz-surface-1) 70%);
+  border: 1px solid rgba(201, 169, 110, 0.25);
   border-radius: var(--nz-radius-xl, 16px);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(201, 169, 110, 0.05);
 }
 
+/* Ambient Corner Tech Brackets */
+.cornerTechTL, .cornerTechTR, .cornerTechBL, .cornerTechBR {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  border-color: var(--nz-accent, #c9a96e);
+  opacity: 0.6;
+}
+
+.cornerTechTL { top: 6px; left: 6px; border-top: 2px solid; border-left: 2px solid; }
+.cornerTechTR { top: 6px; right: 6px; border-top: 2px solid; border-right: 2px solid; }
+.cornerTechBL { bottom: 6px; left: 6px; border-bottom: 2px solid; border-left: 2px solid; }
+.cornerTechBR { bottom: 6px; right: 6px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* Header */
 .lobbyHeader {
   display: flex;
   justify-content: space-between;
@@ -16,6 +37,8 @@
   gap: var(--nz-space-4);
   margin-bottom: var(--nz-space-4);
   flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
 }
 
 .lobbyTitleGroup {
@@ -27,27 +50,34 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  padding: 3px 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 4px 12px;
   border-radius: var(--nz-radius-pill);
   margin-bottom: var(--nz-space-2);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
 }
 
 .radarDot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #10b981;
-  box-shadow: 0 0 8px #10b981;
+  box-shadow: 0 0 10px #10b981;
+  animation: pulseDot 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
 }
 
 .radarSweep {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.25), transparent);
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.35), transparent);
   animation: sweep 2.4s infinite linear;
 }
 
@@ -57,7 +87,7 @@
 }
 
 .radarText {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -65,23 +95,31 @@
 }
 
 .lobbyTitle {
-  font-size: var(--nz-text-xl, 22px);
+  font-size: var(--nz-text-2xl, 24px);
   font-weight: 800;
   color: var(--nz-text);
-  margin: 0 0 4px;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.arenaIcon {
+  color: var(--nz-accent, #c9a96e);
 }
 
 .lobbySubtitle {
-  font-size: var(--nz-text-xs, 12.5px);
+  font-size: var(--nz-text-sm, 13px);
   color: var(--nz-text-2);
-  line-height: 1.5;
+  line-height: 1.55;
   margin: 0;
-  max-width: 680px;
+  max-width: 720px;
 }
 
 .lobbyActions {
   display: flex;
   align-items: center;
+  gap: var(--nz-space-3);
 }
 
 .createChallengeBtn {
@@ -89,9 +127,217 @@
   align-items: center;
   gap: 8px;
   font-weight: 700;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #c9a96e 0%, #a48246 100%);
+  color: #0b0e14;
+  border-radius: var(--nz-radius-md);
+  box-shadow: 0 4px 16px rgba(201, 169, 110, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Stats bar */
+.createChallengeBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(201, 169, 110, 0.5), 0 0 12px rgba(201, 169, 110, 0.3);
+}
+
+/* ==========================================================================
+   Live Social Proof & Activity Ticker Ribbon
+   ========================================================================== */
+.liveTickerRibbon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(90deg, rgba(201, 169, 110, 0.1) 0%, rgba(16, 185, 129, 0.08) 50%, rgba(201, 169, 110, 0.05) 100%);
+  border: 1px solid rgba(201, 169, 110, 0.2);
+  border-radius: var(--nz-radius-pill);
+  padding: 6px 16px;
+  margin-bottom: var(--nz-space-4);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 12px rgba(201, 169, 110, 0.06);
+}
+
+.tickerTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--nz-accent, #c9a96e);
+  color: #0b0e14;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--nz-radius-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.tickerContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--nz-text);
+  overflow: hidden;
+  white-space: nowrap;
+  animation: fadeIn 0.4s ease;
+}
+
+.tickerIcon {
+  font-size: 14px;
+}
+
+.tickerUser {
+  font-weight: 700;
+  color: var(--nz-accent, #c9a96e);
+}
+
+.tickerAmount {
+  font-weight: 800;
+  color: #10b981;
+  padding: 1px 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border-radius: 4px;
+}
+
+.tickerGame {
+  color: var(--nz-text-2);
+  font-weight: 500;
+}
+
+.tickerTime {
+  font-size: 11px;
+  color: var(--nz-text-3);
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   Arena Games Showcase Strip (10 Games Interactive Showcase)
+   ========================================================================== */
+.arenaShowcase {
+  margin-bottom: var(--nz-space-5);
+}
+
+.arenaShowcaseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--nz-space-2);
+}
+
+.arenaShowcaseTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--nz-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gamesScrollContainer {
+  display: flex;
+  gap: var(--nz-space-3);
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 169, 110, 0.3) transparent;
+}
+
+.gamesScrollContainer::-webkit-scrollbar {
+  height: 5px;
+}
+
+.gamesScrollContainer::-webkit-scrollbar-thumb {
+  background: rgba(201, 169, 110, 0.3);
+  border-radius: 4px;
+}
+
+.gameShowcaseCard {
+  flex: 0 0 150px;
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--nz-radius-lg, 12px);
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #080a10;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.gameShowcaseCard:hover {
+  transform: translateY(-4px) scale(1.03);
+  border-color: var(--nz-accent, #c9a96e);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(201, 169, 110, 0.25);
+}
+
+.gameShowcaseCardActive {
+  border-color: var(--nz-accent, #c9a96e);
+  box-shadow: 0 0 18px rgba(201, 169, 110, 0.35);
+}
+
+.gameShowcaseImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease, filter 0.3s ease;
+  filter: brightness(0.85);
+}
+
+.gameShowcaseCard:hover .gameShowcaseImg {
+  transform: scale(1.08);
+  filter: brightness(1);
+}
+
+.gameShowcaseOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0.92) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 8px 10px;
+  z-index: 1;
+}
+
+.gameShowcaseName {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+.gameShowcaseBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #10b981;
+  margin-top: 2px;
+}
+
+.gameShowcaseDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 5px #10b981;
+}
+
+/* Stats Bar */
 .statsBar {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -128,7 +374,7 @@
   justify-content: space-between;
   align-items: center;
   gap: var(--nz-space-4);
-  margin-bottom: var(--nz-space-6);
+  margin-bottom: var(--nz-space-5);
   flex-wrap: wrap;
 }
 
@@ -137,6 +383,7 @@
   gap: var(--nz-space-2);
   overflow-x: auto;
   padding-bottom: 4px;
+  max-width: 100%;
 }
 
 .filterChip, .stakeChip {
@@ -157,10 +404,18 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.filterChipActive, .stakeChipActive {
+.filterChipActive {
   background: rgba(201, 169, 110, 0.15);
   border-color: var(--nz-accent, #c9a96e);
   color: var(--nz-accent, #c9a96e);
+  box-shadow: 0 0 10px rgba(201, 169, 110, 0.15);
+}
+
+.stakeChipActive {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
 }
 
 .stakeFilters {
@@ -175,21 +430,96 @@
   gap: var(--nz-space-4);
 }
 
-.emptyState {
+/* ==========================================================================
+   Gamified High-Tech Empty State (Radar Arena)
+   ========================================================================== */
+.emptyStateRadar {
   grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nz-space-10) var(--nz-space-6);
+  background: radial-gradient(circle at 50% 50%, rgba(201, 169, 110, 0.05) 0%, var(--nz-surface-2) 70%);
+  border-radius: var(--nz-radius-xl);
+  border: 1px dashed rgba(201, 169, 110, 0.3);
   text-align: center;
-  padding: var(--nz-space-6) var(--nz-space-4);
+  position: relative;
+  overflow: hidden;
+}
+
+.radarGraphicWrap {
+  width: 120px;
+  height: 120px;
+  position: relative;
+  margin-bottom: var(--nz-space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radarCircleOuter {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 169, 110, 0.25);
+  box-shadow: 0 0 20px rgba(201, 169, 110, 0.08);
+}
+
+.radarCircleInner {
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  border: 1px dashed rgba(201, 169, 110, 0.35);
+}
+
+.radarBeam {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(201, 169, 110, 0.4) 360deg);
+  animation: spinRadar 3s linear infinite;
+}
+
+@keyframes spinRadar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radarCenterIcon {
+  position: relative;
+  z-index: 2;
+  font-size: 32px;
+  color: var(--nz-accent, #c9a96e);
+  filter: drop-shadow(0 0 10px rgba(201, 169, 110, 0.5));
+}
+
+.emptyTitle {
+  font-size: var(--nz-text-lg, 18px);
+  font-weight: 800;
+  color: var(--nz-text);
+  margin: 0 0 var(--nz-space-2);
+}
+
+.emptySubtitle {
+  font-size: var(--nz-text-sm, 13px);
   color: var(--nz-text-2);
-  background: var(--nz-surface-2);
-  border-radius: var(--nz-radius-lg);
-  border: 1px dashed var(--nz-line);
+  margin: 0 0 var(--nz-space-5);
+  max-width: 480px;
+  line-height: 1.5;
 }
 
-.emptyState p {
-  margin-bottom: var(--nz-space-3);
-  font-size: 13.5px;
+.emptyCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  padding: 10px 24px;
 }
 
+/* ==========================================================================
+   Duel Cards (Enhanced with High-Stakes Visuals)
+   ========================================================================== */
 .duelCard {
   background: var(--nz-surface-2);
   border: 1px solid var(--nz-line);
@@ -199,18 +529,31 @@
   flex-direction: column;
   justify-content: space-between;
   gap: var(--nz-space-4);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .duelCard:hover {
-  transform: translateY(-2px);
-  border-color: rgba(201, 169, 110, 0.4);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transform: translateY(-3px);
+  border-color: rgba(201, 169, 110, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 16px rgba(201, 169, 110, 0.15);
+}
+
+/* Cash High-Stakes Glow */
+.duelCardCash {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.08) 0%, var(--nz-surface-2) 65%);
+}
+
+.duelCardCash:hover {
+  border-color: #10b981;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 20px rgba(16, 185, 129, 0.25);
 }
 
 .duelCardUser {
-  border-color: rgba(16, 185, 129, 0.4);
-  background: linear-gradient(150deg, var(--nz-surface-2), rgba(16, 185, 129, 0.05));
+  border-color: rgba(201, 169, 110, 0.5);
+  background: linear-gradient(150deg, var(--nz-surface-2), rgba(201, 169, 110, 0.08));
 }
 
 .duelCardTop {
@@ -222,12 +565,16 @@
 .challengerInfo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+
+.challengerAvatarWrap {
+  position: relative;
 }
 
 .challengerAvatar {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--nz-accent, #c9a96e), #8a6c38);
   color: #0b0e14;
@@ -235,7 +582,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 16px;
+  box-shadow: 0 0 12px rgba(201, 169, 110, 0.3);
+}
+
+.avatarRingHighElo {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--nz-accent, #c9a96e);
+  pointer-events: none;
+  animation: pulseDot 2s infinite ease-in-out;
 }
 
 .challengerHandle {
@@ -258,6 +615,9 @@
 .challengerElo {
   font-size: 11.5px;
   color: var(--nz-text-3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .duelGameBadge {
@@ -271,9 +631,9 @@
 }
 
 .duelGameThumb {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
   object-fit: cover;
 }
 
@@ -305,7 +665,7 @@
 }
 
 .specVal {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--nz-text);
   margin-top: 2px;
@@ -313,6 +673,8 @@
 
 .stakeValCash {
   color: #10b981;
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 .stakeValFree {
@@ -332,12 +694,14 @@
   font-weight: 700;
 }
 
-/* Modal */
+/* ==========================================================================
+   Modal (Create Open Challenge with Game Preview Banner)
+   ========================================================================== */
 .modalBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -347,19 +711,53 @@
 
 .modalContent {
   background: var(--nz-surface-1);
-  border: 1px solid var(--nz-accent-line, rgba(201, 169, 110, 0.4));
+  border: 1px solid rgba(201, 169, 110, 0.4);
   border-radius: var(--nz-radius-xl, 16px);
   padding: var(--nz-space-6);
   width: 100%;
-  max-width: 480px;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.7);
+  max-width: 500px;
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.8), 0 0 30px rgba(201, 169, 110, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.modalGameBanner {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  border-radius: var(--nz-radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--nz-space-4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalGameBannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modalGameBannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.75) 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 8px 12px;
+}
+
+.modalGameBannerTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--nz-space-5);
+  margin-bottom: var(--nz-space-4);
 }
 
 .modalTitle {
@@ -439,17 +837,17 @@
   color: var(--nz-accent);
 }
 
-.stakeOptions {
+.stakePills {
   display: flex;
-  gap: var(--nz-space-2);
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.stakeBtn {
-  padding: 8px 14px;
+.stakePillBtn {
+  padding: 6px 14px;
   background: var(--nz-surface-2);
   border: 1px solid var(--nz-line);
-  border-radius: var(--nz-radius-md);
+  border-radius: var(--nz-radius-pill);
   color: var(--nz-text);
   font-size: 13px;
   font-weight: 700;
@@ -457,17 +855,18 @@
   transition: all 0.2s ease;
 }
 
-.stakeBtnActive {
-  background: rgba(16, 185, 129, 0.15);
+.stakePillBtnActive {
+  background: rgba(16, 185, 129, 0.2);
   border-color: #10b981;
   color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 .modalFooter {
   display: flex;
   justify-content: flex-end;
   gap: var(--nz-space-3);
-  margin-top: var(--nz-space-4);
+  margin-top: var(--nz-space-3);
   padding-top: var(--nz-space-4);
   border-top: 1px solid var(--nz-line);
 }

@@ -49,6 +49,7 @@
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   background: var(--nz-surface-1);
@@ -61,9 +62,9 @@
 }
 
 .card:hover {
-  border-color: rgba(201, 169, 110, 0.45);
-  transform: translateY(-4px);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(201, 169, 110, 0.12);
+  border-color: rgba(201, 169, 110, 0.5);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(201, 169, 110, 0.2);
 }
 
 .thumbWrapper {
