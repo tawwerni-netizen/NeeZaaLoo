@@ -44,8 +44,21 @@ export default function LoginPage() {
     setGoogleStarting(true);
     try {
       const { url } = await get<{ url: string }>(`/v1/auth/google/start?locale=${locale}`);
-      window.location.href = url;
+      if (url) {
+        window.location.href = url;
+        return;
+      }
     } catch (e) {
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (clientId) {
+        const redirectUri = `${window.location.origin}/api/auth/google/callback`;
+        const scope = encodeURIComponent("openid email profile");
+        const state = encodeURIComponent(JSON.stringify({ locale }));
+        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
+          redirectUri
+        )}&response_type=code&scope=${scope}&state=${state}&prompt=select_account`;
+        return;
+      }
       setGoogleStarting(false);
       const reason = e instanceof ApiError ? (e.code ?? "GOOGLE_LOGIN_UNAVAILABLE") : "NETWORK_ERROR";
       setError(t(authErrorKey(reason)));

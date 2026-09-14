@@ -234,7 +234,13 @@ async function main() {
   // NODE_ENV=production without it, rather than silently verifying nothing.
   const provider = createSandboxProvider();
   const chain = createChainReader();
-  const paymentSvc = createPaymentService(db, { provider, chain });
+  const paymentSvc = createPaymentService(db, {
+    provider,
+    chain,
+    config: {
+      reviewThresholdMinor: BigInt(process.env.WITHDRAWAL_REVIEW_THRESHOLD_MINOR || "500000000"), // 500 USDT ($499+ manual review)
+    },
+  });
   // `gamePlugins` (constructed above for the gateway's own plugin
   // registry) also lets reconciliation's runReplayVerification() and
   // runEvidenceCleanup() independently re-derive a settled cash duel's

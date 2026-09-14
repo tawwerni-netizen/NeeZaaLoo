@@ -86,13 +86,8 @@ const DEFAULTS = {
   // $2,000 -- the same ceiling the platform already uses as its maximum
   // competitive stake, reused here as the maximum per-withdrawal amount.
   maxWithdrawalMinor: 2_000_000_000n,
-  // LAUNCH POSTURE: every withdrawal goes to a human, full stop -- this
-  // module's own header says so ("above a threshold -- currently EVERY
-  // withdrawal -- a second human"), and 0n is what actually makes that
-  // true. A security review found this previously defaulted to 500 USDT,
-  // silently auto-approving every smaller withdrawal with no four-eyes and
-  // no human review at all. Raising this above 0 is a deliberate, reviewed
-  // product decision for later -- never a quiet default.
+  // Default launch posture: 0n routes all withdrawals through review unless overridden
+  // by service config (which sets reviewThresholdMinor: 500_000_000n for automated payouts <= $499).
   reviewThresholdMinor: 0n,
   addressTimeLockHours: 24,
   // Backstops, not the primary control -- the primary control at launch is

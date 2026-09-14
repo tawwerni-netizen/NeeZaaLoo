@@ -90,7 +90,13 @@ async function main() {
   // "confirm" from a reader that always answers null.
   const provider = createSandboxProvider();
   const chain = createChainReader();
-  const paymentSvc = createPaymentService(db, { provider, chain });
+  const paymentSvc = createPaymentService(db, {
+    provider,
+    chain,
+    config: {
+      reviewThresholdMinor: BigInt(process.env.WITHDRAWAL_REVIEW_THRESHOLD_MINOR || "500000000"), // 500 USDT ($499+ manual review)
+    },
+  });
   // `plugins` (constructed above) lets reconciliation's runReplayVerification()
   // independently re-derive a settled cash duel's real result and check it
   // against what was actually paid -- see reconcile.mjs's own header on why

@@ -1929,9 +1929,12 @@ function buildRoutes() {
         const offset = parseInt(query.get ? query.get("offset") : query.offset) || 0;
         let sql = "SELECT id, handle, locale, created_at FROM player";
         let params = [];
-        if (q) { sql += " WHERE handle ILIKE $1"; params.push(`%${q}%`); }
-        sql += " ORDER BY created_at DESC LIMIT 50 OFFSET " + (q ? "$2" : "$1");
+        if (q) {
+          params.push(`%${q}%`);
+          sql += ` WHERE handle ILIKE $${params.length}`;
+        }
         params.push(offset);
+        sql += ` ORDER BY created_at DESC LIMIT 50 OFFSET $${params.length}`;
         const r = await db.query(sql, params);
         
         // Also get their roles
@@ -1949,6 +1952,9 @@ function buildRoutes() {
     { method: "POST", path: "/v1/admin/players/:id/promote", action: "admin.user.read",
       subjectType: "player",
       handler: async ({ params, actor, db }) => {
+        if (actor.id === params.id) {
+          return { status: 400, body: errorBody("CANNOT_PROMOTE_SELF", "Admins cannot grant roles to themselves") };
+        }
         const player = await db.query("SELECT id, handle FROM player WHERE id = $1", [params.id]);
         if (!player.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
         const p = player.rows[0];
@@ -3262,11 +3268,19 @@ function buildRoutes() {
     { method: "GET", path: "/v1/admin/rbac", action: "admin.user.read",
       handler: async ({ db }) => {
         const admins = await db.query(`
-          SELECT u.id, u.email, u.display_name, u.mfa_enrolled, u.disabled_at, u.created_at,
-                 admin_roles(u.id) as roles
+          SELECT u.id, u.email, u.display_name, u.mfa_enrolled, u.disabled_at, u.created_at
             FROM admin_user u ORDER BY u.created_at ASC
         `);
-        return { body: { ok: true, admins: admins.rows } };
+        const ids = admins.rows.map(r => r.id);
+        const grants = ids.length ? (await db.query(
+          `SELECT admin_id, role::text as role, granted_at FROM admin_role_grant
+            WHERE admin_id = ANY($1::text[]) AND revoked_at IS NULL`, [ids]
+        ).catch(() => ({ rows: [] }))) : { rows: [] };
+        const adminsWithRoles = admins.rows.map(a => ({
+          ...a,
+          roles: grants.rows.filter(g => g.admin_id === a.id).map(g => g.role),
+        }));
+        return { body: { ok: true, admins: adminsWithRoles } };
       } },
 
   ];
