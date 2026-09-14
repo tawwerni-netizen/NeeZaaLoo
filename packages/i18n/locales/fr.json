@@ -1047,5 +1047,53 @@
       "chat": "Messagerie",
       "technical_issues": "Problèmes Techniques"
     }
+  },
+  "tournamentsPage": {
+    "heading": "Tournois et Championnats",
+    "empty": "Aucun tournoi à venir pour le moment.",
+    "back": "← Retour aux tournois",
+    "not_found": "Tournoi introuvable",
+    "view": "Voir le Tableau →",
+    "join": "Rejoindre le Tournoi",
+    "register": "Rejoindre le Tournoi",
+    "registering": "Inscription...",
+    "registered": "Vous êtes inscrit !",
+    "withdraw": "Se retirer",
+    "login_to_register": "Connectez-vous pour participer",
+    "entry_free": "Entrée Gratuite",
+    "entry_fee": "Entrée : {amount} {asset}",
+    "registered_count": "{count} / {capacity} Joueurs",
+    "starts_at": "Début : {date}",
+    "your_match": "Votre match est prêt — entrez dans le duel →",
+    "pairings_heading": "Arbre du Tournoi et Matchs",
+    "round_label": "Tour {number}",
+    "bye": "Qualifié d'office",
+    "standings_heading": "Classement et Points",
+    "standings_rank": "Rang",
+    "standings_player": "Joueur",
+    "standings_points": "Points",
+    "standings_record": "V / D / N",
+    "error_insufficient_funds": "Solde insuffisant pour payer les frais d'inscription. Veuillez déposer des USDT pour participer.",
+    "error_at_capacity": "Ce tournoi a atteint sa capacité maximale de joueurs.",
+    "error_not_open": "Les inscriptions pour ce tournoi sont fermées.",
+    "error_already_registered": "Vous êtes déjà inscrit à ce tournoi.",
+    "error_not_eligible": "Vous n'êtes pas éligible pour ce tournoi.",
+    "error_generic": "Impossible de s'inscrire au tournoi. Veuillez réessayer.",
+    "deposit_cta": "Déposer des USDT",
+    "format": {
+      "SINGLE_ELIMINATION": "Élimination Directe",
+      "SWISS": "Système Suisse"
+    },
+    "status": {
+      "ANNOUNCED": "Annoncé",
+      "SCHEDULED": "Programmé",
+      "REGISTRATION": "Inscriptions Ouvertes",
+      "SEEDED": "Tableau Défini",
+      "LIVE": "En Cours",
+      "FINALS": "Finales",
+      "COMPLETED": "Terminé",
+      "CANCELLED": "Annulé"
+    }
   }
 }
+

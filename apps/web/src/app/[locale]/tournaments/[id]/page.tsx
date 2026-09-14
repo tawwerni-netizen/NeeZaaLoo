@@ -53,6 +53,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [walletBalance, setWalletBalance] = useState<bigint | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -71,6 +72,21 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   }, [id]);
 
   useEffect(() => { void refresh(); }, [refresh]);
+
+  useEffect(() => {
+    if (!player) {
+      setWalletBalance(null);
+      return;
+    }
+    void get<{ accounts: { key: string; balance: string; asset: string }[] }>(`/v1/players/${player.id}/wallet`)
+      .then((r) => {
+        const usdtAcc = r.accounts.find((a) => a.asset === "USDT" && a.key.endsWith(":available"));
+        setWalletBalance(usdtAcc ? BigInt(usdtAcc.balance || 0) : 0n);
+      })
+      .catch(() => {
+        setWalletBalance(0n);
+      });
+  }, [player]);
 
   useEffect(() => {
     const ids = new Set<string>();
@@ -101,12 +117,16 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
       await refresh();
     } catch (e) {
       const code = e instanceof ApiError ? e.code : undefined;
+      const detail = e instanceof ApiError && typeof e.detail === "string" ? e.detail : undefined;
       setErrorCode(code ?? null);
-      if (code === "ALREADY_REGISTERED") setRegistered(true);
-      if (code === "INSUFFICIENT_FUNDS") {
-        setError(e instanceof ApiError && e.message ? e.message : "Insufficient wallet balance. Please deposit USDT to register.");
+      if (code === "ALREADY_REGISTERED") {
+        setRegistered(true);
+      } else if (code === "INSUFFICIENT_FUNDS") {
+        setError(detail || t("tournamentsPage.error_insufficient_funds"));
+      } else if (code && REGISTER_ERROR_KEYS[code]) {
+        setError(t(REGISTER_ERROR_KEYS[code]));
       } else {
-        setError(code && REGISTER_ERROR_KEYS[code] ? t(REGISTER_ERROR_KEYS[code]) : t("tournamentsPage.error_generic"));
+        setError(detail || (e instanceof Error && e.message !== code ? e.message : t("tournamentsPage.error_generic")));
       }
     } finally {
       setBusy(false);
@@ -172,12 +192,20 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
               ? t("tournamentsPage.entry_free")
               : `Entry: ${(Number(tournament.entry_fee_minor) / 1_000_000).toFixed(2)} ${tournament.asset ?? "USDT"}`}
           </span>
-          <span style={{ color: "#10b981", fontWeight: 700 }}>
-            Winner Pool (88%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.88).toFixed(2)} USDT
-          </span>
-          <span style={{ color: "#818cf8" }}>
-            Platform Fee (12%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.12).toFixed(2)} USDT
-          </span>
+          {tournament.tier === "CASH" ? (
+            <>
+              <span style={{ color: "#10b981", fontWeight: 700 }}>
+                Winner Pool (88%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.88).toFixed(2)} USDT
+              </span>
+              <span style={{ color: "#818cf8" }}>
+                Platform Fee (12%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.12).toFixed(2)} USDT
+              </span>
+            </>
+          ) : (
+            <span style={{ color: "#10b981", fontWeight: 600 }}>
+              🏆 Prove Skill & Climb Rankings
+            </span>
+          )}
           <span className="nz-num">{t("tournamentsPage.registered_count", { count: tournament.registeredCount, capacity: tournament.capacity })}</span>
           {startTarget && <span>{t("tournamentsPage.starts_at", { date: formatDate(startTarget, locale) })}</span>}
         </div>
@@ -190,6 +218,37 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
 
         {tournament.status === "REGISTRATION" && (
           <div className={styles.actions}>
+            {player && tournament.tier === "CASH" && walletBalance !== null && (
+              <div style={{
+                background: walletBalance < BigInt(tournament.entry_fee_minor || 0) ? "rgba(239, 68, 68, 0.08)" : "rgba(16, 185, 129, 0.08)",
+                border: `1px solid ${walletBalance < BigInt(tournament.entry_fee_minor || 0) ? "rgba(239, 68, 68, 0.3)" : "rgba(16, 185, 129, 0.3)"}`,
+                borderRadius: "8px",
+                padding: "10px 16px",
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                width: "100%",
+                maxWidth: "600px"
+              }}>
+                <span>
+                  Wallet Balance: <strong>${(Number(walletBalance) / 1_000_000).toFixed(2)} USDT</strong>
+                  {walletBalance < BigInt(tournament.entry_fee_minor || 0) && (
+                    <span style={{ color: "#f87171", marginLeft: "6px" }}>
+                      (Entry requires ${(Number(tournament.entry_fee_minor) / 1_000_000).toFixed(2)} USDT)
+                    </span>
+                  )}
+                </span>
+                {walletBalance < BigInt(tournament.entry_fee_minor || 0) && (
+                  <LocaleLink href="/wallet">
+                    <Button variant="primary">💳 {t("tournamentsPage.deposit_cta")}</Button>
+                  </LocaleLink>
+                )}
+              </div>
+            )}
+
             {!player ? (
               <LocaleLink href="/login"><Button variant="primary">{t("tournamentsPage.login_to_register")}</Button></LocaleLink>
             ) : registered ? (
@@ -201,12 +260,12 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
             )}
             {registered && !error && <span className={styles.registeredNote}>{t("tournamentsPage.registered")}</span>}
             {error && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", width: "100%" }}>
-                <p className={styles.error} role="alert">{error}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", width: "100%", maxWidth: "600px" }}>
+                <p className={styles.error} role="alert" style={{ width: "100%", textAlign: "center" }}>{error}</p>
                 {errorCode === "INSUFFICIENT_FUNDS" && (
                   <LocaleLink href="/wallet">
                     <Button variant="primary">
-                      💳 Deposit USDT to Wallet
+                      💳 {t("tournamentsPage.deposit_cta")}
                     </Button>
                   </LocaleLink>
                 )}

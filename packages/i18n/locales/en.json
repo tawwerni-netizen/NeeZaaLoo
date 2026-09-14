@@ -1036,5 +1036,53 @@
       "chat": "Chat",
       "technical_issues": "Technical Issues"
     }
+  },
+  "tournamentsPage": {
+    "heading": "Tournaments & Championships",
+    "empty": "No upcoming tournaments found.",
+    "back": "← Back to tournaments",
+    "not_found": "Tournament not found",
+    "view": "View Bracket →",
+    "join": "Join Tournament",
+    "register": "Join Tournament",
+    "registering": "Joining...",
+    "registered": "You are registered!",
+    "withdraw": "Withdraw",
+    "login_to_register": "Log in to Join",
+    "entry_free": "Free Entry",
+    "entry_fee": "Entry: {amount} {asset}",
+    "registered_count": "{count} / {capacity} Players",
+    "starts_at": "Starts: {date}",
+    "your_match": "Your match is ready — enter duel →",
+    "pairings_heading": "Tournament Bracket & Matches",
+    "round_label": "Round {number}",
+    "bye": "BYE",
+    "standings_heading": "Standings & Points",
+    "standings_rank": "Rank",
+    "standings_player": "Player",
+    "standings_points": "Points",
+    "standings_record": "W / L / D",
+    "error_insufficient_funds": "Insufficient wallet balance to pay the entry fee. Please deposit USDT to join.",
+    "error_at_capacity": "This tournament has reached its maximum player capacity.",
+    "error_not_open": "Registration for this tournament is closed.",
+    "error_already_registered": "You are already registered for this tournament.",
+    "error_not_eligible": "You are not eligible for this tournament.",
+    "error_generic": "Could not register for tournament. Please try again.",
+    "deposit_cta": "Deposit USDT to Wallet",
+    "format": {
+      "SINGLE_ELIMINATION": "Single Elimination",
+      "SWISS": "Swiss System"
+    },
+    "status": {
+      "ANNOUNCED": "Announced",
+      "SCHEDULED": "Scheduled",
+      "REGISTRATION": "Registration Open",
+      "SEEDED": "Seeded",
+      "LIVE": "In Progress",
+      "FINALS": "Finals",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    }
   }
 }
+

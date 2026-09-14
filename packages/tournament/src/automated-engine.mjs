@@ -20,6 +20,7 @@
  */
 
 export const TOURNAMENT_TIERS = [
+  { feeUsd: 0, minor: 0n, pot: 0, rakeUsd: "0.00", winnerUsd: "0.00", isFree: true },
   { feeUsd: 10, minor: 10_000_000n, pot: 160, rakeUsd: "19.20", winnerUsd: "140.80" },
   { feeUsd: 20, minor: 20_000_000n, pot: 320, rakeUsd: "38.40", winnerUsd: "281.60" },
   { feeUsd: 50, minor: 50_000_000n, pot: 800, rakeUsd: "96.00", winnerUsd: "704.00" },
@@ -55,13 +56,18 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
   async function spawnTournament(gameId, gameName, tier) {
     const closesAt = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
     const timeControl = GAME_TIME_CONTROLS[gameId] || { initialSeconds: 180, incrementSeconds: 2 };
-    const title = `${gameName} 16 Championship [$${tier.feeUsd} USDT]`;
-    const description = `16-Player Single Elimination. Winner takes 88% ($${tier.winnerUsd} USDT). 12% Platform Fee.`;
+    const isFree = Boolean(tier.isFree || tier.feeUsd === 0);
+    const title = isFree
+      ? `${gameName} 16 Championship [Free Entry]`
+      : `${gameName} 16 Championship [$${tier.feeUsd} USDT]`;
+    const description = isFree
+      ? `16-Player Single Elimination. Free entry to prove skill, climb ratings, and win ranking points.`
+      : `16-Player Single Elimination. Winner takes 88% ($${tier.winnerUsd} USDT). 12% Platform Fee.`;
 
     const created = await tournamentService.create({
       gameId,
       format: "SINGLE_ELIMINATION",
-      tier: "CASH",
+      tier: isFree ? "FREE" : "CASH",
       entryFeeMinor: tier.minor,
       asset: "USDT",
       capacity: 16,
@@ -71,7 +77,7 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
       scheduledStartsAt: closesAt,
       title,
       description,
-      prizeStructure: [{ rank: 1, bps: 10000 }],
+      prizeStructure: isFree ? [] : [{ rank: 1, bps: 10000 }],
       createdBy: "system-automation",
       visibility: "PUBLIC",
     });
@@ -106,18 +112,19 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
     for (const game of activeGames) {
       for (const tier of TOURNAMENT_TIERS) {
         try {
+          const tierType = tier.isFree ? "FREE" : "CASH";
           const existing = await db.query(
             `SELECT t.id, t.status,
                     (SELECT count(*)::int FROM tournament_registration tr
                       WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS registered_count
                FROM tournament t
               WHERE t.game_id = $1 
-                AND t.tier = 'CASH' 
-                AND t.entry_fee_minor = $2 
+                AND t.tier = $2 
+                AND t.entry_fee_minor = $3 
                 AND t.capacity = 16 
                 AND t.status = 'REGISTRATION'
               ORDER BY t.created_at DESC LIMIT 1`,
-            [game.id, String(tier.minor)]
+            [game.id, tierType, String(tier.minor)]
           );
 
           if (existing.rows.length === 0) {

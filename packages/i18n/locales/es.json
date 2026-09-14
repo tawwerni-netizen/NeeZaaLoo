@@ -1047,5 +1047,53 @@
       "chat": "Chat",
       "technical_issues": "Problemas Técnicos"
     }
+  },
+  "tournamentsPage": {
+    "heading": "Torneos y Campeonatos",
+    "empty": "No se encontraron próximos torneos.",
+    "back": "← Volver a los torneos",
+    "not_found": "Torneo no encontrado",
+    "view": "Ver Cuadro →",
+    "join": "Unirse al Torneo",
+    "register": "Unirse al Torneo",
+    "registering": "Uniéndose...",
+    "registered": "¡Estás registrado!",
+    "withdraw": "Retirarse",
+    "login_to_register": "Inicia sesión para unirte",
+    "entry_free": "Entrada Gratis",
+    "entry_fee": "Entrada: {amount} {asset}",
+    "registered_count": "{count} / {capacity} Jugadores",
+    "starts_at": "Comienza: {date}",
+    "your_match": "Tu partida está lista — entra al duelo →",
+    "pairings_heading": "Cuadro y Emparejamientos",
+    "round_label": "Ronda {number}",
+    "bye": "Pase directo",
+    "standings_heading": "Clasificación y Puntos",
+    "standings_rank": "Posición",
+    "standings_player": "Jugador",
+    "standings_points": "Puntos",
+    "standings_record": "V / D / E",
+    "error_insufficient_funds": "Saldo insuficiente para pagar la tarifa de entrada. Por favor deposita USDT para unirte.",
+    "error_at_capacity": "Este torneo ha alcanzado su capacidad máxima de jugadores.",
+    "error_not_open": "El registro para este torneo está cerrado.",
+    "error_already_registered": "Ya estás registrado en este torneo.",
+    "error_not_eligible": "No eres elegible para este torneo.",
+    "error_generic": "No se pudo registrar en el torneo. Inténtalo de nuevo.",
+    "deposit_cta": "Depositar USDT en la Billetera",
+    "format": {
+      "SINGLE_ELIMINATION": "Eliminación Directa",
+      "SWISS": "Sistema Suizo"
+    },
+    "status": {
+      "ANNOUNCED": "Anunciado",
+      "SCHEDULED": "Programado",
+      "REGISTRATION": "Registro Abierto",
+      "SEEDED": "Emparejado",
+      "LIVE": "En Curso",
+      "FINALS": "Finales",
+      "COMPLETED": "Completado",
+      "CANCELLED": "Cancelado"
+    }
   }
 }
+

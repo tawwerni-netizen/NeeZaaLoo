@@ -1631,6 +1631,13 @@ function buildRoutes() {
         const t = await db.query("SELECT game_id, tier, entry_fee_minor, asset FROM tournament WHERE id=$1", [params.id]);
         if (!t.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
 
+        // Ensure player's ledger wallet is initialized
+        try {
+          await db.query("SELECT ledger_open_user_wallet($1)", [actor.id]);
+        } catch {
+          // Ignore if already open or function unavailable
+        }
+
         // Check wallet balance if CASH tournament
         if (t.rows[0].tier === "CASH" && BigInt(t.rows[0].entry_fee_minor || 0) > 0n && !process.execArgv.includes("--test") && process.env.NODE_ENV !== "test") {
           const balRes = await db.query(
@@ -1643,9 +1650,14 @@ function buildRoutes() {
           const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
           const requiredBal = BigInt(t.rows[0].entry_fee_minor);
           if (availableBal < requiredBal) {
+            const reqUsd = (Number(requiredBal) / 1_000_000).toFixed(2);
+            const curUsd = (Number(availableBal) / 1_000_000).toFixed(2);
             return {
               status: 400,
-              body: errorBody("INSUFFICIENT_FUNDS", "Insufficient wallet balance. Please deposit USDT to register for this tournament.")
+              body: errorBody(
+                "INSUFFICIENT_FUNDS",
+                `Insufficient wallet balance. You have $${curUsd} USDT, but this tournament requires $${reqUsd} USDT. Please deposit USDT to register.`
+              )
             };
           }
         }
@@ -1662,9 +1674,13 @@ function buildRoutes() {
           return r.ok ? { status: 201, body: r } : { status: 400, body: errorBody(r.reason) };
         } catch (err) {
           if (err.message === "INSUFFICIENT_FUNDS" || /insufficient funds/i.test(err.message)) {
+            const reqUsd = (Number(t.rows[0].entry_fee_minor || 0) / 1_000_000).toFixed(2);
             return {
               status: 400,
-              body: errorBody("INSUFFICIENT_FUNDS", "Insufficient wallet balance. Please deposit USDT to register for this tournament.")
+              body: errorBody(
+                "INSUFFICIENT_FUNDS",
+                `Insufficient wallet balance. Please deposit $${reqUsd} USDT to register for this tournament.`
+              )
             };
           }
           throw err;

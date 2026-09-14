@@ -1051,5 +1051,53 @@
       "chat": "المحادثة والدردشة",
       "technical_issues": "المشاكل التقنية"
     }
+  },
+  "tournamentsPage": {
+    "heading": "البطولات والمنافسات الرسمية",
+    "empty": "لا توجد بطولات قادمة في الوقت الحالي.",
+    "back": "← العودة إلى البطولات",
+    "not_found": "البطولة غير موجودة",
+    "view": "عرض جدول البطولة ←",
+    "join": "انضم للبطولة",
+    "register": "انضم للبطولة",
+    "registering": "جاري الانضمام...",
+    "registered": "تم تسجيلك في البطولة!",
+    "withdraw": "انسحاب",
+    "login_to_register": "سجّل الدخول للمشاركة",
+    "entry_free": "دخول مجاني",
+    "entry_fee": "رسوم الدخول: {amount} {asset}",
+    "registered_count": "{count} / {capacity} لاعب",
+    "starts_at": "تبدأ في: {date}",
+    "your_match": "مباراتك جاهزة — ادخل النزال الآن ←",
+    "pairings_heading": "جدول ومواجهات البطولة",
+    "round_label": "الجولة {number}",
+    "bye": "تأهل تلقائي",
+    "standings_heading": "الترتيب والنقاط",
+    "standings_rank": "المركز",
+    "standings_player": "اللاعب",
+    "standings_points": "النقاط",
+    "standings_record": "ف / خ / ت",
+    "error_insufficient_funds": "رصيد محفظتك غير كافٍ لدفع رسوم الاشتراك. يُرجى إيداع USDT للانضمام.",
+    "error_at_capacity": "اكتمل عدد المشاركين في هذه البطولة.",
+    "error_not_open": "التسجيل في هذه البطولة مغلق حالياً.",
+    "error_already_registered": "أنت مسجل بالفعل في هذه البطولة.",
+    "error_not_eligible": "أنت غير مؤهل للمشاركة في هذه البطولة.",
+    "error_generic": "تعذّر التسجيل في البطولة. يُرجى المحاولة مجدداً.",
+    "deposit_cta": "إيداع USDT في المحفظة",
+    "format": {
+      "SINGLE_ELIMINATION": "خروج المغلوب",
+      "SWISS": "النظام السويسري"
+    },
+    "status": {
+      "ANNOUNCED": "تم الإعلان",
+      "SCHEDULED": "مجدولة",
+      "REGISTRATION": "التسجيل مفتوح",
+      "SEEDED": "تم تحديد المتنافسين",
+      "LIVE": "جارية الآن",
+      "FINALS": "النهائيات",
+      "COMPLETED": "مكتملة",
+      "CANCELLED": "ملغاة"
+    }
   }
 }
+

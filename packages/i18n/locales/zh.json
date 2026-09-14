@@ -1047,5 +1047,53 @@
       "chat": "聊天互动",
       "technical_issues": "技术问题"
     }
+  },
+  "tournamentsPage": {
+    "heading": "锦标赛与冠军联赛",
+    "empty": "目前没有即将进行的锦标赛。",
+    "back": "← 返回锦标赛列表",
+    "not_found": "未找到锦标赛",
+    "view": "查看对阵表 →",
+    "join": "加入锦标赛",
+    "register": "加入锦标赛",
+    "registering": "正在报名...",
+    "registered": "您已成功报名！",
+    "withdraw": "退出比赛",
+    "login_to_register": "登录以报名参赛",
+    "entry_free": "免费参赛",
+    "entry_fee": "报名费: {amount} {asset}",
+    "registered_count": "{count} / {capacity} 名选手",
+    "starts_at": "开始时间: {date}",
+    "your_match": "您的比赛已就绪 — 立即进入对决 →",
+    "pairings_heading": "锦标赛对阵表与赛程",
+    "round_label": "第 {number} 轮",
+    "bye": "轮空 (BYE)",
+    "standings_heading": "积分榜与排名",
+    "standings_rank": "排名",
+    "standings_player": "选手",
+    "standings_points": "积分",
+    "standings_record": "胜 / 负 / 平",
+    "error_insufficient_funds": "钱包余额不足以支付参赛费。请充值 USDT 后再报名参赛。",
+    "error_at_capacity": "此锦标赛参赛人数已满。",
+    "error_not_open": "此锦标赛报名已截止。",
+    "error_already_registered": "您已报名此锦标赛。",
+    "error_not_eligible": "您不符合参加此锦标赛的资格。",
+    "error_generic": "无法报名参赛，请重试。",
+    "deposit_cta": "充值 USDT 到钱包",
+    "format": {
+      "SINGLE_ELIMINATION": "单败淘汰制",
+      "SWISS": "瑞士轮制"
+    },
+    "status": {
+      "ANNOUNCED": "已公布",
+      "SCHEDULED": "已排期",
+      "REGISTRATION": "正在报名",
+      "SEEDED": "已分组",
+      "LIVE": "进行中",
+      "FINALS": "决赛中",
+      "COMPLETED": "已结束",
+      "CANCELLED": "已取消"
+    }
   }
 }
+

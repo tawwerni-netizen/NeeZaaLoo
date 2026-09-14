@@ -1047,5 +1047,53 @@
       "chat": "चैट",
       "technical_issues": "तकनीकी समस्याएं"
     }
+  },
+  "tournamentsPage": {
+    "heading": "टूर्नामेंट और चैंपियनशिप",
+    "empty": "वर्तमान में कोई आगामी टूर्नामेंट नहीं है।",
+    "back": "← टूर्नामेंट पर वापस जाएं",
+    "not_found": "टूर्नामेंट नहीं मिला",
+    "view": "ब्रैकेट देखें →",
+    "join": "टूर्नामेंट में भाग लें",
+    "register": "टूर्नामेंट में भाग लें",
+    "registering": "शामिल हो रहे हैं...",
+    "registered": "आप पंजीकृत हैं!",
+    "withdraw": "नाम वापस लें",
+    "login_to_register": "भाग लेने के लिए लॉग इन करें",
+    "entry_free": "निःशुल्क प्रवेश",
+    "entry_fee": "प्रवेश शुल्क: {amount} {asset}",
+    "registered_count": "{count} / {capacity} खिलाड़ी",
+    "starts_at": "प्रारंभ: {date}",
+    "your_match": "आपका मैच तैयार है — मुकाबला शुरू करें →",
+    "pairings_heading": "टूर्नामेंट ब्रैकेट और मैच",
+    "round_label": "राउंड {number}",
+    "bye": "बाय (BYE)",
+    "standings_heading": "स्टैंडिंग और अंक",
+    "standings_rank": "रैंक",
+    "standings_player": "खिलाड़ी",
+    "standings_points": "अंक",
+    "standings_record": "जीत / हार / ड्रॉ",
+    "error_insufficient_funds": "प्रवेश शुल्क का भुगतान करने के लिए वॉलेट बैलेंस अपर्याप्त है। कृपया जुड़ने के लिए USDT जमा करें।",
+    "error_at_capacity": "यह टूर्नामेंट पूरी क्षमता तक पहुंच चुका है।",
+    "error_not_open": "इस टूर्नामेंट के लिए पंजीकरण बंद है।",
+    "error_already_registered": "आप पहले से ही इस टूर्नामेंट में पंजीकृत हैं।",
+    "error_not_eligible": "आप इस टूर्नामेंट के पात्र नहीं हैं।",
+    "error_generic": "टूर्नामेंट में पंजीकरण करने में असमर्थ। कृपया पुनः प्रयास करें।",
+    "deposit_cta": "वॉलेट में USDT जमा करें",
+    "format": {
+      "SINGLE_ELIMINATION": "सिंगल एलिमिनेशन",
+      "SWISS": "स्विस सिस्टम"
+    },
+    "status": {
+      "ANNOUNCED": "घोषित",
+      "SCHEDULED": "निर्धारित",
+      "REGISTRATION": "पंजीकरण खुला",
+      "SEEDED": "सीडेड",
+      "LIVE": "प्रगति पर",
+      "FINALS": "फाइनल",
+      "COMPLETED": "पूर्ण",
+      "CANCELLED": "रद्द"
+    }
   }
 }
+
