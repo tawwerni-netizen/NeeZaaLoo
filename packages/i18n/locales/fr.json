@@ -411,24 +411,24 @@
       "popup_title": "{handle} vous a défié",
       "meta_game": "Jeu",
       "meta_mode": "Mode",
-      "error_invalid_prize": "That prize amount isn't available.",
-      "mode_competitive_prize": "Competitive — ${amount}"
+      "error_invalid_prize": "Ce montant de prix n'est pas disponible.",
+      "mode_competitive_prize": "Compétitif — ${amount}"
     },
     "time_control": {
-      "heading": "Choose Match Duration",
-      "subheading": "Select the time pace that fits your playstyle",
+      "heading": "Choisissez la durée de la partie",
+      "subheading": "Sélectionnez le rythme qui correspond à votre style de jeu",
       "blitz": "Blitz",
       "standard": "Standard",
-      "extended": "Extended"
+      "extended": "Étendu"
     },
     "prize": {
-      "heading": "Choose your prize",
-      "free_only": "Free only",
-      "free_only_note": "Cash prizes aren't available for this game yet.",
-      "free_title": "Free",
-      "free_description": "No prize — just the game.",
-      "competitive_title": "Competitive",
-      "competitive_description": "Play for a real prize, released only once the match is won."
+      "heading": "Choisissez votre prix",
+      "free_only": "Gratuit uniquement",
+      "free_only_note": "Les prix en argent ne sont pas encore disponibles pour ce jeu.",
+      "free_title": "Gratuit",
+      "free_description": "Aucun prix — juste le jeu.",
+      "competitive_title": "Compétitif",
+      "competitive_description": "Jouez pour un vrai prix, débloqué uniquement une fois la partie gagnée."
     }
   },
   "dashboard": {
@@ -996,9 +996,9 @@
     "leaderboard_signed_out": "Connecte-toi pour voir le vrai classement en direct de ce jeu.",
     "leaderboard_empty": "Pas encore assez de parties classées jouées pour afficher un classement.",
     "leaderboard_games_played": "{count} classées",
-    "fact_prizes": "Prizes",
-    "prizes_free_only": "Free to play — competitive prizes are not yet enabled for this game.",
-    "prizes_enabled": "Free, or competitive with a real prize where eligible."
+    "fact_prizes": "Prix",
+    "prizes_free_only": "Gratuit — les prix compétitifs ne sont pas encore activés pour ce jeu.",
+    "prizes_enabled": "Gratuit, ou compétitif avec un vrai prix si éligible."
   },
   "walletPage": {
     "heading": "Portefeuille",

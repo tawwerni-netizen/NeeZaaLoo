@@ -44,14 +44,6 @@ export const GAME_TIME_CONTROLS = {
   gomoku: { initialSeconds: 180, incrementSeconds: 2 },
 };
 
-export const DEFAULT_GAMES = [
-  { id: "chess", name: "Chess" },
-  { id: "dominoes", name: "Dominoes" },
-  { id: "backgammon", name: "Backgammon" },
-  { id: "checkers", name: "Checkers" },
-  { id: "speed-math", name: "Speed Math" },
-];
-
 export function createAutomatedTournamentEngine(db, tournamentService) {
   async function spawnTournament(gameId, gameName, tier) {
     const closesAt = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
@@ -94,19 +86,24 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
     const spawned = [];
     const settled = [];
 
-    // Query games where auto_tournaments_enabled = TRUE, is_live = TRUE, and cash_enabled = TRUE
+    // Query games where auto_tournaments_enabled = TRUE, is_live = TRUE, and cash_enabled = TRUE.
+    // Deliberately fails CLOSED (no games, nothing spawned) on a genuine query
+    // error, never falls back to a hardcoded list -- a silent fallback here
+    // previously spawned real cash tournaments for five specific games no
+    // matter what an admin had actually set their live/cash-enabled/
+    // auto-tournament flags to.
     let activeGames;
     try {
       const gRes = await db.query(
-        `SELECT id, display_name FROM game 
-          WHERE auto_tournaments_enabled = TRUE 
-            AND is_live = TRUE 
+        `SELECT id, display_name FROM game
+          WHERE auto_tournaments_enabled = TRUE
+            AND is_live = TRUE
             AND cash_enabled = TRUE
           ORDER BY id ASC`
       );
-      activeGames = gRes.rows.length ? gRes.rows : DEFAULT_GAMES.map(g => ({ id: g.id, display_name: g.name }));
+      activeGames = gRes.rows;
     } catch {
-      activeGames = DEFAULT_GAMES.map(g => ({ id: g.id, display_name: g.name }));
+      activeGames = [];
     }
 
     for (const game of activeGames) {

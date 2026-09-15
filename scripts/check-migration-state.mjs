@@ -63,6 +63,7 @@ const CHECKS = [
   ["0050_admin_moderation_and_ban.sql", "column", "player.disabled_at"],
   ["0051_lobby_open_challenges_and_presence.sql", "table", "lobby_open_challenge"],
   ["0052_fairplay_sanction_and_seizure.sql", "column", "player.disabled_category"],
+  ["0053_game_auto_tournaments_column.sql", "column", "game.auto_tournaments_enabled"],
 ];
 
 async function objectExists(client, kind, name) {

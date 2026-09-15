@@ -37,6 +37,9 @@ import { createTournamentService } from "../../../packages/tournament/src/tourna
 import { createTournamentSweep } from "../../../packages/tournament/src/sweep.mjs";
 import { createAutomatedTournamentEngine } from "../../../packages/tournament/src/automated-engine.mjs";
 import { createReferralSweep } from "../../../packages/referral/src/index.mjs";
+import { createFairPlayEngine } from "../../../packages/fairplay/src/engine.mjs";
+import { createCollusionDetector } from "../../../packages/fairplay/src/collusion.mjs";
+import { createFairPlaySweep } from "../../../packages/fairplay/src/sweep.mjs";
 import { ChessPlugin } from "../../../packages/game-chess/src/plugin.mjs";
 import { SpeedMathPlugin } from "../../../packages/game-speed-math/src/plugin.mjs";
 import { CheckersPlugin } from "../../../packages/game-checkers/src/plugin.mjs";
@@ -200,6 +203,22 @@ async function main() {
     intervalMs: referralSweepIntervalMs,
   });
 
+  // Fair Play Sweep: real signals have been flowing in from real gameplay
+  // since recordFromCompletedDuel/recordReplayedAction/recordConcurrentSeat
+  // were wired into realtime/gateway.mjs, and the collusion detector's
+  // pair-level anomaly scoring has existed just as long -- but nothing in
+  // any production entrypoint ever turned either into a fairplay_case the
+  // admin Tribunal could review. Runs on a slower cadence than matchmaking:
+  // this is a review queue, not a payment path, and evaluate()/openCase()
+  // never sanction anyone on their own -- see packages/fairplay/src/sweep.mjs.
+  const fairPlayEngine = createFairPlayEngine(db);
+  const collusionDetector = createCollusionDetector(db);
+  const fairPlaySweep = createFairPlaySweep(db, fairPlayEngine, collusionDetector);
+  const fairPlaySweepIntervalMs = Number(process.env.FAIRPLAY_SWEEP_INTERVAL_MS || 30000);
+  const fairPlaySweepWorker = createTickLoop(() => fairPlaySweep.sweepDue(), {
+    intervalMs: fairPlaySweepIntervalMs,
+  });
+
   const runtime = createWorkerRuntime({
     workers: [
       { name: "matchmaking_dispatch", worker: dispatchWorker },
@@ -213,6 +232,7 @@ async function main() {
       { name: "automated_tournament", worker: automatedTournamentWorker, intervalMs: automatedTournamentIntervalMs },
       { name: "challenge_expiry", worker: challengeExpiryWorker, intervalMs: challengeExpiryIntervalMs },
       { name: "referral_sweep", worker: referralSweepWorker, intervalMs: referralSweepIntervalMs },
+      { name: "fairplay_sweep", worker: fairPlaySweepWorker, intervalMs: fairPlaySweepIntervalMs },
     ],
     logger,
     metrics,

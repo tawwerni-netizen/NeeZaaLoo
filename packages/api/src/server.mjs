@@ -4214,23 +4214,27 @@ function buildRoutes() {
     { method: "GET", path: "/v1/admin/events", action: "admin.audit.read",
       handler: async ({ db, query }) => {
         const limit = Math.min(Number(query.get("limit") ?? 30) || 30, 100);
+        // All three of these queried columns that don't exist (admin_audit's
+        // actor/timestamp columns are actually admin_id/at; security_event's
+        // and tournament_event's timestamp is "at", not "created_at"), so
+        // every query here always threw and the bell always showed nothing.
         const [audit, sec, tourn] = await Promise.all([
           db.query(
-            `SELECT id, actor_id, action, subject_type, subject_id, created_at, 'AUDIT' as event_type,
+            `SELECT id, admin_id as actor_id, action, subject_type, subject_id, at AS created_at, 'AUDIT' as event_type,
                     COALESCE(detail::text, '{}') as detail
-               FROM admin_audit ORDER BY created_at DESC LIMIT $1`,
+               FROM admin_audit ORDER BY at DESC LIMIT $1`,
             [limit]
           ).catch(() => ({ rows: [] })),
           db.query(
             `SELECT id::text, player_id as actor_id, type as action, 'security' as subject_type, player_id as subject_id,
-                    created_at, 'SECURITY' as event_type, COALESCE(detail::text, '{}') as detail
-               FROM security_event ORDER BY created_at DESC LIMIT $1`,
+                    at AS created_at, 'SECURITY' as event_type, COALESCE(detail::text, '{}') as detail
+               FROM security_event ORDER BY at DESC LIMIT $1`,
             [limit]
           ).catch(() => ({ rows: [] })),
           db.query(
             `SELECT id::text, actor_id, event as action, 'tournament' as subject_type, tournament_id as subject_id,
-                    created_at, 'TOURNAMENT' as event_type, COALESCE(detail::text, '{}') as detail
-               FROM tournament_event ORDER BY created_at DESC LIMIT $1`,
+                    at AS created_at, 'TOURNAMENT' as event_type, COALESCE(detail::text, '{}') as detail
+               FROM tournament_event ORDER BY at DESC LIMIT $1`,
             [limit]
           ).catch(() => ({ rows: [] })),
         ]);
@@ -4310,19 +4314,30 @@ function buildRoutes() {
     { method: "GET", path: "/v1/admin/risk", action: "admin.risk.read",
       handler: async ({ db }) => {
         const [alerts, recon, secEvents] = await Promise.all([
+          // risk_alert was never a real table -- this queried a name nothing
+          // ever created, silently caught, so the Risk Radar's "RISK" tab
+          // showed zero real anti-cheat findings even as the Fair Play Engine
+          // scored real signals from real gameplay into fairplay_case rows.
+          // fairplay_case is the real queue those findings land in.
           db.query(`
-            SELECT id, player_id, reason, status, created_at, 'RISK' as type
-              FROM risk_alert ORDER BY created_at DESC LIMIT 30
+            SELECT c.id, c.player_id, c.category AS reason, c.status, c.opened_at AS created_at, 'RISK' as type
+              FROM fairplay_case c
+             WHERE c.status IN ('OPEN','UNDER_REVIEW','APPEALED')
+             ORDER BY c.opened_at DESC LIMIT 30
           `).catch(() => ({ rows: [] })),
+          // reconciliation_case has no "type" or "created_at" column (it's
+          // category/opened_at) -- this silently returned zero rows too.
           db.query(`
-            SELECT id, type, status, severity, created_at
-              FROM reconciliation_case ORDER BY created_at DESC LIMIT 30
+            SELECT id, category AS type, status, severity, opened_at AS created_at
+              FROM reconciliation_case ORDER BY opened_at DESC LIMIT 30
           `).catch(() => ({ rows: [] })),
+          // security_event's timestamp column is "at", not "created_at" --
+          // same silent-empty-result bug, third time in this one handler.
           db.query(`
-            SELECT id::text, player_id, type, detail, created_at
+            SELECT id::text, player_id, type, detail, at AS created_at
               FROM security_event
              WHERE type IN ('LOGIN_FAILED','TOTP_FAILED','LOCKOUT','DEPEG_HALT','SUSPICIOUS_WITHDRAWAL')
-             ORDER BY created_at DESC LIMIT 30
+             ORDER BY at DESC LIMIT 30
           `).catch(() => ({ rows: [] })),
         ]);
         return {
@@ -4335,7 +4350,7 @@ function buildRoutes() {
         };
       } },
 
-    { method: "POST", path: "/v1/admin/risk/resolve", action: "admin.risk.read",
+    { method: "POST", path: "/v1/admin/risk/resolve", action: "admin.risk.decide",
       handler: async ({ body, db }) => {
         const id = String(body?.id ?? "");
         const type = String(body?.type ?? "risk_alert");
@@ -4343,10 +4358,22 @@ function buildRoutes() {
 
         if (type === "reconciliation_case") {
           await db.query(`UPDATE reconciliation_case SET status = 'RESOLVED', resolved_at = now() WHERE id = $1`, [id]).catch(() => {});
-        } else {
-          await db.query(`UPDATE risk_alert SET status = 'RESOLVED', resolved_at = now() WHERE id = $1`, [id]).catch(() => {});
+          return { body: { ok: true, id, status: "RESOLVED" } };
         }
-        return { body: { ok: true, id, status: "RESOLVED" } };
+
+        // "risk_alert" rows shown by GET /v1/admin/risk are real fairplay_case
+        // rows (see that handler's comment). A case cannot be waved to
+        // "resolved" here -- decided_by/decision/decision_note are required by
+        // the database itself (case_decided_has_decider, case_sanction_has_note)
+        // -- it must go through the audited decide flow with a human decision
+        // and a note, exactly like every other fair-play case.
+        return {
+          status: 409,
+          body: errorBody(
+            "USE_FAIRPLAY_TRIBUNAL",
+            "This is a Fair Play case, not a simple alert -- decide it from the Fair Play Tribunal so the decision is recorded with a reviewer and a reason."
+          ),
+        };
       } },
 
     { method: "POST", path: "/v1/admin/risk/lock-player", action: "admin.content.moderate",
@@ -4520,12 +4547,16 @@ function buildRoutes() {
     // --- Admin Chat Moderation ---
     { method: "GET", path: "/v1/admin/chat", action: "admin.content.moderate",
       handler: async ({ db, query }) => {
+        // Chat reports reuse the existing content_report table (0020, widened
+        // by 0023) -- there is no separate chat_report table. Blocks are
+        // chat_block, not player_block. Both names were wrong, so this panel
+        // always silently rendered empty.
         const reports = await db.query(`
           SELECT r.id, r.reporter_id, r.message_id, r.subject_player_id, r.category, r.reason, r.status, r.created_at
-            FROM chat_report r ORDER BY r.created_at DESC LIMIT 50
+            FROM content_report r WHERE r.content_type IN ('CHAT_MESSAGE','PLAYER') ORDER BY r.created_at DESC LIMIT 50
         `).catch(() => ({ rows: [] }));
         const blocks = await db.query(`
-          SELECT blocker_id, blocked_id, created_at FROM player_block ORDER BY created_at DESC LIMIT 50
+          SELECT blocker_id, blocked_id, created_at FROM chat_block ORDER BY created_at DESC LIMIT 50
         `).catch(() => ({ rows: [] }));
         return {
           body: {
@@ -4677,7 +4708,7 @@ function buildRoutes() {
         };
       } },
 
-    { method: "POST", path: "/v1/admin/games/:id/toggle-tournaments", action: "admin.control.read",
+    { method: "POST", path: "/v1/admin/games/:id/toggle-tournaments", action: "admin.control.toggle",
       handler: async ({ params, db }) => {
         const r = await db.query(
           `UPDATE game
@@ -4690,7 +4721,7 @@ function buildRoutes() {
         return { body: { ok: true, game: r.rows[0] } };
       } },
 
-    { method: "POST", path: "/v1/admin/games/:id/toggle-cash", action: "admin.control.read",
+    { method: "POST", path: "/v1/admin/games/:id/toggle-cash", action: "admin.control.toggle",
       handler: async ({ params, db }) => {
         const r = await db.query(
           `UPDATE game
@@ -4703,7 +4734,7 @@ function buildRoutes() {
         return { body: { ok: true, game: r.rows[0] } };
       } },
 
-    { method: "POST", path: "/v1/admin/games/:id/toggle-status", action: "admin.control.read",
+    { method: "POST", path: "/v1/admin/games/:id/toggle-status", action: "admin.control.toggle",
       handler: async ({ params, db }) => {
         const r = await db.query(
           `UPDATE game

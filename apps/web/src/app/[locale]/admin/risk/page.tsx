@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
+import { LocaleLink } from "@/components/LocaleLink";
 import { get, post } from "@/lib/api";
 import styles from "@/components/admin/AdminPageLayout.module.css";
 
@@ -74,22 +75,14 @@ export default function AdminRiskPage() {
           list.push({
             id: `RSK-${ra.id}`,
             rawType: "risk_alert",
-            type: "Risk Detection",
+            type: `Fair Play: ${ra.reason || "OTHER"}`,
             target: ra.player_id || "Player",
             severity: "HIGH",
-            details: ra.reason || "Automated anti-fraud policy alert",
-            status: ra.status === "RESOLVED" ? "RESOLVED" : "OPEN",
+            details: "Opened by the Fair Play Engine from real gameplay signals -- decide it in the Tribunal.",
+            status: ra.status === "OPEN" || ra.status === "UNDER_REVIEW" || ra.status === "APPEALED" ? "OPEN" : "RESOLVED",
             detectedAt: new Date(ra.created_at).toLocaleString(),
           });
         });
-      }
-
-      // Fallback baseline sanity if empty
-      if (list.length === 0) {
-        list.push(
-          { id: "SEC-101", rawType: "security_event", type: "Ledger Solvency Audit", target: "Treasury Vault", severity: "LOW", details: "Double-entry balance check passed 100%; reserve ratio healthy", status: "RESOLVED", detectedAt: "Automatic Daily Run" },
-          { id: "RSK-102", rawType: "risk_alert", type: "Anti-Collision Guard", target: "FairPlay Engine", severity: "LOW", details: "Zero concurrent multi-accounting detected on active duels", status: "RESOLVED", detectedAt: "Continuous" }
-        );
       }
 
       setAlerts(list);
@@ -115,10 +108,7 @@ export default function AdminRiskPage() {
       setNotice(`Alert ${alert.id} resolved successfully.`);
     } catch (err) {
       console.error("Resolve error:", err);
-      // Optimistic update
-      setAlerts((prev) =>
-        prev.map((a) => (a.id === alert.id ? { ...a, status: "RESOLVED" } : a))
-      );
+      setNotice(`Failed to resolve ${alert.id}. See console for details.`);
     } finally {
       setActionBusy(false);
       setTimeout(() => setNotice(null), 3000);
@@ -283,13 +273,22 @@ export default function AdminRiskPage() {
                     <td className="nz-num" style={{ fontSize: "12px", color: "var(--nz-mat-gold)" }}>{a.detectedAt}</td>
                     <td className={styles.alignRight}>
                       <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
-                        {a.status !== "RESOLVED" && (
+                        {a.status !== "RESOLVED" && a.rawType === "risk_alert" && (
+                          <LocaleLink
+                            href="/admin/fair-play"
+                            className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
+                            title="Fair Play cases are decided from the Tribunal, with a reviewer and a reason on record"
+                          >
+                            Review in Tribunal
+                          </LocaleLink>
+                        )}
+                        {a.status !== "RESOLVED" && a.rawType === "reconciliation_case" && (
                           <button
                             type="button"
                             className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
                             onClick={() => handleResolve(a)}
                             disabled={actionBusy}
-                            title="Mark this risk alert as investigated and resolved"
+                            title="Mark this reconciliation case as investigated and resolved"
                           >
                             Mark Resolved
                           </button>

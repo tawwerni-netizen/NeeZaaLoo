@@ -411,24 +411,24 @@
       "popup_title": "{handle} 向你发起了挑战",
       "meta_game": "游戏",
       "meta_mode": "模式",
-      "error_invalid_prize": "That prize amount isn't available.",
-      "mode_competitive_prize": "Competitive — ${amount}"
+      "error_invalid_prize": "该奖金金额不可用。",
+      "mode_competitive_prize": "竞技 — ${amount}"
     },
     "time_control": {
-      "heading": "Choose Match Duration",
-      "subheading": "Select the time pace that fits your playstyle",
-      "blitz": "Blitz",
-      "standard": "Standard",
-      "extended": "Extended"
+      "heading": "选择对局时长",
+      "subheading": "选择适合你风格的时间节奏",
+      "blitz": "闪电战",
+      "standard": "标准",
+      "extended": "长局"
     },
     "prize": {
-      "heading": "Choose your prize",
-      "free_only": "Free only",
-      "free_only_note": "Cash prizes aren't available for this game yet.",
-      "free_title": "Free",
-      "free_description": "No prize — just the game.",
-      "competitive_title": "Competitive",
-      "competitive_description": "Play for a real prize, released only once the match is won."
+      "heading": "选择你的奖金",
+      "free_only": "仅限免费",
+      "free_only_note": "该游戏暂不支持现金奖励。",
+      "free_title": "免费",
+      "free_description": "没有奖金 — 只是游戏本身。",
+      "competitive_title": "竞技",
+      "competitive_description": "为真实奖金而战，赢得比赛后即可获得。"
     }
   },
   "dashboard": {
@@ -996,9 +996,9 @@
     "leaderboard_signed_out": "登录后即可查看此游戏真实的实时排行榜。",
     "leaderboard_empty": "目前评级对局数量还不够,暂无法显示排行榜。",
     "leaderboard_games_played": "{count} 局评级赛",
-    "fact_prizes": "Prizes",
-    "prizes_free_only": "Free to play — competitive prizes are not yet enabled for this game.",
-    "prizes_enabled": "Free, or competitive with a real prize where eligible."
+    "fact_prizes": "奖金",
+    "prizes_free_only": "免费游玩 — 该游戏暂未开放竞技奖金。",
+    "prizes_enabled": "免费，或在符合条件时参与带真实奖金的竞技对局。"
   },
   "walletPage": {
     "heading": "钱包",

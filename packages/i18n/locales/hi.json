@@ -411,24 +411,24 @@
       "popup_title": "{handle} ने आपको चुनौती दी",
       "meta_game": "खेल",
       "meta_mode": "मोड",
-      "error_invalid_prize": "That prize amount isn't available.",
-      "mode_competitive_prize": "Competitive — ${amount}"
+      "error_invalid_prize": "यह इनाम राशि उपलब्ध नहीं है।",
+      "mode_competitive_prize": "प्रतिस्पर्धी — ${amount}"
     },
     "time_control": {
-      "heading": "Choose Match Duration",
-      "subheading": "Select the time pace that fits your playstyle",
-      "blitz": "Blitz",
-      "standard": "Standard",
-      "extended": "Extended"
+      "heading": "मैच की अवधि चुनें",
+      "subheading": "अपनी खेल शैली के अनुसार समय की गति चुनें",
+      "blitz": "ब्लिट्ज़",
+      "standard": "मानक",
+      "extended": "विस्तारित"
     },
     "prize": {
-      "heading": "Choose your prize",
-      "free_only": "Free only",
-      "free_only_note": "Cash prizes aren't available for this game yet.",
-      "free_title": "Free",
-      "free_description": "No prize — just the game.",
-      "competitive_title": "Competitive",
-      "competitive_description": "Play for a real prize, released only once the match is won."
+      "heading": "अपना इनाम चुनें",
+      "free_only": "केवल मुफ़्त",
+      "free_only_note": "इस खेल के लिए नकद इनाम अभी उपलब्ध नहीं हैं।",
+      "free_title": "मुफ़्त",
+      "free_description": "कोई इनाम नहीं — बस खेल।",
+      "competitive_title": "प्रतिस्पर्धी",
+      "competitive_description": "असली इनाम के लिए खेलें, जो मैच जीतने पर ही मिलता है।"
     }
   },
   "dashboard": {
@@ -996,9 +996,9 @@
     "leaderboard_signed_out": "इस खेल का असली, लाइव लीडरबोर्ड देखने के लिए साइन इन करें।",
     "leaderboard_empty": "लीडरबोर्ड दिखाने के लिए अभी तक पर्याप्त रेटेड मैच नहीं खेले गए हैं।",
     "leaderboard_games_played": "{count} रेटेड",
-    "fact_prizes": "Prizes",
-    "prizes_free_only": "Free to play — competitive prizes are not yet enabled for this game.",
-    "prizes_enabled": "Free, or competitive with a real prize where eligible."
+    "fact_prizes": "इनाम",
+    "prizes_free_only": "मुफ़्त खेलें — इस खेल के लिए प्रतिस्पर्धी इनाम अभी सक्षम नहीं हैं।",
+    "prizes_enabled": "मुफ़्त, या योग्य होने पर असली इनाम के साथ प्रतिस्पर्धी।"
   },
   "walletPage": {
     "heading": "वॉलेट",

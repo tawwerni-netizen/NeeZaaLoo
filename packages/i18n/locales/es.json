@@ -411,24 +411,24 @@
       "popup_title": "{handle} te ha desafiado",
       "meta_game": "Juego",
       "meta_mode": "Modo",
-      "error_invalid_prize": "That prize amount isn't available.",
-      "mode_competitive_prize": "Competitive — ${amount}"
+      "error_invalid_prize": "Esa cantidad de premio no está disponible.",
+      "mode_competitive_prize": "Competitivo — ${amount}"
     },
     "time_control": {
-      "heading": "Choose Match Duration",
-      "subheading": "Select the time pace that fits your playstyle",
+      "heading": "Elige la duración de la partida",
+      "subheading": "Selecciona el ritmo de tiempo que se adapte a tu estilo de juego",
       "blitz": "Blitz",
-      "standard": "Standard",
-      "extended": "Extended"
+      "standard": "Estándar",
+      "extended": "Extendido"
     },
     "prize": {
-      "heading": "Choose your prize",
-      "free_only": "Free only",
-      "free_only_note": "Cash prizes aren't available for this game yet.",
-      "free_title": "Free",
-      "free_description": "No prize — just the game.",
-      "competitive_title": "Competitive",
-      "competitive_description": "Play for a real prize, released only once the match is won."
+      "heading": "Elige tu premio",
+      "free_only": "Solo gratis",
+      "free_only_note": "Los premios en efectivo aún no están disponibles para este juego.",
+      "free_title": "Gratis",
+      "free_description": "Sin premio — solo el juego.",
+      "competitive_title": "Competitivo",
+      "competitive_description": "Juega por un premio real, que se libera solo al ganar la partida."
     }
   },
   "dashboard": {
@@ -996,9 +996,9 @@
     "leaderboard_signed_out": "Inicia sesión para ver la clasificación real y en vivo de este juego.",
     "leaderboard_empty": "Todavía no se han jugado suficientes partidas clasificatorias para mostrar una clasificación.",
     "leaderboard_games_played": "{count} clasificadas",
-    "fact_prizes": "Prizes",
-    "prizes_free_only": "Free to play — competitive prizes are not yet enabled for this game.",
-    "prizes_enabled": "Free, or competitive with a real prize where eligible."
+    "fact_prizes": "Premios",
+    "prizes_free_only": "Gratis para jugar — los premios competitivos aún no están habilitados para este juego.",
+    "prizes_enabled": "Gratis, o competitivo con un premio real cuando seas elegible."
   },
   "walletPage": {
     "heading": "Billetera",
