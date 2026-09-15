@@ -433,7 +433,12 @@
       "free_title": "Free",
       "free_description": "No stake — just the game.",
       "competitive_title": "Competitive",
-      "competitive_description": "Play for a real stake, released only once the match is won."
+      "competitive_description": "Play for a real stake, released only once the match is won.",
+      "entry_fee": "Match Stake",
+      "platform_fee": "Platform & Organizing Fee",
+      "fixed_badge": "12% FIXED",
+      "net_prize_contrib": "Prize Pool Contribution",
+      "winner_payout": "Winner's Total Prize"
     }
   },
   "dashboard": {
@@ -629,7 +634,7 @@
   "email": {
     "common": {
       "footer": "Nizalo — Your duel. Your proof.",
-      "support_note": "Questions? Contact us any time at info@nizalo.com."
+      "support_note": "Questions? Contact us any time at support@Nizalo.com."
     },
     "welcome": {
       "subject": "Welcome to Nizalo, {nickname}",

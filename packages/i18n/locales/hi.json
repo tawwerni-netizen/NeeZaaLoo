@@ -374,7 +374,12 @@
       "free_title": "मुफ़्त",
       "free_description": "कोई स्टेक नहीं — बस खेल।",
       "competitive_title": "प्रतिस्पर्धी",
-      "competitive_description": "असली स्टेक के लिए खेलें, जो मैच जीतने पर ही जारी होता है।"
+      "competitive_description": "असली स्टेक के लिए खेलें, जो मैच जीतने पर ही जारी होता है।",
+      "entry_fee": "मैच चुनौती राशि",
+      "platform_fee": "प्लेटफ़ॉर्म व संचालन शुल्क",
+      "fixed_badge": "12% निर्धारित",
+      "net_prize_contrib": "इनामी पूल में योगदान",
+      "winner_payout": "विजेता का कुल पुरस्कार"
     },
     "challenge": {
       "heading": "दोस्त को चुनौती दें",
@@ -617,7 +622,7 @@
   "email": {
     "common": {
       "footer": "Nizalo — आपकी भिड़ंत। आपका प्रमाण।",
-      "support_note": "सवाल हैं? किसी भी समय info@nizalo.com पर हमसे संपर्क करें।"
+      "support_note": "सवाल हैं? किसी भी समय support@Nizalo.com पर हमसे संपर्क करें।"
     },
     "welcome": {
       "subject": "Nizalo में आपका स्वागत है, {nickname}",

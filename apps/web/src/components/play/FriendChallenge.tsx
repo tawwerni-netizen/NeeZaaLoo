@@ -24,6 +24,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { get, post, ApiError } from "@/lib/api";
+import { useVisibilityAwareInterval } from "@/lib/use-interval";
 import { useI18n } from "@/lib/i18n/context";
 import { OpponentSelect } from "./OpponentSelect";
 import type { StakeChoice } from "./StakeSelect";
@@ -77,9 +78,9 @@ export function FriendChallenge({ gameId, stake }: {
 
   useEffect(() => {
     void refresh();
-    const timer = setInterval(() => void refresh(), 1000);
-    return () => clearInterval(timer);
   }, [refresh]);
+
+  useVisibilityAwareInterval(refresh, 4000);
 
   async function sendChallenge(nickname: string) {
     setBusy(true);

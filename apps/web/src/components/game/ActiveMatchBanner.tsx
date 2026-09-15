@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { LocaleLink } from "@/components/LocaleLink";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { get } from "@/lib/api";
 import { getGame } from "@/lib/games";
+import { useVisibilityAwareInterval } from "@/lib/use-interval";
 import styles from "./ActiveMatchBanner.module.css";
 
 type ActiveDuelInfo = {
@@ -28,44 +29,37 @@ export function ActiveMatchBanner() {
   const isAdmin = pathname.includes("/admin");
   const isOnActiveGame = activeDuel ? pathname.includes(`/game/${activeDuel.id}`) : false;
 
-  useEffect(() => {
+  const checkActive = useCallback(async () => {
     if (!player || isAdmin) {
       setActiveDuel(null);
       return;
     }
-
-    let cancelled = false;
-
-    const checkActive = async () => {
-      try {
-        const res = await get<{ active: boolean; duel?: ActiveDuelInfo }>("/v1/me/active-duel");
-        if (cancelled) return;
-        if (res.active && res.duel) {
-          setActiveDuel(res.duel);
-          if (!audioPlayedRef.current) {
-            audioPlayedRef.current = true;
-            try {
-              const audio = new Audio("/sounds/game-start.mp3");
-              audio.volume = 0.4;
-              void audio.play().catch(() => {});
-            } catch {}
-          }
-        } else {
-          setActiveDuel(null);
-          audioPlayedRef.current = false;
+    try {
+      const res = await get<{ active: boolean; duel?: ActiveDuelInfo }>("/v1/me/active-duel");
+      if (res.active && res.duel) {
+        setActiveDuel(res.duel);
+        if (!audioPlayedRef.current) {
+          audioPlayedRef.current = true;
+          try {
+            const audio = new Audio("/sounds/game-start.mp3");
+            audio.volume = 0.4;
+            void audio.play().catch(() => {});
+          } catch {}
         }
-      } catch {
-        // Transient poll errors are ignored
+      } else {
+        setActiveDuel(null);
+        audioPlayedRef.current = false;
       }
-    };
-
-    void checkActive();
-    const timer = setInterval(() => void checkActive(), 4000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
+    } catch {
+      // Transient poll errors are ignored
+    }
   }, [player, isAdmin]);
+
+  useEffect(() => {
+    void checkActive();
+  }, [checkActive]);
+
+  useVisibilityAwareInterval(checkActive, !player || isAdmin ? false : 12000);
 
   if (!player || !activeDuel || isOnActiveGame || isAdmin) {
     return null;

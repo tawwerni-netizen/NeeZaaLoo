@@ -30,7 +30,7 @@ import { createGlobalSkillService } from "../../../packages/global-skill/src/ser
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
 import { createRailService } from "../../../packages/payments/src/valuation.mjs";
 import { createHealthService } from "../../../packages/payments/src/health.mjs";
-import { createSandboxProvider } from "../../../packages/payments/src/provider.mjs";
+import { createSandboxProvider, createOxapayProvider } from "../../../packages/payments/src/provider.mjs";
 import { createChainReader } from "../../../packages/chain/src/reader.mjs";
 import { createReconciliationService } from "../../../packages/reconciliation/src/reconcile.mjs";
 import { createRbacService } from "../../../packages/authz/src/rbac.mjs";
@@ -228,11 +228,17 @@ async function main() {
   // server.mjs's own route for why this exposes no award/mutation path.
   const progression = { exp: expService, achievements: achievementService, badges: badgeService };
 
-  // Sandbox only -- see header comment and apps/worker/src/index.mjs. `chain`
-  // is the real on-chain reader (packages/chain/src/reader.mjs): it honours
+  // OxaPay provider when configured, otherwise Sandbox in dev/test.
+  // `chain` is the real on-chain reader (packages/chain/src/reader.mjs): it honours
   // CHAIN_READER=tron when configured and refuses to start under
   // NODE_ENV=production without it, rather than silently verifying nothing.
-  const provider = createSandboxProvider();
+  const provider = process.env.OXAPAY_MERCHANT_API_KEY
+    ? createOxapayProvider({
+        merchantApiKey: process.env.OXAPAY_MERCHANT_API_KEY,
+        payoutApiKey: process.env.OXAPAY_PAYOUT_API_KEY,
+        callbackUrl: process.env.OXAPAY_CALLBACK_URL,
+      })
+    : createSandboxProvider();
   const chain = createChainReader();
   const paymentSvc = createPaymentService(db, {
     provider,
@@ -301,6 +307,7 @@ async function main() {
     profile, support, ticketNotifications, chat, progression,
     mastery: masteryService, streaks: streakService, dailyChallenges, recommendations, frames: frameService,
     rails, railHealth, referrals, consent,
+    paymentSvc, paymentProvider: provider,
     rateLimit: { capacity: Number(process.env.RATE_LIMIT_CAPACITY || 100), refillPerSecond: Number(process.env.RATE_LIMIT_REFILL || 20) },
     sensitiveRateLimits: {
       "email-code-request": {

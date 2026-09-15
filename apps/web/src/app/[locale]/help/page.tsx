@@ -198,7 +198,7 @@ export default function HelpCenterPage() {
   const [supportConfig, setSupportConfig] = useState<SupportConfig>({
     ok: true,
     phone: "+2 01069999557",
-    email: "Tawwerni@gmail.com"
+    email: "support@Nizalo.com"
   });
   const [policies, setPolicies] = useState<LegalPolicy[]>([]);
 

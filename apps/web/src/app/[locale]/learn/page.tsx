@@ -68,7 +68,7 @@ export default function LearnPage() {
               <div className={styles.statDivider} />
               <div className={styles.statItem}>
                 <span className={styles.statVal}>0%</span>
-                <span className={styles.statDesc}>{isRtl ? "حظ أو قمار (مهارة 100%)" : "Luck or RNG (100% Skill)"}</span>
+                <span className={styles.statDesc}>{isRtl ? "عناصر حظ (مهارة 100%)" : "Luck or RNG (100% Pure Skill)"}</span>
               </div>
               <div className={styles.statDivider} />
               <div className={styles.statItem}>

@@ -8,6 +8,7 @@ import { useAuthPopup } from "@/lib/auth-popup-context";
 import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
 import { get, post } from "@/lib/api";
+import { useVisibilityAwareInterval } from "@/lib/use-interval";
 import styles from "./LiveDuelLobby.module.css";
 
 export interface OpenDuel {
@@ -126,24 +127,23 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   };
 
   useEffect(() => {
-    loadOpenChallenges();
-    const interval = setInterval(loadOpenChallenges, 3500);
-    return () => clearInterval(interval);
+    void loadOpenChallenges();
   }, [isRtl, player?.id]);
 
+  useVisibilityAwareInterval(loadOpenChallenges, 7000);
+
   // Challenger status listener: if someone accepts our challenge, redirect to the duel!
-  useEffect(() => {
+  const checkMyStatus = async () => {
     if (!player) return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await get<{ active: boolean; status?: string; duelId?: string }>("/v1/challenges/open/my-status");
-        if (res && res.active && res.status === "ACCEPTED" && res.duelId) {
-          router.push(`/${locale}/game/${res.duelId}`);
-        }
-      } catch {}
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [player, locale, router]);
+    try {
+      const res = await get<{ active: boolean; status?: string; duelId?: string }>("/v1/challenges/open/my-status");
+      if (res && res.active && res.status === "ACCEPTED" && res.duelId) {
+        router.push(`/${locale}/game/${res.duelId}`);
+      }
+    } catch {}
+  };
+
+  useVisibilityAwareInterval(checkMyStatus, player ? 5000 : false);
 
   const [selectedGameFilter, setSelectedGameFilter] = useState<string>(filterGameId || "all");
   const [stakeFilter, setStakeFilter] = useState<"all" | "free" | "cash">("all");
@@ -593,7 +593,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                     <span className={styles.specVal}>{duel.timeControl}</span>
                   </div>
                   <div className={styles.specItem}>
-                    <span className={styles.specLabel}>{isRtl ? "الرهان" : "Stake"}</span>
+                    <span className={styles.specLabel}>{isRtl ? "قيمة التحدي" : "Match Stake"}</span>
                     <span
                       className={`${styles.specVal} ${
                         duel.tier === "CASH" ? styles.stakeValCash : styles.stakeValFree
@@ -824,7 +824,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             </h3>
             <p className={styles.warningModalDesc}>
               {isRtl
-                ? `أنت تحاول دخول نزال برهان بقيمة ${balanceWarningModal.requiredStake}.00 USDT، بينما رصيدك المتاح حالياً هو ${(userBalanceUSDT ?? 0).toFixed(2)} USDT. لا يمكن دخول النزالات النقدية بدون رصيد مسبق.`
+                ? `أنت تحاول دخول نزال بمبلغ تحدٍّ قدره ${balanceWarningModal.requiredStake}.00 USDT، بينما رصيدك المتاح حالياً هو ${(userBalanceUSDT ?? 0).toFixed(2)} USDT. لا يمكن دخول النزالات النقدية بدون رصيد مسبق.`
                 : `You are attempting to enter a duel with a ${balanceWarningModal.requiredStake}.00 USDT stake, but your available balance is ${(userBalanceUSDT ?? 0).toFixed(2)} USDT. Cash duels require sufficient pre-funded balance.`}
             </p>
             <div className={styles.warningModalActions}>

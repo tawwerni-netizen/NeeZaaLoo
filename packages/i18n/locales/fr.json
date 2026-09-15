@@ -368,13 +368,18 @@
       "heading": "Choisissez une difficulté"
     },
     "stake": {
-      "heading": "Choisissez votre mise",
+      "heading": "Choisissez votre défi",
       "free_only": "Gratuit uniquement",
-      "free_only_note": "Les mises en argent ne sont pas encore disponibles pour ce jeu.",
+      "free_only_note": "Les défis avec prix en argent ne sont pas encore disponibles pour ce jeu.",
       "free_title": "Gratuit",
       "free_description": "Aucune mise — juste la partie.",
       "competitive_title": "Compétitif",
-      "competitive_description": "Jouez pour une vraie mise, libérée seulement en cas de victoire."
+      "competitive_description": "Jouez pour un vrai prix, attribué seulement en cas de victoire.",
+      "entry_fee": "Mise du défi",
+      "platform_fee": "Frais d'organisation et plateforme",
+      "fixed_badge": "12% FIXE",
+      "net_prize_contrib": "Contribution à la cagnotte du match",
+      "winner_payout": "Prix total du vainqueur"
     },
     "challenge": {
       "heading": "Défier un ami",
@@ -617,7 +622,7 @@
   "email": {
     "common": {
       "footer": "Nizalo — Votre duel. Votre preuve.",
-      "support_note": "Des questions ? Contactez-nous à tout moment à info@nizalo.com."
+      "support_note": "Des questions ? Contactez-nous à tout moment à support@Nizalo.com."
     },
     "welcome": {
       "subject": "Bienvenue chez Nizalo, {nickname}",

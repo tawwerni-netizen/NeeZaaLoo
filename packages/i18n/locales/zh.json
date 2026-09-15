@@ -368,13 +368,18 @@
       "heading": "选择难度"
     },
     "stake": {
-      "heading": "选择赌注",
+      "heading": "选择挑战金额",
       "free_only": "仅限免费",
-      "free_only_note": "该项目暂不支持现金赌注。",
+      "free_only_note": "该项目暂不支持现金挑战。",
       "free_title": "免费",
-      "free_description": "不设赌注——纯粹对局。",
+      "free_description": "无挑战金——纯粹对局。",
       "competitive_title": "竞技",
-      "competitive_description": "为真实赌注对战，赢得比赛后才会释放。"
+      "competitive_description": "参与真实挑战赛，赢得比赛后方可获取奖金。",
+      "entry_fee": "比赛挑战金额",
+      "platform_fee": "平台与赛事运营费",
+      "fixed_badge": "固定 12%",
+      "net_prize_contrib": "奖金池贡献份额",
+      "winner_payout": "获胜者总奖金"
     },
     "challenge": {
       "heading": "挑战好友",
@@ -617,7 +622,7 @@
   "email": {
     "common": {
       "footer": "Nizalo——你的对决,你的证明。",
-      "support_note": "有疑问?随时通过 info@nizalo.com 联系我们。"
+      "support_note": "有疑问?随时通过 support@Nizalo.com 联系我们。"
     },
     "welcome": {
       "subject": "欢迎加入 Nizalo,{nickname}",

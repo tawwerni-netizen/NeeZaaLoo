@@ -15,6 +15,29 @@ const path = require("node:path");
 const fs = require("node:fs");
 
 const here = __dirname;
+
+// Auto-load .env file if present
+const envPath = path.join(here, ".env");
+if (fs.existsSync(envPath)) {
+  try {
+    const envContent = fs.readFileSync(envPath, "utf8");
+    for (const line of envContent.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eqIdx = trimmed.indexOf("=");
+      if (eqIdx > 0) {
+        const key = trimmed.slice(0, eqIdx).trim();
+        const val = trimmed.slice(eqIdx + 1).trim();
+        if (process.env[key] === undefined) {
+          process.env[key] = val;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Could not read .env file:", e.message);
+  }
+}
+
 process.env.NODE_ENV = "production";
 
 const avatarDir = process.env.AVATAR_STORAGE_DIR || path.join(here, "apps", "web", "public", "avatars");
@@ -31,18 +54,24 @@ const apiScript    = path.join(here, "apps", "api", "src", "index.mjs");
 const gwScript     = path.join(here, "apps", "gateway", "src", "index.mjs");
 const workerScript = path.join(here, "apps", "worker", "src", "index.mjs");
 
+const crypto = require("node:crypto");
+
 function getEnv(childPort) {
+  if (!process.env.DATABASE_URL) {
+    console.error("FATAL: DATABASE_URL environment variable is required.");
+    process.exit(1);
+  }
+
+  const signingKey = process.env.AUTH_SIGNING_KEY_B64 || crypto.randomBytes(32).toString("base64");
+  const encryptionKey = process.env.AUTH_ENCRYPTION_KEY_B64 || crypto.randomBytes(32).toString("base64");
+
   return Object.assign({}, process.env, {
-    NODE_ENV:               process.env.API_NODE_ENV || "development",
+    NODE_ENV:               process.env.API_NODE_ENV || "production",
     PORT:                   String(childPort),
     WS_PORT:                String(gwPort),
-    DATABASE_URL:
-      process.env.DATABASE_URL ||
-      "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres",
-    AUTH_SIGNING_KEY_B64:
-      process.env.AUTH_SIGNING_KEY_B64 || "qD2UhdyGUdG12PiECMGEbJdEgATItv6zdAkwY0CCkvs=",
-    AUTH_ENCRYPTION_KEY_B64:
-      process.env.AUTH_ENCRYPTION_KEY_B64 || "AFrP8jHH3e46mV+adHSgzRIwMzH3gv5/vH58KgbMb8Y=",
+    DATABASE_URL:           process.env.DATABASE_URL,
+    AUTH_SIGNING_KEY_B64:   signingKey,
+    AUTH_ENCRYPTION_KEY_B64: encryptionKey,
     CORS_ORIGINS:
       process.env.CORS_ORIGINS ||
       "https://nizalo.com,https://app.nizalo.com,http://localhost:3000,http://127.0.0.1:3000",
@@ -206,7 +235,7 @@ const server = createServer((req, res) => {
     console.log(`[REQ] ${req.method} ${url}`);
   }
 
-  if (url.startsWith("/v1/") || url === "/v1") {
+  if (url.startsWith("/v1/") || url === "/v1" || url.startsWith("/api/oxapay-webhook")) {
     proxyHttp(req, res, apiPort);
     return;
   }

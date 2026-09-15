@@ -57,11 +57,11 @@ CREATE INDEX legal_consent_player_accepted_idx
 CREATE TABLE platform_support_config (
   id          TEXT        PRIMARY KEY DEFAULT 'default',
   phone       TEXT        NOT NULL DEFAULT '+2 01069999557',
-  email       TEXT        NOT NULL DEFAULT 'Tawwerni@gmail.com',
+  email       TEXT        NOT NULL DEFAULT 'support@Nizalo.com',
   updated_by  TEXT        REFERENCES admin_user(id),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 INSERT INTO platform_support_config (id, phone, email, updated_by, updated_at)
-VALUES ('default', '+2 01069999557', 'Tawwerni@gmail.com', NULL, now())
+VALUES ('default', '+2 01069999557', 'support@Nizalo.com', NULL, now())
 ON CONFLICT (id) DO NOTHING;

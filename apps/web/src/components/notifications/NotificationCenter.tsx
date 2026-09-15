@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { get, post } from "@/lib/api";
+import { useVisibilityAwareInterval } from "@/lib/use-interval";
 import styles from "./NotificationCenter.module.css";
 
 const GAME_NAME_KEY: Record<string, string> = {
@@ -78,9 +79,9 @@ export function NotificationCenter() {
   useEffect(() => {
     if (!player) return;
     void refresh();
-    const interval = setInterval(() => void refresh(), 2500);
-    return () => clearInterval(interval);
   }, [player, refresh]);
+
+  useVisibilityAwareInterval(refresh, player ? 10000 : false);
 
   // Click / Touch outside to close
   useEffect(() => {

@@ -21,12 +21,6 @@ type TransactionRecord = {
   timestamp: string;
 };
 
-const OFFICIAL_TREASURY = {
-  TRC20: "TX9zNizaloTreasuryTRC20OfficialVault77",
-  BEP20: "0x71C94911335b24c96570650CbeC96B87494aLo99",
-  ERC20: "0x8A164aLo99USDTerc20TreasuryColdStorage01",
-};
-
 function isValidAddress(address: string, network: "TRC20" | "BEP20" | "ERC20"): boolean {
   const trimmed = address.trim();
   if (network === "TRC20") {
@@ -44,10 +38,24 @@ export default function WalletPage() {
   );
 }
 
+interface AmlSummary {
+  asset: string;
+  totalDepositedMinor: string;
+  totalPlayedMinor: string;
+  totalWonMinor: string;
+  availableMinor: string;
+  lockedMinor: string;
+  unplayedDepositMinor: string;
+  withdrawableMinor: string;
+  playthroughRequired: boolean;
+  playthroughCompleted: boolean;
+}
+
 function WalletContent() {
   const { player } = useAuth();
   const { t, locale } = useI18n();
   const [accounts, setAccounts] = useState<Account[] | null>(null);
+  const [amlSummary, setAmlSummary] = useState<AmlSummary | null>(null);
   const [forbidden, setForbidden] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
 
@@ -57,6 +65,17 @@ function WalletContent() {
   const [selectedNetwork, setSelectedNetwork] = useState<"TRC20" | "BEP20" | "ERC20">("TRC20");
   const [copied, setCopied] = useState(false);
   const [txNotice, setTxNotice] = useState<string | null>(null);
+
+  // Dynamic OxaPay deposit state
+  const [depositData, setDepositData] = useState<{
+    id?: string;
+    address?: string;
+    qrCodeUrl?: string | null;
+    expiresAt?: string;
+  } | null>(null);
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [depositError, setDepositError] = useState<string | null>(null);
+  const [depositTimeLeft, setDepositTimeLeft] = useState<string>("");
 
   // Withdraw state
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -70,25 +89,48 @@ function WalletContent() {
   const reload = useCallback(async () => {
     if (!player) return;
     try {
-      const r = await get<{ accounts: Account[]; withdrawals?: Array<{ id: string; asset: string; network: string; destination: string; amount_minor: string; status: string; requested_at: string }> }>(`/v1/players/${player.id}/wallet`);
+      const r = await get<{
+        accounts: Account[];
+        withdrawals?: Array<{ id: string; asset: string; network: string; destination: string; amount_minor: string; status: string; requested_at: string }>;
+        deposits?: Array<{ id: string; asset: string; network: string; address: string; amount_minor?: string; status: string; created_at: string }>;
+        amlSummary?: AmlSummary;
+      }>(`/v1/players/${player.id}/wallet`);
       setAccounts(r.accounts);
+      if (r.amlSummary) setAmlSummary(r.amlSummary);
       setForbidden(false);
       setErrorCode(null);
 
+      const allTxs: TransactionRecord[] = [];
+
       if (r.withdrawals && r.withdrawals.length > 0) {
-        const txs: TransactionRecord[] = r.withdrawals.map((w) => ({
-          id: w.id,
-          type: "WITHDRAWAL",
-          network: (w.network === "TRON" ? "TRC20" : w.network) as "TRC20" | "BEP20" | "ERC20",
-          amount: (Number(BigInt(w.amount_minor || "0")) / 1_000_000).toFixed(2),
-          addressOrHash: w.destination ? `${w.destination.slice(0, 8)}...${w.destination.slice(-6)}` : "—",
-          status: (w.status === "CONFIRMED" || w.status === "COMPLETED") ? "CONFIRMED" : "PENDING",
-          timestamp: w.requested_at ? new Date(w.requested_at).toLocaleDateString() : "Recently",
-        }));
-        setTransactions(txs);
-      } else {
-        setTransactions([]);
+        for (const w of r.withdrawals) {
+          allTxs.push({
+            id: w.id,
+            type: "WITHDRAWAL",
+            network: (w.network === "TRON" ? "TRC20" : w.network) as "TRC20" | "BEP20" | "ERC20",
+            amount: (Number(BigInt(w.amount_minor || "0")) / 1_000_000).toFixed(2),
+            addressOrHash: w.destination ? `${w.destination.slice(0, 8)}...${w.destination.slice(-6)}` : "—",
+            status: (w.status === "CONFIRMED" || w.status === "COMPLETED") ? "CONFIRMED" : "PENDING",
+            timestamp: w.requested_at ? new Date(w.requested_at).toLocaleDateString() : "Recently",
+          });
+        }
       }
+
+      if (r.deposits && r.deposits.length > 0) {
+        for (const d of r.deposits) {
+          allTxs.push({
+            id: d.id,
+            type: "DEPOSIT",
+            network: (d.network === "TRON" ? "TRC20" : d.network) as "TRC20" | "BEP20" | "ERC20",
+            amount: (Number(BigInt(d.amount_minor || "0")) / 1_000_000).toFixed(2),
+            addressOrHash: d.address ? `${d.address.slice(0, 8)}...${d.address.slice(-6)}` : "—",
+            status: d.status === "CREDITED" ? "CONFIRMED" : "PENDING",
+            timestamp: d.created_at ? new Date(d.created_at).toLocaleDateString() : "Recently",
+          });
+        }
+      }
+
+      setTransactions(allTxs);
     } catch (e) {
       if (e instanceof ApiError && e.status === 403) { setForbidden(true); return; }
       setAccounts([
@@ -97,6 +139,51 @@ function WalletContent() {
       ]);
     }
   }, [player]);
+
+  const loadDeposit = useCallback(async (net: "TRC20" | "BEP20" | "ERC20") => {
+    if (!player) return;
+    setDepositLoading(true);
+    setDepositError(null);
+    try {
+      const res = await post<{
+        ok: boolean;
+        deposit: { id: string; address: string; qrCodeUrl?: string | null; expiresAt?: string; asset: string; network: string };
+      }>(`/v1/players/${player.id}/deposits`, {
+        asset: "USDT",
+        network: net,
+      });
+      if (res.ok && res.deposit) {
+        setDepositData(res.deposit);
+      }
+    } catch {
+      setDepositError(locale === "ar" ? "تعذر توليد عنوان الإيداع حالياً. يرجى المحاولة لاحقاً." : "Failed to generate deposit address. Please try again.");
+    } finally {
+      setDepositLoading(false);
+    }
+  }, [player, locale]);
+
+  useEffect(() => {
+    if (showDepositModal) {
+      void loadDeposit(selectedNetwork);
+      // Auto-refresh wallet while modal is open to detect incoming credits
+      const poller = setInterval(() => { void reload(); }, 8000);
+      return () => clearInterval(poller);
+    }
+  }, [showDepositModal, selectedNetwork, loadDeposit, reload]);
+
+  useEffect(() => {
+    if (!depositData?.expiresAt) {
+      setDepositTimeLeft("");
+      return;
+    }
+    const timer = setInterval(() => {
+      const diff = Math.max(0, Math.floor((new Date(depositData.expiresAt!).getTime() - Date.now()) / 1000));
+      const mins = Math.floor(diff / 60);
+      const secs = diff % 60;
+      setDepositTimeLeft(`${mins}:${secs < 10 ? "0" : ""}${secs}`);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [depositData?.expiresAt]);
 
   useEffect(() => { void reload(); }, [reload]);
 
@@ -110,17 +197,24 @@ function WalletContent() {
 
   const usdtBalance = byAsset.get("USDT") ?? { available: "0", locked: "0" };
   const availableUsdt = fromMinorUnits(usdtBalance.available);
+  const withdrawableUsdt = amlSummary
+    ? Number(BigInt(amlSummary.withdrawableMinor)) / 1_000_000
+    : availableUsdt;
+  const unplayedUsdt = amlSummary
+    ? Number(BigInt(amlSummary.unplayedDepositMinor)) / 1_000_000
+    : 0;
 
   const parsedWithdrawAmount = parseFloat(withdrawAmount);
   const isAmountNumber = !isNaN(parsedWithdrawAmount) && parsedWithdrawAmount > 0;
   const isAmountOverBalance = isAmountNumber && parsedWithdrawAmount > availableUsdt;
+  const isAmountOverWithdrawable = isAmountNumber && parsedWithdrawAmount > withdrawableUsdt;
   const isAmountBelowMin = isAmountNumber && parsedWithdrawAmount < 10;
   const isAddressValid = withdrawAddress ? isValidAddress(withdrawAddress, selectedNetwork) : false;
   const canSubmitWithdraw =
     !isSubmitting &&
-    availableUsdt >= 10 &&
+    withdrawableUsdt >= 10 &&
     isAmountNumber &&
-    !isAmountOverBalance &&
+    !isAmountOverWithdrawable &&
     !isAmountBelowMin &&
     isAddressValid;
 
@@ -137,6 +231,15 @@ function WalletContent() {
 
     if (isNaN(amt) || amt < 10) {
       setWithdrawError(locale === "ar" ? "الحد الأدنى للسحب هو 10.00 USDT." : "Minimum withdrawal is 10.00 USDT.");
+      return;
+    }
+
+    if (amt > withdrawableUsdt) {
+      setWithdrawError(
+        locale === "ar"
+          ? `المبلغ المطلوب ($${amt.toFixed(2)} USDT) يتجاوز رصيدك القابل للسحب ($${withdrawableUsdt.toFixed(2)} USDT). تنص سياسات مكافحة غسيل الأموال (AML) على ضرورة اللعب بمبالغ الإيداع في المباريات أولاً قبل سحبها.`
+          : `Requested amount ($${amt.toFixed(2)} USDT) exceeds your withdrawable balance ($${withdrawableUsdt.toFixed(2)} USDT). Anti-Money Laundering (AML) policies require deposited funds to be played before withdrawal.`
+      );
       return;
     }
 
@@ -178,7 +281,13 @@ function WalletContent() {
     } catch (err: unknown) {
       const apiErr = err as { body?: { error?: { code?: string } }; message?: string; status?: number };
       const code = apiErr?.body?.error?.code || apiErr?.message || "ERROR";
-      if (code === "INSUFFICIENT_FUNDS") {
+      if (code === "AML_PLAYTHROUGH_REQUIRED") {
+        setWithdrawError(
+          locale === "ar"
+            ? `تنبيه أمني (مكافحة غسيل الأموال AML): لا يمكن سحب مبالغ تم إيداعها دون استخدامها في اللعب أولاً. رصيدك القابل للسحب حالياً هو $${withdrawableUsdt.toFixed(2)} USDT فقط.`
+            : `Under Anti-Money Laundering (AML) regulations, deposited funds must be played in duels before withdrawal. Your currently withdrawable balance is $${withdrawableUsdt.toFixed(2)} USDT.`
+        );
+      } else if (code === "INSUFFICIENT_FUNDS") {
         setWithdrawError(locale === "ar" ? "رصيدك المتاح غير كافٍ لإتمام عملية السحب." : "Insufficient available balance in your wallet.");
       } else if (code === "CONTROL_DISABLED") {
         setWithdrawError(locale === "ar" ? "عمليات السحب متوقفة مؤقتاً لأعمال الصيانة الدورية." : "Withdrawals are temporarily paused for maintenance.");
@@ -236,6 +345,48 @@ function WalletContent() {
                   </div>
                   <span className={`nz-num ${styles.balanceValue}`}>${formatUsd(bal.locked)}</span>
                 </div>
+                {asset === "USDT" && (
+                  <>
+                    <div className={styles.balanceRow} style={{ borderTop: "1px dashed rgba(255, 255, 255, 0.1)", paddingTop: "12px", marginTop: "4px" }}>
+                      <div>
+                        <span className={styles.balanceLabel} style={{ color: "#22c55e", fontWeight: 700 }}>
+                          {locale === "ar" ? "الرصيد القابل للسحب" : "Withdrawable Balance"}
+                        </span>
+                        <span className={styles.balanceNote}>
+                          {locale === "ar" ? "المبلغ المستوفي لشروط اللعب والجاهز للسحب الفوري" : "Cleared funds ready for instant withdrawal"}
+                        </span>
+                      </div>
+                      <span className={`nz-num ${styles.balanceValue}`} style={{ color: "#22c55e", fontWeight: 700 }}>
+                        ${withdrawableUsdt.toFixed(2)}
+                      </span>
+                    </div>
+
+                    {unplayedUsdt > 0 && (
+                      <div style={{
+                        marginTop: "14px",
+                        padding: "12px 14px",
+                        background: "rgba(245, 158, 11, 0.1)",
+                        border: "1px solid rgba(245, 158, 11, 0.3)",
+                        borderRadius: "10px",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "10px",
+                        fontSize: "13px",
+                        color: "#fbbf24"
+                      }}>
+                        <span style={{ fontSize: "18px", lineHeight: 1 }}>🔒</span>
+                        <div>
+                          <strong>{locale === "ar" ? "رصيد مقيد بلائحة مكافحة غسيل الأموال (AML)" : "AML Wagering Requirement Active"}</strong>
+                          <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px", lineHeight: 1.5 }}>
+                            {locale === "ar"
+                              ? `لديك $${unplayedUsdt.toFixed(2)} USDT من مبالغ الإيداع تتطلب استخدامها في خوض المبارزات أولاً قبل أن تصبح قابلة للسحب.`
+                              : `You have $${unplayedUsdt.toFixed(2)} USDT deposited funds that must be played in matches before withdrawal.`}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -339,29 +490,55 @@ function WalletContent() {
             </div>
 
             <div className={styles.qrContainer}>
-              <div style={{ width: "130px", height: "130px", background: "#fff", padding: "8px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                <svg viewBox="0 0 100 100" width="100%" height="100%">
-                  <rect width="100" height="100" fill="#fff" />
-                  <rect x="10" y="10" width="25" height="25" fill="#000" />
-                  <rect x="15" y="15" width="15" height="15" fill="#fff" />
-                  <rect x="18" y="18" width="9" height="9" fill="#000" />
-                  <rect x="65" y="10" width="25" height="25" fill="#000" />
-                  <rect x="70" y="15" width="15" height="15" fill="#fff" />
-                  <rect x="73" y="18" width="9" height="9" fill="#000" />
-                  <rect x="10" y="65" width="25" height="25" fill="#000" />
-                  <rect x="15" y="70" width="15" height="15" fill="#fff" />
-                  <rect x="18" y="73" width="9" height="9" fill="#000" />
-                  <rect x="45" y="20" width="8" height="8" fill="#000" />
-                  <rect x="45" y="45" width="12" height="12" fill="#000" />
-                  <rect x="65" y="65" width="15" height="15" fill="#000" />
-                </svg>
-              </div>
+              {depositLoading ? (
+                <div style={{ width: "130px", height: "130px", background: "rgba(255,255,255,0.06)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: "12px" }}>
+                  ⏳ {locale === "ar" ? "جارِ التوليد..." : "Generating..."}
+                </div>
+              ) : depositData?.qrCodeUrl ? (
+                <div style={{ width: "130px", height: "130px", background: "#fff", padding: "6px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                  <img src={depositData.qrCodeUrl} alt="Deposit QR Code" width={118} height={118} style={{ display: "block" }} />
+                </div>
+              ) : (
+                <div style={{ width: "130px", height: "130px", background: "#fff", padding: "8px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <rect width="100" height="100" fill="#fff" />
+                    <rect x="10" y="10" width="25" height="25" fill="#000" />
+                    <rect x="15" y="15" width="15" height="15" fill="#fff" />
+                    <rect x="18" y="18" width="9" height="9" fill="#000" />
+                    <rect x="65" y="10" width="25" height="25" fill="#000" />
+                    <rect x="70" y="15" width="15" height="15" fill="#fff" />
+                    <rect x="73" y="18" width="9" height="9" fill="#000" />
+                    <rect x="10" y="65" width="25" height="25" fill="#000" />
+                    <rect x="15" y="70" width="15" height="15" fill="#fff" />
+                    <rect x="18" y="73" width="9" height="9" fill="#000" />
+                    <rect x="45" y="20" width="8" height="8" fill="#000" />
+                    <rect x="45" y="45" width="12" height="12" fill="#000" />
+                    <rect x="65" y="65" width="15" height="15" fill="#000" />
+                  </svg>
+                </div>
+              )}
               <span style={{ fontSize: "12px", color: "#94a3b8" }}>{t("walletPage.scan_qr_hint")}</span>
+              {depositTimeLeft && (
+                <span style={{ fontSize: "12px", color: "#fbbf24", fontWeight: 700 }}>
+                  ⏱ {locale === "ar" ? `ينتهي خلال: ${depositTimeLeft}` : `Expires in: ${depositTimeLeft}`}
+                </span>
+              )}
+              {depositError && (
+                <div style={{ color: "#ef4444", fontSize: "12px", textAlign: "center" }}>
+                  {depositError}
+                </div>
+              )}
               <div className={styles.addressBox}>
-                <span className={styles.addressText}>{OFFICIAL_TREASURY[selectedNetwork]}</span>
-                <button type="button" className={styles.copyBtn} onClick={() => handleCopy(OFFICIAL_TREASURY[selectedNetwork])}>
-                  {copied ? t("walletPage.copied") : t("walletPage.copy")}
-                </button>
+                <span className={styles.addressText}>
+                  {depositLoading
+                    ? (locale === "ar" ? "جارِ توليد عنوان الإيداع من OxaPay..." : "Generating OxaPay address...")
+                    : (depositData?.address || "—")}
+                </span>
+                {depositData?.address && !depositLoading && (
+                  <button type="button" className={styles.copyBtn} onClick={() => handleCopy(depositData.address!)}>
+                    {copied ? t("walletPage.copied") : t("walletPage.copy")}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -407,12 +584,63 @@ function WalletContent() {
               ))}
             </div>
 
-            {/* Strict balance notification */}
-            {availableUsdt < 10 && (
-              <div style={{ padding: "12px 14px", background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.4)", borderRadius: "8px", color: "#f87171", fontSize: "13px", lineHeight: "1.5", marginBottom: "16px" }}>
+            {/* Withdrawable balance overview */}
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "12px 14px",
+              background: "rgba(34, 197, 94, 0.08)",
+              border: "1px solid rgba(34, 197, 94, 0.25)",
+              borderRadius: "8px",
+              marginBottom: "14px",
+              fontSize: "13px"
+            }}>
+              <div>
+                <span style={{ color: "#22c55e", fontWeight: 700, display: "block" }}>
+                  {locale === "ar" ? "الرصيد القابل للسحب حالياً:" : "Currently Withdrawable:"}
+                </span>
+                <span style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px", display: "block" }}>
+                  {locale === "ar" ? "الرصيد الإجمالي في الحساب: " : "Total Account Balance: "}
+                  ${availableUsdt.toFixed(2)} USDT
+                </span>
+              </div>
+              <span className="nz-num" style={{ color: "#22c55e", fontWeight: 800, fontSize: "16px" }}>
+                ${withdrawableUsdt.toFixed(2)} USDT
+              </span>
+            </div>
+
+            {/* AML Playthrough Notice if user has unplayed deposit balance */}
+            {unplayedUsdt > 0 && (
+              <div style={{
+                padding: "10px 14px",
+                background: "rgba(245, 158, 11, 0.1)",
+                border: "1px solid rgba(245, 158, 11, 0.3)",
+                borderRadius: "8px",
+                color: "#fbbf24",
+                fontSize: "12px",
+                lineHeight: "1.5",
+                marginBottom: "14px"
+              }}>
+                ℹ {locale === "ar"
+                  ? `وفقاً لقوانين مكافحة غسيل الأموال (AML)، لا يمكن سحب مبالغ الإيداع ($${unplayedUsdt.toFixed(2)} USDT) دون استخدامها في اللعب وخوض المباريات أولاً. الأرباح ورؤوس الأموال الملعوب بها فقط هي المتاحة للسحب.`
+                  : `Under Anti-Money Laundering (AML) regulations, deposited funds ($${unplayedUsdt.toFixed(2)} USDT) must be played in duels before withdrawal. Only winnings and played funds are immediately withdrawable.`}
+              </div>
+            )}
+
+            {withdrawableUsdt < 10 && availableUsdt >= 10 && (
+              <div style={{ padding: "12px 14px", background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.4)", borderRadius: "8px", color: "#f87171", fontSize: "13px", lineHeight: "1.5", marginBottom: "14px" }}>
                 ⚠️ {locale === "ar"
-                  ? `رصيدك المتاح ($${availableUsdt.toFixed(2)} USDT) أقل من الحد الأدنى للسحب (10.00 USDT). لا يمكن إدراج طلب سحب بدون توفر رصيد كافٍ في المحفظة.`
-                  : `Your available balance ($${availableUsdt.toFixed(2)} USDT) is below the minimum withdrawal amount (10.00 USDT). You cannot request a withdrawal without sufficient funds.`}
+                  ? `رصيدك القابل للسحب ($${withdrawableUsdt.toFixed(2)} USDT) أقل من الحد الأدنى للسحب (10.00 USDT). يرجى خوض مباريات بمبالغ الإيداع أولاً لتصبح مؤهلة للسحب.`
+                  : `Your withdrawable balance ($${withdrawableUsdt.toFixed(2)} USDT) is below the minimum (10.00 USDT). Please play duels with deposited funds to unlock them for withdrawal.`}
+              </div>
+            )}
+
+            {availableUsdt < 10 && (
+              <div style={{ padding: "12px 14px", background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.4)", borderRadius: "8px", color: "#f87171", fontSize: "13px", lineHeight: "1.5", marginBottom: "14px" }}>
+                ⚠️ {locale === "ar"
+                  ? `رصيدك ($${availableUsdt.toFixed(2)} USDT) أقل من الحد الأدنى للسحب (10.00 USDT). لا يمكن إدراج طلب سحب بدون توفر رصيد كافٍ في المحفظة.`
+                  : `Your balance ($${availableUsdt.toFixed(2)} USDT) is below the minimum withdrawal amount (10.00 USDT). You cannot request a withdrawal without sufficient funds.`}
               </div>
             )}
 
@@ -446,15 +674,15 @@ function WalletContent() {
               <div className={styles.formGroup}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                   <label className={styles.formLabel} style={{ margin: 0 }}>{t("walletPage.withdraw_amount_label")}</label>
-                  <span style={{ fontSize: "12px", color: availableUsdt >= 10 ? "#22c55e" : "#94a3b8", fontWeight: 600 }}>
-                    {t("walletPage.available_label")}: ${availableUsdt.toFixed(2)} USDT
+                  <span style={{ fontSize: "12px", color: withdrawableUsdt >= 10 ? "#22c55e" : "#fbbf24", fontWeight: 600 }}>
+                    {locale === "ar" ? "القابل للسحب:" : "Withdrawable:"} ${withdrawableUsdt.toFixed(2)} USDT
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <input
                     type="number"
                     min="10"
-                    max={availableUsdt > 0 ? availableUsdt.toString() : undefined}
+                    max={withdrawableUsdt > 0 ? withdrawableUsdt.toString() : undefined}
                     step="0.01"
                     required
                     placeholder={t("walletPage.withdraw_amount_placeholder")}
@@ -469,21 +697,21 @@ function WalletContent() {
                     type="button"
                     className={styles.copyBtn}
                     onClick={() => {
-                      setWithdrawAmount(availableUsdt > 0 ? availableUsdt.toFixed(2) : "0.00");
+                      setWithdrawAmount(withdrawableUsdt > 0 ? withdrawableUsdt.toFixed(2) : "0.00");
                       setWithdrawError(null);
                     }}
                   >
                     MAX
                   </button>
                 </div>
-                {isAmountOverBalance && (
+                {isAmountOverWithdrawable && (
                   <span style={{ fontSize: "12px", color: "#f87171", marginTop: "4px", display: "block", fontWeight: 600 }}>
                     {locale === "ar"
-                      ? `المبلغ المطلوب ($${parsedWithdrawAmount.toFixed(2)}) يتجاوز رصيدك المتاح ($${availableUsdt.toFixed(2)} USDT)`
-                      : `Requested amount ($${parsedWithdrawAmount.toFixed(2)}) exceeds available balance ($${availableUsdt.toFixed(2)} USDT)`}
+                      ? `المبلغ المطلوب ($${parsedWithdrawAmount.toFixed(2)}) يتجاوز رصيدك القابل للسحب ($${withdrawableUsdt.toFixed(2)} USDT). تنص سياسات مكافحة غسيل الأموال على ضرورة اللعب بمبالغ الإيداع قبل سحبها.`
+                      : `Requested amount ($${parsedWithdrawAmount.toFixed(2)}) exceeds withdrawable balance ($${withdrawableUsdt.toFixed(2)} USDT). Anti-Money Laundering policies require playing before withdrawal.`}
                   </span>
                 )}
-                {isAmountBelowMin && !isAmountOverBalance && (
+                {isAmountBelowMin && !isAmountOverWithdrawable && (
                   <span style={{ fontSize: "12px", color: "#f59e0b", marginTop: "4px", display: "block" }}>
                     {locale === "ar" ? "الحد الأدنى للسحب هو 10.00 USDT" : "Minimum withdrawal is 10.00 USDT"}
                   </span>

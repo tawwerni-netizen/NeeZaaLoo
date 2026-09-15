@@ -73,7 +73,7 @@ describe("Legal Policies and Support Config API", () => {
     const res = await req("GET", "/v1/support/config");
     assert.equal(res.status, 200);
     assert.equal(res.body.phone, "+2 01069999557");
-    assert.equal(res.body.email, "Tawwerni@gmail.com");
+    assert.equal(res.body.email, "support@Nizalo.com");
   });
 
   test("POST /v1/auth/register with termsAccepted: false is refused", async () => {

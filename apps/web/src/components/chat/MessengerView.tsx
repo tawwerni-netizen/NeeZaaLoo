@@ -151,12 +151,18 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
     }
   }, []);
 
-  // Search or list members
+  // Search members (search-only, never dump all members)
   const searchMembers = useCallback(async (query: string) => {
+    const q = query.trim();
+    if (!q) {
+      setMembers([]);
+      setLoadingMembers(false);
+      return;
+    }
     try {
       setLoadingMembers(true);
       const res = await get<{ members: Member[] }>(
-        query ? `/v1/members?q=${encodeURIComponent(query)}` : "/v1/members?limit=30"
+        `/v1/members?q=${encodeURIComponent(q)}`
       );
       setMembers(res.members || []);
     } catch {
@@ -180,8 +186,7 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
   useEffect(() => {
     loadConversations();
     loadFriends();
-    searchMembers("");
-  }, [loadConversations, loadFriends, searchMembers]);
+  }, [loadConversations, loadFriends]);
 
   // Handle search query with debounce
   useEffect(() => {
@@ -376,7 +381,7 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
                     className={styles.primaryActionBtn}
                     onClick={() => setActiveTab("MEMBERS")}
                   >
-                    {locale === "ar" ? "تصفح قائمة الأعضاء لبدء محادثة" : "Browse members to start chat"}
+                    {locale === "ar" ? "ابحث عن لاعب لبدء محادثة" : "Search players to start chat"}
                   </button>
                 </div>
               ) : (
@@ -424,7 +429,17 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
           {/* TAB: MEMBERS */}
           {activeTab === "MEMBERS" && (
             <div className={styles.membersList}>
-              {loadingMembers ? (
+              {!searchQuery.trim() ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>🔍</div>
+                  <p style={{ fontWeight: 600, color: "#cbd5e1" }}>
+                    {locale === "ar" ? "ابحث عن أي لاعب بالاسم المستعار" : "Search for any player by nickname"}
+                  </p>
+                  <p style={{ fontSize: "12px", color: "#64748b", margin: "4px 0 0" }}>
+                    {locale === "ar" ? "اكتب الاسم في خانة البحث أعلاه لعرض اللاعب وبدء المحادثة معه" : "Type a nickname in the search bar above to find and chat"}
+                  </p>
+                </div>
+              ) : loadingMembers ? (
                 <div className={styles.emptyState}>
                   <p>{locale === "ar" ? "جاري البحث في قائمة الأعضاء..." : "Searching members..."}</p>
                 </div>
@@ -672,7 +687,7 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
                 <div className={styles.dmEmpty}>
                   <div className={styles.emptyIcon}>👋</div>
                   <h3>{locale === "ar" ? `ابدأ المحادثة مع ${activePartner.handle}` : `Start chatting with ${activePartner.handle}`}</h3>
-                  <p>{locale === "ar" ? "قل مرحباً، أو اتفقا على رهان ومبارزة الآن!" : "Say hello or agree on a match stake!"}</p>
+                  <p>{locale === "ar" ? "قل مرحباً، أو اتفقا على مبارزة وتحدٍّ الآن!" : "Say hello or challenge each other to a duel now!"}</p>
                 </div>
               ) : (
                 messages.map((msg) => (

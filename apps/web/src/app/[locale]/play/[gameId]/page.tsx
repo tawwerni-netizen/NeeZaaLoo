@@ -205,7 +205,7 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
             >
               2. {step.name === "difficulty" || step.name === "time_control"
                   ? (isRtl ? "الصعوبة" : "Difficulty")
-                  : (isRtl ? "الرهان" : "Stake")}
+                  : (isRtl ? "قيمة التحدي" : "Match Stake")}
             </span>
 
             <span className={styles.stepSep}>›</span>

@@ -73,6 +73,7 @@ function connect(gwInstance = gw) {
           waiters.splice(waiters.indexOf(w), 1);
           reject(new Error(`timed out; queued frames: ${JSON.stringify(inbox)}`));
         }, 2000);
+        w.timer.unref?.();
         waiters.push(w);
       });
     },
@@ -81,6 +82,10 @@ function connect(gwInstance = gw) {
     // terminated it first, in which case the "close" event has already fired
     // and waiting for another one hangs forever.
     close: () => new Promise((r) => {
+      for (const w of waiters) {
+        clearTimeout(w.timer);
+      }
+      waiters.length = 0;
       if (ws.readyState === ws.CLOSED) return r();
       ws.once("close", r);
       ws.close();

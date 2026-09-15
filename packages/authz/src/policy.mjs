@@ -82,6 +82,7 @@ export const ACTIONS = {
   "player.consent.accept":       { capability: null, selfOnly: true },
   "legal.policies.read":         { capability: null },
   "support.config.read":         { capability: null },
+  "payment.webhook":             { capability: null },
 
   // --- Read surfaces ---------------------------------------------------------
   "admin.user.read":         { capability: "user.read" },

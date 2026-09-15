@@ -81,10 +81,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!player) return;
     if (player.locale === activeLocale) return;
+    // If the active page URL is already in Arabic, preserve the user's view and do not hijack to English
+    if (activeLocale === "ar") {
+      document.cookie = `${LOCALE_COOKIE}=ar; path=/; max-age=${LOCALE_COOKIE_MAX_AGE_S}; samesite=lax`;
+      document.cookie = `${LOCALE_EXPLICIT_COOKIE}=1; path=/; max-age=${LOCALE_COOKIE_MAX_AGE_S}; samesite=lax`;
+      return;
+    }
     if (readCookie(LOCALE_EXPLICIT_COOKIE)) return;
-    document.cookie = `${LOCALE_COOKIE}=${player.locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE_S}; samesite=lax`;
-    const rest = pathname.split("/").slice(2).join("/");
-    router.replace(`/${player.locale}/${rest}`);
+    if (player.locale && player.locale !== activeLocale && player.locale !== "en") {
+      document.cookie = `${LOCALE_COOKIE}=${player.locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE_S}; samesite=lax`;
+      const rest = pathname.split("/").slice(2).join("/");
+      router.replace(`/${player.locale}/${rest}`);
+    }
   }, [player, activeLocale, pathname, router]);
 
   const login = useCallback(async (identifier: string, password: string, remember: boolean = true) => {

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n/context';
 import { get, post } from '@/lib/api';
+import { useVisibilityAwareInterval } from '@/lib/use-interval';
 import styles from './TournamentReadyWatcher.module.css';
 
 type TournamentNotification = {
@@ -122,9 +123,12 @@ export function TournamentReadyWatcher() {
   useEffect(() => {
     if (!player || pathname.includes('/admin')) return;
     void checkNotifications();
-    const interval = setInterval(checkNotifications, 3000);
-    return () => clearInterval(interval);
   }, [player, pathname, checkNotifications]);
+
+  useVisibilityAwareInterval(
+    checkNotifications,
+    !player || pathname.includes('/admin') ? false : 10000
+  );
 
   // Countdown timer tick
   useEffect(() => {

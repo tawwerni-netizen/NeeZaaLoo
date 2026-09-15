@@ -25,6 +25,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { get } from "@/lib/api";
+import { useVisibilityAwareInterval } from "@/lib/use-interval";
 import { ChallengePopup, type IncomingChallenge } from "./ChallengePopup";
 
 type OutgoingChallenge = {
@@ -101,9 +102,12 @@ export function IncomingChallengeWatcher() {
   useEffect(() => {
     if (!player || isAdminRoute) { setIncoming([]); return; }
     void refresh();
-    const timer = setInterval(() => void refresh(), 1000);
-    return () => clearInterval(timer);
   }, [player, isAdminRoute, refresh]);
+
+  useVisibilityAwareInterval(
+    refresh,
+    !player || isAdminRoute ? false : 5000
+  );
 
   if (!player || isAdminRoute || incoming.length === 0) return null;
   // Already mid-game (any duel) -- do not pop a new-challenge dialog over

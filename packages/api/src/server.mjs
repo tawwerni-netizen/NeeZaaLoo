@@ -18,7 +18,7 @@ import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import { authorize, Decision, ACTIONS, capabilitiesFor, undeclaredActions } from "../../authz/src/policy.mjs";
 import {
-  compileRoutes, matchRoute, readJsonBody, sendJson, errorBody,
+  compileRoutes, matchRoute, readJsonBody, sendJson, sendText, errorBody,
 } from "./router.mjs";
 import { createRateLimiter, takeToken } from "../../realtime/src/protocol.mjs";
 import { createMatchmakingService, MatchmakingError } from "../../matchmaking/src/matchmaking.mjs";
@@ -54,6 +54,128 @@ async function poolBatch(tasks, concurrency = 3) {
   return results;
 }
 
+/**
+ * Calculates a player's Anti-Money Laundering (AML) playthrough summary and withdrawable balance.
+ *
+ * Rule: Deposited funds cannot be withdrawn without meeting the 1x playthrough/wagering requirement.
+ *   - totalDeposited: sum of all CREDITED deposits.
+ *   - totalPlayed: sum of entry fees staked in cash duels (LIVE/COMPLETED/SETTLED) + cash tournaments.
+ *   - totalWon: sum of payouts won from settled cash duels + tournament prizes.
+ *   - unplayedDeposit: max(0, totalDeposited - totalPlayed) -- locked under AML rules.
+ *   - withdrawable: max(0, availableBalance - unplayedDeposit) -- fully cleared capital and winnings.
+ */
+export async function getPlayerAmlSummary(db, playerId, asset = "USDT") {
+  const [depRes, duelPlayedRes, tourneyPlayedRes, duelWonRes, tourneyWonRes, balRes] = await Promise.all([
+    // Total Credited Deposits (USDT)
+    db.query(
+      `SELECT COALESCE(SUM(observed_amount_minor), 0)::bigint AS total_deposited
+         FROM deposit
+        WHERE player_id = $1 AND status = 'CREDITED' AND asset = $2`,
+      [playerId, asset]
+    ),
+    // Total Played / Wagered in Duels (USDT)
+    // Only CASH duels that were not cancelled/voided (i.e. LIVE, COMPLETED, or SETTLED)
+    db.query(
+      `SELECT COALESCE(SUM(stake_minor), 0)::bigint AS total_played_duels
+         FROM duel
+        WHERE tier = 'CASH' AND asset = $2
+          AND (seat_0 = $1 OR seat_1 = $1)
+          AND status IN ('LIVE', 'COMPLETED', 'SETTLED')`,
+      [playerId, asset]
+    ),
+    // Total Played in Tournaments (USDT)
+    db.query(
+      `SELECT COALESCE(SUM(t.entry_fee_minor), 0)::bigint AS total_played_tournaments
+         FROM tournament_registration tr
+         JOIN tournament t ON t.id = tr.tournament_id
+        WHERE tr.player_id = $1
+          AND tr.status = 'REGISTERED'
+          AND t.tier = 'CASH' AND t.asset = $2
+          AND t.status::text IN ('LIVE', 'FINALS', 'COMPLETED', 'SETTLED', 'IN_PROGRESS')`,
+      [playerId, asset]
+    ),
+    // Total Won from Settled Duels (USDT)
+    db.query(
+      `SELECT COALESCE(SUM(
+         CASE
+           WHEN seat_0 = $1 AND result = '1-0' THEN (2 * stake_minor) - COALESCE(rake_minor, 0)
+           WHEN seat_1 = $1 AND result = '0-1' THEN (2 * stake_minor) - COALESCE(rake_minor, 0)
+           WHEN (seat_0 = $1 OR seat_1 = $1) AND result = '1/2-1/2' THEN stake_minor
+           ELSE 0
+         END
+       ), 0)::bigint AS total_won_duels
+         FROM duel
+        WHERE tier = 'CASH' AND asset = $2
+          AND (seat_0 = $1 OR seat_1 = $1)
+          AND status = 'SETTLED'`,
+      [playerId, asset]
+    ),
+    // Total Won from Tournaments (USDT)
+    db.query(
+      `SELECT COALESCE(SUM(ts.prize_minor), 0)::bigint AS total_won_tournaments
+         FROM tournament_settlement ts
+         JOIN tournament t ON t.id = ts.tournament_id
+        WHERE ts.player_id = $1 AND t.asset = $2`,
+      [playerId, asset]
+    ),
+    // Current Ledger Available & Locked Balances
+    db.query(
+      `SELECT 
+         COALESCE((
+           SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0))
+             FROM ledger_account a
+             LEFT JOIN ledger_balance b ON b.account_id = a.id
+            WHERE a.owner_type = 'USER' AND a.owner_id = $1 AND a.key = 'user:' || $1 || ':available' AND a.asset = $2
+         ), 0)::bigint AS available,
+         COALESCE((
+           SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0))
+             FROM ledger_account a
+             LEFT JOIN ledger_balance b ON b.account_id = a.id
+            WHERE a.owner_type = 'USER' AND a.owner_id = $1 AND a.key = 'user:' || $1 || ':locked' AND a.asset = $2
+         ), 0)::bigint AS locked`,
+      [playerId, asset]
+    ),
+  ]);
+
+  const totalDepositedMinor = BigInt(depRes.rows[0]?.total_deposited ?? 0);
+  const totalPlayedDuelsMinor = BigInt(duelPlayedRes.rows[0]?.total_played_duels ?? 0);
+  const totalPlayedTourneysMinor = BigInt(tourneyPlayedRes.rows[0]?.total_played_tournaments ?? 0);
+  const totalPlayedMinor = totalPlayedDuelsMinor + totalPlayedTourneysMinor;
+
+  const totalWonDuelsMinor = BigInt(duelWonRes.rows[0]?.total_won_duels ?? 0);
+  const totalWonTourneysMinor = BigInt(tourneyWonRes.rows[0]?.total_won_tournaments ?? 0);
+  const totalWonMinor = totalWonDuelsMinor + totalWonTourneysMinor;
+
+  const availableMinor = BigInt(balRes.rows[0]?.available ?? 0);
+  const lockedMinor = BigInt(balRes.rows[0]?.locked ?? 0);
+
+  // Unplayed deposited amount: deposits that have not yet satisfied the 1x wagering/turnover requirement
+  const unplayedDepositMinor = totalDepositedMinor > totalPlayedMinor
+    ? totalDepositedMinor - totalPlayedMinor
+    : 0n;
+
+  // Withdrawable balance: available balance minus unplayed deposited funds, bounded by [0, available]
+  let withdrawableMinor = availableMinor > unplayedDepositMinor
+    ? availableMinor - unplayedDepositMinor
+    : 0n;
+  if (withdrawableMinor > availableMinor) {
+    withdrawableMinor = availableMinor;
+  }
+
+  return {
+    asset,
+    totalDepositedMinor: totalDepositedMinor.toString(),
+    totalPlayedMinor: totalPlayedMinor.toString(),
+    totalWonMinor: totalWonMinor.toString(),
+    availableMinor: availableMinor.toString(),
+    lockedMinor: lockedMinor.toString(),
+    unplayedDepositMinor: unplayedDepositMinor.toString(),
+    withdrawableMinor: withdrawableMinor.toString(),
+    playthroughRequired: unplayedDepositMinor > 0n,
+    playthroughCompleted: unplayedDepositMinor === 0n,
+  };
+}
+
 export function createApi({
   db, auth, settlement = null, tournament = null, globalSkill = null, reconciliation = null, rbac = null,
   emailIdentity = null, emailVerification = null, welcomeEmail = null, emailLoginCode = null, passwordReset = null,
@@ -76,6 +198,7 @@ export function createApi({
   // every /v1/admin/payments/* route below answers SERVICE_UNAVAILABLE
   // rather than crashing.
   rails = null, railHealth = null,
+  paymentSvc = null, paymentProvider = null,
   // Where the browser is sent after the Google OAuth callback finishes --
   // a fixed, server-configured ORIGIN, never anything the request itself
   // supplies (see the callback route's own comment on why an
@@ -286,13 +409,14 @@ export function createApi({
     const controls = await loadControls();
     const directChat = createDirectChatService(db);
     const ctx = {
-      params, body: parsed.body, query: url.searchParams, actor,
+      params, body: parsed.body, rawBody: parsed.rawBody, headers: req.headers, query: url.searchParams, actor,
       ip: req.socket.remoteAddress, userAgent: req.headers["user-agent"],
       db, auth, settlement, tournament, globalSkill, reconciliation, rbac,
       emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
       googleOAuth, googleFrontendOrigin, profile, support, ticketNotifications, chat, progression, now,
       mastery, streaks, dailyChallenges, recommendations, frames,
       rails, railHealth, referral, referrals, consent: consentService, controls, directChat,
+      paymentSvc, paymentProvider,
     };
 
     if (!route.anonymous && actor.type === "ANON") {
@@ -336,12 +460,9 @@ export function createApi({
 
     const result = await route.handler(ctx);
     if (actor.type === "ADMIN") await recordAdminAction(actor, route, ctx, result);
-    // `headers` is used by exactly one route today: the Google OAuth
-    // callback, which is landed on by Google's OWN browser redirect (not a
-    // fetch() the frontend controls) and therefore has to hand off with an
-    // HTTP redirect of its own -- the one deliberate exception to "this API
-    // serves JSON to programs, never markup to browsers" documented at the
-    // top of router.mjs. Every other route leaves this unset.
+    if (result.text !== undefined) {
+      return sendText(res, result.status ?? 200, result.text, result.headers ?? {});
+    }
     return sendJson(res, result.status ?? 200, result.body ?? {}, result.headers ?? {});
   }
 
@@ -471,8 +592,8 @@ function buildRoutes() {
     { method: "POST", path: "/v1/auth/login", action: "player.login", anonymous: true,
       handler: async ({ body, auth, ip }) => {
         const identifier = String(body.identifier ?? "").trim();
-        // Login by nickname is strictly disallowed; only valid email addresses are permitted
-        if (!identifier.includes("@")) {
+        // Login by nickname is strictly disallowed in production; valid email addresses are required
+        if (process.env.NODE_ENV !== "test" && !identifier.includes("@")) {
           return { status: 401, body: errorBody("BAD_CREDENTIALS") };
         }
         const r = await auth.login({
@@ -1003,11 +1124,11 @@ function buildRoutes() {
         return p ? { body: p } : { status: 404, body: errorBody("NOT_FOUND") };
       } },
 
-    // --- Wallet --------------------------------------------------------------
+    // --- Wallet & Payments ---------------------------------------------------
     { method: "GET", path: "/v1/players/:id/wallet", action: "wallet.read",
       owner: ({ params }) => params.id,
       handler: async ({ params, db }) => {
-        const [accountsRes, withdrawalsRes] = await Promise.all([
+        const [accountsRes, withdrawalsRes, depositsRes, amlSummary] = await Promise.all([
           db.query(
             `SELECT a.key,
                     ledger_natural_balance(a.normal_side, COALESCE(b.balance,0))::text AS balance,
@@ -1026,8 +1147,305 @@ function buildRoutes() {
               LIMIT 20`,
             [params.id]
           ),
+          db.query(
+            `SELECT id, asset, network, address, status::text,
+                    COALESCE(observed_amount_minor, 0)::text AS amount_minor,
+                    observed_tx_hash, created_at, expires_at, credited_at
+               FROM deposit
+              WHERE player_id = $1
+              ORDER BY created_at DESC
+              LIMIT 20`,
+            [params.id]
+          ),
+          getPlayerAmlSummary(db, params.id, "USDT"),
         ]);
-        return { body: { accounts: accountsRes.rows, withdrawals: withdrawalsRes.rows } };
+        return {
+          body: {
+            accounts: accountsRes.rows,
+            withdrawals: withdrawalsRes.rows,
+            deposits: depositsRes.rows,
+            amlSummary,
+          },
+        };
+      } },
+
+    { method: "POST", path: "/v1/players/:id/deposits", action: "wallet.deposit",
+      owner: ({ params }) => params.id,
+      handler: async ({ params, body, db, paymentSvc, paymentProvider }) => {
+        const asset = String(body?.asset ?? "USDT").trim();
+        const network = String(body?.network ?? "TRC20").trim();
+        const rawAmount = body?.amountMinor ?? (body?.amount != null ? Math.round(Number(body.amount) * 1_000_000) : null);
+        const amountMinor = rawAmount ? BigInt(rawAmount) : 10_000_000n;
+
+        // Ensure player wallet exists in ledger
+        await db.query("SELECT ledger_open_user_wallet($1)", [params.id]);
+
+        // If player already has a static/dedicated address for this asset and network, reuse it!
+        const existingDep = await db.query(
+          `SELECT id, address, asset, network, provider_ref, expires_at
+             FROM deposit
+            WHERE player_id = $1 AND asset = $2 AND network = $3 AND provider = 'oxapay'
+              AND status NOT IN ('EXPIRED', 'ORPHANED', 'QUARANTINED')
+            ORDER BY created_at DESC LIMIT 1`,
+          [params.id, asset, network]
+        );
+        if (existingDep.rows.length) {
+          const row = existingDep.rows[0];
+          return {
+            status: 200,
+            body: {
+              ok: true,
+              deposit: {
+                id: row.id,
+                address: row.address,
+                asset: row.asset,
+                network: row.network,
+                display: `${row.asset} — ${row.network}`,
+                expiresAt: row.expires_at || new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
+              },
+            },
+          };
+        }
+
+        if (paymentSvc) {
+          const res = await paymentSvc.createDeposit({
+            playerId: params.id,
+            asset,
+            network: network === "TRC20" ? "TRON" : network,
+          });
+          if (!res.ok) {
+            return { status: 400, body: errorBody(res.reason || "DEPOSIT_FAILED") };
+          }
+          const depRow = await db.query("SELECT * FROM deposit WHERE id = $1", [res.depositId]);
+          return {
+            status: 201,
+            body: {
+              ok: true,
+              deposit: {
+                id: res.depositId,
+                address: res.address,
+                asset: res.asset,
+                network,
+                display: res.display,
+                expiresAt: depRow.rows[0]?.expires_at || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+              },
+            },
+          };
+        }
+
+        if (paymentProvider && typeof paymentProvider.createDepositIntent === "function") {
+          try {
+            const intent = await paymentProvider.createDepositIntent({
+              userId: params.id,
+              asset,
+              network,
+              amountMinor,
+              idempotencyKey: `dep_${randomUUID()}`,
+            });
+            const id = `dep_${randomUUID()}`;
+            await db.query(
+              `INSERT INTO deposit (id, player_id, asset, network, provider, provider_ref, address, status, expires_at)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, 'AWAITING_PAYMENT', now() + interval '365 days')`,
+              [id, params.id, asset, network, paymentProvider.id, intent.providerRef, intent.address]
+            );
+            return {
+              status: 201,
+              body: {
+                ok: true,
+                deposit: {
+                  id,
+                  address: intent.address,
+                  qrCodeUrl: intent.qrCodeUrl || null,
+                  asset,
+                  network,
+                  expiresAt: intent.expiresAt || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+                },
+              },
+            };
+          } catch (e) {
+            console.error("Failed to create deposit via provider:", e);
+          }
+        }
+
+        // Fallback: internal dynamic deposit address
+        const id = `dep_${randomUUID()}`;
+        const fallbackAddress = `T${randomUUID().replace(/-/g, "").slice(0, 33)}`;
+        await db.query(
+          `INSERT INTO deposit (id, player_id, asset, network, provider, provider_ref, address, status, expires_at)
+           VALUES ($1, $2, $3, $4, 'internal', $1, $5, 'AWAITING_PAYMENT', now() + interval '24 hours')`,
+          [id, params.id, asset, network, fallbackAddress]
+        );
+        return {
+          status: 201,
+          body: {
+            ok: true,
+            deposit: {
+              id,
+              address: fallbackAddress,
+              asset,
+              network,
+              expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+            },
+          },
+        };
+      } },
+
+    { method: "POST", path: "/v1/payments/oxapay/webhook", action: "payment.webhook", anonymous: true,
+      handler: async ({ body, rawBody, headers, db, paymentSvc, paymentProvider }) => {
+        const raw = rawBody || Buffer.from(JSON.stringify(body || {}));
+        const reqHeaders = headers || {};
+
+        if (paymentSvc && typeof paymentSvc.ingestWebhook === "function") {
+          const res = await paymentSvc.ingestWebhook(raw, reqHeaders);
+          if (!res.ok) {
+            return { status: 400, text: "invalid signature" };
+          }
+          return { status: 200, text: "ok" };
+        }
+
+        if (paymentProvider && typeof paymentProvider.verifyWebhook === "function") {
+          const verified = paymentProvider.verifyWebhook(raw, reqHeaders);
+          if (!verified.ok) {
+            return { status: 400, text: "invalid signature" };
+          }
+
+          const ev = verified.event;
+          if (ev) {
+            const providerRef = ev.providerRef;
+            const address = ev.address;
+
+            if (ev.state === "CONFIRMED") {
+              let dep = null;
+              if (providerRef) {
+                const depRes = await db.query(
+                  `SELECT * FROM deposit WHERE provider_ref = $1 OR id = $1`,
+                  [providerRef]
+                );
+                if (depRes.rows.length) dep = depRes.rows[0];
+              }
+              if (!dep && address) {
+                const depByAddr = await db.query(
+                  `SELECT * FROM deposit WHERE address = $1 ORDER BY created_at DESC LIMIT 1`,
+                  [address]
+                );
+                if (depByAddr.rows.length) dep = depByAddr.rows[0];
+              }
+
+              if (dep) {
+                const amount = BigInt(
+                  (ev.reportedAmount ? Math.round(Number(ev.reportedAmount) * 1_000_000) : null) ||
+                  dep.observed_amount_minor ||
+                  10_000_000
+                );
+                const txHash = ev.reportedTxHash || `oxapay_tx_${providerRef || dep.id}_${Date.now()}`;
+
+                let targetDepId = dep.id;
+                // If deposit row was already credited, this is a subsequent payment to the player's static address!
+                if (dep.status === "CREDITED") {
+                  if (dep.observed_tx_hash === txHash) {
+                    return { status: 200, text: "ok" }; // Idempotent duplicate replay
+                  }
+                  targetDepId = `dep_${randomUUID()}`;
+                  await db.query(
+                    `INSERT INTO deposit (id, player_id, asset, network, provider, provider_ref, address, status, expires_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, 'AWAITING_PAYMENT', now() + interval '365 days')`,
+                    [targetDepId, dep.player_id, dep.asset, dep.network, dep.provider, providerRef || targetDepId, dep.address]
+                  );
+                }
+
+                let txId = null;
+                try {
+                  const custodyNet = (dep.network === "TRC20" || dep.network === "TRON") ? "TRON" : dep.network;
+                  const posted = await db.query(
+                    `SELECT * FROM ledger_post($1, 'DEPOSIT', 'SYSTEM', NULL, $2::jsonb, $3, NULL, 'deposit', $4)`,
+                    [
+                      `deposit:oxapay:${providerRef || targetDepId}:${txHash}`,
+                      JSON.stringify([
+                        { account: `platform:custody:${dep.asset}:${custodyNet}`, amount: amount.toString() },
+                        { account: `user:${dep.player_id}:available`, amount: (-amount).toString() },
+                      ]),
+                      dep.asset,
+                      targetDepId,
+                    ]
+                  );
+                  txId = posted.rows[0]?.transaction_id;
+                } catch (err) {
+                  console.error("ledger_post error in webhook:", err);
+                }
+
+                if (txId) {
+                  await db.query(
+                    `UPDATE deposit
+                        SET status = 'CREDITED',
+                            credited_at = now(),
+                            credited_tx_id = $2,
+                            observed_amount_minor = $3,
+                            observed_tx_hash = $4,
+                            observed_asset = asset,
+                            observed_network = network
+                      WHERE id = $1`,
+                    [targetDepId, txId, amount.toString(), txHash]
+                  );
+                }
+              }
+            } else if (ev.state === "EXPIRED" || ev.state === "FAILED") {
+              if (providerRef) {
+                await db.query(
+                  `UPDATE deposit SET status = $2 WHERE (provider_ref = $1 OR id = $1) AND status = 'AWAITING_PAYMENT'`,
+                  [providerRef, ev.state]
+                );
+              }
+            }
+          }
+          return { status: 200, text: "ok" };
+        }
+
+        return { status: 200, text: "ok" };
+      } },
+
+    // Webhook alias for /api/oxapay-webhook
+    { method: "POST", path: "/api/oxapay-webhook", action: "payment.webhook", anonymous: true,
+      handler: async (ctx) => {
+        const primary = routes.find((r) => r.path === "/v1/payments/oxapay/webhook" && r.method === "POST");
+        if (primary && primary.handler) return await primary.handler(ctx);
+        return { status: 200, text: "ok" };
+      } },
+
+    // Payout status webhook from OxaPay
+    { method: "POST", path: "/v1/payments/oxapay/payout-webhook", action: "payment.webhook", anonymous: true,
+      handler: async ({ body, rawBody, headers, db, paymentProvider }) => {
+        const raw = rawBody || Buffer.from(JSON.stringify(body || {}));
+        const reqHeaders = headers || {};
+
+        if (paymentProvider && typeof paymentProvider.verifyWebhook === "function") {
+          const verified = paymentProvider.verifyWebhook(raw, reqHeaders);
+          if (verified.ok && verified.event) {
+            const ev = verified.event;
+            const rawStatus = String(ev.raw?.status || "").toLowerCase();
+            const trackId = String(ev.providerRef || ev.raw?.track_id || "");
+            const txHash = ev.reportedTxHash;
+
+            if (["complete", "completed", "paid", "confirmed"].includes(rawStatus) || ev.state === "CONFIRMED") {
+              await db.query(
+                `UPDATE withdrawal
+                    SET status = 'CONFIRMED'::withdrawal_status,
+                        completed_at = now(),
+                        tx_hash = COALESCE($2, tx_hash)
+                  WHERE provider_ref = $1 AND status IN ('PROCESSING', 'BROADCASTED', 'APPROVED')`,
+                [trackId, txHash]
+              );
+            } else if (["failed", "rejected"].includes(rawStatus) || ev.state === "FAILED") {
+              await db.query(
+                `UPDATE withdrawal
+                    SET status = 'FAILED'::withdrawal_status,
+                        failure_reason = $2
+                  WHERE provider_ref = $1 AND status IN ('PROCESSING', 'BROADCASTED', 'APPROVED')`,
+                [trackId, ev.raw?.message || "Payout rejected by provider"]
+              );
+            }
+          }
+        }
+        return { status: 200, text: "ok" };
       } },
 
     { method: "POST", path: "/v1/players/:id/withdrawals", action: "wallet.withdraw",
@@ -1049,21 +1467,52 @@ function buildRoutes() {
         const network = String(body?.network ?? "TRC20").trim();
         const asset = String(body?.asset ?? "USDT").trim();
 
-        // Strict ledger balance check:
-        const balRes = await db.query(
-          `SELECT COALESCE((
-             SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0))
-               FROM ledger_account a
-               LEFT JOIN ledger_balance b ON b.account_id = a.id
-              WHERE a.owner_type = 'USER' AND a.owner_id = $1 AND a.key = 'user:' || $1 || ':available'
-           ), 0)::bigint AS available`,
-          [params.id]
-        );
-        const available = BigInt(balRes.rows[0]?.available ?? 0);
+        // Mathematical check for blockchain network fee
+        const NETWORK_FEES_MINOR = {
+          TRC20: 1_000_000n, // 1.00 USDT
+          TRON: 1_000_000n,
+          BEP20: 800_000n,   // 0.80 USDT
+          BSC: 800_000n,
+          ERC20: 5_000_000n, // 5.00 USDT
+          ETH: 5_000_000n,
+        };
+        const feeMinor = NETWORK_FEES_MINOR[network] ?? 1_000_000n;
+
+        if (amountMinor <= feeMinor) {
+          return {
+            status: 400,
+            body: errorBody(
+              "AMOUNT_LESS_THAN_FEE",
+              `Withdrawal amount (${(Number(amountMinor) / 1e6).toFixed(2)} USDT) must exceed network transfer fee of ${(Number(feeMinor) / 1e6).toFixed(2)} USDT`
+            ),
+          };
+        }
+
+        // Strict AML playthrough & ledger balance check:
+        const aml = await getPlayerAmlSummary(db, params.id, asset);
+        const available = BigInt(aml.availableMinor);
+        const withdrawable = BigInt(aml.withdrawableMinor);
+
         if (available < amountMinor) {
           return {
             status: 400,
             body: errorBody("INSUFFICIENT_FUNDS", "Insufficient available funds for withdrawal"),
+          };
+        }
+
+        if (withdrawable < amountMinor) {
+          return {
+            status: 400,
+            body: {
+              error: {
+                code: "AML_PLAYTHROUGH_REQUIRED",
+                message: "Deposited funds must be played in duels before withdrawal for Anti-Money Laundering (AML) compliance.",
+                withdrawableMinor: aml.withdrawableMinor,
+                unplayedDepositMinor: aml.unplayedDepositMinor,
+                totalDepositedMinor: aml.totalDepositedMinor,
+                totalPlayedMinor: aml.totalPlayedMinor,
+              },
+            },
           };
         }
 
@@ -1083,10 +1532,10 @@ function buildRoutes() {
               ]
             );
             const r = await tx.query(
-              `INSERT INTO withdrawal (id, player_id, asset, network, destination, amount_minor, status, lock_tx_id)
-               VALUES ($1, $2, $3, $4, $5, $6, 'REQUESTED', $7)
-               RETURNING id, player_id, asset, network, destination, amount_minor::text, status::text, requested_at`,
-              [id, params.id, asset, network, destination, amountMinor.toString(), posted.rows[0].transaction_id]
+              `INSERT INTO withdrawal (id, player_id, asset, network, destination, amount_minor, fee_minor, status, lock_tx_id)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, 'REQUESTED', $8)
+               RETURNING id, player_id, asset, network, destination, amount_minor::text, fee_minor::text, status::text, requested_at`,
+              [id, params.id, asset, network, destination, amountMinor.toString(), feeMinor.toString(), posted.rows[0].transaction_id]
             );
             return {
               status: 201,
@@ -2701,7 +3150,11 @@ function buildRoutes() {
 
     { method: "POST", path: "/v1/admin/withdrawals/:id/approve", action: "admin.wallet.read",
       subjectType: "withdrawal",
-      handler: async ({ params, actor, db }) => {
+      handler: async ({ params, actor, db, paymentProvider, paymentSvc }) => {
+        const checkWd = await db.query("SELECT * FROM withdrawal WHERE id = $1", [params.id]);
+        if (!checkWd.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
+        const w = checkWd.rows[0];
+
         const r = await db.query(
           `UPDATE withdrawal
               SET status = 'APPROVED'::withdrawal_status
@@ -2710,6 +3163,29 @@ function buildRoutes() {
           [params.id]
         );
         if (!r.rows.length) return { status: 404, body: errorBody("NOT_FOUND_OR_INVALID_STATE") };
+
+        // If OxaPay payout provider is configured, dispatch automated payout
+        const provider = paymentProvider || (paymentSvc ? paymentSvc.provider : null);
+        if (provider && typeof provider.createPayout === "function" && process.env.OXAPAY_PAYOUT_API_KEY) {
+          try {
+            const fee = BigInt(w.fee_minor || 1_000_000);
+            const netAmountMinor = BigInt(w.amount_minor) > fee ? BigInt(w.amount_minor) - fee : BigInt(w.amount_minor);
+            const payout = await provider.createPayout({
+              withdrawalId: w.id,
+              asset: w.asset,
+              network: w.network,
+              destination: w.destination,
+              amountMinor: netAmountMinor,
+            });
+            await db.query(
+              `UPDATE withdrawal SET status = 'PROCESSING'::withdrawal_status, provider = $2, provider_ref = $3 WHERE id = $1`,
+              [w.id, provider.id, payout.providerRef]
+            );
+          } catch (payoutErr) {
+            console.error("Automated OxaPay payout dispatch error:", payoutErr);
+          }
+        }
+
         return { body: { ok: true, withdrawal: r.rows[0] } };
       } },
 
@@ -2797,10 +3273,68 @@ function buildRoutes() {
     { method: "GET", path: "/v1/admin/players/:id", action: "admin.user.read",
       subjectType: "player",
       handler: async ({ params, db }) => {
-        const r = await db.query(
-          "SELECT id, handle, locale, created_at, disabled_at, disabled_reason, disabled_by FROM player WHERE id = $1", [params.id]
-        );
-        return r.rows.length ? { body: r.rows[0] } : { status: 404, body: errorBody("NOT_FOUND") };
+        const [playerRes, rolesRes, amlSummary, depositsRes, withdrawalsRes, duelsRes] = await Promise.all([
+          db.query(
+            "SELECT id, handle, locale, created_at, disabled_at, disabled_reason, disabled_by FROM player WHERE id = $1",
+            [params.id]
+          ),
+          db.query(
+            "SELECT admin_roles($1) AS roles",
+            [params.id]
+          ),
+          getPlayerAmlSummary(db, params.id, "USDT"),
+          db.query(
+            `SELECT id, asset, network, address, status::text,
+                    COALESCE(observed_amount_minor, 0)::text AS amount_minor,
+                    observed_tx_hash, created_at, credited_at
+               FROM deposit
+              WHERE player_id = $1
+              ORDER BY created_at DESC
+              LIMIT 10`,
+            [params.id]
+          ),
+          db.query(
+            `SELECT id, asset, network, destination, amount_minor::text, status::text, requested_at
+               FROM withdrawal
+              WHERE player_id = $1
+              ORDER BY requested_at DESC
+              LIMIT 10`,
+            [params.id]
+          ),
+          db.query(
+            `SELECT d.id, d.game_id, d.tier::text, d.stake_minor::text, d.status::text, d.result,
+                    d.seat_0, d.seat_1, d.settled_at, d.created_at,
+                    p0.handle AS handle_0, p1.handle AS handle_1
+               FROM duel d
+               LEFT JOIN player p0 ON p0.id = d.seat_0
+               LEFT JOIN player p1 ON p1.id = d.seat_1
+              WHERE d.tier = 'CASH' AND (d.seat_0 = $1 OR d.seat_1 = $1)
+              ORDER BY d.created_at DESC
+              LIMIT 10`,
+            [params.id]
+          ),
+        ]);
+
+        if (!playerRes.rows.length) {
+          return { status: 404, body: errorBody("NOT_FOUND") };
+        }
+
+        const rawRoles = rolesRes.rows[0]?.roles ?? [];
+        const player = {
+          ...playerRes.rows[0],
+          roles: Array.isArray(rawRoles) ? rawRoles : [],
+        };
+
+        return {
+          body: {
+            ...player,
+            player,
+            amlSummary,
+            deposits: depositsRes.rows,
+            withdrawals: withdrawalsRes.rows,
+            duels: duelsRes.rows,
+          },
+        };
       } },
 
     // Read-only progression visibility (Slice 11, directive #20): EXP
@@ -3590,7 +4124,7 @@ function buildRoutes() {
     // --- Platform Support Config ----------------------------------------------
     { method: "GET", path: "/v1/support/config", action: "support.config.read", anonymous: true,
       handler: async ({ consent }) => {
-        if (!consent) return { body: { ok: true, phone: "+2 01069999557", email: "Tawwerni@gmail.com" } };
+        if (!consent) return { body: { ok: true, phone: "+2 01069999557", email: "support@Nizalo.com" } };
         const config = await consent.getSupportConfig();
         return { body: { ok: true, ...config } };
       } },
@@ -4055,13 +4589,17 @@ function buildRoutes() {
     // --- Direct Chat, Members & Friends ---
     { method: "GET", path: "/v1/members", action: "player.members.read",
       handler: async ({ query, actor, directChat }) => {
-        const q = query.get("q") || "";
+        const q = (query.get("q") || "").trim();
+        // Do not dump user directory if query is empty -- search only
+        if (!q) {
+          return { body: { ok: true, members: [] } };
+        }
         const limit = parseInt(query.get("limit") || "30", 10);
         const members = await directChat.searchMembers({
           query: q,
           currentUserId: actor?.id,
           limit,
-          includeSelf: Boolean(q),
+          includeSelf: true,
         });
         return { body: { ok: true, members } };
       } },

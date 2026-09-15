@@ -368,13 +368,18 @@
       "heading": "Elige una dificultad"
     },
     "stake": {
-      "heading": "Elige tu apuesta",
+      "heading": "Elige tu desafío",
       "free_only": "Solo gratis",
-      "free_only_note": "Las apuestas en efectivo aún no están disponibles para este juego.",
+      "free_only_note": "Las partidas con premio en efectivo aún no están disponibles para este juego.",
       "free_title": "Gratis",
-      "free_description": "Sin apuesta — solo la partida.",
+      "free_description": "Sin cuota — solo la partida.",
       "competitive_title": "Competitivo",
-      "competitive_description": "Juega por una apuesta real, liberada solo al ganar la partida."
+      "competitive_description": "Juega por un premio real, entregado solo al ganar la partida.",
+      "entry_fee": "Cuota del desafío",
+      "platform_fee": "Tarifa de organización y plataforma",
+      "fixed_badge": "12% FIJO",
+      "net_prize_contrib": "Aportación al premio del encuentro",
+      "winner_payout": "Premio total del ganador"
     },
     "challenge": {
       "heading": "Desafiar a un amigo",
@@ -617,7 +622,7 @@
   "email": {
     "common": {
       "footer": "Nizalo — Tu duelo. Tu prueba.",
-      "support_note": "¿Dudas? Contáctanos cuando quieras en info@nizalo.com."
+      "support_note": "¿Dudas? Contáctanos cuando quieras en support@Nizalo.com."
     },
     "welcome": {
       "subject": "Bienvenido a Nizalo, {nickname}",

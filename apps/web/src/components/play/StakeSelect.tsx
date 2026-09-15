@@ -170,23 +170,23 @@ export function StakeSelect({ plugin, onContinue }: {
           {stakeUsd !== null && (
             <div className={styles.economicsCard}>
               <div className={styles.economicsRow}>
-                <span>{t("play.stake.entry_fee") || "Entry Stake (USDT TRC20)"}</span>
-                <strong style={{ color: "#fff" }}>${stakeUsd.toFixed(2)} USDT</strong>
+                <span>{t("play.stake.entry_fee")}</span>
+                <strong style={{ color: "#fff", direction: "ltr" }}>${stakeUsd.toFixed(2)} USDT</strong>
               </div>
               <div className={styles.economicsRow}>
                 <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span>{t("play.stake.platform_fee") || "Platform Operational Fee"}</span>
-                  <span className={styles.economicsBadge}>12% FIXED</span>
+                  <span>{t("play.stake.platform_fee")}</span>
+                  <span className={styles.economicsBadge}>{t("play.stake.fixed_badge")}</span>
                 </span>
-                <span>-${(stakeUsd * 0.12).toFixed(2)} USDT</span>
+                <span style={{ direction: "ltr" }}>-${(stakeUsd * 0.12).toFixed(2)} USDT</span>
               </div>
               <div className={styles.economicsRow}>
-                <span>{t("play.stake.net_prize_contrib") || "Your Net Prize Contribution"}</span>
-                <span>${(stakeUsd * 0.88).toFixed(2)} USDT</span>
+                <span>{t("play.stake.net_prize_contrib")}</span>
+                <span style={{ direction: "ltr" }}>${(stakeUsd * 0.88).toFixed(2)} USDT</span>
               </div>
               <div className={styles.economicsTotal}>
-                <span>{t("play.stake.winner_payout") || "Winner Match Prize Pool"}</span>
-                <span>${(stakeUsd * 2 * 0.88).toFixed(2)} USDT</span>
+                <span>{t("play.stake.winner_payout")}</span>
+                <span style={{ direction: "ltr" }}>${(stakeUsd * 2 * 0.88).toFixed(2)} USDT</span>
               </div>
             </div>
           )}

@@ -65,11 +65,16 @@ function connect(gwInstance = gw) {
           waiters.splice(waiters.indexOf(w), 1);
           reject(new Error(`timed out; queued frames: ${JSON.stringify(inbox)}`));
         }, 2000);
+        w.timer.unref?.();
         waiters.push(w);
       });
     },
     open: () => new Promise((r) => (ws.readyState === ws.OPEN ? r() : ws.once("open", r))),
     close: () => new Promise((r) => {
+      for (const w of waiters) {
+        clearTimeout(w.timer);
+      }
+      waiters.length = 0;
       if (ws.readyState === ws.CLOSED) return r();
       ws.once("close", r);
       ws.close();

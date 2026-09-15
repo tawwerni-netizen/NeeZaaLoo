@@ -117,7 +117,7 @@ export function Footer() {
                 <LocaleLink href="/help">💬 {isRtl ? "مركز المساعدة الفورية" : "Help Center"}</LocaleLink>
               </li>
               <li>
-                <a href="mailto:support@nizalo.com">✉️ support@nizalo.com</a>
+                <a href="mailto:support@Nizalo.com">✉️ support@Nizalo.com</a>
               </li>
             </ul>
             <div className={styles.statusIndicator}>

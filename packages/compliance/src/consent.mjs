@@ -134,7 +134,7 @@ export function createConsentService(db, { now = () => Date.now() } = {}) {
     async getSupportConfig() {
       const r = await db.query("SELECT phone, email, updated_at FROM platform_support_config WHERE id = 'default'");
       if (!r.rows.length) {
-        return { phone: "+2 01069999557", email: "Tawwerni@gmail.com", updatedAt: new Date(now()).toISOString() };
+        return { phone: "+2 01069999557", email: "support@Nizalo.com", updatedAt: new Date(now()).toISOString() };
       }
       return r.rows[0];
     },

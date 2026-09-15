@@ -132,7 +132,7 @@ before(async () => {
   );
 });
 
-after(async () => { await api.close(); });
+after(async () => { await api.close(); await db.close?.(); });
 
 const tokenFor = async (handle) =>
   (await auth.login({ identifier: handle, password: PASSWORD })).accessToken;

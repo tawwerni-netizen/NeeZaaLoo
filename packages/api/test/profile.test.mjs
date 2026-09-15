@@ -5,6 +5,8 @@
  * a public profile is safe to show to anyone, and nothing sensitive
  * (email, wallet, security data) is ever assembled into it.
  */
+process.env.NODE_ENV = "test";
+
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";

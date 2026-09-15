@@ -76,14 +76,15 @@ export async function readJsonBody(req, { maxBytes = MAX_BODY_BYTES } = {}) {
     if (total > maxBytes) return { ok: false, code: "PAYLOAD_TOO_LARGE" };
     chunks.push(chunk);
   }
-  if (total === 0) return { ok: true, body: {} };
+  const rawBody = Buffer.concat(chunks);
+  if (total === 0) return { ok: true, body: {}, rawBody };
 
   try {
-    const parsed = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    const parsed = JSON.parse(rawBody.toString("utf8"));
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
       return { ok: false, code: "BAD_REQUEST" };
     }
-    return { ok: true, body: parsed };
+    return { ok: true, body: parsed, rawBody };
   } catch {
     return { ok: false, code: "BAD_REQUEST" };
   }
@@ -111,6 +112,15 @@ export function sendJson(res, status, payload, extraHeaders = {}) {
   const body = JSON.stringify(payload);
   res.writeHead(status, { ...SECURITY_HEADERS, ...extraHeaders });
   res.end(body);
+}
+
+export function sendText(res, status, text, extraHeaders = {}) {
+  res.writeHead(status, {
+    ...SECURITY_HEADERS,
+    "content-type": "text/plain; charset=utf-8",
+    ...extraHeaders,
+  });
+  res.end(text);
 }
 
 /**

@@ -128,7 +128,7 @@ describe("Legal Policies and Consent", () => {
     const { consent } = await fresh();
     const initial = await consent.getSupportConfig();
     assert.equal(initial.phone, "+2 01069999557");
-    assert.equal(initial.email, "Tawwerni@gmail.com");
+    assert.equal(initial.email, "support@Nizalo.com");
 
     const updated = await consent.updateSupportConfig({
       phone: "+1 800 555 0199",

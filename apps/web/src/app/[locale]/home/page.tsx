@@ -118,7 +118,9 @@ function HomeContent() {
               ))}
             </ul>
           )}
-          <LocaleLink href="/dashboard/history" className={styles.cardLink}>{t("dashboard.recent.full_history")}</LocaleLink>
+          {player?.handle && (
+            <LocaleLink href={`/players/${encodeURIComponent(player.handle)}`} className={styles.cardLink}>{t("dashboard.recent.full_history")}</LocaleLink>
+          )}
         </div>
 
         <div className={styles.card}>
