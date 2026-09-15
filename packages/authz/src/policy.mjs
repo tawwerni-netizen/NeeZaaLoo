@@ -108,6 +108,15 @@ export const ACTIONS = {
   // --- Money -----------------------------------------------------------------
   "admin.withdrawal.review":  { capability: "withdrawal.review" },
   "admin.withdrawal.approve": { capability: "withdrawal.approve", stepUp: true, fourEyes: true },
+  // A deliberate, explicit exception to four-eyes for operators running with
+  // a single admin, where a SECOND distinct decider structurally cannot
+  // exist -- true four-eyes review (admin.withdrawal.approve above) remains
+  // available the moment a second admin account does. Same capability, same
+  // step-up requirement, no approval_request precondition. This is a real
+  // reduction in the control (one compromised admin credential is enough),
+  // accepted knowingly rather than worked around silently -- see the
+  // review-threshold split in payments.mjs's own reviewThresholdMinor.
+  "admin.withdrawal.approve_solo": { capability: "withdrawal.approve", stepUp: true },
   "admin.withdrawal.reject":  { capability: "withdrawal.review", stepUp: true },
   "admin.adjustment.create":  { capability: "adjustment.create", stepUp: true, fourEyes: true },
   "admin.economy.change":     { capability: "economy.manage", stepUp: true, fourEyes: true },

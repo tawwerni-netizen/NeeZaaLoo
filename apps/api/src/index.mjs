@@ -330,6 +330,18 @@ async function main() {
         capacity: Number(process.env.GOOGLE_FINALIZE_RATE_CAPACITY || 10),
         refillPerSecond: Number(process.env.GOOGLE_FINALIZE_RATE_REFILL_PER_SEC || 10 / 300),
       },
+      // Keyed per-IP like every other sensitive route. OxaPay's webhook
+      // traffic comes from a small, stable set of provider IPs and can be
+      // bursty across many users' deposits/withdrawals at once, so this
+      // budget is far more generous than the auth-flow limits above -- the
+      // real defense against a forged/replayed webhook is signature
+      // verification plus paymentSvc's own chain re-derivation, not rate
+      // limiting; this is a backstop against flood/DoS, not the primary
+      // control.
+      "payment-webhook": {
+        capacity: Number(process.env.PAYMENT_WEBHOOK_RATE_CAPACITY || 120),
+        refillPerSecond: Number(process.env.PAYMENT_WEBHOOK_RATE_REFILL_PER_SEC || 2),
+      },
     },
     // Comma-separated exact origins, e.g. "https://app.nizalo.com" in
     // production or "http://localhost:3400" for local frontend dev against

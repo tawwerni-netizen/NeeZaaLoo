@@ -28,6 +28,7 @@ import { DEFAULT_SPAWNERS } from "../../matchmaking/src/spawn.mjs";
 import { tryResolveTimeControl, resolveTimeControl, DEFAULT_TIME_PROFILE } from "../../duel-engine/src/time-profiles.mjs";
 import { SUPPORTED_LOCALE_CODES, DEFAULT_LOCALE } from "../../i18n/src/locales.mjs";
 import { RbacError } from "../../authz/src/rbac.mjs";
+import { setActor as setLedgerActor, WithdrawalError } from "../../payments/src/payments.mjs";
 import { EmailIdentityError } from "../../auth/src/email-identity.mjs";
 import { EmailVerificationError } from "../../auth/src/email-verification.mjs";
 import { getAuthMethods } from "../../auth/src/auth-methods.mjs";
@@ -1174,6 +1175,13 @@ function buildRoutes() {
       handler: async ({ params, body, db, paymentSvc, paymentProvider }) => {
         const asset = String(body?.asset ?? "USDT").trim();
         const network = String(body?.network ?? "TRC20").trim();
+        // What actually gets stored on the deposit row and checked against
+        // the chain -- see custodyNetwork()'s own header on why "TRC20" and
+        // "TRON" must resolve to the one seeded custody account. Used for
+        // every DB lookup/write below; `network` (raw, user-facing) stays
+        // what the wallet UI's network tabs sent and is only ever echoed
+        // back in responses, never queried against.
+        const storedNetwork = network === "TRC20" ? "TRON" : network;
         const rawAmount = body?.amountMinor ?? (body?.amount != null ? Math.round(Number(body.amount) * 1_000_000) : null);
         const amountMinor = rawAmount ? BigInt(rawAmount) : 10_000_000n;
 
@@ -1187,7 +1195,7 @@ function buildRoutes() {
             WHERE player_id = $1 AND asset = $2 AND network = $3 AND provider = 'oxapay'
               AND status NOT IN ('EXPIRED', 'ORPHANED', 'QUARANTINED')
             ORDER BY created_at DESC LIMIT 1`,
-          [params.id, asset, network]
+          [params.id, asset, storedNetwork]
         );
         if (existingDep.rows.length) {
           const row = existingDep.rows[0];
@@ -1199,8 +1207,8 @@ function buildRoutes() {
                 id: row.id,
                 address: row.address,
                 asset: row.asset,
-                network: row.network,
-                display: `${row.asset} — ${row.network}`,
+                network,
+                display: `${row.asset} — ${network}`,
                 expiresAt: row.expires_at || new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
               },
             },
@@ -1211,7 +1219,7 @@ function buildRoutes() {
           const res = await paymentSvc.createDeposit({
             playerId: params.id,
             asset,
-            network: network === "TRC20" ? "TRON" : network,
+            network: storedNetwork,
           });
           if (!res.ok) {
             return { status: 400, body: errorBody(res.reason || "DEPOSIT_FAILED") };
@@ -1224,6 +1232,7 @@ function buildRoutes() {
               deposit: {
                 id: res.depositId,
                 address: res.address,
+                qrCodeUrl: res.qrCodeUrl ?? null,
                 asset: res.asset,
                 network,
                 display: res.display,
@@ -1290,116 +1299,27 @@ function buildRoutes() {
         };
       } },
 
+    // Deposit webhook from OxaPay. The ONLY supported path is
+    // paymentSvc.ingestWebhook() -> verifyAndCredit(): verify signature,
+    // record+dedupe the raw event, then independently re-derive the deposit
+    // from the chain (packages/chain's own reader) before ever posting a
+    // ledger entry. There is deliberately no inline fallback that credits
+    // from the webhook body directly -- a payment provider is configured
+    // (see apps/api/src/index.mjs) or deposits simply do not auto-credit,
+    // which is the safe failure mode.
     { method: "POST", path: "/v1/payments/oxapay/webhook", action: "payment.webhook", anonymous: true,
-      handler: async ({ body, rawBody, headers, db, paymentSvc, paymentProvider }) => {
+      rateLimitKey: "payment-webhook",
+      handler: async ({ body, rawBody, headers, paymentSvc }) => {
         const raw = rawBody || Buffer.from(JSON.stringify(body || {}));
         const reqHeaders = headers || {};
 
-        if (paymentSvc && typeof paymentSvc.ingestWebhook === "function") {
-          const res = await paymentSvc.ingestWebhook(raw, reqHeaders);
-          if (!res.ok) {
-            return { status: 400, text: "invalid signature" };
-          }
+        if (!paymentSvc || typeof paymentSvc.ingestWebhook !== "function") {
           return { status: 200, text: "ok" };
         }
-
-        if (paymentProvider && typeof paymentProvider.verifyWebhook === "function") {
-          const verified = paymentProvider.verifyWebhook(raw, reqHeaders);
-          if (!verified.ok) {
-            return { status: 400, text: "invalid signature" };
-          }
-
-          const ev = verified.event;
-          if (ev) {
-            const providerRef = ev.providerRef;
-            const address = ev.address;
-
-            if (ev.state === "CONFIRMED") {
-              let dep = null;
-              if (providerRef) {
-                const depRes = await db.query(
-                  `SELECT * FROM deposit WHERE provider_ref = $1 OR id = $1`,
-                  [providerRef]
-                );
-                if (depRes.rows.length) dep = depRes.rows[0];
-              }
-              if (!dep && address) {
-                const depByAddr = await db.query(
-                  `SELECT * FROM deposit WHERE address = $1 ORDER BY created_at DESC LIMIT 1`,
-                  [address]
-                );
-                if (depByAddr.rows.length) dep = depByAddr.rows[0];
-              }
-
-              if (dep) {
-                const amount = BigInt(
-                  (ev.reportedAmount ? Math.round(Number(ev.reportedAmount) * 1_000_000) : null) ||
-                  dep.observed_amount_minor ||
-                  10_000_000
-                );
-                const txHash = ev.reportedTxHash || `oxapay_tx_${providerRef || dep.id}_${Date.now()}`;
-
-                let targetDepId = dep.id;
-                // If deposit row was already credited, this is a subsequent payment to the player's static address!
-                if (dep.status === "CREDITED") {
-                  if (dep.observed_tx_hash === txHash) {
-                    return { status: 200, text: "ok" }; // Idempotent duplicate replay
-                  }
-                  targetDepId = `dep_${randomUUID()}`;
-                  await db.query(
-                    `INSERT INTO deposit (id, player_id, asset, network, provider, provider_ref, address, status, expires_at)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, 'AWAITING_PAYMENT', now() + interval '365 days')`,
-                    [targetDepId, dep.player_id, dep.asset, dep.network, dep.provider, providerRef || targetDepId, dep.address]
-                  );
-                }
-
-                let txId = null;
-                try {
-                  const custodyNet = (dep.network === "TRC20" || dep.network === "TRON") ? "TRON" : dep.network;
-                  const posted = await db.query(
-                    `SELECT * FROM ledger_post($1, 'DEPOSIT', 'SYSTEM', NULL, $2::jsonb, $3, NULL, 'deposit', $4)`,
-                    [
-                      `deposit:oxapay:${providerRef || targetDepId}:${txHash}`,
-                      JSON.stringify([
-                        { account: `platform:custody:${dep.asset}:${custodyNet}`, amount: amount.toString() },
-                        { account: `user:${dep.player_id}:available`, amount: (-amount).toString() },
-                      ]),
-                      dep.asset,
-                      targetDepId,
-                    ]
-                  );
-                  txId = posted.rows[0]?.transaction_id;
-                } catch (err) {
-                  console.error("ledger_post error in webhook:", err);
-                }
-
-                if (txId) {
-                  await db.query(
-                    `UPDATE deposit
-                        SET status = 'CREDITED',
-                            credited_at = now(),
-                            credited_tx_id = $2,
-                            observed_amount_minor = $3,
-                            observed_tx_hash = $4,
-                            observed_asset = asset,
-                            observed_network = network
-                      WHERE id = $1`,
-                    [targetDepId, txId, amount.toString(), txHash]
-                  );
-                }
-              }
-            } else if (ev.state === "EXPIRED" || ev.state === "FAILED") {
-              if (providerRef) {
-                await db.query(
-                  `UPDATE deposit SET status = $2 WHERE (provider_ref = $1 OR id = $1) AND status = 'AWAITING_PAYMENT'`,
-                  [providerRef, ev.state]
-                );
-              }
-            }
-          }
-          return { status: 200, text: "ok" };
+        const res = await paymentSvc.ingestWebhook(raw, reqHeaders);
+        if (!res.ok) {
+          return { status: 400, text: "invalid signature" };
         }
-
         return { status: 200, text: "ok" };
       } },
 
@@ -1411,46 +1331,59 @@ function buildRoutes() {
         return { status: 200, text: "ok" };
       } },
 
-    // Payout status webhook from OxaPay
+    // Payout status webhook from OxaPay.
+    //
+    // Deliberately does NOT trust the webhook body for anything but "go look":
+    // it verifies the signature, resolves provider_ref -> our withdrawal id,
+    // and hands off to paymentSvc.reconcile() -- the SAME function the
+    // background reconciliation worker calls on a schedule. reconcile() never
+    // advances BROADCASTED to CONFIRMED on a provider's word; it re-queries
+    // the provider itself (provider.getPayout()) and, from there, requires an
+    // independent chain.verifyTransfer() before completion ever posts a
+    // ledger entry. A forged or replayed webhook can at worst trigger an
+    // early reconcile() call that finds nothing new -- exactly mirroring the
+    // deposit webhook's ingestWebhook() -> verifyAndCredit() shape below.
     { method: "POST", path: "/v1/payments/oxapay/payout-webhook", action: "payment.webhook", anonymous: true,
-      handler: async ({ body, rawBody, headers, db, paymentProvider }) => {
+      rateLimitKey: "payment-webhook",
+      handler: async ({ body, rawBody, headers, db, paymentProvider, paymentSvc }) => {
         const raw = rawBody || Buffer.from(JSON.stringify(body || {}));
         const reqHeaders = headers || {};
 
-        if (paymentProvider && typeof paymentProvider.verifyWebhook === "function") {
-          const verified = paymentProvider.verifyWebhook(raw, reqHeaders);
-          if (verified.ok && verified.event) {
-            const ev = verified.event;
-            const rawStatus = String(ev.raw?.status || "").toLowerCase();
-            const trackId = String(ev.providerRef || ev.raw?.track_id || "");
-            const txHash = ev.reportedTxHash;
+        if (!paymentProvider || typeof paymentProvider.verifyWebhook !== "function") {
+          return { status: 200, text: "ok" };
+        }
+        const verified = paymentProvider.verifyWebhook(raw, reqHeaders);
+        if (!verified.ok) {
+          return { status: 400, text: "invalid signature" };
+        }
+        if (!paymentSvc || typeof paymentSvc.reconcile !== "function") {
+          // No payment service wired -- nothing safe to do. Never fall back
+          // to writing withdrawal state directly from a webhook body.
+          return { status: 200, text: "ok" };
+        }
 
-            if (["complete", "completed", "paid", "confirmed"].includes(rawStatus) || ev.state === "CONFIRMED") {
-              await db.query(
-                `UPDATE withdrawal
-                    SET status = 'CONFIRMED'::withdrawal_status,
-                        completed_at = now(),
-                        tx_hash = COALESCE($2, tx_hash)
-                  WHERE provider_ref = $1 AND status IN ('PROCESSING', 'BROADCASTED', 'APPROVED')`,
-                [trackId, txHash]
-              );
-            } else if (["failed", "rejected"].includes(rawStatus) || ev.state === "FAILED") {
-              await db.query(
-                `UPDATE withdrawal
-                    SET status = 'FAILED'::withdrawal_status,
-                        failure_reason = $2
-                  WHERE provider_ref = $1 AND status IN ('PROCESSING', 'BROADCASTED', 'APPROVED')`,
-                [trackId, ev.raw?.message || "Payout rejected by provider"]
-              );
-            }
-          }
+        const ev = verified.event;
+        const trackId = String(ev?.providerRef || ev?.raw?.track_id || "");
+        if (!trackId) return { status: 200, text: "ok" };
+
+        const wd = await db.query(
+          `SELECT id FROM withdrawal WHERE provider_ref = $1 AND status IN ('PROCESSING', 'BROADCASTED', 'APPROVED')`,
+          [trackId]
+        );
+        if (wd.rows.length) {
+          // Errors here are the worker's problem too -- reconcile() is safe
+          // to call repeatedly and idempotent on every terminal transition,
+          // so a failure just means the next scheduled poll picks it up.
+          await paymentSvc.reconcile(wd.rows[0].id).catch((err) => {
+            console.error("paymentSvc.reconcile error in payout webhook:", err);
+          });
         }
         return { status: 200, text: "ok" };
       } },
 
     { method: "POST", path: "/v1/players/:id/withdrawals", action: "wallet.withdraw",
       owner: ({ params }) => params.id,
-      handler: async ({ params, body, db }) => {
+      handler: async ({ params, body, db, paymentSvc }) => {
         const rawAmount = body?.amountMinor ?? (body?.amount != null ? Math.round(Number(body.amount) * 1_000_000) : null);
         const amountMinor = BigInt(rawAmount ?? 0);
         if (amountMinor <= 0n) {
@@ -1517,8 +1450,9 @@ function buildRoutes() {
         }
 
         const id = `wd_${randomUUID()}`;
+        let created;
         try {
-          return await db.transaction(async (tx) => {
+          created = await db.transaction(async (tx) => {
             const posted = await tx.query(
               `SELECT * FROM ledger_post($1, 'WITHDRAWAL_LOCK', 'SYSTEM', NULL, $2::jsonb, $3, NULL, 'withdrawal', $4)`,
               [
@@ -1537,10 +1471,7 @@ function buildRoutes() {
                RETURNING id, player_id, asset, network, destination, amount_minor::text, fee_minor::text, status::text, requested_at`,
               [id, params.id, asset, network, destination, amountMinor.toString(), feeMinor.toString(), posted.rows[0].transaction_id]
             );
-            return {
-              status: 201,
-              body: { ok: true, withdrawal: r.rows[0] },
-            };
+            return r.rows[0];
           });
         } catch (e) {
           if (/insufficient funds/i.test(e.message)) {
@@ -1548,6 +1479,46 @@ function buildRoutes() {
           }
           throw e;
         }
+
+        // Walk the withdrawal through the REAL state machine automatically,
+        // outside the funds-locking transaction above (assess()/process()
+        // each open their own). REQUESTED -> VALIDATING is always a legal
+        // transition (withdrawal_transition_allowed); paymentSvc.assess()
+        // takes it the rest of the way to RISK_CHECK -> APPROVED or
+        // PENDING_REVIEW using this process's own configured
+        // reviewThresholdMinor (apps/api/src/index.mjs -- $500 today) and
+        // the injected risk() hook (score 0 by default, so the threshold is
+        // the only gate unless a real risk engine is wired in later).
+        // Below threshold: process() immediately too, which hands it to the
+        // background reconciliation worker's own PROCESSING/BROADCASTED
+        // pickup (packages/reconciliation's runProviderWithdrawals) with no
+        // human step at all -- the outbound mirror of how deposits already
+        // auto-credit off a webhook. At/above threshold, it lands on
+        // PENDING_REVIEW and stays there for an admin to act on.
+        if (paymentSvc) {
+          try {
+            await db.query(`UPDATE withdrawal SET status='VALIDATING'::withdrawal_status WHERE id=$1`, [id]);
+            const assessed = await paymentSvc.assess(id);
+            if (assessed.ok && assessed.status === "APPROVED") {
+              await paymentSvc.process(id);
+            }
+          } catch (err) {
+            // The withdrawal already exists and funds are already locked --
+            // never fail the request over a problem in the automation step.
+            // It's left wherever the state machine got to (VALIDATING,
+            // RISK_CHECK, or PENDING_REVIEW); the reconciliation worker and
+            // admin tooling both operate on real persisted state, not on
+            // this request having "finished" the job.
+            console.error("automatic withdrawal processing error:", err);
+          }
+        }
+
+        const finalRow = await db.query(
+          `SELECT id, player_id, asset, network, destination, amount_minor::text, fee_minor::text, status::text, requested_at
+             FROM withdrawal WHERE id = $1`,
+          [id]
+        );
+        return { status: 201, body: { ok: true, withdrawal: finalRow.rows[0] ?? created } };
       } },
 
     // --- Play ----------------------------------------------------------------
@@ -1576,7 +1547,7 @@ function buildRoutes() {
             return { status: decision.reason === "CONTROL_DISABLED" ? 503 : 403, body: errorBody(decision.reason) };
           }
           const stakeMinor = BigInt(body.stakeMinor ?? "0");
-          if (stakeMinor > 0n && !process.execArgv.includes("--test") && process.env.NODE_ENV !== "test") {
+          if (stakeMinor > 0n) {
             const balRes = await db.query(
               `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
                  FROM ledger_account a
@@ -1645,7 +1616,7 @@ function buildRoutes() {
             return { status: decision.reason === "CONTROL_DISABLED" ? 503 : 403, body: errorBody(decision.reason) };
           }
           const stakeMinor = BigInt(body.stakeMinor ?? "0");
-          if (stakeMinor > 0n && !process.execArgv.includes("--test") && process.env.NODE_ENV !== "test") {
+          if (stakeMinor > 0n) {
             const balRes = await db.query(
               `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
                  FROM ledger_account a
@@ -2511,7 +2482,7 @@ function buildRoutes() {
         }
 
         // Check wallet balance if CASH tournament
-        if (t.rows[0].tier === "CASH" && BigInt(t.rows[0].entry_fee_minor || 0) > 0n && !process.execArgv.includes("--test") && process.env.NODE_ENV !== "test") {
+        if (t.rows[0].tier === "CASH" && BigInt(t.rows[0].entry_fee_minor || 0) > 0n) {
           const balRes = await db.query(
             `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
                FROM ledger_account a
@@ -3148,59 +3119,80 @@ function buildRoutes() {
         };
       } },
 
-    { method: "POST", path: "/v1/admin/withdrawals/:id/approve", action: "admin.wallet.read",
+    // Single-admin approval for a withdrawal that landed on PENDING_REVIEW
+    // (i.e. at/above reviewThresholdMinor -- see the automatic sub-threshold
+    // path in POST /v1/players/:id/withdrawals). Deliberately NOT
+    // admin.withdrawal.approve: that action requires a genuine four-eyes
+    // approval_request from a SECOND admin, which cannot exist with one
+    // operator. admin.withdrawal.approve_solo carries the same capability
+    // and the same mandatory step-up, without that precondition -- see its
+    // own comment in policy.mjs for the trade-off being accepted here.
+    { method: "POST", path: "/v1/admin/withdrawals/:id/approve", action: "admin.withdrawal.approve_solo",
       subjectType: "withdrawal",
-      handler: async ({ params, actor, db, paymentProvider, paymentSvc }) => {
-        const checkWd = await db.query("SELECT * FROM withdrawal WHERE id = $1", [params.id]);
-        if (!checkWd.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
-        const w = checkWd.rows[0];
+      handler: async ({ params, actor, db, paymentSvc }) => {
+        if (!paymentSvc) return { status: 503, body: errorBody("PAYMENTS_UNAVAILABLE") };
 
-        const r = await db.query(
-          `UPDATE withdrawal
-              SET status = 'APPROVED'::withdrawal_status
-            WHERE id = $1 AND status IN ('REQUESTED', 'PENDING_REVIEW', 'ON_HOLD')
-            RETURNING id, status`,
+        const updated = await db.transaction(async (tx) => {
+          await setLedgerActor(tx, { type: "ADMIN", id: actor.id });
+          // PENDING_REVIEW -> APPROVED is the one edge this endpoint is
+          // for. A withdrawal sitting at REQUESTED/VALIDATING/RISK_CHECK
+          // hasn't finished assess() yet (a request in flight, or the
+          // automation errored -- see that route's own comment), and
+          // ON_HOLD must return to PENDING_REVIEW first (there is no
+          // direct ON_HOLD -> APPROVED edge, by design: a withdrawal an
+          // admin explicitly paused for investigation should not be
+          // approvable without someone consciously resuming it first).
+          const r = await tx.query(
+            `UPDATE withdrawal SET status = 'APPROVED'::withdrawal_status
+              WHERE id = $1 AND status = 'PENDING_REVIEW'
+              RETURNING id, status::text`,
+            [params.id]
+          );
+          return r.rows[0] ?? null;
+        });
+        if (!updated) return { status: 409, body: errorBody("NOT_PENDING_REVIEW") };
+
+        // The SAME function the automatic sub-threshold path calls --
+        // broadcasts via the provider, records provider_ref, moves to
+        // PROCESSING. From there the existing reconciliation worker
+        // (packages/reconciliation's runProviderWithdrawals, already
+        // running on a schedule) picks it up and drives it the rest of the
+        // way to BROADCASTED -> CONFIRMED -> COMPLETED with no further
+        // admin action. A failure here leaves it at APPROVED, retryable by
+        // calling this same process() again (it's idempotent on the
+        // withdrawal's own broadcast-attempt key) -- never fails this
+        // request, since the approval itself already succeeded.
+        const processed = await paymentSvc.process(params.id).catch((err) => {
+          console.error("paymentSvc.process error after solo approval:", err);
+          return null;
+        });
+
+        const finalRow = await db.query(
+          "SELECT id, status::text, provider_ref FROM withdrawal WHERE id = $1",
           [params.id]
         );
-        if (!r.rows.length) return { status: 404, body: errorBody("NOT_FOUND_OR_INVALID_STATE") };
-
-        // If OxaPay payout provider is configured, dispatch automated payout
-        const provider = paymentProvider || (paymentSvc ? paymentSvc.provider : null);
-        if (provider && typeof provider.createPayout === "function" && process.env.OXAPAY_PAYOUT_API_KEY) {
-          try {
-            const fee = BigInt(w.fee_minor || 1_000_000);
-            const netAmountMinor = BigInt(w.amount_minor) > fee ? BigInt(w.amount_minor) - fee : BigInt(w.amount_minor);
-            const payout = await provider.createPayout({
-              withdrawalId: w.id,
-              asset: w.asset,
-              network: w.network,
-              destination: w.destination,
-              amountMinor: netAmountMinor,
-            });
-            await db.query(
-              `UPDATE withdrawal SET status = 'PROCESSING'::withdrawal_status, provider = $2, provider_ref = $3 WHERE id = $1`,
-              [w.id, provider.id, payout.providerRef]
-            );
-          } catch (payoutErr) {
-            console.error("Automated OxaPay payout dispatch error:", payoutErr);
-          }
-        }
-
-        return { body: { ok: true, withdrawal: r.rows[0] } };
+        return { body: { ok: true, withdrawal: finalRow.rows[0], processResult: processed } };
       } },
 
-    { method: "POST", path: "/v1/admin/withdrawals/:id/reject", action: "admin.wallet.read",
+    { method: "POST", path: "/v1/admin/withdrawals/:id/reject", action: "admin.withdrawal.reject",
       subjectType: "withdrawal",
-      handler: async ({ params, actor, db }) => {
-        const r = await db.query(
-          `UPDATE withdrawal
-              SET status = 'REJECTED'::withdrawal_status
-            WHERE id = $1 AND status IN ('REQUESTED', 'PENDING_REVIEW', 'ON_HOLD')
-            RETURNING id, status`,
-          [params.id]
-        );
-        if (!r.rows.length) return { status: 404, body: errorBody("NOT_FOUND_OR_INVALID_STATE") };
-        return { body: { ok: true, withdrawal: r.rows[0] } };
+      handler: async ({ params, body, actor, paymentSvc }) => {
+        if (!paymentSvc) return { status: 503, body: errorBody("PAYMENTS_UNAVAILABLE") };
+        // paymentSvc.reject() -- not raw SQL -- because it's the one path
+        // that both respects the legal-transition table AND releases the
+        // locked funds back to :available in the same transaction (see its
+        // own header). The route's own action already required step-up to
+        // reach this handler at all, so stepUpVerified: true here reflects
+        // a check the pipeline already performed, not one this handler is
+        // asserting on its own.
+        const reason = String(body?.reason ?? "Rejected by admin").slice(0, 500);
+        const result = await paymentSvc.reject(params.id, reason, { adminId: actor.id, stepUpVerified: true });
+        if (!result.ok) {
+          const status = result.reason === WithdrawalError.WRONG_STATE ? 409
+            : result.reason === WithdrawalError.PERMISSION_DENIED ? 403 : 400;
+          return { status, body: errorBody(result.reason) };
+        }
+        return { body: { ok: true, withdrawal: result } };
       } },
 
     { method: "GET", path: "/v1/admin/matches", action: "admin.duel.read",

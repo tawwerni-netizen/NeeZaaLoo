@@ -176,6 +176,11 @@ export function createPaymentService(db, {
       );
       return {
         ok: true, depositId: id, address: intent.address,
+        // Whatever the provider gave us to render on the deposit modal --
+        // dropped here previously, which meant the wallet UI fell back to a
+        // static placeholder graphic instead of a QR that actually encodes
+        // the user's real, unique deposit address.
+        qrCodeUrl: intent.qrCodeUrl ?? null,
         // Asset and network always travel together, everywhere, per the brand
         // rule -- never a bare "USDT".
         display: `${asset} — ${network} (${network === "TRON" ? "TRC20" : network})`,
@@ -414,7 +419,7 @@ export function createPaymentService(db, {
               // (a real UNIQUE constraint), not application logic alone.
               `deposit:${dep.network}:${result.txHash}:0`,
               JSON.stringify([
-                { account: `platform:custody:${dep.asset}:${dep.network}`, amount: amount.toString() },
+                { account: `platform:custody:${dep.asset}:${custodyNetwork(dep.network)}`, amount: amount.toString() },
                 { account: `user:${dep.player_id}:available`, amount: (-amount).toString() },
               ]),
               dep.asset, dep.id,
@@ -1037,9 +1042,10 @@ export function createPaymentService(db, {
 
         const amount = BigInt(w.amount_minor);
         const fee = BigInt(w.fee_minor ?? 0);
+        const custodyAccount = `platform:custody:${w.asset}:${custodyNetwork(w.network)}`;
         const legs = [
           { account: `user:${w.player_id}:locked`, amount: amount.toString() },
-          { account: `platform:custody:${w.asset}:${w.network}`, amount: (-amount).toString() },
+          { account: custodyAccount, amount: (-amount).toString() },
         ];
         // G13: a declared network fee is posted as its own leg, in the SAME
         // transaction, to the platform's existing fees account -- never
@@ -1047,7 +1053,7 @@ export function createPaymentService(db, {
         // its default zero (every existing withdrawal, unchanged).
         if (fee > 0n) {
           legs.push(
-            { account: `platform:custody:${w.asset}:${w.network}`, amount: (-fee).toString() },
+            { account: custodyAccount, amount: (-fee).toString() },
             { account: `platform:fees:network`, amount: fee.toString() }
           );
         }
@@ -1101,7 +1107,7 @@ const advance = (db, id, to) =>
  * setting to the current transaction only -- it never leaks to the next one
  * on a pooled connection.
  */
-async function setActor(tx, { type, id = null }) {
+export async function setActor(tx, { type, id = null }) {
   await tx.query(
     `SELECT set_config('nizalo.actor_type', $1, true), set_config('nizalo.actor_id', $2, true)`,
     [type, id ?? ""]
@@ -1192,5 +1198,28 @@ function railOperationAllowed(rail, flagField) {
 /** TRON base58 addresses start with T and are 34 characters. */
 export const isValidTronAddress = (a) =>
   typeof a === "string" && /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(a);
+
+/**
+ * The platform's ONE seeded custody account (0002_ledger_roles_and_platform_
+ * accounts.sql) is `platform:custody:USDT:TRON` -- deliberately singular,
+ * per PAYMENT_ARCHITECTURE.md's "exactly one network at launch". Deposit and
+ * withdrawal rows, by contrast, store the OxaPay/UI-facing network label
+ * ("TRC20"), because that is the vocabulary the provider and the wallet
+ * network tabs speak. Without this mapping, every deposit or withdrawal on
+ * TRC20 would try to post against a `platform:custody:USDT:TRC20` account
+ * that was never created, and ledger_post() would reject it outright
+ * ("no such ledger account") -- silently breaking every real deposit and
+ * withdrawal, not a cosmetic mismatch.
+ *
+ * BEP20 and ERC20 are exposed as network tabs in the wallet UI today but
+ * have no seeded custody account either (and, per the same doc, adding a
+ * network is meant to be a deliberate, threat-modelled decision, not a UI
+ * default) -- this function makes that gap explicit rather than silently
+ * routing their funds into the TRON custody account.
+ */
+export function custodyNetwork(network) {
+  if (network === "TRC20" || network === "TRON") return "TRON";
+  return network;
+}
 
 export { ProviderPaymentState, ProviderPayoutState };

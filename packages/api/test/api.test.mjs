@@ -1328,6 +1328,18 @@ describe("play surfaces", () => {
     before(async () => {
       own = createApi({ db, auth, rateLimit: { capacity: 5000, refillPerSecond: 5000 }, controlCacheMs: 0 });
       await own.listen();
+      // The balance check on a CASH-tier ticket is real (no NODE_ENV/--test
+      // bypass -- that was itself a bug, since production sets neither), so
+      // bob genuinely needs funds to reach the off-ladder/success assertions
+      // below rather than short-circuiting on INSUFFICIENT_FUNDS first.
+      await db.query("SELECT ledger_open_user_wallet('bob')");
+      await db.query(
+        `SELECT ledger_post('seed-bob-cash-tickets','DEPOSIT','SYSTEM',NULL,$1::jsonb)`,
+        [JSON.stringify([
+          { account: "platform:custody:USDT:TRON", amount: "100000000" },
+          { account: "user:bob:available", amount: "-100000000" },
+        ])]
+      );
     });
     after(async () => { await own.close(); });
 
@@ -1564,6 +1576,19 @@ describe("play surfaces", () => {
       before(async () => {
         own = createApi({ db, auth, rateLimit: { capacity: 5000, refillPerSecond: 5000 }, controlCacheMs: 0 });
         await own.listen();
+        // Same real (no test-only bypass) balance check as the RANDOM
+        // OPPONENT block above -- alice is the challenger who pays the
+        // stake here, so she needs funds to reach the off-ladder/success
+        // assertions below rather than short-circuiting on
+        // INSUFFICIENT_FUNDS first.
+        await db.query("SELECT ledger_open_user_wallet('alice')");
+        await db.query(
+          `SELECT ledger_post('seed-alice-cash-challenges','DEPOSIT','SYSTEM',NULL,$1::jsonb)`,
+          [JSON.stringify([
+            { account: "platform:custody:USDT:TRON", amount: "100000000" },
+            { account: "user:alice:available", amount: "-100000000" },
+          ])]
+        );
       });
       after(async () => { await own.close(); });
 
