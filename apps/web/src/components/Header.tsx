@@ -102,7 +102,9 @@ export function Header() {
           ) : (
             <>
               <Button variant="ghost" onClick={openPopup}>{t("nav.log_in")}</Button>
-              <Button variant="primary" onClick={openPopup}>{t("nav.play_now")}</Button>
+              <LocaleLink href="/play">
+                <Button variant="primary">{t("nav.play_now")}</Button>
+              </LocaleLink>
               <div className={styles.headerDivider} />
             </>
           )}
@@ -123,13 +125,10 @@ export function Header() {
               <NotificationCenter />
             </>
           ) : (
-            <button
-              type="button"
-              className={styles.mobileHeaderPlayBtn}
-              onClick={openPopup}
-            >
-              {t("nav.play_now")}
-            </button>
+            <LocaleLink href="/play" className={styles.mobileHeaderPlayBtn}>
+              <span>⚔️</span>
+              <span>{t("nav.play_now")}</span>
+            </LocaleLink>
           )}
 
           <button
@@ -193,9 +192,11 @@ export function Header() {
                   <Button variant="ghost" onClick={() => { closeMenu(); openPopup(); }}>
                     {t("nav.log_in")}
                   </Button>
-                  <Button variant="primary" onClick={() => { closeMenu(); openPopup(); }}>
-                    {t("nav.play_now")}
-                  </Button>
+                  <LocaleLink href="/play" onClick={closeMenu}>
+                    <Button variant="primary">
+                      {t("nav.play_now")}
+                    </Button>
+                  </LocaleLink>
                 </div>
               </div>
             )}

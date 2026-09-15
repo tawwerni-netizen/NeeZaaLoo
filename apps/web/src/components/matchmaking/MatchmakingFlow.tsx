@@ -24,10 +24,12 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { get, post, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useAuthPopup } from "@/lib/auth-popup-context";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import { Countdown } from "@/components/game/Countdown";
 import { LocaleLink } from "@/components/LocaleLink";
+import { Button } from "@/components/Button";
 import type { StakeChoice } from "@/components/play/StakeSelect";
 import styles from "./MatchmakingFlow.module.css";
 
@@ -39,6 +41,7 @@ const GAME_NAME_KEY: Record<string, string> = { chess: "chess", "speed-math": "s
 
 export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: StakeChoice }) {
   const { player } = useAuth();
+  const { openPopup } = useAuthPopup();
   const { t, locale } = useI18n();
   const router = useRouter();
   const reduceMotion = useReducedMotion();
@@ -55,6 +58,12 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
   // Enqueue once on mount.
   useEffect(() => {
     cancelledRef.current = false;
+    if (!player) {
+      setError(locale === "ar" ? "يرجى تسجيل الدخول للبدء في التوفيق والمبارزة" : "Please log in to enter matchmaking");
+      setPhase("error");
+      openPopup();
+      return;
+    }
     (async () => {
       try {
         await post("/v1/matchmaking/tickets", {
@@ -77,7 +86,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
     })();
     return () => { cancelledRef.current = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]);
+  }, [gameId, player]);
 
   // Poll for a match while waiting.
   useEffect(() => {
@@ -160,7 +169,28 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
         {phase === "error" && (
           <motion.div key="error" {...fade(reduceMotion)} className={styles.center}>
             <p className={styles.status} role="alert">{error}</p>
-            {insufficientFunds ? (
+            {!player ? (
+              <div style={{ marginTop: "16px", display: "flex", gap: "10px", justifyContent: "center" }}>
+                <Button variant="primary" onClick={openPopup}>
+                  {t("nav.log_in")}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/${locale}/play`)}
+                  style={{
+                    padding: "8px 16px",
+                    background: "transparent",
+                    color: "var(--nz-text-2)",
+                    border: "1px solid var(--nz-border)",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  {t("matchmaking.back_to_play")}
+                </button>
+              </div>
+            ) : insufficientFunds ? (
               <div style={{ marginTop: "16px", display: "flex", gap: "10px", justifyContent: "center" }}>
                 <LocaleLink href="/wallet">
                   <button

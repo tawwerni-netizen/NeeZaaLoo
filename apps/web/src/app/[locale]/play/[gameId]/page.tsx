@@ -26,6 +26,8 @@ import { FriendChallenge } from "@/components/play/FriendChallenge";
 import { TimeControlSelect, type TimeProfile } from "@/components/play/TimeControlSelect";
 import { getGame, type Difficulty } from "@/lib/games";
 import { post } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { useAuthPopup } from "@/lib/auth-popup-context";
 import { useI18n } from "@/lib/i18n/context";
 import styles from "./playGame.module.css";
 
@@ -41,6 +43,8 @@ type Step =
 export default function PlayGamePage({ params }: { params: Promise<{ gameId: string }> }) {
   const { gameId } = use(params);
   const { t, locale, dir } = useI18n();
+  const { player } = useAuth();
+  const { openPopup } = useAuthPopup();
   const isRtl = dir === "rtl";
   const router = useRouter();
   const plugin = getGame(gameId);
@@ -99,13 +103,25 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
         setStep({ name: "time_control", difficulty: null });
       }
     } else if (mode === "FRIEND") {
+      if (!player) {
+        openPopup();
+        return;
+      }
       setStep({ name: "friend_stake" });
     } else {
+      if (!player) {
+        openPopup();
+        return;
+      }
       setStep({ name: "random_stake" });
     }
   }
 
   async function startVsComputer(chosenDifficulty: Difficulty | null, chosenProfile: TimeProfile = "STANDARD") {
+    if (!player) {
+      openPopup();
+      return;
+    }
     setCreating(true);
     try {
       const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", {

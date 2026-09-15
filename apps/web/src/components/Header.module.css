@@ -218,6 +218,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   padding: 6px 14px;
   border-radius: var(--nz-radius-pill);
   background: linear-gradient(135deg, #ff5a2b, #ff7849);
@@ -225,10 +226,15 @@
   font-size: var(--nz-text-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
+  text-decoration: none;
   border: none;
   cursor: pointer;
   box-shadow: 0 2px 10px rgba(255, 90, 43, 0.35);
   transition: all 0.2s ease;
+}
+.mobileHeaderPlayBtn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
 }
 
 .menuToggle {

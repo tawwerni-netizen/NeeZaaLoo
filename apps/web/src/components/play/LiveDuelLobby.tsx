@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth-context";
+import { useAuthPopup } from "@/lib/auth-popup-context";
 import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
 import { get, post } from "@/lib/api";
@@ -68,6 +69,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   const { locale, dir } = useI18n();
   const isRtl = dir === "rtl";
   const { player } = useAuth();
+  const { openPopup } = useAuthPopup();
   const router = useRouter();
 
   const [duels, setDuels] = useState<OpenDuel[]>(INITIAL_OPEN_DUELS);
@@ -189,6 +191,10 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   }
 
   async function handlePlayVsAi(duel: OpenDuel) {
+    if (!player) {
+      openPopup();
+      return;
+    }
     setAcceptingId(duel.id);
     try {
       const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", {
@@ -217,6 +223,10 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   }, [duels, selectedGameFilter, stakeFilter]);
 
   async function handleAccept(duel: OpenDuel) {
+    if (!player) {
+      openPopup();
+      return;
+    }
     setAcceptingId(duel.id);
     try {
       try {
@@ -246,6 +256,11 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
 
   function handleCreateChallenge(e: React.FormEvent) {
     e.preventDefault();
+    if (!player) {
+      setIsModalOpen(false);
+      openPopup();
+      return;
+    }
     if (newTier === "CASH") {
       const currentBal = userBalanceUSDT ?? 0;
       if (currentBal < newStake) {
@@ -347,7 +362,13 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
           <Button
             variant="primary"
             className={styles.createChallengeBtn}
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              if (!player) {
+                openPopup();
+                return;
+              }
+              setIsModalOpen(true);
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 5v14M5 12h14" />
@@ -502,6 +523,10 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
               variant="primary"
               className={styles.emptyCtaBtn}
               onClick={() => {
+                if (!player) {
+                  openPopup();
+                  return;
+                }
                 if (selectedGameFilter !== "all") {
                   setNewGameId(selectedGameFilter);
                 }
