@@ -20,6 +20,14 @@
 -- automated cash tournaments run only where an admin has deliberately
 -- turned them on through the (now genuinely working) toggle, not wherever
 -- a silently-swallowed exception happened to fall back to.
+--
+-- IF NOT EXISTS: production turned out to already have this exact column
+-- (added by hand outside any tracked migration at some point, the same
+-- schema-drift pattern already found once this session -- see
+-- scripts/check-migration-state.mjs's own header). Idempotent either way:
+-- a fresh database gets the column with every game defaulted FALSE; a
+-- database that already has it is left completely untouched, whatever
+-- values are already sitting there.
 -- =============================================================================
 
-ALTER TABLE game ADD COLUMN auto_tournaments_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE game ADD COLUMN IF NOT EXISTS auto_tournaments_enabled BOOLEAN NOT NULL DEFAULT FALSE;
