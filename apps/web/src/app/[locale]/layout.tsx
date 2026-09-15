@@ -8,6 +8,7 @@ import { ActiveMatchBanner } from "@/components/game/ActiveMatchBanner";
 import { TournamentReadyWatcher } from "@/components/tournaments/TournamentReadyWatcher";
 import { AuthPopupProvider } from "@/lib/auth-popup-context";
 import { AuthPopup, AuthPopupAutoOpen } from "@/components/auth/AuthPopup";
+import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { PolicyReacceptanceModal } from "@/components/legal/PolicyReacceptanceModal";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { I18nProvider } from "@/lib/i18n/context";
@@ -245,7 +246,7 @@ export default async function LocaleLayout({
               <ActiveMatchBanner />
               <IncomingChallengeWatcher />
               <TournamentReadyWatcher />
-              <AuthPopupAutoOpen />
+              <GoogleOneTap />
               <AuthPopup />
               <PolicyReacceptanceModal />
             </AuthPopupProvider>
