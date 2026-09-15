@@ -34,6 +34,22 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Safe, essentially zero-risk hardening headers on every response.
+        // Deliberately NOT a Content-Security-Policy here: this app has a
+        // realtime WebSocket gateway, an OxaPay-hosted checkout redirect,
+        // and Google OAuth -- getting a CSP's connect-src/frame-src allowlist
+        // wrong would silently break gameplay or payments, and that needs
+        // its own careful, tested pass rather than guessing at it here.
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
+        ],
+      },
+      {
         source: "/images/:path*",
         headers: [
           {
