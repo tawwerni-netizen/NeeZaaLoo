@@ -22,11 +22,12 @@ type XOView = {
 function XOBoardAdapter({ view, mySeat, canMove, onMove }: BoardProps) {
   const v = (view ?? {}) as XOView;
   if (!v.board) return null;
+  const fallbackLegal = v.board.map((m, idx) => (m === 0 ? idx : -1)).filter((idx) => idx >= 0);
   return (
     <XOBoard
       board={v.board}
       lastMove={v.lastMove ?? null}
-      legalCells={v.legalCells ?? []}
+      legalCells={v.legalCells && v.legalCells.length > 0 ? v.legalCells : fallbackLegal}
       mySeat={mySeat}
       canMove={canMove}
       onMove={(cell) => onMove(cell)}

@@ -223,9 +223,39 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #10b981;
+  background: #22c55e;
   border: 2px solid #0d1117;
-  box-shadow: 0 0 6px #10b981;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.offlineBadge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid #0d1117;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+
+.statusDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.statusDotOffline {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
 }
 
 .convDetails {

@@ -124,7 +124,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
   }, [players, opponentSeat]);
 
   const canMove = !isSpectator && !completed && connected && mySeat !== null
-    && (isSharedClock ? true : clock?.toMove === mySeat);
+    && (isSharedClock ? true : (clock?.toMove ?? (view as { turn?: number } | null)?.turn) === mySeat);
 
   const lastMove = useMemo(() => {
     if (latest?.t !== "EVENT" || (latest as { type?: string }).type !== "INTENT_ACCEPTED") return null;

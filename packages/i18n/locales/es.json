@@ -19,7 +19,8 @@
     "create_account": "Crear cuenta",
     "download_app": "Descargar app",
     "referrals": "Referidos",
-    "menu_aria_label": "Menú"
+    "menu_aria_label": "Menú",
+    "admin": "Administración"
   },
   "footer": {
     "learn": "Aprender",
@@ -201,7 +202,8 @@
       "submitting": "Creando cuenta…",
       "switch_prompt": "¿Ya tienes una cuenta?",
       "switch_cta": "Iniciar sesión",
-      "nickname_label": "Apodo"
+      "nickname_label": "Apodo",
+      "email_label": "Dirección de correo electrónico"
     },
     "login": {
       "title": "Iniciar sesión",
@@ -215,7 +217,8 @@
       "google_cta": "Continuar con Google",
       "email_code_cta": "Envíame un código de 6 caracteres",
       "forgot_password_cta": "¿Olvidaste tu contraseña?",
-      "or_divider": "o"
+      "or_divider": "o",
+      "identifier_label": "Dirección de correo electrónico"
     },
     "errors": {
       "weak_password": "Esa contraseña es demasiado fácil de adivinar. Usa al menos 10 caracteres, evitando palabras comunes.",
@@ -245,7 +248,8 @@
       "too_large": "Esa imagen es demasiado grande. Prueba con un archivo más pequeño.",
       "invalid_image": "Eso no parece una imagen válida. Prueba con un archivo PNG, JPEG o WEBP.",
       "not_owned": "Todavía no tienes esa insignia.",
-      "cannot_report_self": "No puedes reportar tu propio contenido."
+      "cannot_report_self": "No puedes reportar tu propio contenido.",
+      "email_taken": "Ya existe una cuenta con este correo electrónico."
     },
     "email_code": {
       "title": "Iniciar sesión con un código",
@@ -560,49 +564,51 @@
     "language": "Idioma"
   },
   "tournamentsPage": {
-    "heading": "Torneos",
-    "empty": "No hay torneos abiertos para inscripción en este momento.",
-    "entry_free": "Gratis",
-    "entry_fee": "{amount} {asset}",
-    "registered_count": "{count}/{capacity} inscritos",
-    "starts_at": "Comienza el {date}",
-    "view": "Ver →",
-    "back": "← Todos los torneos",
-    "format": {
-      "SINGLE_ELIMINATION": "Eliminación directa",
-      "SWISS": "Suizo"
-    },
-    "status": {
-      "DRAFT": "Borrador",
-      "COMPLETED": "Finalizado",
-      "CANCELLED": "Cancelado",
-      "SCHEDULED": "Programado",
-      "REGISTRATION": "Inscripción abierta",
-      "LIVE": "En vivo",
-      "FINALS": "Final",
-      "SETTLED": "Liquidado"
-    },
-    "register": "Inscribirse",
-    "registering": "Inscribiendo…",
-    "registered": "Estás inscrito",
+    "heading": "Torneos y Campeonatos",
+    "empty": "No se encontraron próximos torneos.",
+    "back": "← Volver a los torneos",
+    "not_found": "Torneo no encontrado",
+    "view": "Ver Cuadro →",
+    "join": "Unirse al Torneo",
+    "register": "Unirse al Torneo",
+    "registering": "Uniéndose...",
+    "registered": "¡Estás registrado!",
     "withdraw": "Retirarse",
-    "your_match": "Jugar tu partida →",
-    "standings_heading": "Clasificación",
-    "standings_rank": "Puesto",
+    "login_to_register": "Inicia sesión para unirte",
+    "entry_free": "Entrada Gratis",
+    "entry_fee": "Entrada: {amount} {asset}",
+    "registered_count": "{count} / {capacity} Jugadores",
+    "starts_at": "Comienza: {date}",
+    "your_match": "Tu partida está lista — entra al duelo →",
+    "pairings_heading": "Cuadro y Emparejamientos",
+    "round_label": "Ronda {number}",
+    "bye": "Pase directo",
+    "standings_heading": "Clasificación y Puntos",
+    "standings_rank": "Posición",
     "standings_player": "Jugador",
     "standings_points": "Puntos",
-    "standings_record": "G-P-E",
-    "error_at_capacity": "Este torneo está completo.",
-    "error_not_open": "La inscripción está cerrada.",
-    "error_already_registered": "Ya estás inscrito.",
-    "error_generic": "Algo salió mal. Inténtalo de nuevo.",
-    "not_found": "Torneo no encontrado.",
-    "join": "Unirse",
-    "error_not_eligible": "No cumples los requisitos de elegibilidad para este torneo.",
-    "pairings_heading": "Cuadro",
-    "round_label": "Ronda {number}",
-    "bye": "Descanso",
-    "login_to_register": "Inicia sesión para inscribirte"
+    "standings_record": "V / D / E",
+    "error_insufficient_funds": "Saldo insuficiente para pagar la tarifa de entrada. Por favor deposita USDT para unirte.",
+    "error_at_capacity": "Este torneo ha alcanzado su capacidad máxima de jugadores.",
+    "error_not_open": "El registro para este torneo está cerrado.",
+    "error_already_registered": "Ya estás registrado en este torneo.",
+    "error_not_eligible": "No eres elegible para este torneo.",
+    "error_generic": "No se pudo registrar en el torneo. Inténtalo de nuevo.",
+    "deposit_cta": "Depositar USDT en la Billetera",
+    "format": {
+      "SINGLE_ELIMINATION": "Eliminación Directa",
+      "SWISS": "Sistema Suizo"
+    },
+    "status": {
+      "ANNOUNCED": "Anunciado",
+      "SCHEDULED": "Programado",
+      "REGISTRATION": "Registro Abierto",
+      "SEEDED": "Emparejado",
+      "LIVE": "En Curso",
+      "FINALS": "Finales",
+      "COMPLETED": "Completado",
+      "CANCELLED": "Cancelado"
+    }
   },
   "meta": {
     "title": "Nizalo — Tu duelo. Tu prueba.",
@@ -1112,53 +1118,5 @@
     "cancel": "Cancelar",
     "expires_in": "Expira en {sec}s",
     "clear": "Limpiar"
-  },
-  "tournamentsPage": {
-    "heading": "Torneos y Campeonatos",
-    "empty": "No se encontraron próximos torneos.",
-    "back": "← Volver a los torneos",
-    "not_found": "Torneo no encontrado",
-    "view": "Ver Cuadro →",
-    "join": "Unirse al Torneo",
-    "register": "Unirse al Torneo",
-    "registering": "Uniéndose...",
-    "registered": "¡Estás registrado!",
-    "withdraw": "Retirarse",
-    "login_to_register": "Inicia sesión para unirte",
-    "entry_free": "Entrada Gratis",
-    "entry_fee": "Entrada: {amount} {asset}",
-    "registered_count": "{count} / {capacity} Jugadores",
-    "starts_at": "Comienza: {date}",
-    "your_match": "Tu partida está lista — entra al duelo →",
-    "pairings_heading": "Cuadro y Emparejamientos",
-    "round_label": "Ronda {number}",
-    "bye": "Pase directo",
-    "standings_heading": "Clasificación y Puntos",
-    "standings_rank": "Posición",
-    "standings_player": "Jugador",
-    "standings_points": "Puntos",
-    "standings_record": "V / D / E",
-    "error_insufficient_funds": "Saldo insuficiente para pagar la tarifa de entrada. Por favor deposita USDT para unirte.",
-    "error_at_capacity": "Este torneo ha alcanzado su capacidad máxima de jugadores.",
-    "error_not_open": "El registro para este torneo está cerrado.",
-    "error_already_registered": "Ya estás registrado en este torneo.",
-    "error_not_eligible": "No eres elegible para este torneo.",
-    "error_generic": "No se pudo registrar en el torneo. Inténtalo de nuevo.",
-    "deposit_cta": "Depositar USDT en la Billetera",
-    "format": {
-      "SINGLE_ELIMINATION": "Eliminación Directa",
-      "SWISS": "Sistema Suizo"
-    },
-    "status": {
-      "ANNOUNCED": "Anunciado",
-      "SCHEDULED": "Programado",
-      "REGISTRATION": "Registro Abierto",
-      "SEEDED": "Emparejado",
-      "LIVE": "En Curso",
-      "FINALS": "Finales",
-      "COMPLETED": "Completado",
-      "CANCELLED": "Cancelado"
-    }
   }
 }
-

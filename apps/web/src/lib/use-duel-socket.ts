@@ -111,6 +111,13 @@ export function useDuelSocket(duelId: string) {
           if (type === "DRAW_OFFERED") setDrawOfferBy(payload?.seat ?? null);
           else if (type === "DRAW_DECLINED" || type === "INTENT_ACCEPTED") setDrawOfferBy(null);
           if (typeof msg.version === "number") versionRef.current = msg.version;
+        } else if (msg.t === "REJECTED") {
+          if (typeof msg.currentVersion === "number") {
+            versionRef.current = msg.currentVersion;
+          }
+          if (msg.reason === "STALE_ACTION" && socketRef.current?.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify({ t: "JOIN", duelId }));
+          }
         }
       };
       ws.onclose = () => {

@@ -83,49 +83,67 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
     return () => clearInterval(t);
   }, []);
   
-  useEffect(() => {
-    // Fetch real live matches to spectate in the lobby
-    get<{ duels: any[] }>("/v1/duels/live")
-      .then((res: any) => {
-        if (res && res.matches) {
-          const mapped = res.matches.map((d: any) => {
-            const gameObj = AVAILABLE_GAMES.find(g => g.id === d.gameId);
-            const gameName = isRtl ? (gameObj?.labelAr || d.gameId) : (gameObj?.labelEn || d.gameId);
-            return {
-              id: d.duelId,
-              gameId: d.gameId,
-              gameName: gameName,
-              challenger: {
-                handle: d.players?.[0]?.handle || "Player 1",
-                avatarLetter: (d.players?.[0]?.handle?.[0] || "P").toUpperCase(),
-                elo: Math.floor((d.players?.[0]?.ratingX100 || 160000) / 100),
-                badge: d.players?.[0]?.badge || "Player"
-              },
-              tier: "FREE" as const, // For now since we don't have tier in the live spectate output
-              stakeUSDT: 0,
-              timeControl: "Ongoing",
-              createdSecondsAgo: Math.floor((Date.now() - new Date(d.startedAt).getTime()) / 1000),
-              isUserCreated: false
-            };
-          });
-          setDuels(mapped);
-        }
-      })
-      .catch(console.error);
+  const loadOpenChallenges = async () => {
+    try {
+      const res = await get<{ challenges: any[] }>("/v1/challenges/open");
+      if (res && Array.isArray(res.challenges)) {
+        const mapped: OpenDuel[] = res.challenges.map((c: any) => {
+          const gameObj = AVAILABLE_GAMES.find((g) => g.id === c.gameId);
+          const gameName = isRtl ? (gameObj?.labelAr || c.gameId) : (gameObj?.labelEn || c.gameId);
+          return {
+            id: c.id,
+            gameId: c.gameId,
+            gameName,
+            challenger: {
+              handle: c.creator?.handle || "Player",
+              avatarLetter: (c.creator?.handle?.[0] || "P").toUpperCase(),
+              elo: c.creator?.elo || 1600,
+              badge: c.creator?.badge || "Player",
+            },
+            tier: c.tier || "FREE",
+            stakeUSDT: Number(c.stakeUSDT || 0),
+            timeControl: c.timeControl || "Blitz",
+            createdSecondsAgo: Math.max(0, Math.floor((Date.now() - new Date(c.createdAt).getTime()) / 1000)),
+            isUserCreated: c.creator?.id === player?.id || c.creator?.handle === player?.handle,
+          };
+        });
+        setDuels(mapped);
+      }
+    } catch (err) {
+      console.error("Error loading open challenges:", err);
+    }
 
-    // Fetch real lobby stats (Active Players, Open Challenges, etc)
-    get<{ activeMatches: number; activePlayers: number; openChallenges: number }>("/v1/lobby/stats")
-      .then((res: any) => {
-        if (res) {
-          setLobbyStats({
-            activeMatches: res.activeMatches || 0,
-            activePlayers: res.activePlayers || 0,
-            openChallenges: res.openChallenges || 0
-          });
+    try {
+      const statsRes = await get<{ activeMatches: number; activePlayers: number; openChallenges: number }>("/v1/lobby/stats");
+      if (statsRes) {
+        setLobbyStats({
+          activeMatches: statsRes.activeMatches || 0,
+          activePlayers: statsRes.activePlayers || 0,
+          openChallenges: statsRes.openChallenges || 0,
+        });
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    loadOpenChallenges();
+    const interval = setInterval(loadOpenChallenges, 3500);
+    return () => clearInterval(interval);
+  }, [isRtl, player?.id]);
+
+  // Challenger status listener: if someone accepts our challenge, redirect to the duel!
+  useEffect(() => {
+    if (!player) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await get<{ active: boolean; status?: string; duelId?: string }>("/v1/challenges/open/my-status");
+        if (res && res.active && res.status === "ACCEPTED" && res.duelId) {
+          router.push(`/${locale}/game/${res.duelId}`);
         }
-      })
-      .catch(console.error);
-  }, [isRtl]);
+      } catch {}
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [player, locale, router]);
 
   const [selectedGameFilter, setSelectedGameFilter] = useState<string>(filterGameId || "all");
   const [stakeFilter, setStakeFilter] = useState<"all" | "free" | "cash">("all");
@@ -186,7 +204,10 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
     return () => clearInterval(timer);
   }, [isRtl]);
 
-  function handleCancelDuel(duelId: string) {
+  async function handleCancelDuel(duelId: string) {
+    try {
+      await post(`/v1/challenges/open/${duelId}/cancel`, {});
+    } catch {}
     setDuels((prev) => prev.filter((d) => d.id !== duelId));
   }
 
@@ -229,32 +250,20 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
     }
     setAcceptingId(duel.id);
     try {
-      try {
-        const r = await post<{ duelId: string }>("/v1/matchmaking/tickets", {
-          gameId: duel.gameId,
-          ...(duel.tier === "CASH" ? { tier: "CASH", stakeMinor: (duel.stakeUSDT * 100).toString() } : {}),
-        });
-        if (r && r.duelId) {
-          router.push(`/${locale}/game/${r.duelId}`);
-          return;
-        }
-      } catch {
-        // Fallback: start a real vs-computer match so player never encounters a blank screen
-        const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", {
-          gameId: duel.gameId,
-          difficulty: "MEDIUM",
-        });
-        if (r && r.duelId) {
-          router.push(`/${locale}/game/${r.duelId}`);
-          return;
-        }
+      const r = await post<{ duelId: string }>(`/v1/challenges/open/${duel.id}/accept`, {});
+      if (r && r.duelId) {
+        router.push(`/${locale}/game/${r.duelId}`);
+        return;
       }
+    } catch (err: any) {
+      console.error("Failed to accept open challenge:", err);
+      await loadOpenChallenges();
     } finally {
       setAcceptingId(null);
     }
   }
 
-  function handleCreateChallenge(e: React.FormEvent) {
+  async function handleCreateChallenge(e: React.FormEvent) {
     e.preventDefault();
     if (!player) {
       setIsModalOpen(false);
@@ -271,33 +280,22 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
       }
     }
 
-    const targetGame = AVAILABLE_GAMES.find((g) => g.id === newGameId);
-    const gameLabel = isRtl
-      ? targetGame?.labelAr || newGameId
-      : targetGame?.labelEn || newGameId;
+    setIsPublishing(true);
+    try {
+      await post<{ challengeId: string }>("/v1/challenges/open", {
+        gameId: newGameId,
+        tier: newTier,
+        stakeMinor: newTier === "CASH" ? String(Math.round(newStake * 100)) : "0",
+        timeControl: newTimeControl,
+      });
 
-    const newDuel: OpenDuel = {
-      id: `open_duel_${Date.now()}`,
-      gameId: newGameId,
-      gameName: gameLabel,
-      challenger: {
-        handle: player?.handle || (isRtl ? "أنت" : "You"),
-        avatarLetter: (player?.handle?.[0] || "U").toUpperCase(),
-        elo: 1600,
-        badge: isRtl ? "تحدٍ مفتوح" : "Open Host",
-      },
-      tier: newTier,
-      stakeUSDT: newTier === "CASH" ? newStake : 0,
-      timeControl: newTimeControl,
-      createdSecondsAgo: 0,
-      isUserCreated: true,
-    };
-
-    setTimeout(() => {
-      setDuels((prev) => [newDuel, ...prev]);
-      setIsPublishing(false);
       setIsModalOpen(false);
-    }, 450);
+      await loadOpenChallenges();
+    } catch (err) {
+      console.error("Failed to publish open challenge:", err);
+    } finally {
+      setIsPublishing(false);
+    }
   }
 
   const DEFAULT_FEED_EVENT: LiveFeedEvent = {

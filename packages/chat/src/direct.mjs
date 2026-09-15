@@ -26,7 +26,8 @@ export function createDirectChatService(db) {
           p.selected_badge_code,
           p.bio,
           f.status AS friend_status,
-          f.user_id AS friend_initiator
+          f.user_id AS friend_initiator,
+          ((p.last_seen_at IS NOT NULL AND p.last_seen_at > now() - INTERVAL '5 minutes') OR (p.id = $1)) AS is_online
         FROM player p
         LEFT JOIN email_identity e ON e.player_id = p.id
         LEFT JOIN oauth_identity o ON o.player_id = p.id
@@ -42,7 +43,7 @@ export function createDirectChatService(db) {
             LOWER(COALESCE(o.email, '')) LIKE '%' || $2 || '%' OR
             LOWER(p.id) = $2
           )
-        GROUP BY p.id, p.handle, p.avatar_key, p.selected_badge_code, p.bio, f.status, f.user_id
+        GROUP BY p.id, p.handle, p.avatar_key, p.selected_badge_code, p.bio, p.last_seen_at, f.status, f.user_id
         ORDER BY
           CASE WHEN LOWER(p.handle) = $2 THEN 0
                WHEN LOWER(p.handle) LIKE $2 || '%' THEN 1
@@ -60,7 +61,8 @@ export function createDirectChatService(db) {
           p.selected_badge_code,
           p.bio,
           f.status AS friend_status,
-          f.user_id AS friend_initiator
+          f.user_id AS friend_initiator,
+          ((p.last_seen_at IS NOT NULL AND p.last_seen_at > now() - INTERVAL '5 minutes') OR (p.id = $1)) AS is_online
         FROM player p
         LEFT JOIN friendship f ON (
           (f.user_id = $1 AND f.friend_id = p.id) OR
@@ -86,6 +88,7 @@ export function createDirectChatService(db) {
       isPending: row.friend_status === "PENDING",
       isInitiator: row.friend_initiator === currentUserId,
       isSelf: row.id === currentUserId,
+      isOnline: Boolean(row.is_online),
     }));
   }
 
@@ -99,7 +102,8 @@ export function createDirectChatService(db) {
         p.bio,
         f.status,
         f.user_id AS initiator_id,
-        f.created_at AS friendship_date
+        f.created_at AS friendship_date,
+        ((p.last_seen_at IS NOT NULL AND p.last_seen_at > now() - INTERVAL '5 minutes') OR (p.id = $1)) AS is_online
       FROM friendship f
       JOIN player p ON (p.id = CASE WHEN f.user_id = $1 THEN f.friend_id ELSE f.user_id END)
       WHERE (f.user_id = $1 OR f.friend_id = $1)
@@ -116,6 +120,7 @@ export function createDirectChatService(db) {
       status: r.status,
       isOutgoing: r.initiator_id === userId,
       since: r.friendship_date,
+      isOnline: Boolean(r.is_online),
     }));
   }
 
@@ -180,7 +185,8 @@ export function createDirectChatService(db) {
         dm.content AS last_message_content,
         dm.sender_id AS last_message_sender,
         dm.created_at AS last_message_time,
-        pa.unread_count
+        pa.unread_count,
+        ((p.last_seen_at IS NOT NULL AND p.last_seen_at > now() - INTERVAL '5 minutes') OR (p.id = $1)) AS is_online
       FROM partner_activity pa
       JOIN player p ON p.id = pa.partner_id
       JOIN direct_message dm ON dm.id = pa.latest_message_id
@@ -200,6 +206,7 @@ export function createDirectChatService(db) {
         createdAt: r.last_message_time,
       },
       unreadCount: Number(r.unread_count || 0),
+      isOnline: Boolean(r.is_online),
     }));
   }
 

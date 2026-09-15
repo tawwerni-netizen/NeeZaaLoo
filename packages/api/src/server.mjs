@@ -24,7 +24,8 @@ import { createRateLimiter, takeToken } from "../../realtime/src/protocol.mjs";
 import { createMatchmakingService, MatchmakingError } from "../../matchmaking/src/matchmaking.mjs";
 import { createVsComputerService } from "../../matchmaking/src/vs-computer.mjs";
 import { createChallengeService, ChallengeError } from "../../matchmaking/src/challenge.mjs";
-import { tryResolveTimeControl, DEFAULT_TIME_PROFILE } from "../../duel-engine/src/time-profiles.mjs";
+import { DEFAULT_SPAWNERS } from "../../matchmaking/src/spawn.mjs";
+import { tryResolveTimeControl, resolveTimeControl, DEFAULT_TIME_PROFILE } from "../../duel-engine/src/time-profiles.mjs";
 import { SUPPORTED_LOCALE_CODES, DEFAULT_LOCALE } from "../../i18n/src/locales.mjs";
 import { RbacError } from "../../authz/src/rbac.mjs";
 import { EmailIdentityError } from "../../auth/src/email-identity.mjs";
@@ -271,6 +272,12 @@ export function createApi({
     }
 
     const actor = await identify(req);
+    if (actor?.id && db) {
+      db.query(
+        "UPDATE player SET last_seen_at = now() WHERE id = $1 AND (last_seen_at IS NULL OR last_seen_at < now() - INTERVAL '1 minute')",
+        [actor.id]
+      ).catch(() => {});
+    }
 
     // Platform emergency controls: loaded once per request, passed into
     // authorize() and on to handlers through `ctx.controls` so any secondary
@@ -1223,6 +1230,205 @@ function buildRoutes() {
         return { body: { incoming, outgoing } };
       } },
 
+    // --- LOBBY OPEN CHALLENGES (Radar Feed) ---
+    { method: "GET", path: "/v1/challenges/open", action: "duel.play.free", anonymous: true,
+      handler: async ({ db, query }) => {
+        const gameId = query.get("gameId") || null;
+        const res = await db.query(
+          `SELECT c.id, c.game_id, c.mode, c.tier, c.stake_minor, c.asset, c.time_control,
+                  c.created_at, c.expires_at,
+                  p.id AS creator_id, p.handle, p.avatar_key, p.selected_badge_code,
+                  COALESCE(r.rating_x100, 160000) AS rating_x100
+             FROM lobby_open_challenge c
+             JOIN player p ON p.id = c.creator_id
+             LEFT JOIN rating r ON r.player_id = c.creator_id AND r.game_id = c.game_id
+            WHERE c.status = 'OPEN' AND c.expires_at > now()
+              AND ($1::text IS NULL OR c.game_id = $1)
+            ORDER BY c.created_at DESC
+            LIMIT 50`,
+          [gameId]
+        );
+        return {
+          body: {
+            challenges: res.rows.map((row) => ({
+              id: row.id,
+              gameId: row.game_id,
+              tier: row.tier,
+              stakeMinor: row.stake_minor,
+              stakeUSDT: Number(row.stake_minor || 0) / 100,
+              timeControl: row.time_control,
+              createdAt: row.created_at,
+              expiresAt: row.expires_at,
+              creator: {
+                id: row.creator_id,
+                handle: row.handle,
+                avatarKey: row.avatar_key,
+                badge: row.selected_badge_code || "Player",
+                ratingX100: row.rating_x100,
+                elo: Math.floor(row.rating_x100 / 100),
+              },
+            }))
+          }
+        };
+      } },
+
+    { method: "GET", path: "/v1/challenges/open/my-status", action: "duel.play.free",
+      handler: async ({ actor, db }) => {
+        const res = await db.query(
+          `SELECT id, status, duel_id, accepted_by, responded_at
+             FROM lobby_open_challenge
+            WHERE creator_id = $1
+              AND (
+                (status = 'OPEN' AND expires_at > now())
+                OR (status = 'ACCEPTED' AND responded_at > now() - INTERVAL '3 minutes')
+              )
+            ORDER BY created_at DESC
+            LIMIT 1`,
+          [actor.id]
+        );
+        if (!res.rows.length) return { body: { active: false } };
+        const row = res.rows[0];
+        return {
+          body: {
+            active: true,
+            challengeId: row.id,
+            status: row.status,
+            duelId: row.duel_id,
+            acceptedBy: row.accepted_by,
+          }
+        };
+      } },
+
+    { method: "POST", path: "/v1/challenges/open", action: "duel.play.free",
+      handler: async ({ actor, body, db, controls }) => {
+        const gameId = String(body.gameId ?? "").trim();
+        const tier = body.tier === "CASH" ? "CASH" : "FREE";
+        const timeControlName = String(body.timeControl ?? "BLITZ").toUpperCase();
+        const stakeMinor = tier === "CASH" ? String(body.stakeMinor ?? "0") : "0";
+
+        const gameCheck = await db.query("SELECT id, cash_enabled, is_live FROM game WHERE id = $1", [gameId]);
+        if (!gameCheck.rows.length || !gameCheck.rows[0].is_live) {
+          return { status: 400, body: errorBody("UNKNOWN_GAME") };
+        }
+        if (tier === "CASH") {
+          if (controls?.killSwitches?.cashDuels) {
+            return { status: 503, body: errorBody("CASH_PLAY_DISABLED") };
+          }
+          if (!gameCheck.rows[0].cash_enabled) {
+            return { status: 400, body: errorBody("CASH_NOT_ENABLED_FOR_GAME") };
+          }
+          const stakeNum = Number(stakeMinor);
+          if (!Number.isSafeInteger(stakeNum) || stakeNum <= 0) {
+            return { status: 400, body: errorBody("INVALID_STAKE") };
+          }
+          const bal = await db.query(
+            `SELECT balance FROM ledger_account WHERE player_id = $1 AND asset = 'USDT' AND role = 'PLAYER_AVAILABLE'`,
+            [actor.id]
+          );
+          const available = BigInt(bal.rows[0]?.balance ?? 0);
+          if (available < BigInt(stakeMinor)) {
+            return { status: 400, body: errorBody("INSUFFICIENT_FUNDS") };
+          }
+        }
+
+        const challengeId = `open_${randomUUID()}`;
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        await db.query(
+          `INSERT INTO lobby_open_challenge
+             (id, creator_id, game_id, tier, stake_minor, asset, time_control, status, expires_at)
+           VALUES ($1, $2, $3, $4::entry_tier, $5, $6, $7, 'OPEN', $8)`,
+          [challengeId, actor.id, gameId, tier, stakeMinor, tier === "CASH" ? "USDT" : null, timeControlName, expiresAt.toISOString()]
+        );
+
+        return {
+          status: 201,
+          body: {
+            challengeId,
+            expiresAt: expiresAt.toISOString(),
+          }
+        };
+      } },
+
+    { method: "POST", path: "/v1/challenges/open/:id/accept", action: "duel.play.free",
+      handler: async ({ actor, params, db, chat, controls }) => {
+        const challengeId = params.id;
+        return db.transaction(async (tx) => {
+          const r = await tx.query(
+            `SELECT * FROM lobby_open_challenge WHERE id = $1 FOR UPDATE`,
+            [challengeId]
+          );
+          if (!r.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
+          const row = r.rows[0];
+
+          if (row.status !== "OPEN" || new Date(row.expires_at).getTime() <= Date.now()) {
+            return { status: 400, body: errorBody("CHALLENGE_EXPIRED_OR_CLOSED") };
+          }
+          if (row.creator_id === actor.id) {
+            return { status: 400, body: errorBody("CANNOT_CHALLENGE_SELF") };
+          }
+
+          const isCash = row.tier === "CASH";
+          if (isCash) {
+            if (controls?.killSwitches?.cashDuels) {
+              return { status: 503, body: errorBody("CASH_PLAY_DISABLED") };
+            }
+            const bal = await tx.query(
+              `SELECT balance FROM ledger_account WHERE player_id = $1 AND asset = 'USDT' AND role = 'PLAYER_AVAILABLE'`,
+              [actor.id]
+            );
+            const available = BigInt(bal.rows[0]?.balance ?? 0);
+            if (available < BigInt(row.stake_minor)) {
+              return { status: 400, body: errorBody("INSUFFICIENT_FUNDS") };
+            }
+          }
+
+          const spawn = DEFAULT_SPAWNERS[row.game_id] || (() => ({ initialState: {}, seed: null }));
+          const { initialState, seed } = spawn();
+          const duelId = `ch_${randomUUID()}`;
+          const timeControl = resolveTimeControl(row.game_id);
+
+          await tx.query(
+            `INSERT INTO duel
+               (id, game_id, plugin_version, pairing_key, seat_0, seat_1,
+                tier, stake_minor, asset, initial_state, seed, time_control, status, is_vs_computer)
+             VALUES ($1, $2,
+               (SELECT plugin_version FROM game WHERE id = $2),
+               $3, $4, $5, $6::entry_tier, $7, $8, $9::jsonb, $10, $11::jsonb, $12::duel_status, FALSE)`,
+            [duelId, row.game_id, `challenge:open:${row.id}`, row.creator_id, actor.id,
+             row.tier, row.stake_minor, isCash ? row.asset : null,
+             JSON.stringify(initialState), seed, JSON.stringify(timeControl),
+             isCash ? "RESERVED" : "READY"]
+          );
+
+          await tx.query(
+            `UPDATE lobby_open_challenge
+                SET status = 'ACCEPTED', accepted_by = $2, duel_id = $3, responded_at = now()
+              WHERE id = $1`,
+            [challengeId, actor.id, duelId]
+          );
+
+          if (chat?.channels) {
+            chat.channels.getOrCreateMatchChannel(duelId).catch(() => {});
+          }
+
+          return { body: { duelId } };
+        });
+      } },
+
+    { method: "POST", path: "/v1/challenges/open/:id/cancel", action: "duel.play.free",
+      handler: async ({ actor, params, db }) => {
+        const challengeId = params.id;
+        const res = await db.query(
+          `UPDATE lobby_open_challenge
+              SET status = 'CANCELLED', responded_at = now()
+            WHERE id = $1 AND creator_id = $2 AND status = 'OPEN'`,
+          [challengeId, actor.id]
+        );
+        if (res.rowCount === 0) return { status: 400, body: errorBody("NOT_FOUND_OR_NOT_YOURS") };
+        return { body: { ok: true } };
+      } },
+
     { method: "POST", path: "/v1/challenges/:id/accept", action: "duel.play.free",
       handler: async ({ actor, params, db, chat }) => {
         const challenge = createChallengeService(db, { channels: chat?.channels });
@@ -1293,9 +1499,12 @@ function buildRoutes() {
           `SELECT count(DISTINCT d.id)::int AS matches,
                   count(DISTINCT seat) FILTER (WHERE seat IS NOT NULL)::int AS players
              FROM duel d, LATERAL (VALUES (d.seat_0), (d.seat_1)) AS s(seat)
-            WHERE d.status = 'LIVE'`
+            WHERE d.status IN ('LIVE', 'READY')`
         );
-        const openChallenges = await db.query(`SELECT count(*)::int AS tickets FROM matchmaking_ticket`);
+        const openChallenges = await db.query(
+          `SELECT ((SELECT count(*)::int FROM matchmaking_ticket) +
+                   (SELECT count(*)::int FROM lobby_open_challenge WHERE status = 'OPEN' AND expires_at > now()))::int AS tickets`
+        );
         return {
           body: {
             activeMatches: liveDuels.rows[0]?.matches || 0,
@@ -1329,7 +1538,7 @@ function buildRoutes() {
         }
 
         const r = await db.query(
-          `SELECT d.id, d.game_id, d.started_at, d.pairing_key, d.is_vs_computer,
+          `SELECT d.id, d.game_id, d.started_at, d.created_at, d.pairing_key, d.is_vs_computer,
                   pa.handle AS handle_0, pa.selected_badge_code AS badge_0,
                   COALESCE(pb.handle, CASE WHEN d.is_vs_computer THEN 'Computer AI' ELSE 'Player 2' END) AS handle_1,
                   pb.selected_badge_code AS badge_1,
@@ -1340,12 +1549,12 @@ function buildRoutes() {
              LEFT JOIN player pb ON pb.id = d.seat_1
              LEFT JOIN rating ra ON ra.player_id = d.seat_0 AND ra.game_id = d.game_id
              LEFT JOIN rating rb ON rb.player_id = d.seat_1 AND rb.game_id = d.game_id
-            WHERE d.status = 'LIVE'
+            WHERE d.status IN ('LIVE', 'READY')
               AND d.spectator_policy = 'OPEN'
               AND ($2::text IS NULL OR d.game_id = $2)
               AND ($3::text IS NULL OR pa.handle ILIKE '%' || $3 || '%' OR pb.handle ILIKE '%' || $3 || '%')
               AND ($4::boolean IS TRUE OR d.is_vs_computer = FALSE OR ($3::text IS NOT NULL AND pa.handle ILIKE '%' || $3 || '%'))
-            ORDER BY d.started_at DESC
+            ORDER BY COALESCE(d.started_at, d.created_at) DESC
             LIMIT $1`,
           [limit, gameId, handle, includeBots]
         );
@@ -1354,7 +1563,7 @@ function buildRoutes() {
             matches: r.rows.map((row) => ({
               duelId: row.id,
               gameId: row.game_id,
-              startedAt: row.started_at,
+              startedAt: row.started_at || row.created_at,
               isVsComputer: Boolean(row.is_vs_computer),
               // A tournament pairing's duel is keyed "tournament:<id>:r<n>:s<slot>"
               // (see tournament.mjs's createRound()) -- a real, safe signal the
@@ -3551,6 +3760,35 @@ function buildRoutes() {
             securityEvents: secEvents.rows,
           }
         };
+      } },
+
+    { method: "POST", path: "/v1/admin/risk/resolve", action: "admin.risk.read",
+      handler: async ({ body, db }) => {
+        const id = String(body?.id ?? "");
+        const type = String(body?.type ?? "risk_alert");
+        if (!id) return { status: 400, body: errorBody("MISSING_ID") };
+
+        if (type === "reconciliation_case") {
+          await db.query(`UPDATE reconciliation_case SET status = 'RESOLVED', resolved_at = now() WHERE id = $1`, [id]).catch(() => {});
+        } else {
+          await db.query(`UPDATE risk_alert SET status = 'RESOLVED', resolved_at = now() WHERE id = $1`, [id]).catch(() => {});
+        }
+        return { body: { ok: true, id, status: "RESOLVED" } };
+      } },
+
+    { method: "POST", path: "/v1/admin/risk/lock-player", action: "admin.content.moderate",
+      handler: async ({ actor, body, db }) => {
+        const playerId = String(body?.playerId ?? "");
+        const reason = String(body?.reason ?? "Risk Radar administrative lock");
+        if (!playerId) return { status: 400, body: errorBody("MISSING_PLAYER_ID") };
+
+        await db.query(
+          `INSERT INTO security_event (player_id, type, detail)
+           VALUES ($1, 'LOCKOUT', $2::jsonb)`,
+          [playerId, JSON.stringify({ reason, lockedBy: actor.id, lockedAt: new Date().toISOString() })]
+        ).catch(() => {});
+
+        return { body: { ok: true, playerId, status: "LOCKED" } };
       } },
 
     // --- Admin Fair Play Cases & Flagged Duels ---

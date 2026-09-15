@@ -22,6 +22,7 @@ interface Member {
   isFriend: boolean;
   isPending: boolean;
   isSelf?: boolean;
+  isOnline?: boolean | undefined;
 }
 
 interface Conversation {
@@ -37,6 +38,7 @@ interface Conversation {
     createdAt: string;
   };
   unreadCount: number;
+  isOnline?: boolean | undefined;
 }
 
 interface DirectMessage {
@@ -62,7 +64,7 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingChats, setLoadingChats] = useState(false);
 
-  const [activePartner, setActivePartner] = useState<{ id: string; handle: string; avatar: string | null } | null>(null);
+  const [activePartner, setActivePartner] = useState<{ id: string; handle: string; avatar: string | null; isOnline?: boolean | undefined } | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -383,12 +385,15 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
                     key={conv.partnerId}
                     className={`${styles.convItem} ${activePartner?.id === conv.partnerId ? styles.convItemActive : ""}`}
                     onClick={() => {
-                      setActivePartner({ id: conv.partnerId, handle: conv.partnerHandle, avatar: conv.partnerAvatar });
+                      setActivePartner({ id: conv.partnerId, handle: conv.partnerHandle, avatar: conv.partnerAvatar, isOnline: conv.isOnline });
                     }}
                   >
                     <div className={styles.avatarWrap}>
                       <Avatar nickname={conv.partnerHandle} avatarUrl={conv.partnerAvatar} size={44} />
-                      <span className={styles.onlineBadge} />
+                      <span
+                        className={conv.isOnline ? styles.onlineBadge : styles.offlineBadge}
+                        title={conv.isOnline ? (locale === "ar" ? "متصل الآن" : "Online") : (locale === "ar" ? "غير متصل" : "Offline")}
+                      />
                     </div>
                     <div className={styles.convDetails}>
                       <div className={styles.convTop}>
@@ -434,7 +439,10 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
                     <div className={styles.memberInfo}>
                       <div className={styles.avatarWrap}>
                         <Avatar nickname={m.handle} avatarUrl={m.avatarKey} size={42} />
-                        <span className={styles.onlineBadge} />
+                        <span
+                          className={m.isOnline ? styles.onlineBadge : styles.offlineBadge}
+                          title={m.isOnline ? (locale === "ar" ? "متصل الآن" : "Online") : (locale === "ar" ? "غير متصل" : "Offline")}
+                        />
                       </div>
                       <div className={styles.memberMeta}>
                         <span className={styles.memberName}>{m.handle}</span>
@@ -537,7 +545,10 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
                     <div className={styles.memberInfo}>
                       <div className={styles.avatarWrap}>
                         <Avatar nickname={f.handle} avatarUrl={f.avatarKey} size={42} />
-                        <span className={styles.onlineBadge} />
+                        <span
+                          className={f.isOnline ? styles.onlineBadge : styles.offlineBadge}
+                          title={f.isOnline ? (locale === "ar" ? "متصل الآن" : "Online") : (locale === "ar" ? "غير متصل" : "Offline")}
+                        />
                       </div>
                       <div className={styles.memberMeta}>
                         <span className={styles.memberName}>{f.handle}</span>
@@ -551,7 +562,7 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
                         className={styles.msgBtn}
                         title={locale === "ar" ? "مراسلة" : "Chat"}
                         onClick={() => {
-                          setActivePartner({ id: f.id, handle: f.handle, avatar: f.avatarKey });
+                          setActivePartner({ id: f.id, handle: f.handle, avatar: f.avatarKey, isOnline: f.isOnline });
                         }}
                       >
                         💬
@@ -603,7 +614,10 @@ export function MessengerView({ initialPartnerId }: { initialPartnerId?: string 
                 <div className={styles.partnerDetails}>
                   <h2 className={styles.partnerName}>{activePartner.handle}</h2>
                   <span className={styles.partnerStatus}>
-                    <span className={styles.statusDot} /> {locale === "ar" ? "متصل الآن" : "Online now"}
+                    <span className={activePartner.isOnline ? styles.statusDot : styles.statusDotOffline} />{" "}
+                    {activePartner.isOnline
+                      ? (locale === "ar" ? "متصل الآن" : "Online now")
+                      : (locale === "ar" ? "غير متصل" : "Offline")}
                   </span>
                 </div>
               </div>

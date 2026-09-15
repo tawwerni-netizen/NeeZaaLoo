@@ -260,9 +260,15 @@ export function createGateway({
     return projectClock(duel, t);
   }
 
+  function seatFor(duel, playerId) {
+    if (!duel?.players || !playerId) return -1;
+    const lower = String(playerId).toLowerCase();
+    return duel.players.findIndex((p) => p && String(p).toLowerCase() === lower);
+  }
+
   function unbindSeat(duel, conn) {
     if (!duel?.seatConns) return;
-    const seat = duel.players.indexOf(conn.playerId);
+    const seat = seatFor(duel, conn.playerId);
     if (seat >= 0) {
       duel.seatConns[seat].delete(conn);
       broadcastPresence(duel);
@@ -448,7 +454,7 @@ export function createGateway({
 
   /** The authoritative snapshot. Sent on join, and again on every reconnect. */
   function stateFor(duel, plugin, conn, t) {
-    const seat = duel.players.indexOf(conn.playerId);
+    const seat = seatFor(duel, conn.playerId);
     const viewer = seat >= 0 ? conn.playerId : "spectator";
     return {
       t: ServerMsg.STATE,
@@ -641,7 +647,7 @@ export function createGateway({
     for (let i = fromIndex; i < duel.events.length; i++) {
       const ev = duel.events[i];
       broadcast(duel.duelId, (conn) => {
-        const seat = duel.players.indexOf(conn.playerId);
+        const seat = seatFor(duel, conn.playerId);
         const viewer = seat >= 0 ? conn.playerId : "spectator";
         return {
           t: ServerMsg.EVENT,
@@ -842,7 +848,8 @@ export function createGateway({
       switch (msg.t) {
         case ClientMsg.JOIN: {
           // Spectating is allowed; playing is not, unless you are seated.
-          const isSeated = duel.players.includes(conn.playerId);
+          const seat = seatFor(duel, conn.playerId);
+          const isSeated = seat >= 0;
           if (msg.as === "player" && !isSeated) {
             return fail(conn, ErrorCode.NOT_A_PARTICIPANT);
           }
@@ -872,7 +879,6 @@ export function createGateway({
             if (!takeToken(reconnectLimiterFor(conn.playerId, duel.duelId), t)) {
               return fail(conn, ErrorCode.RECONNECT_LIMITED);
             }
-            const seat = duel.players.indexOf(conn.playerId);
             duel.seatConns ??= [new Set(), new Set()];
             const wasBothConnected = (duel.seatConns[0]?.size ?? 0) > 0 && (duel.seatConns[1]?.size ?? 0) > 0;
             duel.seatConns[seat].add(conn);
@@ -916,7 +922,7 @@ export function createGateway({
 
         case ClientMsg.INTENT: {
           if (!conn.subscriptions.has(duel.duelId)) return fail(conn, ErrorCode.NOT_SUBSCRIBED);
-          if (!duel.players.includes(conn.playerId)) {
+          if (seatFor(duel, conn.playerId) < 0) {
             return fail(conn, ErrorCode.NOT_A_PARTICIPANT);
           }
           const before = duel.events.length;
@@ -949,6 +955,7 @@ export function createGateway({
               reason: res.reason,
               cseq: msg.cseq ?? null,
               clock: projectClock(duel, t),
+              currentVersion: duel.version,
             });
           }
           if (res.duplicate) {
@@ -963,7 +970,7 @@ export function createGateway({
         }
 
         case ClientMsg.RESIGN: {
-          if (!duel.players.includes(conn.playerId)) {
+          if (seatFor(duel, conn.playerId) < 0) {
             return fail(conn, ErrorCode.NOT_A_PARTICIPANT);
           }
           const before = duel.events.length;
@@ -980,7 +987,7 @@ export function createGateway({
         // publishNewEvents' own comment on why draw events need no
         // dedicated ServerMsg type).
         case ClientMsg.DRAW_OFFER: {
-          if (!duel.players.includes(conn.playerId)) {
+          if (seatFor(duel, conn.playerId) < 0) {
             return fail(conn, ErrorCode.NOT_A_PARTICIPANT);
           }
           const before = duel.events.length;
@@ -990,7 +997,7 @@ export function createGateway({
         }
 
         case ClientMsg.DRAW_DECLINE: {
-          if (!duel.players.includes(conn.playerId)) {
+          if (seatFor(duel, conn.playerId) < 0) {
             return fail(conn, ErrorCode.NOT_A_PARTICIPANT);
           }
           const before = duel.events.length;
@@ -1000,7 +1007,7 @@ export function createGateway({
         }
 
         case ClientMsg.DRAW_ACCEPT: {
-          if (!duel.players.includes(conn.playerId)) {
+          if (seatFor(duel, conn.playerId) < 0) {
             return fail(conn, ErrorCode.NOT_A_PARTICIPANT);
           }
           const before = duel.events.length;

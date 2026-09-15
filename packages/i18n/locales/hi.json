@@ -19,7 +19,8 @@
     "create_account": "खाता बनाएँ",
     "download_app": "ऐप डाउनलोड करें",
     "referrals": "रेफ़रल",
-    "menu_aria_label": "मेनू"
+    "menu_aria_label": "मेनू",
+    "admin": "व्यवस्थापक"
   },
   "footer": {
     "learn": "जानें",
@@ -201,7 +202,8 @@
       "submitting": "खाता बनाया जा रहा है…",
       "switch_prompt": "पहले से खाता है?",
       "switch_cta": "लॉग इन करें",
-      "nickname_label": "उपनाम"
+      "nickname_label": "उपनाम",
+      "email_label": "ईमेल पता"
     },
     "login": {
       "title": "लॉग इन करें",
@@ -215,7 +217,8 @@
       "google_cta": "Google से जारी रखें",
       "email_code_cta": "मुझे 6-अक्षर का कोड ईमेल करें",
       "forgot_password_cta": "पासवर्ड भूल गए?",
-      "or_divider": "या"
+      "or_divider": "या",
+      "identifier_label": "ईमेल पता"
     },
     "errors": {
       "weak_password": "यह पासवर्ड आसानी से अंदाज़ा लगाया जा सकता है। कम से कम 10 अक्षर इस्तेमाल करें, आम शब्दों से बचें।",
@@ -245,7 +248,8 @@
       "too_large": "वह छवि बहुत बड़ी है। कोई छोटी फ़ाइल आज़माएं।",
       "invalid_image": "यह मान्य छवि नहीं लगती। PNG, JPEG या WEBP फ़ाइल आज़माएं।",
       "not_owned": "आपके पास अभी वह बैज नहीं है।",
-      "cannot_report_self": "आप अपनी खुद की सामग्री की रिपोर्ट नहीं कर सकते।"
+      "cannot_report_self": "आप अपनी खुद की सामग्री की रिपोर्ट नहीं कर सकते।",
+      "email_taken": "इस ईमेल से पहले से खाता मौजूद है।"
     },
     "email_code": {
       "title": "कोड से लॉग इन करें",
@@ -560,49 +564,51 @@
     "language": "भाषा"
   },
   "tournamentsPage": {
-    "heading": "टूर्नामेंट",
-    "empty": "अभी पंजीकरण के लिए कोई टूर्नामेंट खुला नहीं है।",
-    "entry_free": "मुफ़्त",
-    "entry_fee": "{amount} {asset}",
-    "registered_count": "{count}/{capacity} पंजीकृत",
-    "starts_at": "शुरू होगा {date}",
-    "view": "देखें →",
-    "back": "← सभी टूर्नामेंट",
-    "format": {
-      "SINGLE_ELIMINATION": "सिंगल एलिमिनेशन",
-      "SWISS": "स्विस"
-    },
-    "status": {
-      "DRAFT": "ड्राफ़्ट",
-      "COMPLETED": "समाप्त",
-      "CANCELLED": "रद्द",
-      "SCHEDULED": "निर्धारित",
-      "REGISTRATION": "पंजीकरण खुला",
-      "LIVE": "लाइव",
-      "FINALS": "फाइनल",
-      "SETTLED": "निपटाया गया"
-    },
-    "register": "पंजीकरण करें",
-    "registering": "पंजीकरण हो रहा है…",
-    "registered": "आप पंजीकृत हैं",
-    "withdraw": "वापस लें",
-    "your_match": "अपना मुक़ाबला खेलें →",
-    "standings_heading": "स्टैंडिंग",
+    "heading": "टूर्नामेंट और चैंपियनशिप",
+    "empty": "वर्तमान में कोई आगामी टूर्नामेंट नहीं है।",
+    "back": "← टूर्नामेंट पर वापस जाएं",
+    "not_found": "टूर्नामेंट नहीं मिला",
+    "view": "ब्रैकेट देखें →",
+    "join": "टूर्नामेंट में भाग लें",
+    "register": "टूर्नामेंट में भाग लें",
+    "registering": "शामिल हो रहे हैं...",
+    "registered": "आप पंजीकृत हैं!",
+    "withdraw": "नाम वापस लें",
+    "login_to_register": "भाग लेने के लिए लॉग इन करें",
+    "entry_free": "निःशुल्क प्रवेश",
+    "entry_fee": "प्रवेश शुल्क: {amount} {asset}",
+    "registered_count": "{count} / {capacity} खिलाड़ी",
+    "starts_at": "प्रारंभ: {date}",
+    "your_match": "आपका मैच तैयार है — मुकाबला शुरू करें →",
+    "pairings_heading": "टूर्नामेंट ब्रैकेट और मैच",
+    "round_label": "राउंड {number}",
+    "bye": "बाय (BYE)",
+    "standings_heading": "स्टैंडिंग और अंक",
     "standings_rank": "रैंक",
     "standings_player": "खिलाड़ी",
     "standings_points": "अंक",
-    "standings_record": "जीत-हार-ड्रॉ",
-    "error_at_capacity": "यह टूर्नामेंट भर चुका है।",
-    "error_not_open": "पंजीकरण बंद हो चुका है।",
-    "error_already_registered": "आप पहले से ही पंजीकृत हैं।",
-    "error_generic": "कुछ गड़बड़ हो गई। फिर कोशिश करें।",
-    "not_found": "टूर्नामेंट नहीं मिला।",
-    "join": "शामिल हों",
-    "error_not_eligible": "आप इस टूर्नामेंट के लिए पात्रता आवश्यकताओं को पूरा नहीं करते हैं।",
-    "pairings_heading": "ब्रैकेट",
-    "round_label": "राउंड {number}",
-    "bye": "बाई",
-    "login_to_register": "पंजीकरण के लिए लॉग इन करें"
+    "standings_record": "जीत / हार / ड्रॉ",
+    "error_insufficient_funds": "प्रवेश शुल्क का भुगतान करने के लिए वॉलेट बैलेंस अपर्याप्त है। कृपया जुड़ने के लिए USDT जमा करें।",
+    "error_at_capacity": "यह टूर्नामेंट पूरी क्षमता तक पहुंच चुका है।",
+    "error_not_open": "इस टूर्नामेंट के लिए पंजीकरण बंद है।",
+    "error_already_registered": "आप पहले से ही इस टूर्नामेंट में पंजीकृत हैं।",
+    "error_not_eligible": "आप इस टूर्नामेंट के पात्र नहीं हैं।",
+    "error_generic": "टूर्नामेंट में पंजीकरण करने में असमर्थ। कृपया पुनः प्रयास करें।",
+    "deposit_cta": "वॉलेट में USDT जमा करें",
+    "format": {
+      "SINGLE_ELIMINATION": "सिंगल एलिमिनेशन",
+      "SWISS": "स्विस सिस्टम"
+    },
+    "status": {
+      "ANNOUNCED": "घोषित",
+      "SCHEDULED": "निर्धारित",
+      "REGISTRATION": "पंजीकरण खुला",
+      "SEEDED": "सीडेड",
+      "LIVE": "प्रगति पर",
+      "FINALS": "फाइनल",
+      "COMPLETED": "पूर्ण",
+      "CANCELLED": "रद्द"
+    }
   },
   "meta": {
     "title": "Nizalo — आपकी भिड़ंत। आपका प्रमाण।",
@@ -1112,53 +1118,5 @@
     "cancel": "रद्द करें",
     "expires_in": "{sec} सेकंड में समाप्त",
     "clear": "साफ़ करें"
-  },
-  "tournamentsPage": {
-    "heading": "टूर्नामेंट और चैंपियनशिप",
-    "empty": "वर्तमान में कोई आगामी टूर्नामेंट नहीं है।",
-    "back": "← टूर्नामेंट पर वापस जाएं",
-    "not_found": "टूर्नामेंट नहीं मिला",
-    "view": "ब्रैकेट देखें →",
-    "join": "टूर्नामेंट में भाग लें",
-    "register": "टूर्नामेंट में भाग लें",
-    "registering": "शामिल हो रहे हैं...",
-    "registered": "आप पंजीकृत हैं!",
-    "withdraw": "नाम वापस लें",
-    "login_to_register": "भाग लेने के लिए लॉग इन करें",
-    "entry_free": "निःशुल्क प्रवेश",
-    "entry_fee": "प्रवेश शुल्क: {amount} {asset}",
-    "registered_count": "{count} / {capacity} खिलाड़ी",
-    "starts_at": "प्रारंभ: {date}",
-    "your_match": "आपका मैच तैयार है — मुकाबला शुरू करें →",
-    "pairings_heading": "टूर्नामेंट ब्रैकेट और मैच",
-    "round_label": "राउंड {number}",
-    "bye": "बाय (BYE)",
-    "standings_heading": "स्टैंडिंग और अंक",
-    "standings_rank": "रैंक",
-    "standings_player": "खिलाड़ी",
-    "standings_points": "अंक",
-    "standings_record": "जीत / हार / ड्रॉ",
-    "error_insufficient_funds": "प्रवेश शुल्क का भुगतान करने के लिए वॉलेट बैलेंस अपर्याप्त है। कृपया जुड़ने के लिए USDT जमा करें।",
-    "error_at_capacity": "यह टूर्नामेंट पूरी क्षमता तक पहुंच चुका है।",
-    "error_not_open": "इस टूर्नामेंट के लिए पंजीकरण बंद है।",
-    "error_already_registered": "आप पहले से ही इस टूर्नामेंट में पंजीकृत हैं।",
-    "error_not_eligible": "आप इस टूर्नामेंट के पात्र नहीं हैं।",
-    "error_generic": "टूर्नामेंट में पंजीकरण करने में असमर्थ। कृपया पुनः प्रयास करें।",
-    "deposit_cta": "वॉलेट में USDT जमा करें",
-    "format": {
-      "SINGLE_ELIMINATION": "सिंगल एलिमिनेशन",
-      "SWISS": "स्विस सिस्टम"
-    },
-    "status": {
-      "ANNOUNCED": "घोषित",
-      "SCHEDULED": "निर्धारित",
-      "REGISTRATION": "पंजीकरण खुला",
-      "SEEDED": "सीडेड",
-      "LIVE": "प्रगति पर",
-      "FINALS": "फाइनल",
-      "COMPLETED": "पूर्ण",
-      "CANCELLED": "रद्द"
-    }
   }
 }
-

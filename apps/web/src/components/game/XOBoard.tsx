@@ -101,7 +101,7 @@ export function XOBoard({ board, lastMove, legalCells, mySeat, canMove, onMove }
         <div className={styles.titaniumFrame}>
           <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>
             {board.map((mark, cell) => {
-              const isLegal = legalCells.includes(cell);
+              const isLegal = mark === 0 && (legalCells.length === 0 || legalCells.includes(cell));
               const isNewest = lastMove === cell;
               const isWinning = winSet.has(cell);
               const isPreview = hoverCell === cell && mark === 0 && isLegal;

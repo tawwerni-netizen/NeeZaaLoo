@@ -19,7 +19,8 @@
     "create_account": "创建账户",
     "download_app": "下载应用",
     "referrals": "引荐返利",
-    "menu_aria_label": "菜单"
+    "menu_aria_label": "菜单",
+    "admin": "管理后台"
   },
   "footer": {
     "learn": "了解",
@@ -201,7 +202,8 @@
       "submitting": "正在创建账户…",
       "switch_prompt": "已有账户?",
       "switch_cta": "登录",
-      "nickname_label": "昵称"
+      "nickname_label": "昵称",
+      "email_label": "电子邮箱地址"
     },
     "login": {
       "title": "登录",
@@ -215,7 +217,8 @@
       "google_cta": "使用 Google 继续",
       "email_code_cta": "给我发送 6 位邮箱验证码",
       "forgot_password_cta": "忘记密码？",
-      "or_divider": "或"
+      "or_divider": "或",
+      "identifier_label": "电子邮箱地址"
     },
     "errors": {
       "weak_password": "该密码过于容易猜到。请使用至少10个字符,避免常见词汇。",
@@ -245,7 +248,8 @@
       "too_large": "图片过大，请尝试更小的文件。",
       "invalid_image": "这似乎不是有效的图片，请尝试 PNG、JPEG 或 WEBP 文件。",
       "not_owned": "您尚未拥有该徽章。",
-      "cannot_report_self": "您不能举报自己的内容。"
+      "cannot_report_self": "您不能举报自己的内容。",
+      "email_taken": "该邮箱已被注册。"
     },
     "email_code": {
       "title": "使用验证码登录",
@@ -560,49 +564,51 @@
     "language": "语言"
   },
   "tournamentsPage": {
-    "heading": "锦标赛",
-    "empty": "目前没有开放报名的锦标赛。",
-    "entry_free": "免费",
-    "entry_fee": "{amount} {asset}",
-    "registered_count": "已报名 {count}/{capacity}",
-    "starts_at": "开始时间：{date}",
-    "view": "查看 →",
-    "back": "← 所有锦标赛",
+    "heading": "锦标赛与冠军联赛",
+    "empty": "目前没有即将进行的锦标赛。",
+    "back": "← 返回锦标赛列表",
+    "not_found": "未找到锦标赛",
+    "view": "查看对阵表 →",
+    "join": "加入锦标赛",
+    "register": "加入锦标赛",
+    "registering": "正在报名...",
+    "registered": "您已成功报名！",
+    "withdraw": "退出比赛",
+    "login_to_register": "登录以报名参赛",
+    "entry_free": "免费参赛",
+    "entry_fee": "报名费: {amount} {asset}",
+    "registered_count": "{count} / {capacity} 名选手",
+    "starts_at": "开始时间: {date}",
+    "your_match": "您的比赛已就绪 — 立即进入对决 →",
+    "pairings_heading": "锦标赛对阵表与赛程",
+    "round_label": "第 {number} 轮",
+    "bye": "轮空 (BYE)",
+    "standings_heading": "积分榜与排名",
+    "standings_rank": "排名",
+    "standings_player": "选手",
+    "standings_points": "积分",
+    "standings_record": "胜 / 负 / 平",
+    "error_insufficient_funds": "钱包余额不足以支付参赛费。请充值 USDT 后再报名参赛。",
+    "error_at_capacity": "此锦标赛参赛人数已满。",
+    "error_not_open": "此锦标赛报名已截止。",
+    "error_already_registered": "您已报名此锦标赛。",
+    "error_not_eligible": "您不符合参加此锦标赛的资格。",
+    "error_generic": "无法报名参赛，请重试。",
+    "deposit_cta": "充值 USDT 到钱包",
     "format": {
-      "SINGLE_ELIMINATION": "单败淘汰",
-      "SWISS": "瑞士制"
+      "SINGLE_ELIMINATION": "单败淘汰制",
+      "SWISS": "瑞士轮制"
     },
     "status": {
-      "DRAFT": "草稿",
-      "COMPLETED": "已结束",
-      "CANCELLED": "已取消",
-      "SCHEDULED": "已安排",
-      "REGISTRATION": "报名开放中",
+      "ANNOUNCED": "已公布",
+      "SCHEDULED": "已排期",
+      "REGISTRATION": "正在报名",
+      "SEEDED": "已分组",
       "LIVE": "进行中",
-      "FINALS": "决赛",
-      "SETTLED": "已结算"
-    },
-    "register": "报名",
-    "registering": "报名中…",
-    "registered": "你已报名",
-    "withdraw": "退出",
-    "your_match": "参加你的比赛 →",
-    "standings_heading": "排名",
-    "standings_rank": "名次",
-    "standings_player": "玩家",
-    "standings_points": "积分",
-    "standings_record": "胜-负-平",
-    "error_at_capacity": "该锦标赛名额已满。",
-    "error_not_open": "报名已截止。",
-    "error_already_registered": "你已经报名了。",
-    "error_generic": "出了点问题，请重试。",
-    "not_found": "未找到该锦标赛。",
-    "join": "加入",
-    "error_not_eligible": "你不符合本次锦标赛的参赛资格要求。",
-    "pairings_heading": "对阵表",
-    "round_label": "第 {number} 轮",
-    "bye": "轮空",
-    "login_to_register": "登录以报名"
+      "FINALS": "决赛中",
+      "COMPLETED": "已结束",
+      "CANCELLED": "已取消"
+    }
   },
   "meta": {
     "title": "Nizalo — 你的对决,你的证明。",
@@ -1112,53 +1118,5 @@
     "cancel": "取消",
     "expires_in": "{sec}秒后过期",
     "clear": "清除"
-  },
-  "tournamentsPage": {
-    "heading": "锦标赛与冠军联赛",
-    "empty": "目前没有即将进行的锦标赛。",
-    "back": "← 返回锦标赛列表",
-    "not_found": "未找到锦标赛",
-    "view": "查看对阵表 →",
-    "join": "加入锦标赛",
-    "register": "加入锦标赛",
-    "registering": "正在报名...",
-    "registered": "您已成功报名！",
-    "withdraw": "退出比赛",
-    "login_to_register": "登录以报名参赛",
-    "entry_free": "免费参赛",
-    "entry_fee": "报名费: {amount} {asset}",
-    "registered_count": "{count} / {capacity} 名选手",
-    "starts_at": "开始时间: {date}",
-    "your_match": "您的比赛已就绪 — 立即进入对决 →",
-    "pairings_heading": "锦标赛对阵表与赛程",
-    "round_label": "第 {number} 轮",
-    "bye": "轮空 (BYE)",
-    "standings_heading": "积分榜与排名",
-    "standings_rank": "排名",
-    "standings_player": "选手",
-    "standings_points": "积分",
-    "standings_record": "胜 / 负 / 平",
-    "error_insufficient_funds": "钱包余额不足以支付参赛费。请充值 USDT 后再报名参赛。",
-    "error_at_capacity": "此锦标赛参赛人数已满。",
-    "error_not_open": "此锦标赛报名已截止。",
-    "error_already_registered": "您已报名此锦标赛。",
-    "error_not_eligible": "您不符合参加此锦标赛的资格。",
-    "error_generic": "无法报名参赛，请重试。",
-    "deposit_cta": "充值 USDT 到钱包",
-    "format": {
-      "SINGLE_ELIMINATION": "单败淘汰制",
-      "SWISS": "瑞士轮制"
-    },
-    "status": {
-      "ANNOUNCED": "已公布",
-      "SCHEDULED": "已排期",
-      "REGISTRATION": "正在报名",
-      "SEEDED": "已分组",
-      "LIVE": "进行中",
-      "FINALS": "决赛中",
-      "COMPLETED": "已结束",
-      "CANCELLED": "已取消"
-    }
   }
 }
-

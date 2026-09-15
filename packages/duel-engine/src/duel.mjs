@@ -236,10 +236,16 @@ function append(duel, type, payload, serverTimeMs) {
  * gateway, which always supplies both -- see protocol.mjs's own INTENT
  * shape and gateway.mjs's INTENT handler.
  */
+function seatOf(duel, playerId) {
+  if (!duel?.players || !playerId) return -1;
+  const target = String(playerId).toLowerCase();
+  return duel.players.findIndex((p) => p && String(p).toLowerCase() === target);
+}
+
 export function runIntent(duel, plugin, { playerId, intent, nonce, baseVersion }, serverTimeMs) {
   if (duel.status !== DuelState.LIVE) return { ok: false, reason: Reject.NOT_LIVE };
 
-  const seat = duel.players.indexOf(playerId);
+  const seat = seatOf(duel, playerId);
   if (seat < 0) return { ok: false, reason: Reject.MALFORMED };
 
   if (nonce !== undefined) {
@@ -334,7 +340,7 @@ export function runIntent(duel, plugin, { playerId, intent, nonce, baseVersion }
 /** Resignation is an intent like any other, and is always legal. */
 export function resign(duel, playerId, serverTimeMs) {
   if (duel.status !== DuelState.LIVE) return { ok: false, reason: Reject.NOT_LIVE };
-  const seat = duel.players.indexOf(playerId);
+  const seat = seatOf(duel, playerId);
   if (seat < 0) return { ok: false, reason: Reject.MALFORMED };
   return finish(duel, {
     result: seat === 0 ? "0-1" : "1-0",
@@ -367,7 +373,7 @@ function allowsDrawOffers(plugin) {
 export function offerDraw(duel, plugin, playerId, serverTimeMs) {
   if (duel.status !== DuelState.LIVE) return { ok: false, reason: Reject.NOT_LIVE };
   if (!allowsDrawOffers(plugin)) return { ok: false, reason: "DRAWS_NOT_ALLOWED" };
-  const seat = duel.players.indexOf(playerId);
+  const seat = seatOf(duel, playerId);
   if (seat < 0) return { ok: false, reason: Reject.MALFORMED };
   if (duel.drawOfferBy === seat) return { ok: false, reason: "ALREADY_OFFERED" };
   if (duel.drawCooldownUntil !== null && serverTimeMs < duel.drawCooldownUntil) {
@@ -381,7 +387,7 @@ export function offerDraw(duel, plugin, playerId, serverTimeMs) {
 /** The other player refuses the standing offer. Play continues unchanged. */
 export function declineDraw(duel, playerId, serverTimeMs) {
   if (duel.status !== DuelState.LIVE) return { ok: false, reason: Reject.NOT_LIVE };
-  const seat = duel.players.indexOf(playerId);
+  const seat = seatOf(duel, playerId);
   if (seat < 0) return { ok: false, reason: Reject.MALFORMED };
   if (duel.drawOfferBy === null || duel.drawOfferBy === seat) {
     return { ok: false, reason: "NO_OFFER" };
@@ -396,7 +402,7 @@ export function declineDraw(duel, playerId, serverTimeMs) {
  * that no plugin ever derives from a position. */
 export function acceptDraw(duel, playerId, serverTimeMs) {
   if (duel.status !== DuelState.LIVE) return { ok: false, reason: Reject.NOT_LIVE };
-  const seat = duel.players.indexOf(playerId);
+  const seat = seatOf(duel, playerId);
   if (seat < 0) return { ok: false, reason: Reject.MALFORMED };
   if (duel.drawOfferBy === null || duel.drawOfferBy === seat) {
     return { ok: false, reason: "NO_OFFER" };

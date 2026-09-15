@@ -19,7 +19,8 @@
     "create_account": "Créer un compte",
     "download_app": "Télécharger l'app",
     "referrals": "Parrainages",
-    "menu_aria_label": "Menu"
+    "menu_aria_label": "Menu",
+    "admin": "Administration"
   },
   "footer": {
     "learn": "Découvrir",
@@ -201,7 +202,8 @@
       "submitting": "Création du compte…",
       "switch_prompt": "Déjà un compte ?",
       "switch_cta": "Se connecter",
-      "nickname_label": "Pseudo"
+      "nickname_label": "Pseudo",
+      "email_label": "Adresse e-mail"
     },
     "login": {
       "title": "Connexion",
@@ -215,7 +217,8 @@
       "google_cta": "Continuer avec Google",
       "email_code_cta": "M'envoyer un code à 6 caractères",
       "forgot_password_cta": "Mot de passe oublié ?",
-      "or_divider": "ou"
+      "or_divider": "ou",
+      "identifier_label": "Adresse e-mail"
     },
     "errors": {
       "weak_password": "Ce mot de passe est trop facile à deviner. Utilisez au moins 10 caractères, en évitant les mots courants.",
@@ -245,7 +248,8 @@
       "too_large": "Cette image est trop volumineuse. Essayez un fichier plus petit.",
       "invalid_image": "Cela ne ressemble pas à une image valide. Essayez un fichier PNG, JPEG ou WEBP.",
       "not_owned": "Vous ne possédez pas encore ce badge.",
-      "cannot_report_self": "Vous ne pouvez pas signaler votre propre contenu."
+      "cannot_report_self": "Vous ne pouvez pas signaler votre propre contenu.",
+      "email_taken": "Un compte existe déjà avec cet e-mail."
     },
     "email_code": {
       "title": "Se connecter avec un code",
@@ -560,49 +564,51 @@
     "language": "Langue"
   },
   "tournamentsPage": {
-    "heading": "Tournois",
-    "empty": "Aucun tournoi ouvert aux inscriptions pour le moment.",
-    "entry_free": "Gratuit",
-    "entry_fee": "{amount} {asset}",
-    "registered_count": "{count}/{capacity} inscrits",
-    "starts_at": "Commence le {date}",
-    "view": "Voir →",
-    "back": "← Tous les tournois",
-    "format": {
-      "SINGLE_ELIMINATION": "Élimination directe",
-      "SWISS": "Suisse"
-    },
-    "status": {
-      "DRAFT": "Brouillon",
-      "COMPLETED": "Terminé",
-      "CANCELLED": "Annulé",
-      "SCHEDULED": "Planifié",
-      "REGISTRATION": "Inscriptions ouvertes",
-      "LIVE": "En direct",
-      "FINALS": "Finale",
-      "SETTLED": "Réglé"
-    },
-    "register": "S'inscrire",
-    "registering": "Inscription…",
-    "registered": "Vous êtes inscrit",
+    "heading": "Tournois et Championnats",
+    "empty": "Aucun tournoi à venir pour le moment.",
+    "back": "← Retour aux tournois",
+    "not_found": "Tournoi introuvable",
+    "view": "Voir le Tableau →",
+    "join": "Rejoindre le Tournoi",
+    "register": "Rejoindre le Tournoi",
+    "registering": "Inscription...",
+    "registered": "Vous êtes inscrit !",
     "withdraw": "Se retirer",
-    "your_match": "Jouer votre match →",
-    "standings_heading": "Classement",
+    "login_to_register": "Connectez-vous pour participer",
+    "entry_free": "Entrée Gratuite",
+    "entry_fee": "Entrée : {amount} {asset}",
+    "registered_count": "{count} / {capacity} Joueurs",
+    "starts_at": "Début : {date}",
+    "your_match": "Votre match est prêt — entrez dans le duel →",
+    "pairings_heading": "Arbre du Tournoi et Matchs",
+    "round_label": "Tour {number}",
+    "bye": "Qualifié d'office",
+    "standings_heading": "Classement et Points",
     "standings_rank": "Rang",
     "standings_player": "Joueur",
     "standings_points": "Points",
-    "standings_record": "V-D-N",
-    "error_at_capacity": "Ce tournoi est complet.",
-    "error_not_open": "Les inscriptions sont closes.",
-    "error_already_registered": "Vous êtes déjà inscrit.",
-    "error_generic": "Une erreur est survenue. Réessayez.",
-    "not_found": "Tournoi introuvable.",
-    "join": "Rejoindre",
-    "error_not_eligible": "Vous ne remplissez pas les conditions d'éligibilité pour ce tournoi.",
-    "pairings_heading": "Tableau",
-    "round_label": "Ronde {number}",
-    "bye": "Exempt",
-    "login_to_register": "Connectez-vous pour vous inscrire"
+    "standings_record": "V / D / N",
+    "error_insufficient_funds": "Solde insuffisant pour payer les frais d'inscription. Veuillez déposer des USDT pour participer.",
+    "error_at_capacity": "Ce tournoi a atteint sa capacité maximale de joueurs.",
+    "error_not_open": "Les inscriptions pour ce tournoi sont fermées.",
+    "error_already_registered": "Vous êtes déjà inscrit à ce tournoi.",
+    "error_not_eligible": "Vous n'êtes pas éligible pour ce tournoi.",
+    "error_generic": "Impossible de s'inscrire au tournoi. Veuillez réessayer.",
+    "deposit_cta": "Déposer des USDT",
+    "format": {
+      "SINGLE_ELIMINATION": "Élimination Directe",
+      "SWISS": "Système Suisse"
+    },
+    "status": {
+      "ANNOUNCED": "Annoncé",
+      "SCHEDULED": "Programmé",
+      "REGISTRATION": "Inscriptions Ouvertes",
+      "SEEDED": "Tableau Défini",
+      "LIVE": "En Cours",
+      "FINALS": "Finales",
+      "COMPLETED": "Terminé",
+      "CANCELLED": "Annulé"
+    }
   },
   "meta": {
     "title": "Nizalo — Votre duel. Votre preuve.",
@@ -1112,53 +1118,5 @@
     "cancel": "Annuler",
     "expires_in": "Expire dans {sec}s",
     "clear": "Effacer"
-  },
-  "tournamentsPage": {
-    "heading": "Tournois et Championnats",
-    "empty": "Aucun tournoi à venir pour le moment.",
-    "back": "← Retour aux tournois",
-    "not_found": "Tournoi introuvable",
-    "view": "Voir le Tableau →",
-    "join": "Rejoindre le Tournoi",
-    "register": "Rejoindre le Tournoi",
-    "registering": "Inscription...",
-    "registered": "Vous êtes inscrit !",
-    "withdraw": "Se retirer",
-    "login_to_register": "Connectez-vous pour participer",
-    "entry_free": "Entrée Gratuite",
-    "entry_fee": "Entrée : {amount} {asset}",
-    "registered_count": "{count} / {capacity} Joueurs",
-    "starts_at": "Début : {date}",
-    "your_match": "Votre match est prêt — entrez dans le duel →",
-    "pairings_heading": "Arbre du Tournoi et Matchs",
-    "round_label": "Tour {number}",
-    "bye": "Qualifié d'office",
-    "standings_heading": "Classement et Points",
-    "standings_rank": "Rang",
-    "standings_player": "Joueur",
-    "standings_points": "Points",
-    "standings_record": "V / D / N",
-    "error_insufficient_funds": "Solde insuffisant pour payer les frais d'inscription. Veuillez déposer des USDT pour participer.",
-    "error_at_capacity": "Ce tournoi a atteint sa capacité maximale de joueurs.",
-    "error_not_open": "Les inscriptions pour ce tournoi sont fermées.",
-    "error_already_registered": "Vous êtes déjà inscrit à ce tournoi.",
-    "error_not_eligible": "Vous n'êtes pas éligible pour ce tournoi.",
-    "error_generic": "Impossible de s'inscrire au tournoi. Veuillez réessayer.",
-    "deposit_cta": "Déposer des USDT",
-    "format": {
-      "SINGLE_ELIMINATION": "Élimination Directe",
-      "SWISS": "Système Suisse"
-    },
-    "status": {
-      "ANNOUNCED": "Annoncé",
-      "SCHEDULED": "Programmé",
-      "REGISTRATION": "Inscriptions Ouvertes",
-      "SEEDED": "Tableau Défini",
-      "LIVE": "En Cours",
-      "FINALS": "Finales",
-      "COMPLETED": "Terminé",
-      "CANCELLED": "Annulé"
-    }
   }
 }
-

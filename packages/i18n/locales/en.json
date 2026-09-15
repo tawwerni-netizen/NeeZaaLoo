@@ -19,7 +19,8 @@
     "watch": "Watch",
     "download_app": "Download app",
     "referrals": "Referrals",
-    "menu_aria_label": "Menu"
+    "menu_aria_label": "Menu",
+    "admin": "Admin"
   },
   "footer": {
     "learn": "Learn",
@@ -414,7 +415,9 @@
       "mode_competitive_prize": "Competitive — ${amount}",
       "popup_title": "{handle} challenged you",
       "meta_game": "Game",
-      "meta_mode": "Mode"
+      "meta_mode": "Mode",
+      "error_invalid_stake": "That stake amount isn't available.",
+      "mode_competitive_stake": "Competitive — ${amount}"
     },
     "time_control": {
       "heading": "Choose Match Duration",
@@ -422,6 +425,15 @@
       "blitz": "Blitz",
       "standard": "Standard",
       "extended": "Extended"
+    },
+    "stake": {
+      "heading": "Choose your stake",
+      "free_only": "Free only",
+      "free_only_note": "Cash stakes aren't available for this game yet.",
+      "free_title": "Free",
+      "free_description": "No stake — just the game.",
+      "competitive_title": "Competitive",
+      "competitive_description": "Play for a real stake, released only once the match is won."
     }
   },
   "dashboard": {
@@ -564,49 +576,51 @@
     "language": "Language"
   },
   "tournamentsPage": {
-    "heading": "Tournaments",
-    "empty": "No tournaments open for registration right now.",
-    "entry_free": "Free",
-    "entry_fee": "{amount} {asset}",
-    "registered_count": "{count}/{capacity} registered",
-    "starts_at": "Starts {date}",
-    "join": "Join",
-    "view": "View →",
-    "back": "← All tournaments",
-    "format": {
-      "SINGLE_ELIMINATION": "Single elimination",
-      "SWISS": "Swiss"
-    },
-    "status": {
-      "DRAFT": "Draft",
-      "SCHEDULED": "Scheduled",
-      "REGISTRATION": "Registration open",
-      "LIVE": "Live",
-      "FINALS": "Finals",
-      "COMPLETED": "Completed",
-      "SETTLED": "Settled",
-      "CANCELLED": "Cancelled"
-    },
-    "register": "Register",
-    "registering": "Registering…",
-    "registered": "You're registered",
+    "heading": "Tournaments & Championships",
+    "empty": "No upcoming tournaments found.",
+    "back": "← Back to tournaments",
+    "not_found": "Tournament not found",
+    "view": "View Bracket →",
+    "join": "Join Tournament",
+    "register": "Join Tournament",
+    "registering": "Joining...",
+    "registered": "You are registered!",
     "withdraw": "Withdraw",
-    "your_match": "Play your match →",
-    "standings_heading": "Standings",
+    "login_to_register": "Log in to Join",
+    "entry_free": "Free Entry",
+    "entry_fee": "Entry: {amount} {asset}",
+    "registered_count": "{count} / {capacity} Players",
+    "starts_at": "Starts: {date}",
+    "your_match": "Your match is ready — enter duel →",
+    "pairings_heading": "Tournament Bracket & Matches",
+    "round_label": "Round {number}",
+    "bye": "BYE",
+    "standings_heading": "Standings & Points",
     "standings_rank": "Rank",
     "standings_player": "Player",
     "standings_points": "Points",
-    "standings_record": "W-L-D",
-    "error_at_capacity": "This tournament is full.",
-    "error_not_open": "Registration is closed.",
-    "error_already_registered": "You're already registered.",
-    "error_not_eligible": "You don't meet the eligibility requirements for this tournament.",
-    "error_generic": "Something went wrong. Try again.",
-    "not_found": "Tournament not found.",
-    "pairings_heading": "Bracket",
-    "round_label": "Round {number}",
-    "bye": "Bye",
-    "login_to_register": "Log in to register"
+    "standings_record": "W / L / D",
+    "error_insufficient_funds": "Insufficient wallet balance to pay the entry fee. Please deposit USDT to join.",
+    "error_at_capacity": "This tournament has reached its maximum player capacity.",
+    "error_not_open": "Registration for this tournament is closed.",
+    "error_already_registered": "You are already registered for this tournament.",
+    "error_not_eligible": "You are not eligible for this tournament.",
+    "error_generic": "Could not register for tournament. Please try again.",
+    "deposit_cta": "Deposit USDT to Wallet",
+    "format": {
+      "SINGLE_ELIMINATION": "Single Elimination",
+      "SWISS": "Swiss System"
+    },
+    "status": {
+      "ANNOUNCED": "Announced",
+      "SCHEDULED": "Scheduled",
+      "REGISTRATION": "Registration Open",
+      "SEEDED": "Seeded",
+      "LIVE": "In Progress",
+      "FINALS": "Finals",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    }
   },
   "meta": {
     "title": "Nizalo — Your duel. Your proof.",
@@ -974,7 +988,10 @@
     "leaderboard_heading": "Top players",
     "leaderboard_signed_out": "Sign in to see the real, live leaderboard for this game.",
     "leaderboard_empty": "Not enough rated matches have been played yet to show a leaderboard.",
-    "leaderboard_games_played": "{count} rated"
+    "leaderboard_games_played": "{count} rated",
+    "fact_stakes": "Stakes",
+    "stakes_free_only": "Free play only — competitive stakes aren't enabled for this game yet.",
+    "stakes_enabled": "Free, or competitive with a real stake where eligible."
   },
   "walletPage": {
     "heading": "Wallet",
@@ -1101,53 +1118,5 @@
     "cancel": "Cancel",
     "expires_in": "Expires in {sec}s",
     "clear": "Clear"
-  },
-  "tournamentsPage": {
-    "heading": "Tournaments & Championships",
-    "empty": "No upcoming tournaments found.",
-    "back": "← Back to tournaments",
-    "not_found": "Tournament not found",
-    "view": "View Bracket →",
-    "join": "Join Tournament",
-    "register": "Join Tournament",
-    "registering": "Joining...",
-    "registered": "You are registered!",
-    "withdraw": "Withdraw",
-    "login_to_register": "Log in to Join",
-    "entry_free": "Free Entry",
-    "entry_fee": "Entry: {amount} {asset}",
-    "registered_count": "{count} / {capacity} Players",
-    "starts_at": "Starts: {date}",
-    "your_match": "Your match is ready — enter duel →",
-    "pairings_heading": "Tournament Bracket & Matches",
-    "round_label": "Round {number}",
-    "bye": "BYE",
-    "standings_heading": "Standings & Points",
-    "standings_rank": "Rank",
-    "standings_player": "Player",
-    "standings_points": "Points",
-    "standings_record": "W / L / D",
-    "error_insufficient_funds": "Insufficient wallet balance to pay the entry fee. Please deposit USDT to join.",
-    "error_at_capacity": "This tournament has reached its maximum player capacity.",
-    "error_not_open": "Registration for this tournament is closed.",
-    "error_already_registered": "You are already registered for this tournament.",
-    "error_not_eligible": "You are not eligible for this tournament.",
-    "error_generic": "Could not register for tournament. Please try again.",
-    "deposit_cta": "Deposit USDT to Wallet",
-    "format": {
-      "SINGLE_ELIMINATION": "Single Elimination",
-      "SWISS": "Swiss System"
-    },
-    "status": {
-      "ANNOUNCED": "Announced",
-      "SCHEDULED": "Scheduled",
-      "REGISTRATION": "Registration Open",
-      "SEEDED": "Seeded",
-      "LIVE": "In Progress",
-      "FINALS": "Finals",
-      "COMPLETED": "Completed",
-      "CANCELLED": "Cancelled"
-    }
   }
 }
-
