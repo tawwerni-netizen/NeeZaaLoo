@@ -28,6 +28,12 @@ const KEYS: Record<string, string> = {
   PROVIDER_ERROR: "auth.errors.provider_error",
   BAD_STATE: "auth.errors.bad_state",
   GOOGLE_DENIED: "auth.errors.google_denied",
+  CANCELLED: "auth.errors.google_denied",
+  SYNC_FAILED: "auth.errors.provider_error",
+  MISSING_CREDENTIALS: "auth.errors.provider_error",
+  TOKEN_EXCHANGE_FAILED: "auth.errors.provider_error",
+  SERVER_ERROR: "auth.errors.generic",
+  ACCOUNT_DISABLED: "auth.errors.locked_out",
   // Slice 7 -- Profile/nickname/bio/avatar validation codes, returned from
   // /v1/me/profile and /v1/me/profile/avatar.
   INVALID_SHAPE: "auth.errors.invalid_shape",

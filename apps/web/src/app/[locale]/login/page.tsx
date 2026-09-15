@@ -25,11 +25,14 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
+  const urlError = searchParams.get("error");
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    urlError ? t(authErrorKey(urlError.toUpperCase())) : null
+  );
   const [submitting, setSubmitting] = useState(false);
   const [googleStarting, setGoogleStarting] = useState(false);
 
@@ -92,14 +95,14 @@ function LoginForm() {
 
           <div className={styles.field}>
             <label htmlFor="identifier">
-              {locale === "ar" ? "البريد الإلكتروني" : (t("auth.login.identifier_label") || "Email Address")}
+              {locale === "ar" ? "البريد الإلكتروني أو اسم المستخدم" : (t("auth.login.identifier_label") || "Email Address or Username")}
             </label>
             <input
               id="identifier"
               name="identifier"
               type="text"
               autoComplete="email username"
-              placeholder="name@example.com"
+              placeholder={locale === "ar" ? "البريد الإلكتروني أو اسم المستخدم" : "name@example.com or username"}
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
