@@ -263,7 +263,7 @@ export function createTronChainReader({
  * than quietly constructing a reader that can never confirm a real deposit.
  */
 export function createChainReader({
-  kind = process.env.CHAIN_READER || "mock",
+  kind = process.env.CHAIN_READER || (process.env.NODE_ENV === "production" ? "tron" : "mock"),
   nodeEnv = process.env.NODE_ENV,
   apiKey = process.env.TRON_API_KEY,
   fullNodeUrl = process.env.TRON_FULL_NODE_URL,

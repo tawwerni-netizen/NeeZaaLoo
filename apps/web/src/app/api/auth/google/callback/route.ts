@@ -94,8 +94,10 @@ export async function GET(request: Request) {
     }
 
     if (!syncRes || !syncRes.ok) {
-      console.error("Failed to sync session with Nizalo backend:", syncRes ? await syncRes.text() : "no response");
-      return NextResponse.redirect(`${origin}/${locale}/login?error=sync_failed`);
+      const errText = syncRes ? await syncRes.text().catch(() => "") : "no_response";
+      console.error("Failed to sync session with Nizalo backend:", errText);
+      const code = syncRes?.status ? `sync_failed_${syncRes.status}` : "sync_failed";
+      return NextResponse.redirect(`${origin}/${locale}/login?error=${code}`);
     }
 
     const sessionData = await syncRes.json();

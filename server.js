@@ -72,6 +72,7 @@ function getEnv(childPort) {
     DATABASE_URL:           process.env.DATABASE_URL,
     AUTH_SIGNING_KEY_B64:   signingKey,
     AUTH_ENCRYPTION_KEY_B64: encryptionKey,
+    CHAIN_READER:           process.env.CHAIN_READER || "tron",
     CORS_ORIGINS:
       process.env.CORS_ORIGINS ||
       "https://nizalo.com,https://app.nizalo.com,http://localhost:3000,http://127.0.0.1:3000",

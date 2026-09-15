@@ -4172,7 +4172,8 @@ function buildRoutes() {
           }
         }
         if (!playerId) {
-          const base = (normEmail.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "_") || "player").slice(0, 20);
+          const rawBase = normEmail.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "_") || "player";
+          const base = (rawBase.length < 3 ? `${rawBase}_player` : rawBase).slice(0, 18);
           let handle = base;
           const exists = await db.query("SELECT 1 FROM player WHERE handle = $1", [handle]);
           if (exists.rows.length) {
