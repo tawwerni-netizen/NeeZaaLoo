@@ -19,12 +19,13 @@ const FAST_ARGON = { algorithm: 2, memoryCost: 1024, timeCost: 1, parallelism: 1
 
 let db, auth, rbac, chat, directChat, api, base;
 
-async function req(method, path, { token, body } = {}) {
+async function req(method, path, { token, body, headers = {} } = {}) {
   const res = await fetch(`${base}${path}`, {
     method,
     headers: {
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...(body !== undefined ? { "content-type": "application/json" } : {}),
+      ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
@@ -70,8 +71,16 @@ after(async () => {
 describe("Admin player promotion and chat moderation capability", () => {
   test("promoting a player to Admin grants ADMIN role and chat moderation capability", async () => {
     const superToken = await tokenFor("adminSuper");
-    const promoteRes = await req("POST", "/v1/admin/players/adminMod/promote", { token: superToken });
-    assert.equal(promoteRes.status, 200);
+    const step = await req("POST", "/v1/auth/step-up", {
+      token: superToken,
+      body: { action: "admin.rbac.manage", password: PASSWORD },
+    });
+    assert.equal(step.status, 200, `step-up failed: ${JSON.stringify(step.body)}`);
+    const promoteRes = await req("POST", "/v1/admin/players/adminMod/promote", {
+      token: superToken,
+      headers: { "x-step-up-token": step.body.stepUpToken },
+    });
+    assert.equal(promoteRes.status, 200, JSON.stringify(promoteRes.body));
 
     const modToken = await tokenFor("adminMod");
     // Send a message as badPlayer

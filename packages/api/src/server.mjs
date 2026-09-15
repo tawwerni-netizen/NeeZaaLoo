@@ -2872,7 +2872,14 @@ function buildRoutes() {
         return { body: { players } };
       } },
 
-    { method: "POST", path: "/v1/admin/players/:id/promote", action: "admin.user.read",
+    // Grants full ADMIN role (plus a Chat Mod custom role) to an arbitrary
+    // player -- a privilege-escalation action, not a read. admin.user.read
+    // is held by FINANCE_ADMIN, RISK_ADMIN, and ANTI_CHEAT_MODERATOR too
+    // (they all need it just to view a player profile); gating role grants
+    // on it would let any of them mint new ADMIN accounts at will.
+    // admin.rbac.manage is SUPER_ADMIN-only and already step-up gated --
+    // the same action the RBAC page's own grant/revoke routes use.
+    { method: "POST", path: "/v1/admin/players/:id/promote", action: "admin.rbac.manage",
       subjectType: "player",
       handler: async ({ params, actor, db, rbac }) => {
         if (actor.id === params.id) {
@@ -2926,7 +2933,7 @@ function buildRoutes() {
         return { body: { ok: true, playerId: p.id, handle: p.handle, role: "ADMIN" } };
       } },
 
-    { method: "POST", path: "/v1/admin/players/:id/demote", action: "admin.user.read",
+    { method: "POST", path: "/v1/admin/players/:id/demote", action: "admin.rbac.manage",
       subjectType: "player",
       handler: async ({ params, actor, db }) => {
         await db.query(
