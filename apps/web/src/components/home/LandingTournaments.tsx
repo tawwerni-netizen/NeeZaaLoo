@@ -169,7 +169,7 @@ export function LandingTournaments() {
       emptyText={t("home.tournaments.empty")}
       viewAllHref="/tournaments"
       viewAllText={t("home.tournaments.view_all")}
-      limit={4}
+      limit={7}
       banners={banners}
     />
   );

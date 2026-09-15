@@ -19,6 +19,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { formatDate } from "@/lib/i18n/format";
 import { getGame } from "@/lib/games";
 import { TournamentBannerSlider } from "@/components/tournaments/TournamentBannerSlider";
+import { formatTournamentTitle, getTournamentCover } from "@/components/tournaments/UpcomingTournaments";
 import styles from "./tournaments.module.css";
 
 type TournamentRow = {
@@ -72,18 +73,20 @@ function TournamentsList() {
         <div className={styles.list}>
           {visible?.map((row) => {
             const nameKey = getGame(row.game_id)?.nameKey ?? row.game_id;
+            const gameName = t(`common.game_names.${nameKey}`);
+            const cleanTitle = formatTournamentTitle(row, gameName, locale);
             const startTarget = row.scheduled_starts_at ?? row.starts_at;
             const entryFeeUsdt = Number(row.entry_fee_minor || 0) / 1_000_000;
             const prizePool = (entryFeeUsdt * row.capacity * 0.88).toFixed(2);
             const registeredPct = Math.min(100, Math.round(((row.registered_count || 0) / (row.capacity || 1)) * 100));
-            const imgPath = `/images/games/${row.game_id}-hero.webp`;
+            const imgPath = getTournamentCover(row.game_id);
 
             return (
               <LocaleLink key={row.id} href={`/tournaments/${row.id}`} className={styles.card}>
                 <div className={styles.cardBannerWrap}>
                   <img
                     src={imgPath}
-                    alt={t(`common.game_names.${nameKey}`)}
+                    alt={cleanTitle}
                     className={styles.cardBannerImg}
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src = "/images/games/chess-hero.webp";
@@ -105,10 +108,10 @@ function TournamentsList() {
                   <div className={styles.titleArea}>
                     <div className={styles.gameNameRow}>
                       <span>🎮</span>
-                      <span>{t(`common.game_names.${nameKey}`)}</span>
+                      <span>{gameName}</span>
                     </div>
                     <h2 className={styles.title}>
-                      {row.title || t(`common.game_names.${nameKey}`) + " Championship"}
+                      {cleanTitle}
                     </h2>
                   </div>
 

@@ -126,10 +126,35 @@ export function createMatchmakingService(db, { now = () => Date.now() } = {}) {
       return { ok: r.rows.length > 0 };
     },
 
-    async status(playerId) {
+    async status(playerId, ticketId = null) {
+      if (ticketId) {
+        await db.query(
+          `UPDATE matchmaking_ticket SET heartbeat_at=now()
+            WHERE id=$1 AND player_id=$2 AND status='ACTIVE'`,
+          [ticketId, playerId]
+        ).catch(() => {});
+
+        const r = await db.query(
+          `SELECT id, game_id, mode, tier, status, enqueued_at, expires_at, duel_id
+             FROM matchmaking_ticket WHERE player_id=$1 AND id=$2`,
+          [playerId, ticketId]
+        );
+        return r.rows[0] ?? null;
+      }
+
+      await db.query(
+        `UPDATE matchmaking_ticket SET heartbeat_at=now()
+          WHERE player_id=$1 AND status='ACTIVE'`,
+        [playerId]
+      ).catch(() => {});
+
       const r = await db.query(
         `SELECT id, game_id, mode, tier, status, enqueued_at, expires_at, duel_id
-           FROM matchmaking_ticket WHERE player_id=$1 AND status='ACTIVE'`,
+           FROM matchmaking_ticket
+          WHERE player_id=$1
+            AND (status='ACTIVE' OR (status='MATCHED' AND enqueued_at > now() - interval '60 seconds'))
+          ORDER BY (CASE WHEN status='ACTIVE' THEN 0 ELSE 1 END), enqueued_at DESC
+          LIMIT 1`,
         [playerId]
       );
       return r.rows[0] ?? null;

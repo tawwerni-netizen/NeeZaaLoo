@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hostinger Production Entrypoint -- node server.js (CommonJS, root-level).
  *
  * Architecture:
@@ -12,9 +12,13 @@ const { createServer } = require("node:http");
 const http = require("node:http");
 const { spawn } = require("node:child_process");
 const path = require("node:path");
+const fs = require("node:fs");
 
 const here = __dirname;
 process.env.NODE_ENV = "production";
+
+const avatarDir = process.env.AVATAR_STORAGE_DIR || path.join(here, "apps", "web", "public", "avatars");
+try { fs.mkdirSync(avatarDir, { recursive: true }); } catch {}
 
 const hostname = process.env.HOSTNAME || "0.0.0.0";
 const port     = parseInt(process.env.PORT,      10) || 3000;
@@ -108,6 +112,15 @@ process.on("SIGTERM", shutdown);
 // ---------------------------------------------------------------------------
 // Reverse Proxy Helpers
 // ---------------------------------------------------------------------------
+// Persistent HTTP keep-alive agent for high-throughput internal proxying
+const keepAliveAgent = new http.Agent({
+  keepAlive: true,
+  maxSockets: 250,
+  maxFreeSockets: 50,
+  keepAliveMsecs: 60000,
+  timeout: 30000,
+});
+
 function cleanHopByHopHeaders(headers) {
   const h = Object.assign({}, headers);
   delete h["connection"];
@@ -140,10 +153,24 @@ function proxyHttp(req, res, targetPort) {
       method:   req.method,
       headers:  pHeaders,
       timeout:  30000,
+      agent:    keepAliveAgent,
     },
     (proxyRes) => {
-      console.log(`[HTTP ${proxyRes.statusCode}] ${req.method} ${req.url}`);
+      if (proxyRes.statusCode >= 400 || process.env.DEBUG_PROXY === "1") {
+        console.log(`[HTTP ${proxyRes.statusCode}] ${req.method} ${req.url}`);
+      }
       const respHeaders = cleanHopByHopHeaders(proxyRes.headers);
+
+      // Aggressive caching for static assets
+      if (
+        req.url.startsWith("/_next/static/") ||
+        req.url.startsWith("/avatars/") ||
+        req.url.startsWith("/images/") ||
+        req.url.startsWith("/sounds/")
+      ) {
+        respHeaders["cache-control"] = "public, max-age=31536000, immutable";
+      }
+
       res.writeHead(proxyRes.statusCode, respHeaders);
       proxyRes.pipe(res, { end: true });
     }
@@ -175,7 +202,9 @@ function proxyHttp(req, res, targetPort) {
 // ---------------------------------------------------------------------------
 const server = createServer((req, res) => {
   const url = req.url || "/";
-  console.log(`[REQ] ${req.method} ${url}`);
+  if (process.env.DEBUG_PROXY === "1") {
+    console.log(`[REQ] ${req.method} ${url}`);
+  }
 
   if (url.startsWith("/v1/") || url === "/v1") {
     proxyHttp(req, res, apiPort);
@@ -185,6 +214,37 @@ const server = createServer((req, res) => {
   if (url.startsWith("/gateway")) {
     res.writeHead(426, { "Content-Type": "text/plain", Upgrade: "WebSocket" });
     res.end("Upgrade Required");
+    return;
+  }
+
+  // Directly serve dynamic uploaded avatars from AVATAR_STORAGE_DIR
+  if (url.startsWith("/avatars/")) {
+    const rawFileName = url.slice("/avatars/".length).split("?")[0];
+    const safeFileName = path.basename(rawFileName);
+    const filePath = path.join(avatarDir, safeFileName);
+    fs.stat(filePath, (err, stats) => {
+      if (err || !stats.isFile()) {
+        res.writeHead(404, { "Content-Type": "text/plain" });
+        res.end("Not Found");
+        return;
+      }
+      const ext = path.extname(safeFileName).toLowerCase();
+      const mimeMap = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+        ".svg": "image/svg+xml",
+      };
+      const contentType = mimeMap[ext] || "application/octet-stream";
+      res.writeHead(200, {
+        "Content-Type": contentType,
+        "Content-Length": stats.size,
+        "Cache-Control": "public, max-age=31536000, immutable",
+      });
+      fs.createReadStream(filePath).pipe(res);
+    });
     return;
   }
 

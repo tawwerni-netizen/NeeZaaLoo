@@ -447,6 +447,11 @@ function finish(duel, outcome, serverTimeMs) {
  * key ordering left to chance.
  */
 export function serializeReplay(duel, plugin) {
+  const challengeState = duel.challenge?.state ?? duel.challenge ?? duel.state ?? {};
+  const initial = typeof plugin?.serializeReplay === "function"
+    ? plugin.serializeReplay(challengeState, { initialOnly: true })
+    : {};
+
   return {
     duelId: duel.duelId,
     gameId: duel.gameId,
@@ -455,7 +460,7 @@ export function serializeReplay(duel, plugin) {
     seed: duel.seed,
     config: duel.config,
     timeControl: duel.timeControl,
-    initial: plugin.serializeReplay(duel.challenge.state, { initialOnly: true }),
+    initial,
     moves: duel.events
       .filter((e) => e.type === "INTENT_ACCEPTED")
       .map((e) => ({

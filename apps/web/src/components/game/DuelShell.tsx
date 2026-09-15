@@ -48,6 +48,11 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const [connectedSeats, setConnectedSeats] = useState<[boolean, boolean] | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
+  const [completedInfo, setCompletedInfo] = useState<{
+    completed: boolean;
+    result: string | null;
+    reason: string | null;
+  }>({ completed: false, result: null, reason: null });
 
   useEffect(() => {
     setMounted(true);
@@ -59,6 +64,14 @@ export function DuelShell({ duelId }: { duelId: string }) {
     if (msg.t === "STATE") {
       if (Array.isArray(msg.players)) setPlayers(msg.players as string[]);
       if (typeof msg.gameId === "string") setGameId(msg.gameId);
+      if (msg.status === "COMPLETED" || msg.status === "SETTLED") {
+        const outcome = msg.outcome as { result?: unknown; reason?: unknown } | undefined;
+        setCompletedInfo({
+          completed: true,
+          result: outcome?.result ? String(outcome.result) : null,
+          reason: outcome?.reason ? String(outcome.reason) : null,
+        });
+      }
     }
     if ("view" in msg && msg.view !== undefined && msg.view !== null) {
       setView(msg.view);
@@ -69,24 +82,73 @@ export function DuelShell({ duelId }: { duelId: string }) {
     if ("connectedSeats" in msg && Array.isArray(msg.connectedSeats)) {
       setConnectedSeats(msg.connectedSeats as [boolean, boolean]);
     }
+    if (msg.t === "COMPLETED") {
+      setCompletedInfo({
+        completed: true,
+        result: msg.result ? String(msg.result) : null,
+        reason: msg.reason ? String(msg.reason) : null,
+      });
+    }
+    if (msg.t === "EVENT" && msg.type === "DUEL_COMPLETED") {
+      const payload = msg.payload as { result?: unknown; reason?: unknown } | undefined;
+      setCompletedInfo({
+        completed: true,
+        result: payload?.result ? String(payload.result) : null,
+        reason: payload?.reason ? String(payload.reason) : null,
+      });
+    }
   }, [latest]);
 
+  // Active status fallback polling: ensures resignation or winning move updates promptly even if WS frame is delayed
+  useEffect(() => {
+    if (completedInfo.completed) return;
+    let timer: ReturnType<typeof setInterval>;
+    let cancelled = false;
+
+    const checkStatus = async () => {
+      try {
+        const d = await get<{ status?: string; result?: string | null; termination_reason?: string | null }>(
+          `/v1/duels/${encodeURIComponent(duelId)}`
+        );
+        if (!cancelled && d && (d.status === "COMPLETED" || d.status === "SETTLED")) {
+          setCompletedInfo({
+            completed: true,
+            result: d.result ?? null,
+            reason: d.termination_reason ?? null,
+          });
+        }
+      } catch {
+        // Non-fatal poll error
+      }
+    };
+
+    timer = setInterval(() => void checkStatus(), 2000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [duelId, completedInfo.completed]);
+
   const isSharedClock = clock?.model === "SHARED";
-  const stateStatus = latest?.t === "STATE" ? (latest as { status?: unknown }).status : null;
-  const stateOutcome = latest?.t === "STATE"
-    ? (latest as { outcome?: { result?: unknown; reason?: unknown } | null }).outcome
-    : null;
-  const completed = latest?.t === "COMPLETED" || stateStatus === "COMPLETED";
-  const result = latest?.t === "COMPLETED"
-    ? String((latest as { result?: unknown }).result)
-    : stateStatus === "COMPLETED" && stateOutcome
-    ? String(stateOutcome.result)
-    : null;
-  const reason = latest?.t === "COMPLETED"
-    ? String((latest as { reason?: unknown }).reason)
-    : stateStatus === "COMPLETED" && stateOutcome
-    ? String(stateOutcome.reason)
-    : null;
+  const completed = completedInfo.completed;
+  const result = completedInfo.result;
+  const reason = completedInfo.reason;
+
+  // Persist handled duel in sessionStorage so player is never bounced back after match finishes
+  useEffect(() => {
+    if (completed) {
+      try {
+        const stored = sessionStorage.getItem("nizalo_handled_duels");
+        const list = stored ? (JSON.parse(stored) as string[]) : [];
+        if (!list.includes(duelId)) {
+          list.push(duelId);
+          sessionStorage.setItem("nizalo_handled_duels", JSON.stringify(list));
+        }
+      } catch {
+        // Non-fatal
+      }
+    }
+  }, [completed, duelId]);
 
   const isSpectator = seat === null;
   const mySeat = typeof seat === "number" ? (seat as 0 | 1) : null;

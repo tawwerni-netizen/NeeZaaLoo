@@ -105,9 +105,18 @@ export function ConnectFourBoard({ board, turn, lastMove, legalColumns, canMove,
               type="button"
               className={[styles.dropColumnBtn, isHovered && isLegal ? styles.dropActive : ""].join(" ")}
               disabled={!canMove || !isLegal}
-              onClick={() => onMove(col)}
-              onMouseEnter={() => setHoverCol(col)}
-              onMouseLeave={() => setHoverCol((c) => (c === col ? null : c))}
+              onClick={() => {
+                if (canMove && isLegal) {
+                  setHoverCol(null);
+                  onMove(col);
+                }
+              }}
+              onPointerEnter={(e) => {
+                if (e.pointerType !== "touch") setHoverCol(col);
+              }}
+              onPointerLeave={(e) => {
+                if (e.pointerType !== "touch") setHoverCol((c) => (c === col ? null : c));
+              }}
               aria-label={`Drop in column ${col + 1}`}
             >
               {isHovered && isLegal && <span className={styles.dropArrow}>▼</span>}
@@ -142,9 +151,18 @@ export function ConnectFourBoard({ board, turn, lastMove, legalColumns, canMove,
                       aria-label={`${t("game.move_history")} ${row},${col}`}
                       className={styles.cell}
                       disabled={!canMove || !legalColumns.includes(col)}
-                      onClick={() => onMove(col)}
-                      onMouseEnter={() => setHoverCol(col)}
-                      onMouseLeave={() => setHoverCol((c) => (c === col ? null : c))}
+                      onClick={() => {
+                        if (canMove && legalColumns.includes(col)) {
+                          setHoverCol(null);
+                          onMove(col);
+                        }
+                      }}
+                      onPointerEnter={(e) => {
+                        if (e.pointerType !== "touch") setHoverCol(col);
+                      }}
+                      onPointerLeave={(e) => {
+                        if (e.pointerType !== "touch") setHoverCol((c) => (c === col ? null : c));
+                      }}
                     >
                       <span className={styles.holeBevel}>
                         {token !== 0 && (

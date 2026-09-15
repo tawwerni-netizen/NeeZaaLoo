@@ -255,13 +255,16 @@ export function createChallengeService(db, {
     const r = await db.query(
       `SELECT dc.id, dc.game_id, dc.created_at, dc.expires_at, dc.responded_at, dc.status,
               dc.duel_id, dc.tier, dc.stake_minor::text AS stake_minor, dc.asset,
-              dc.opponent_id, p.handle AS opponent_handle
-         FROM duel_challenge dc JOIN player p ON p.id = dc.opponent_id
+              dc.opponent_id, p.handle AS opponent_handle,
+              d.status AS duel_status
+         FROM duel_challenge dc
+         JOIN player p ON p.id = dc.opponent_id
+         LEFT JOIN duel d ON d.id = dc.duel_id
         WHERE dc.challenger_id = $1
           AND (
             (dc.status = 'PENDING' AND dc.expires_at > $2)
             OR
-            (dc.status = 'ACCEPTED' AND dc.responded_at > $3)
+            (dc.status = 'ACCEPTED' AND dc.responded_at > $3 AND (d.status IS NULL OR d.status NOT IN ('COMPLETED', 'SETTLED', 'ABORTED')))
           )
         ORDER BY dc.created_at DESC`,
       [playerId, new Date(now()).toISOString(), new Date(now() - 60_000).toISOString()]

@@ -624,24 +624,26 @@ export function createGateway({
    */
   async function publishNewEvents(duel, plugin, fromIndex, t, origin = null) {
     if (store) {
-      // The game hash is the audit commitment, so it is written in the same
-      // transaction that marks the duel finished -- never separately.
-      const gameHash = duel.status === DuelState.COMPLETED
-        ? replayHash(serializeReplay(duel, plugin))
-        : null;
+      let gameHash = null;
+      if (duel.status === DuelState.COMPLETED) {
+        try {
+          gameHash = replayHash(serializeReplay(duel, plugin));
+        } catch {
+          gameHash = null;
+        }
+      }
       const leaseToken = leaseTokens.has(duel.duelId) ? leaseTokens.get(duel.duelId) : null;
       try {
         await store.persist(duel, fromIndex, { gameHash, now: t, leaseToken });
       } catch (e) {
-        if (e.code !== "STALE_LEASE") throw e;
-        // Another instance now owns this duel. This one must stop acting as
-        // if it does: evict it locally so the NEXT message against this
-        // duelId gets a clean NO_SUCH_DUEL instead of silently drifting from
-        // whatever the real owner is recording.
-        duels.delete(duel.duelId);
-        leaseTokens.delete(duel.duelId);
-        if (origin) fail(origin.conn, ErrorCode.STALE_OWNER, duel.duelId);
-        return;
+        if (e.code === "STALE_LEASE") {
+          duels.delete(duel.duelId);
+          leaseTokens.delete(duel.duelId);
+          if (origin) fail(origin.conn, ErrorCode.STALE_OWNER, duel.duelId);
+          return;
+        }
+        // Log transient persistence failure without starving clients of in-memory completion
+        console.warn(`[Gateway] store.persist warning for duel ${duel.duelId}:`, e.message);
       }
     }
     for (let i = fromIndex; i < duel.events.length; i++) {

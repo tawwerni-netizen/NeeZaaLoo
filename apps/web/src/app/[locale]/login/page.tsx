@@ -39,6 +39,10 @@ function LoginForm() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!identifier.includes("@")) {
+      setError(locale === "ar" ? "يرجى إدخال بريد إلكتروني صالح. تسجيل الدخول بالاسم المستعار غير متاح." : "Please enter a valid email address. Login with username is not supported.");
+      return;
+    }
     setSubmitting(true);
     const result = await login(identifier, password, remember);
     setSubmitting(false);
@@ -95,14 +99,14 @@ function LoginForm() {
 
           <div className={styles.field}>
             <label htmlFor="identifier">
-              {locale === "ar" ? "البريد الإلكتروني أو اسم المستخدم" : (t("auth.login.identifier_label") || "Email Address or Username")}
+              {locale === "ar" ? "البريد الإلكتروني" : "Email Address"}
             </label>
             <input
               id="identifier"
               name="identifier"
-              type="text"
-              autoComplete="email username"
-              placeholder={locale === "ar" ? "البريد الإلكتروني أو اسم المستخدم" : "name@example.com or username"}
+              type="email"
+              autoComplete="email"
+              placeholder={locale === "ar" ? "name@example.com" : "name@example.com"}
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}

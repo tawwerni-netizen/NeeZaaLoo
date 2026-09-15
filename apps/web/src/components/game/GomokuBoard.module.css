@@ -73,6 +73,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .cell:disabled { cursor: default; }
@@ -126,6 +129,9 @@
 }
 
 @media (max-width: 640px) {
+  .perspective {
+    transform: none !important;
+  }
   .kayaWoodTable { padding: 10px; }
   .board { width: 88vw; }
 }

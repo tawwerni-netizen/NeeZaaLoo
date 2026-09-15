@@ -31,7 +31,33 @@ type OutgoingChallenge = {
   id: string;
   status?: string;
   duel_id?: string | null;
+  duel_status?: string | null;
 };
+
+function isDuelHandled(duelId: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = sessionStorage.getItem("nizalo_handled_duels");
+    const list = raw ? (JSON.parse(raw) as string[]) : [];
+    return list.includes(duelId);
+  } catch {
+    return false;
+  }
+}
+
+function markDuelHandled(duelId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = sessionStorage.getItem("nizalo_handled_duels");
+    const list = raw ? (JSON.parse(raw) as string[]) : [];
+    if (!list.includes(duelId)) {
+      list.push(duelId);
+      sessionStorage.setItem("nizalo_handled_duels", JSON.stringify(list));
+    }
+  } catch {
+    // Non-fatal
+  }
+}
 
 export function IncomingChallengeWatcher() {
   const { player } = useAuth();
@@ -40,12 +66,11 @@ export function IncomingChallengeWatcher() {
   const pathname = usePathname();
   const [incoming, setIncoming] = useState<IncomingChallenge[]>([]);
   const isAdminRoute = pathname.includes("/admin");
-  const handledDuelsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const match = pathname.match(/\/game\/([^/?]+)/);
     if (match?.[1]) {
-      handledDuelsRef.current.add(match[1]);
+      markDuelHandled(match[1]);
     }
   }, [pathname]);
 
@@ -53,14 +78,19 @@ export function IncomingChallengeWatcher() {
     try {
       const r = await get<{ incoming: IncomingChallenge[]; outgoing?: OutgoingChallenge[] }>("/v1/challenges");
       setIncoming(r.incoming || []);
-      const accepted = (r.outgoing || []).find((c) => c.status === "ACCEPTED" && c.duel_id);
+      const accepted = (r.outgoing || []).find((c) => {
+        if (c.status !== "ACCEPTED" || !c.duel_id) return false;
+        if (c.duel_status === "COMPLETED" || c.duel_status === "SETTLED" || c.duel_status === "ABORTED") return false;
+        return true;
+      });
+
       if (
         accepted &&
         accepted.duel_id &&
-        !handledDuelsRef.current.has(accepted.duel_id) &&
+        !isDuelHandled(accepted.duel_id) &&
         !pathname.includes(`/game/${accepted.duel_id}`)
       ) {
-        handledDuelsRef.current.add(accepted.duel_id);
+        markDuelHandled(accepted.duel_id);
         router.push(`/${locale}/game/${accepted.duel_id}`);
       }
     } catch {
@@ -84,7 +114,7 @@ export function IncomingChallengeWatcher() {
     <ChallengePopup
       challenge={incoming[0]!}
       onAccepted={(duelId) => {
-        handledDuelsRef.current.add(duelId);
+        markDuelHandled(duelId);
         router.push(`/${locale}/game/${duelId}`);
       }}
       onDeclined={() => void refresh()}

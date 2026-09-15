@@ -77,3 +77,16 @@
 .environment[data-perspective="false"] .tableSurface {
   transform-style: flat !important;
 }
+
+@media (max-width: 640px) {
+  .environment {
+    perspective: none !important;
+    padding: var(--nz-space-2) 0;
+  }
+  .tableSurface {
+    transform-style: flat !important;
+  }
+  .ambientLighting {
+    opacity: 0.5;
+  }
+}

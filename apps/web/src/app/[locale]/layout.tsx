@@ -4,6 +4,7 @@ import Script from "next/script";
 import { Archivo, IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import { IncomingChallengeWatcher } from "@/components/play/IncomingChallengeWatcher";
+import { ActiveMatchBanner } from "@/components/game/ActiveMatchBanner";
 import { TournamentReadyWatcher } from "@/components/tournaments/TournamentReadyWatcher";
 import { AuthPopupProvider } from "@/lib/auth-popup-context";
 import { AuthPopup, AuthPopupAutoOpen } from "@/components/auth/AuthPopup";
@@ -241,6 +242,7 @@ export default async function LocaleLayout({
           <AuthProvider>
             <AuthPopupProvider>
               {children}
+              <ActiveMatchBanner />
               <IncomingChallengeWatcher />
               <TournamentReadyWatcher />
               <AuthPopupAutoOpen />

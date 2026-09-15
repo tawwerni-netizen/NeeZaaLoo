@@ -54,10 +54,12 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
   const [duelId, setDuelId] = useState<string | null>(null);
 
   const cancelledRef = useRef(false);
+  const ticketIdRef = useRef<string | null>(null);
 
   // Enqueue once on mount.
   useEffect(() => {
     cancelledRef.current = false;
+    ticketIdRef.current = null;
     if (!player) {
       setError(locale === "ar" ? "يرجى تسجيل الدخول للبدء في التوفيق والمبارزة" : "Please log in to enter matchmaking");
       setPhase("error");
@@ -66,10 +68,13 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
     }
     (async () => {
       try {
-        await post("/v1/matchmaking/tickets", {
+        const res = await post<{ ticketId?: string }>("/v1/matchmaking/tickets", {
           gameId,
           ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor } : {}),
         });
+        if (res?.ticketId) {
+          ticketIdRef.current = String(res.ticketId);
+        }
         if (!cancelledRef.current) setPhase("waiting");
       } catch (e) {
         if (e instanceof ApiError && e.code === "ALREADY_QUEUED") {
@@ -95,8 +100,14 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
     const timer = setInterval(async () => {
       setElapsedSec(Math.floor((Date.now() - started) / 1000));
       try {
-        const { ticket } = await get<{ ticket: Ticket }>("/v1/matchmaking/status");
+        const url = ticketIdRef.current
+          ? `/v1/matchmaking/status?ticketId=${encodeURIComponent(ticketIdRef.current)}`
+          : "/v1/matchmaking/status";
+        const { ticket } = await get<{ ticket: Ticket }>(url);
         if (cancelledRef.current) return;
+        if (ticket && !ticketIdRef.current && ticket.id) {
+          ticketIdRef.current = String(ticket.id);
+        }
         if (ticket?.status === "MATCHED" && ticket.duel_id) {
           clearInterval(timer);
           setDuelId(ticket.duel_id);

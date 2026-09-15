@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { authErrorKey } from "@/components/auth/error-messages";
 import { get, patch, post, ApiError } from "@/lib/api";
 import type { PublicProfile } from "@/lib/profile-types";
+import { ImageCropperModal } from "@/components/profile/ImageCropperModal";
 import styles from "./profile.module.css";
 import formStyles from "@/components/auth/AuthForm.module.css";
 
@@ -23,12 +24,13 @@ export default function ProfilePage() {
 }
 
 function ProfileContent() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   async function reload() {
@@ -37,16 +39,28 @@ function ProfileContent() {
 
   useEffect(() => { void reload(); }, []);
 
-  async function onAvatarSelected(e: React.ChangeEvent<HTMLInputElement>) {
+  function onAvatarSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
     setError(null);
+    setMessage(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropperImage(String(reader.result));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function handleCropComplete(imageBase64: string) {
     setUploading(true);
+    setError(null);
+    setMessage(null);
     try {
-      const imageBase64 = await fileToBase64(file);
       await post("/v1/me/profile/avatar", { imageBase64 });
+      setCropperImage(null);
       await reload();
+      setMessage(locale === "ar" ? "تم تحديث صورة ملفك الشخصي بنجاح!" : "Profile picture updated successfully!");
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
       setError(t(authErrorKey(code ?? "GENERIC")));
@@ -221,6 +235,14 @@ function ProfileContent() {
         <p className={styles.memberSince}>
           {t("profile.member_since_label")} {new Date(profile.memberSince).toLocaleDateString()}
         </p>
+
+        {cropperImage && (
+          <ImageCropperModal
+            imageSrc={cropperImage}
+            onCropComplete={handleCropComplete}
+            onCancel={() => setCropperImage(null)}
+          />
+        )}
       </div>
       <Footer />
     </>

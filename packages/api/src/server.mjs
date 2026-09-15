@@ -470,8 +470,13 @@ function buildRoutes() {
 
     { method: "POST", path: "/v1/auth/login", action: "player.login", anonymous: true,
       handler: async ({ body, auth, ip }) => {
+        const identifier = String(body.identifier ?? "").trim();
+        // Login by nickname is strictly disallowed; only valid email addresses are permitted
+        if (!identifier.includes("@")) {
+          return { status: 401, body: errorBody("BAD_CREDENTIALS") };
+        }
         const r = await auth.login({
-          identifier: String(body.identifier ?? ""),
+          identifier,
           password: String(body.password ?? ""),
           totpCode: body.totpCode ? String(body.totpCode) : null,
           deviceFingerprint: body.deviceFingerprint ? String(body.deviceFingerprint) : null,
@@ -1471,9 +1476,10 @@ function buildRoutes() {
     // process) is what actually performs the match; this route only ever
     // reads the ticket row it wrote.
     { method: "GET", path: "/v1/matchmaking/status", action: "duel.play.free",
-      handler: async ({ actor, db }) => {
+      handler: async ({ actor, db, query }) => {
         const mm = createMatchmakingService(db);
-        const ticket = await mm.status(actor.id);
+        const ticketId = query?.get?.("ticketId") || null;
+        const ticket = await mm.status(actor.id, ticketId);
         return { body: { ticket } };
       } },
 
@@ -1608,6 +1614,39 @@ function buildRoutes() {
           [actor.id, limit]
         );
         return { body: { duels: r.rows } };
+      } },
+
+    { method: "GET", path: "/v1/me/active-duel", action: "duel.play.free",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, db }) => {
+        const r = await db.query(
+          `SELECT d.id, d.game_id, d.status, d.seat_0, d.seat_1, d.started_at,
+                  p0.handle AS seat_0_handle, p1.handle AS seat_1_handle
+             FROM duel d
+             LEFT JOIN player p0 ON p0.id = d.seat_0
+             LEFT JOIN player p1 ON p1.id = d.seat_1
+            WHERE (d.seat_0 = $1 OR d.seat_1 = $1)
+              AND d.status IN ('LIVE', 'READY', 'RESERVED')
+            ORDER BY d.created_at DESC
+            LIMIT 1`,
+          [actor.id]
+        );
+        if (!r.rows.length) return { body: { active: false } };
+        const row = r.rows[0];
+        const isSeat0 = row.seat_0 === actor.id;
+        const opponentHandle = isSeat0 ? (row.seat_1_handle ?? row.seat_1) : (row.seat_0_handle ?? row.seat_0);
+        return {
+          body: {
+            active: true,
+            duel: {
+              id: row.id,
+              gameId: row.game_id,
+              status: row.status,
+              opponentNickname: opponentHandle,
+              startedAt: row.started_at,
+            },
+          },
+        };
       } },
 
     // --- Customer support tickets (Slice 8) -------------------------------------

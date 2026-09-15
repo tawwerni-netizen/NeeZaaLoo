@@ -148,9 +148,18 @@ export function GomokuBoard({ board, lastMove, legalCells, mySeat, canMove, onMo
                   className={[styles.cell, isWinning ? styles.winningCell : ""].join(" ")}
                   style={{ left: `${((col + 0.5) * 100) / SIZE}%`, top: `${((row + 0.5) * 100) / SIZE}%` }}
                   disabled={!canMove || !isLegal}
-                  onClick={() => onMove(cell)}
-                  onMouseEnter={() => setHoverCell(cell)}
-                  onMouseLeave={() => setHoverCell((c) => (c === cell ? null : c))}
+                  onClick={() => {
+                    if (canMove && isLegal) {
+                      setHoverCell(null);
+                      onMove(cell);
+                    }
+                  }}
+                  onPointerEnter={(e) => {
+                    if (e.pointerType !== "touch") setHoverCell(cell);
+                  }}
+                  onPointerLeave={(e) => {
+                    if (e.pointerType !== "touch") setHoverCell((c) => (c === cell ? null : c));
+                  }}
                 >
                   {mark !== 0 && (
                     <motion.div
