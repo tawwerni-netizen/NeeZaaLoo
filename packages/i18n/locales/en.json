@@ -238,6 +238,8 @@
       "email_taken": "An account already exists with this email.",
       "bad_credentials": "Incorrect email or password.",
       "locked_out": "Too many attempts. Try again in a few minutes.",
+      "account_disabled": "Your account has been suspended. Contact support if you believe this is a mistake.",
+      "account_disabled_cheating": "Your account has been suspended for violating Nizalo's Fair Play Policy (cheating). This decision is final under site protocol.",
       "totp_required": "Enter your authenticator code to continue.",
       "totp_invalid": "That code didn’t work. Check your authenticator and try again.",
       "network_error": "Couldn’t reach the server. Check your connection and try again.",

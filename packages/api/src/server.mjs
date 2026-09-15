@@ -4365,19 +4365,30 @@ function buildRoutes() {
       } },
 
     // --- Admin Fair Play Cases & Flagged Duels ---
+    // Was previously querying columns (reason, score, game_id, created_at)
+    // that do not exist on fairplay_case at all -- silently swallowed by the
+    // blanket .catch() below, so this always returned an empty list with no
+    // visible error. Real columns per 0009_risk_and_fairplay.sql:
+    // category/status/risk_score/opened_at/decision/decision_note/funds_held.
     { method: "GET", path: "/v1/admin/fair-play", action: "admin.fairplay.read",
       handler: async ({ db, query }) => {
         const q = (query.get("q") ?? "").trim().toLowerCase();
         const cases = await db.query(`
-          SELECT id, player_id, game_id, reason, status, score, created_at, decided_at, decided_by
-            FROM fairplay_case
-           WHERE ($1 = '' OR LOWER(player_id) LIKE '%' || $1 || '%' OR LOWER(id) LIKE '%' || $1 || '%')
-           ORDER BY created_at DESC LIMIT 50
-        `).catch(() => ({ rows: [] }));
+          SELECT c.id, c.player_id, p.handle AS player_handle, c.category, c.status, c.risk_score,
+                 c.auto_actioned, c.opened_at, c.decided_at, c.decided_by, c.decision, c.decision_note,
+                 c.funds_held, c.closed_at
+            FROM fairplay_case c
+            LEFT JOIN player p ON p.id = c.player_id
+           WHERE ($1 = '' OR LOWER(c.player_id) LIKE '%' || $1 || '%' OR LOWER(c.id) LIKE '%' || $1 || '%'
+                  OR LOWER(p.handle) LIKE '%' || $1 || '%')
+           ORDER BY c.opened_at DESC LIMIT 50
+        `, [q]).catch((err) => { console.error("admin fair-play cases query error:", err); return { rows: [] }; });
+        // duel_engine_flag never existed -- the real table is
+        // fairplay_signal (0009_risk_and_fairplay.sql).
         const flags = await db.query(`
-          SELECT id, duel_id, player_id, flag_code, severity, created_at
-            FROM duel_engine_flag ORDER BY created_at DESC LIMIT 50
-        `).catch(() => ({ rows: [] }));
+          SELECT id, duel_id, player_id, detector AS flag_code, strength, confidence, explanation, created_at
+            FROM fairplay_signal ORDER BY created_at DESC LIMIT 50
+        `).catch((err) => { console.error("admin fair-play signals query error:", err); return { rows: [] }; });
         return {
           body: {
             ok: true,
@@ -4385,6 +4396,125 @@ function buildRoutes() {
             flags: flags.rows,
           }
         };
+      } },
+
+    // The one real consequence path from the fair-play tribunal. Two
+    // outcomes only, for now: ACCOUNT_CLOSURE (ban + seize every non-zero
+    // wallet balance to platform:confiscated) or NONE (dismiss, no action).
+    // Deliberately not auto-actioned and not reachable without step-up --
+    // 0009's own header calls this "NEVER ONE SIGNAL = BAN, made
+    // structural"; this endpoint is the human decision that principle
+    // exists to require, not a bypass of it.
+    { method: "POST", path: "/v1/admin/fair-play/cases/:id/decide", action: "admin.fairplay.decide",
+      subjectType: "fairplay_case",
+      handler: async ({ params, body, actor, db }) => {
+        const decision = String(body?.decision ?? "").toUpperCase();
+        if (!["ACCOUNT_CLOSURE", "NONE"].includes(decision)) {
+          return { status: 400, body: errorBody("INVALID_DECISION", "decision must be ACCOUNT_CLOSURE or NONE") };
+        }
+        const note = String(body?.note ?? "").trim();
+        if (note.length < 3) {
+          return { status: 400, body: errorBody("REASON_REQUIRED", "A reason is required and becomes part of the permanent audit trail") };
+        }
+
+        const caseRes = await db.query("SELECT * FROM fairplay_case WHERE id = $1", [params.id]);
+        if (!caseRes.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
+        const c = caseRes.rows[0];
+        if (!["OPEN", "UNDER_REVIEW"].includes(c.status)) {
+          return { status: 409, body: errorBody("ALREADY_DECIDED", `case is already ${c.status}`) };
+        }
+
+        if (decision === "NONE") {
+          await db.query(
+            `UPDATE fairplay_case
+                SET status='CLOSED_NO_ACTION', decision='NONE', decision_note=$2,
+                    decided_by=$3, decided_at=now(), closed_at=now()
+              WHERE id=$1`,
+            [params.id, note, actor.id]
+          );
+          await db.query(
+            `INSERT INTO fairplay_case_event (case_id, event, actor_type, actor_id, detail)
+             VALUES ($1,'CLEARED','ADMIN',$2,$3::jsonb)`,
+            [params.id, actor.id, JSON.stringify({ note })]
+          );
+          return { body: { ok: true, caseId: params.id, decision: "NONE" } };
+        }
+
+        // ACCOUNT_CLOSURE: ban the account (same effect as POST
+        // /v1/admin/players/:id/ban, plus the CHEATING category the login
+        // flow's specific message depends on) and seize every non-zero
+        // balance across all five wallet states -- not just :available --
+        // to platform:confiscated. Each state's seizure is its own
+        // ADJUSTMENT posting, keyed on (case id, state), so a retry after a
+        // partial failure never double-seizes a state already moved.
+        const nowIso = new Date().toISOString();
+        const states = ["available", "locked", "pending", "withdrawable", "restricted"];
+        const seized = [];
+
+        await db.transaction(async (tx) => {
+          await tx.query(
+            `UPDATE player SET disabled_at=$2, disabled_reason=$3, disabled_by=$4, disabled_category='CHEATING' WHERE id=$1`,
+            [c.player_id, nowIso, note, actor.id]
+          );
+          await tx.query(
+            `UPDATE auth_session SET revoked_at=$2, revoked_reason='FAIRPLAY_SANCTION' WHERE player_id=$1 AND revoked_at IS NULL`,
+            [c.player_id, nowIso]
+          );
+
+          for (const state of states) {
+            const balRes = await tx.query(
+              `SELECT a.asset, ledger_natural_balance(a.normal_side, COALESCE(b.balance,0)) AS bal
+                 FROM ledger_account a LEFT JOIN ledger_balance b ON b.account_id = a.id
+                WHERE a.key = 'user:' || $1 || ':' || $2`,
+              [c.player_id, state]
+            );
+            for (const row of balRes.rows) {
+              const amount = BigInt(row.bal || 0);
+              if (amount <= 0n) continue;
+              await tx.query(
+                `SELECT * FROM ledger_post($1,'ADJUSTMENT','ADMIN',$2,$3::jsonb,$4,$5,'fairplay_case',$6)`,
+                [
+                  `fairplay:${params.id}:seize:${state}`,
+                  actor.id,
+                  // Both user wallet accounts and platform:confiscated are
+                  // CREDIT-normal (LIABILITY / REVENUE respectively) -- for
+                  // a CREDIT-normal account here, a POSITIVE raw amount
+                  // DECREASES its natural balance and a NEGATIVE one
+                  // INCREASES it (the exact convention WITHDRAWAL_LOCK and
+                  // rake.mjs's own platform:rake posting already use).
+                  // Getting this backwards doesn't just fail loudly -- it
+                  // silently CREDITS the sanctioned player instead of
+                  // debiting them, which is how the very first version of
+                  // this code was caught, by a test asserting the seized
+                  // amount actually left the account, not by inspection.
+                  JSON.stringify([
+                    { account: `user:${c.player_id}:${state}`, amount: amount.toString() },
+                    { account: "platform:confiscated", amount: (-amount).toString() },
+                  ]),
+                  row.asset,
+                  `Fair-play sanction ${params.id}: ${note}`,
+                  params.id,
+                ]
+              );
+              seized.push({ state, asset: row.asset, amountMinor: amount.toString() });
+            }
+          }
+
+          await tx.query(
+            `UPDATE fairplay_case
+                SET status='DECIDED', decision='ACCOUNT_CLOSURE', decision_note=$2,
+                    decided_by=$3, decided_at=now(), funds_held=TRUE, closed_at=now()
+              WHERE id=$1`,
+            [params.id, note, actor.id]
+          );
+          await tx.query(
+            `INSERT INTO fairplay_case_event (case_id, event, actor_type, actor_id, detail)
+             VALUES ($1,'SANCTIONED_ACCOUNT_CLOSURE_AND_FUNDS_SEIZED','ADMIN',$2,$3::jsonb)`,
+            [params.id, actor.id, JSON.stringify({ note, seized })]
+          );
+        });
+
+        return { body: { ok: true, caseId: params.id, decision: "ACCOUNT_CLOSURE", playerId: c.player_id, seized } };
       } },
 
     // --- Admin Chat Moderation ---

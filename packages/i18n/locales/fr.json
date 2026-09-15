@@ -225,6 +225,8 @@
       "handle_taken": "Ce pseudo est déjà pris. Essayez-en un autre.",
       "bad_credentials": "Pseudo ou mot de passe incorrect.",
       "locked_out": "Trop de tentatives. Réessayez dans quelques minutes.",
+      "account_disabled": "Votre compte a été suspendu. Contactez le support si vous pensez qu'il s'agit d'une erreur.",
+      "account_disabled_cheating": "Votre compte a été suspendu pour non-respect de la politique de jeu équitable de Nizalo (triche). Cette décision est définitive selon le protocole du site.",
       "totp_required": "Saisissez votre code d’authentification pour continuer.",
       "totp_invalid": "Ce code n’a pas fonctionné. Vérifiez votre authentificateur et réessayez.",
       "network_error": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",

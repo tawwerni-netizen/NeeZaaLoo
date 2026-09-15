@@ -225,6 +225,8 @@
       "handle_taken": "该用户名已被占用,请换一个。",
       "bad_credentials": "用户名或密码不正确。",
       "locked_out": "尝试次数过多,请几分钟后再试。",
+      "account_disabled": "您的账户已被暂停。如果您认为这是错误,请联系客服。",
+      "account_disabled_cheating": "您的账户因违反 Nizalo 公平竞赛政策(作弊)已被暂停。根据网站协议,此决定为最终决定。",
       "totp_required": "请输入身份验证码以继续。",
       "totp_invalid": "验证码不正确,请检查身份验证器后重试。",
       "network_error": "无法连接服务器,请检查网络后重试。",

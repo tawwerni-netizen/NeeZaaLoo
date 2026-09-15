@@ -33,7 +33,11 @@ const KEYS: Record<string, string> = {
   MISSING_CREDENTIALS: "auth.errors.provider_error",
   TOKEN_EXCHANGE_FAILED: "auth.errors.provider_error",
   SERVER_ERROR: "auth.errors.generic",
-  ACCOUNT_DISABLED: "auth.errors.locked_out",
+  // Was pointing at locked_out -- the RATE-LIMIT message ("too many
+  // attempts, try again in a few minutes"), not a ban message. A genuinely
+  // banned player was being told their account was fine and to just wait.
+  ACCOUNT_DISABLED: "auth.errors.account_disabled",
+  ACCOUNT_DISABLED_CHEATING: "auth.errors.account_disabled_cheating",
   // Slice 7 -- Profile/nickname/bio/avatar validation codes, returned from
   // /v1/me/profile and /v1/me/profile/avatar.
   INVALID_SHAPE: "auth.errors.invalid_shape",

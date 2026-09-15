@@ -43,6 +43,11 @@ export const AuthError = {
   CREDENTIAL_ALREADY_SET: "CREDENTIAL_ALREADY_SET",
   TERMS_ACCEPTANCE_REQUIRED: "TERMS_ACCEPTANCE_REQUIRED",
   ACCOUNT_DISABLED: "ACCOUNT_DISABLED",
+  // A distinct, stable code for the one ban category the player-facing UI
+  // must not soften into the generic "account disabled" message -- see
+  // disabled_category (0052_fairplay_sanction_and_seizure.sql) and the fair-
+  // play tribunal's /decide route, the only place that category gets set.
+  ACCOUNT_DISABLED_CHEATING: "ACCOUNT_DISABLED_CHEATING",
 };
 
 const MAX_FAILURES = 10;                 // per 15-minute window, per identifier
@@ -158,7 +163,7 @@ export function createAuthService(db, {
       }
 
       const row = await db.query(
-        `SELECT p.id, p.disabled_at, c.password_hash
+        `SELECT p.id, p.disabled_at, p.disabled_category, c.password_hash
            FROM player p
            JOIN credential c ON c.player_id = p.id
            LEFT JOIN email_identity e ON e.player_id = p.id
@@ -187,7 +192,12 @@ export function createAuthService(db, {
       }
 
       if (row.rows[0]?.disabled_at) {
-        return { ok: false, reason: AuthError.ACCOUNT_DISABLED };
+        return {
+          ok: false,
+          reason: row.rows[0].disabled_category === "CHEATING"
+            ? AuthError.ACCOUNT_DISABLED_CHEATING
+            : AuthError.ACCOUNT_DISABLED,
+        };
       }
 
       const playerId = row.rows[0].id;
@@ -263,9 +273,14 @@ export function createAuthService(db, {
     async loginPasswordless({ playerId, totpCode = null, deviceFingerprint = null }, ctx = {}) {
       const t = now();
 
-      const playerCheck = await db.query("SELECT disabled_at FROM player WHERE id = $1", [playerId]);
+      const playerCheck = await db.query("SELECT disabled_at, disabled_category FROM player WHERE id = $1", [playerId]);
       if (playerCheck.rows[0]?.disabled_at) {
-        return { ok: false, reason: AuthError.ACCOUNT_DISABLED };
+        return {
+          ok: false,
+          reason: playerCheck.rows[0].disabled_category === "CHEATING"
+            ? AuthError.ACCOUNT_DISABLED_CHEATING
+            : AuthError.ACCOUNT_DISABLED,
+        };
       }
 
       const totpRow = await db.query(
@@ -334,10 +349,15 @@ export function createAuthService(db, {
 
         if (s.revoked_at) return { ok: false, reason: AuthError.SESSION_REVOKED };
 
-        const playerCheck = await tx.query("SELECT disabled_at FROM player WHERE id = $1", [s.player_id]);
+        const playerCheck = await tx.query("SELECT disabled_at, disabled_category FROM player WHERE id = $1", [s.player_id]);
         if (playerCheck.rows[0]?.disabled_at) {
           await tx.query("UPDATE auth_session SET revoked_at = now(), revoked_reason = 'ACCOUNT_DISABLED' WHERE id = $1", [s.id]);
-          return { ok: false, reason: AuthError.ACCOUNT_DISABLED };
+          return {
+            ok: false,
+            reason: playerCheck.rows[0].disabled_category === "CHEATING"
+              ? AuthError.ACCOUNT_DISABLED_CHEATING
+              : AuthError.ACCOUNT_DISABLED,
+          };
         }
 
         if (s.rotated_at) {

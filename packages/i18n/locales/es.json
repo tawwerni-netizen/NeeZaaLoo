@@ -225,6 +225,8 @@
       "handle_taken": "Ese nombre de usuario ya está en uso. Prueba con otro.",
       "bad_credentials": "Usuario o contraseña incorrectos.",
       "locked_out": "Demasiados intentos. Vuelve a intentarlo en unos minutos.",
+      "account_disabled": "Tu cuenta ha sido suspendida. Contacta con soporte si crees que se trata de un error.",
+      "account_disabled_cheating": "Tu cuenta ha sido suspendida por infringir la Política de Juego Limpio de Nizalo (trampas). Esta decisión es definitiva según el protocolo del sitio.",
       "totp_required": "Introduce tu código de autenticación para continuar.",
       "totp_invalid": "Ese código no funcionó. Revisa tu autenticador e inténtalo de nuevo.",
       "network_error": "No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
