@@ -357,7 +357,7 @@ function WalletContent() {
   };
   const currentWithdrawFee = WITHDRAW_FEES[withdrawNetwork] ?? 1.00;
 
-  const availableForWithdrawCoin = totalAvailableUsd;
+  const availableForWithdrawCoin = availableUsdt;
 
   const maxWithdrawableForAsset = Math.min(withdrawableUsd, availableForWithdrawCoin);
 
@@ -562,7 +562,7 @@ function WalletContent() {
           </div>
           <div className={styles.totalBalanceAmount}>
             <span className="nz-num">${totalBalanceUsd.toFixed(2)}</span>
-            <span className={styles.usdtUnit}>USDT</span>
+            <span className={styles.usdtUnit}>USD</span>
           </div>
         </div>
 
@@ -577,7 +577,7 @@ function WalletContent() {
               </span>
             </div>
             <div className={styles.statPillAmount}>
-              <span className="nz-num">${totalAvailableUsd.toFixed(2)}</span> <span style={{ fontSize: "14px", fontWeight: 600, color: "#94a3b8" }}>USD</span>
+              <span className="nz-num">${availableUsdt.toFixed(2)}</span> <span style={{ fontSize: "14px", fontWeight: 600, color: "#94a3b8" }}>USDT</span>
             </div>
             <div className={styles.statPillSub}>
               {tW.availableSub}
@@ -618,6 +618,47 @@ function WalletContent() {
         </div>
       </section>
 
+      {/* Play and withdrawal are USDT-only for launch. A balance in any
+          other coin (USDC/DAI, from before this change, or credited by an
+          admin) still belongs to the player and is still counted in the
+          total above -- it is never hidden or written off -- but this
+          page cannot submit a withdrawal in anything but USDT, so it is
+          surfaced honestly here instead of silently vanishing into the
+          headline number. */}
+      {(availableUsdc + lockedUsdc + availableDai + lockedDai) > 0 && (
+        <section
+          style={{
+            padding: "14px 18px", background: "rgba(59, 130, 246, 0.1)",
+            border: "1px solid rgba(59, 130, 246, 0.35)", borderRadius: "12px",
+            marginBottom: "20px", display: "flex", flexWrap: "wrap",
+            alignItems: "center", justifyContent: "space-between", gap: "12px",
+          }}
+        >
+          <div style={{ color: "#93c5fd", fontSize: "13.5px", lineHeight: 1.6 }}>
+            <strong>{isAr ? "لديك أيضاً رصيد بعملات أخرى: " : "You also hold a balance in other coins: "}</strong>
+            {availableUsdc + lockedUsdc > 0 && (
+              <span className="nz-num">{(availableUsdc + lockedUsdc).toFixed(2)} USDC{availableDai + lockedDai > 0 ? " · " : ""}</span>
+            )}
+            {availableDai + lockedDai > 0 && (
+              <span className="nz-num">{(availableDai + lockedDai).toFixed(2)} DAI</span>
+            )}
+            <br />
+            {isAr
+              ? "السحب حالياً متاح بعملة USDT فقط. رصيدك محفوظ بأمان ولم يُفقد -- تواصل مع الدعم لسحبه بعملته الأصلية."
+              : "Withdrawals currently support USDT only. This balance is safe and has not been lost -- contact support to withdraw it in its original coin."}
+          </div>
+          <Link
+            href={"/" + locale + "/support/new"}
+            style={{
+              padding: "8px 16px", background: "#3b82f6", color: "#fff", borderRadius: "8px",
+              fontWeight: 700, fontSize: "13px", whiteSpace: "nowrap", flexShrink: 0,
+            }}
+          >
+            {isAr ? "تواصل مع الدعم" : "Contact Support"}
+          </Link>
+        </section>
+      )}
+
       {/* Gamified AML Playthrough Progress Bar */}
       {unplayedUsd > 0 ? (
         <section className={`${styles.amlCard} ${styles.amlCardActive}`}>
@@ -653,6 +694,14 @@ function WalletContent() {
             </div>
             <div className={styles.amlDesc}>
               {tW.amlDescReady}
+              {(availableUsdc + lockedUsdc + availableDai + lockedDai) > 0 && (
+                <>
+                  {" "}
+                  {isAr
+                    ? "(السحب الفعلي حالياً بعملة USDT فقط -- راجع الإشعار أعلاه بخصوص رصيدك بعملات أخرى.)"
+                    : "(Withdrawals currently go out in USDT only -- see the notice above about your balance in other coins.)"}
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -1252,7 +1301,7 @@ function WalletContent() {
                 {tW.withdrawEligibleLabel}
               </div>
               <div className={styles.withdrawOverviewSub}>
-                {tW.totalBalancePrefix} ${totalBalanceUsd.toFixed(2)} USDT
+                {tW.totalBalancePrefix} ${totalBalanceUsd.toFixed(2)} USD
               </div>
             </div>
             <div className={styles.withdrawOverviewAmount}>
@@ -1293,7 +1342,7 @@ function WalletContent() {
                 <p className={styles.coinCardDesc}>{tW.coinUsdtDesc}</p>
                 <div className={styles.coinCardBalanceMini}>
                   <span>{tW.availableLabel}:</span>
-                  <span className={styles.coinCardBalanceVal}>${totalAvailableUsd.toFixed(2)} USDT</span>
+                  <span className={styles.coinCardBalanceVal}>${availableUsdt.toFixed(2)} USDT</span>
                 </div>
               </div>
             </div>

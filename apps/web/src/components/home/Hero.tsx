@@ -12,64 +12,6 @@ import styles from "./Hero.module.css";
 
 const FEATURED_COUNT = 6;
 
-const RECENT_WINNERS = [
-  {
-    id: "w1",
-    winner: "Karim_Master",
-    avatar: "KM",
-    gameAr: "شطرنج خاطف",
-    gameEn: "Chess Blitz",
-    amount: 47.5,
-    asset: "USDT",
-    timeAr: "منذ دقيقتين",
-    timeEn: "2m ago",
-  },
-  {
-    id: "w2",
-    winner: "Sultan_Play",
-    avatar: "SP",
-    gameAr: "لودو نيزالو",
-    gameEn: "Ludo Battle",
-    amount: 19.0,
-    asset: "USDT",
-    timeAr: "منذ 4 دقائق",
-    timeEn: "4m ago",
-  },
-  {
-    id: "w3",
-    winner: "Amir_Tawla",
-    avatar: "AT",
-    gameAr: "طاولة الزهر",
-    gameEn: "Backgammon",
-    amount: 95.0,
-    asset: "USDT",
-    timeAr: "منذ 6 دقائق",
-    timeEn: "6m ago",
-  },
-  {
-    id: "w4",
-    winner: "Tariq_Tactics",
-    avatar: "TT",
-    gameAr: "دومينو التحدي",
-    gameEn: "Dominoes Pro",
-    amount: 38.0,
-    asset: "USDT",
-    timeAr: "منذ 8 دقائق",
-    timeEn: "8m ago",
-  },
-  {
-    id: "w5",
-    winner: "Youssef_King",
-    avatar: "YK",
-    gameAr: "كونكت فور",
-    gameEn: "Connect Four",
-    amount: 9.5,
-    asset: "USDT",
-    timeAr: "منذ 11 دقيقة",
-    timeEn: "11m ago",
-  },
-];
-
 const QUICK_STAKES = [
   { stake: 2, prize: 3.8, tagAr: "🚀 بداية سريعة", tagEn: "🚀 Quick Start", popular: false },
   { stake: 5, prize: 9.5, tagAr: "🔥 نزال الأبطال", tagEn: "🔥 Champions", popular: true },
@@ -274,15 +216,7 @@ export function Hero() {
   const [isPaused, setIsPaused] = useState(false);
   const [loadedIndices, setLoadedIndices] = useState<number[]>([0]);
 
-  const [activeWinnerIdx, setActiveWinnerIdx] = useState(0);
   const [lobbyStats, setLobbyStats] = useState({ openChallenges: 0, activePlayers: 0, activeMatches: 0 });
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setActiveWinnerIdx((prev) => (prev + 1) % RECENT_WINNERS.length);
-    }, 4500);
-    return () => clearInterval(t);
-  }, []);
 
   useEffect(() => {
     void get<{ openChallenges: number; activePlayers: number; activeMatches: number }>("/v1/lobby/stats")
@@ -334,49 +268,6 @@ export function Hero() {
       <div className={`nz-container ${styles.container}`}>
         {/* Top Hero Statement / Copy Zone */}
         <div className={styles.headerZone}>
-          {/* Live Wins / Cashout Proof Ticker (Neuro-Design Social Proof & FOMO) */}
-          <div className={styles.liveWinsTicker}>
-            <div className={styles.tickerBadge}>
-              <span className={styles.tickerLiveDot} />
-              <span className={styles.tickerBadgeText}>
-                {isRtl ? "سحب فوري تم للتو ⚡" : "Live Cashout ⚡"}
-              </span>
-            </div>
-            <div className={styles.tickerSlideWrap}>
-              {(() => {
-                const currentWin = RECENT_WINNERS[activeWinnerIdx] ?? RECENT_WINNERS[0];
-                if (!currentWin) return null;
-                return (
-                  <div key={currentWin.id} className={styles.tickerSlide}>
-                    <span className={styles.winnerAvatar}>{currentWin.avatar}</span>
-                    <span className={styles.winnerText}>
-                      {isRtl ? (
-                        <>
-                          🏆 فاز اللاعب <strong>{currentWin.winner}</strong> بجائزة{" "}
-                          <span className={styles.winnerAmount}>
-                            +{currentWin.amount.toFixed(2)} {currentWin.asset}
-                          </span>{" "}
-                          في لعبة <em>{currentWin.gameAr}</em> ({currentWin.timeAr})
-                        </>
-                      ) : (
-                        <>
-                          🏆 Player <strong>{currentWin.winner}</strong> won{" "}
-                          <span className={styles.winnerAmount}>
-                            +{currentWin.amount.toFixed(2)} {currentWin.asset}
-                          </span>{" "}
-                          in <em>{currentWin.gameEn}</em> ({currentWin.timeEn})
-                        </>
-                      )}
-                    </span>
-                    <span className={styles.instantVerifiedBadge}>
-                      {isRtl ? "✓ مسحوبة للمحفظة" : "✓ Paid to Wallet"}
-                    </span>
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-
           <motion.div {...stage(0, reduceMotion)} className={styles.eyebrowWrap}>
             <span className={styles.eyebrowBadge}>
               <span className={styles.eyebrowBeacon} aria-hidden="true" />

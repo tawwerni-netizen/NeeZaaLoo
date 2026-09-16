@@ -103,8 +103,8 @@ export function Header() {
                   className={styles.walletBalanceMain}
                   title={
                     locale === "ar"
-                      ? `إجمالي الرصيد: $${totalUsd.toFixed(2)} USD (المتاح للعب: $${availableUsd.toFixed(2)})`
-                      : `Total Balance: $${totalUsd.toFixed(2)} USD (Available: $${availableUsd.toFixed(2)})`
+                      ? `إجمالي الرصيد: $${totalUsd.toFixed(2)} USD (المتاح للعب: $${availableUsd.toFixed(2)} USDT)`
+                      : `Total Balance: $${totalUsd.toFixed(2)} USD (Available to play: $${availableUsd.toFixed(2)} USDT)`
                   }
                 >
                   <div className={styles.walletIconWrap}>

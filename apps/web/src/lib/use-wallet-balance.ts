@@ -51,12 +51,18 @@ export function useWalletBalance(): WalletBalanceSummary {
       if (res?.accounts && Array.isArray(res.accounts)) {
         let availMinor = 0n;
         let lockMinor = 0n;
+        // Play (matchmaking, challenges, tournaments) only ever stakes
+        // USDT -- see CoinPicker.tsx and StakeSelect.tsx. "available to
+        // play" must be scoped to USDT, or it overstates what a player
+        // holding USDC/DAI can actually enter a match with.
+        let availUsdtMinor = 0n;
 
         for (const a of res.accounts) {
           try {
             const bal = BigInt(a.balance || "0");
             if (a.key.endsWith(":available") || a.key.includes("available")) {
               availMinor += bal;
+              if (a.asset === "USDT") availUsdtMinor += bal;
             } else if (a.key.endsWith(":locked") || a.key.includes("locked")) {
               lockMinor += bal;
             }
@@ -68,8 +74,10 @@ export function useWalletBalance(): WalletBalanceSummary {
         const avail = fromMinorUnits(availMinor.toString());
         const locked = fromMinorUnits(lockMinor.toString());
 
-        setAvailableUsd(avail);
+        setAvailableUsd(fromMinorUnits(availUsdtMinor.toString()));
         setLockedUsd(locked);
+        // Total portfolio value across every coin the player holds --
+        // USDC and DAI included, even though only USDT can be staked.
         setTotalUsd(avail + locked);
         setError(false);
       }
