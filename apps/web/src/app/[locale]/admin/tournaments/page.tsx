@@ -48,7 +48,7 @@ export default function AdminTournamentsPage() {
   const [newTitle, setNewTitle] = useState('');
   const [newGame, setNewGame] = useState('chess');
   const [newFee, setNewFee] = useState('10.00');
-  const [newAsset, setNewAsset] = useState<'USDT' | 'USDC' | 'DAI'>('USDT');
+  const [newAsset, setNewAsset] = useState<'USDT'>('USDT');
   const [submitting, setSubmitting] = useState(false);
   const [quickPublishing, setQuickPublishing] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -357,12 +357,10 @@ export default function AdminTournamentsPage() {
             </label>
             <select
               value={newAsset}
-              onChange={(e) => setNewAsset(e.target.value as 'USDT' | 'USDC' | 'DAI')}
+              onChange={(e) => setNewAsset(e.target.value as 'USDT')}
               style={{ width: '100%', background: '#0e1015', border: '1px solid #252b37', color: '#fff', padding: '8px', borderRadius: '6px' }}
             >
-              <option value="USDT">USDT</option>
-              <option value="USDC">USDC</option>
-              <option value="DAI">DAI</option>
+              <option value="USDT">USDT (Tether · Official)</option>
             </select>
           </div>
           <button

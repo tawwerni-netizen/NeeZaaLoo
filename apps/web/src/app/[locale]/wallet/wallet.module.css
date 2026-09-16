@@ -1313,6 +1313,11 @@
   gap: 14px;
 }
 
+.coinCardsGridSingle {
+  display: flex;
+  flex-direction: column;
+}
+
 @media (max-width: 768px) {
   .coinCardsGrid {
     grid-template-columns: 1fr;

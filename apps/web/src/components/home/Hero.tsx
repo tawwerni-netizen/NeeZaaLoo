@@ -703,8 +703,8 @@ export function Hero() {
               </strong>
               <span className={styles.pillarDesc}>
                 {isRtl
-                  ? "الأرباح تصل مباشرة إلى محفظتك بالعملات المستقرة USDT/USDC بدون شروط تعجيزية."
-                  : "Winnings credit directly to your wallet in stablecoins with zero hold times."}
+                  ? "الأرباح تصل مباشرة إلى محفظتك بعملة USDT المستقرة بدون شروط تعجيزية."
+                  : "Winnings credit directly to your wallet in USDT with zero hold times."}
               </span>
             </div>
           </div>

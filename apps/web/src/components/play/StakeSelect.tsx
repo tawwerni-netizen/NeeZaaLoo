@@ -97,7 +97,7 @@ export function StakeSelect({ plugin, onContinue }: {
             value={asset}
             onChange={(c) => { setAsset(c); setAssetTouched(true); }}
             balances={balances}
-            label={isRtl ? "العملة التي تلعب بها (يُدفع الفوز بنفس العملة)" : "Coin to stake (winnings are paid in the same coin)"}
+            label={isRtl ? "عملة النزال الرسمية المعتمدة:" : "Approved Official Match Currency:"}
           />
           <div className={styles.presetGrid}>
             {STAKE_PRESETS_USD.map((usd) => (

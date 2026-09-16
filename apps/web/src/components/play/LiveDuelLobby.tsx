@@ -933,7 +933,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                     value={newAsset}
                     onChange={(c) => { setNewAsset(c); setAssetTouched(true); }}
                     balances={balances}
-                    label={isRtl ? "العملة (يُدفع الفوز بنفس العملة)" : "Coin (winnings are paid in the same coin)"}
+                    label={isRtl ? "عملة النزال الرسمية المعتمدة:" : "Approved Official Match Currency:"}
                   />
                   <label className={styles.formLabel}>{isRtl ? `قيمة التحدي (${newAsset})` : `Stake Amount (${newAsset})`}</label>
                   

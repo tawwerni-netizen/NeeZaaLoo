@@ -14,7 +14,7 @@ import type { SupportedLocale } from "@/lib/i18n/locale";
 import { WALLET_TRANSLATIONS } from "./translations";
 import styles from "./wallet.module.css";
 
-type SupportedAsset = "USDT" | "USDC" | "DAI";
+type SupportedAsset = "USDT";
 type NetworkCode = "TRC20" | "BEP20" | "ERC20";
 
 type Account = { key: string; balance: string; asset: string };
@@ -45,8 +45,6 @@ interface AmlSummary {
 
 const ASSET_NETWORKS: Record<SupportedAsset, NetworkCode[]> = {
   USDT: ["TRC20", "BEP20"],
-  USDC: ["BEP20", "TRC20"],
-  DAI: ["BEP20", "ERC20"],
 };
 
 function isValidAddress(address: string, network: NetworkCode): boolean {
@@ -145,12 +143,12 @@ function WalletContent() {
   useEffect(() => {
     if (!liveRails) return;
     if (!networksFor(selectedAsset).includes(selectedNetwork)) {
-      const firstAsset = (["USDT", "USDC", "DAI"] as SupportedAsset[]).find((a) => networksFor(a).length > 0);
-      if (firstAsset) { setSelectedAsset(firstAsset); setSelectedNetwork(networksFor(firstAsset)[0]!); }
+      const valid = networksFor("USDT");
+      if (valid.length > 0) { setSelectedAsset("USDT"); setSelectedNetwork(valid[0]!); }
     }
     if (!networksFor(withdrawAsset).includes(withdrawNetwork)) {
-      const firstAsset = (["USDT", "USDC", "DAI"] as SupportedAsset[]).find((a) => networksFor(a).length > 0);
-      if (firstAsset) { setWithdrawAsset(firstAsset); setWithdrawNetwork(networksFor(firstAsset)[0]!); }
+      const valid = networksFor("USDT");
+      if (valid.length > 0) { setWithdrawAsset("USDT"); setWithdrawNetwork(valid[0]!); }
     }
   }, [liveRails, networksFor, selectedAsset, selectedNetwork, withdrawAsset, withdrawNetwork]);
 
@@ -359,10 +357,7 @@ function WalletContent() {
   };
   const currentWithdrawFee = WITHDRAW_FEES[withdrawNetwork] ?? 1.00;
 
-  const availableForWithdrawCoin =
-    withdrawAsset === "USDT" ? availableUsdt :
-    withdrawAsset === "USDC" ? availableUsdc :
-    availableDai;
+  const availableForWithdrawCoin = totalAvailableUsd;
 
   const maxWithdrawableForAsset = Math.min(withdrawableUsd, availableForWithdrawCoin);
 
@@ -550,7 +545,7 @@ function WalletContent() {
                 <path d="M12 9h4.8c3.4 0 5.7 2.1 6.1 5.2H8.8v1.6h14.1c-.4 3.1-2.7 5.2-6.1 5.2H12v2h-2V9h2zm0 3.2v2.6h8.8c-.3-1.6-1.7-2.6-3.9-2.6H12zm0 4.2v2.6h4.9c2.2 0 3.6-1 3.9-2.6H12z" fill="#fff" />
               </svg>
             </div>
-            <span>USDT · USDC · DAI</span>
+            <span>Tether (USDT)</span>
             <span className={styles.peggedBadge}>{tW.peggedRate}</span>
           </div>
 
@@ -567,23 +562,7 @@ function WalletContent() {
           </div>
           <div className={styles.totalBalanceAmount}>
             <span className="nz-num">${totalBalanceUsd.toFixed(2)}</span>
-            <span className={styles.usdtUnit}>USD</span>
-          </div>
-
-          {/* Asset Breakdown Pills */}
-          <div className={styles.balanceBreakdownPills}>
-            <div className={styles.balanceBreakdownPill}>
-              <span className={styles.balanceBreakdownDotUsdt} />
-              <span>USDT: ${(availableUsdt + lockedUsdt).toFixed(2)}</span>
-            </div>
-            <div className={styles.balanceBreakdownPill}>
-              <span className={styles.balanceBreakdownDotUsdc} />
-              <span>USDC: ${(availableUsdc + lockedUsdc).toFixed(2)}</span>
-            </div>
-            <div className={styles.balanceBreakdownPill}>
-              <span className={styles.balanceBreakdownDotDai} />
-              <span>DAI: ${(availableDai + lockedDai).toFixed(2)}</span>
-            </div>
+            <span className={styles.usdtUnit}>USDT</span>
           </div>
         </div>
 
@@ -731,95 +710,29 @@ function WalletContent() {
               {tW.coinSelectorSubtitle}
             </div>
 
-            <div className={styles.coinCardsGrid}>
-              {/* USDT Card */}
-              <button
-                type="button"
-                className={`${styles.coinCard} ${selectedAsset === "USDT" ? styles.coinCardActiveUsdt : ""}`}
-                onClick={() => handleSelectAsset("USDT")}
-              >
+            <div className={styles.coinCardsGridSingle}>
+              {/* USDT Card - Official Unified Asset */}
+              <div className={`${styles.coinCard} ${styles.coinCardActiveUsdt}`}>
                 <div className={styles.coinCardHeader}>
                   <div className={styles.coinCardIdentity}>
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                       <circle cx="16" cy="16" r="16" fill="#26A17B" />
                       <path d="M17.9 16.9v-1.3c2.4-.1 4.4-.8 4.4-1.8s-2-1.7-4.4-1.8V9.3h-3.8v2.7c-2.4.1-4.4.8-4.4 1.8s2 1.7 4.4 1.8v1.3c-3 .2-5.3 1-5.3 2.1s2.3 1.9 5.3 2.1v4.6h3.8v-4.6c3-.2 5.3-1 5.3-2.1s-2.3-1.9-5.3-2.1z" fill="#fff" />
                     </svg>
                     <div>
                       <div className={styles.coinNameTitle}>{tW.coinUsdtName}</div>
-                      <div className={styles.coinTickerSub}>Tether USD</div>
+                      <div className={styles.coinTickerSub}>Tether USD · $1.00 USD Guaranteed Peg</div>
                     </div>
                   </div>
                   <div className={styles.coinCardHeaderBadges}>
-                    {selectedAsset === "USDT" && (
-                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
-                    )}
+                    <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
                     <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdt}`}>
                       {tW.coinUsdtBadge}
                     </span>
                   </div>
                 </div>
                 <p className={styles.coinCardDesc}>{tW.coinUsdtDesc}</p>
-              </button>
-
-              {/* USDC Card */}
-              <button
-                type="button"
-                style={assetLive("USDC") ? undefined : { display: "none" }}
-                className={`${styles.coinCard} ${selectedAsset === "USDC" ? styles.coinCardActiveUsdc : ""}`}
-                onClick={() => handleSelectAsset("USDC")}
-              >
-                <div className={styles.coinCardHeader}>
-                  <div className={styles.coinCardIdentity}>
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                      <circle cx="16" cy="16" r="16" fill="#2775CA" />
-                      <path d="M16 6C10.5 6 6 10.5 6 16s4.5 10 10 10 10-4.5 10-10S21.5 6 16 6zm.8 16.5v1.8h-1.6v-1.8c-2-.2-3.4-1.2-3.6-2.7h2c.2.8.9 1.3 2.1 1.3 1.2 0 1.9-.6 1.9-1.4 0-.8-.6-1.2-2.3-1.6-2.3-.6-3.4-1.4-3.4-2.8 0-1.4 1.2-2.5 3.3-2.7V11h1.6v1.6c1.7.2 2.9 1.1 3.2 2.4h-2c-.2-.6-.7-1.1-1.8-1.1-1.1 0-1.7.5-1.7 1.2 0 .7.5 1.1 2.2 1.5 2.5.6 3.5 1.5 3.5 2.9 0 1.5-1.3 2.7-3.4 3z" fill="#fff" />
-                    </svg>
-                    <div>
-                      <div className={styles.coinNameTitle}>{tW.coinUsdcName}</div>
-                      <div className={styles.coinTickerSub}>USD Coin (Circle)</div>
-                    </div>
-                  </div>
-                  <div className={styles.coinCardHeaderBadges}>
-                    {selectedAsset === "USDC" && (
-                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
-                    )}
-                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdc}`}>
-                      {tW.coinUsdcBadge}
-                    </span>
-                  </div>
-                </div>
-                <p className={styles.coinCardDesc}>{tW.coinUsdcDesc}</p>
-              </button>
-
-              {/* DAI Card */}
-              <button
-                type="button"
-                style={assetLive("DAI") ? undefined : { display: "none" }}
-                className={`${styles.coinCard} ${selectedAsset === "DAI" ? styles.coinCardActiveDai : ""}`}
-                onClick={() => handleSelectAsset("DAI")}
-              >
-                <div className={styles.coinCardHeader}>
-                  <div className={styles.coinCardIdentity}>
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                      <circle cx="16" cy="16" r="16" fill="#F5AC37" />
-                      <path d="M12 9h4.8c3.4 0 5.7 2.1 6.1 5.2H8.8v1.6h14.1c-.4 3.1-2.7 5.2-6.1 5.2H12v2h-2V9h2zm0 3.2v2.6h8.8c-.3-1.6-1.7-2.6-3.9-2.6H12zm0 4.2v2.6h4.9c2.2 0 3.6-1 3.9-2.6H12z" fill="#fff" />
-                    </svg>
-                    <div>
-                      <div className={styles.coinNameTitle}>{tW.coinDaiName}</div>
-                      <div className={styles.coinTickerSub}>MakerDAO Protocol</div>
-                    </div>
-                  </div>
-                  <div className={styles.coinCardHeaderBadges}>
-                    {selectedAsset === "DAI" && (
-                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
-                    )}
-                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeDai}`}>
-                      {tW.coinDaiBadge}
-                    </span>
-                  </div>
-                </div>
-                <p className={styles.coinCardDesc}>{tW.coinDaiDesc}</p>
-              </button>
+              </div>
             </div>
           </div>
 
@@ -1339,25 +1252,11 @@ function WalletContent() {
                 {tW.withdrawEligibleLabel}
               </div>
               <div className={styles.withdrawOverviewSub}>
-                {tW.totalBalancePrefix} ${totalBalanceUsd.toFixed(2)} USD
-              </div>
-              <div className={styles.balanceBreakdownPills}>
-                <span className={styles.balanceBreakdownPill}>
-                  <span className={styles.balanceBreakdownDotUsdt} />
-                  <span>USDT: ${availableUsdt.toFixed(2)}</span>
-                </span>
-                <span className={styles.balanceBreakdownPill}>
-                  <span className={styles.balanceBreakdownDotUsdc} />
-                  <span>USDC: ${availableUsdc.toFixed(2)}</span>
-                </span>
-                <span className={styles.balanceBreakdownPill}>
-                  <span className={styles.balanceBreakdownDotDai} />
-                  <span>DAI: ${availableDai.toFixed(2)}</span>
-                </span>
+                {tW.totalBalancePrefix} ${totalBalanceUsd.toFixed(2)} USDT
               </div>
             </div>
             <div className={styles.withdrawOverviewAmount}>
-              <span className="nz-num">${withdrawableUsd.toFixed(2)}</span> USD
+              <span className="nz-num">${withdrawableUsd.toFixed(2)}</span> USDT
             </div>
           </div>
 
@@ -1370,28 +1269,22 @@ function WalletContent() {
               {tW.withdrawCoinSelectorSubtitle}
             </div>
 
-            <div className={styles.coinCardsGrid}>
-              {/* USDT Card */}
-              <button
-                type="button"
-                className={`${styles.coinCard} ${withdrawAsset === "USDT" ? styles.coinCardActiveUsdt : ""}`}
-                onClick={() => handleSelectWithdrawAsset("USDT")}
-              >
+            <div className={styles.coinCardsGridSingle}>
+              {/* USDT Card - Official Unified Asset */}
+              <div className={`${styles.coinCard} ${styles.coinCardActiveUsdt}`}>
                 <div className={styles.coinCardHeader}>
                   <div className={styles.coinCardIdentity}>
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                       <circle cx="16" cy="16" r="16" fill="#26A17B" />
                       <path d="M17.9 16.9v-1.3c2.4-.1 4.4-.8 4.4-1.8s-2-1.7-4.4-1.8V9.3h-3.8v2.7c-2.4.1-4.4.8-4.4 1.8s2 1.7 4.4 1.8v1.3c-3 .2-5.3 1-5.3 2.1s2.3 1.9 5.3 2.1v4.6h3.8v-4.6c3-.2 5.3-1 5.3-2.1s-2.3-1.9-5.3-2.1z" fill="#fff" />
                     </svg>
                     <div>
                       <div className={styles.coinNameTitle}>{tW.coinUsdtName}</div>
-                      <div className={styles.coinTickerSub}>Tether USD</div>
+                      <div className={styles.coinTickerSub}>Tether USD · $1.00 USD Guaranteed Peg</div>
                     </div>
                   </div>
                   <div className={styles.coinCardHeaderBadges}>
-                    {withdrawAsset === "USDT" && (
-                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
-                    )}
+                    <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
                     <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdt}`}>
                       {tW.coinUsdtBadge}
                     </span>
@@ -1400,77 +1293,9 @@ function WalletContent() {
                 <p className={styles.coinCardDesc}>{tW.coinUsdtDesc}</p>
                 <div className={styles.coinCardBalanceMini}>
                   <span>{tW.availableLabel}:</span>
-                  <span className={styles.coinCardBalanceVal}>${availableUsdt.toFixed(2)} USDT</span>
+                  <span className={styles.coinCardBalanceVal}>${totalAvailableUsd.toFixed(2)} USDT</span>
                 </div>
-              </button>
-
-              {/* USDC Card */}
-              <button
-                type="button"
-                style={assetLive("USDC") ? undefined : { display: "none" }}
-                className={`${styles.coinCard} ${withdrawAsset === "USDC" ? styles.coinCardActiveUsdc : ""}`}
-                onClick={() => handleSelectWithdrawAsset("USDC")}
-              >
-                <div className={styles.coinCardHeader}>
-                  <div className={styles.coinCardIdentity}>
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                      <circle cx="16" cy="16" r="16" fill="#2775CA" />
-                      <path d="M16 6C10.5 6 6 10.5 6 16s4.5 10 10 10 10-4.5 10-10S21.5 6 16 6zm.8 16.5v1.8h-1.6v-1.8c-2-.2-3.4-1.2-3.6-2.7h2c.2.8.9 1.3 2.1 1.3 1.2 0 1.9-.6 1.9-1.4 0-.8-.6-1.2-2.3-1.6-2.3-.6-3.4-1.4-3.4-2.8 0-1.4 1.2-2.5 3.3-2.7V11h1.6v1.6c1.7.2 2.9 1.1 3.2 2.4h-2c-.2-.6-.7-1.1-1.8-1.1-1.1 0-1.7.5-1.7 1.2 0 .7.5 1.1 2.2 1.5 2.5.6 3.5 1.5 3.5 2.9 0 1.5-1.3 2.7-3.4 3z" fill="#fff" />
-                    </svg>
-                    <div>
-                      <div className={styles.coinNameTitle}>{tW.coinUsdcName}</div>
-                      <div className={styles.coinTickerSub}>USD Coin (Circle)</div>
-                    </div>
-                  </div>
-                  <div className={styles.coinCardHeaderBadges}>
-                    {withdrawAsset === "USDC" && (
-                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
-                    )}
-                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdc}`}>
-                      {tW.coinUsdcBadge}
-                    </span>
-                  </div>
-                </div>
-                <p className={styles.coinCardDesc}>{tW.coinUsdcDesc}</p>
-                <div className={styles.coinCardBalanceMini}>
-                  <span>{tW.availableLabel}:</span>
-                  <span className={styles.coinCardBalanceVal}>${availableUsdc.toFixed(2)} USDC</span>
-                </div>
-              </button>
-
-              {/* DAI Card */}
-              <button
-                type="button"
-                style={assetLive("DAI") ? undefined : { display: "none" }}
-                className={`${styles.coinCard} ${withdrawAsset === "DAI" ? styles.coinCardActiveDai : ""}`}
-                onClick={() => handleSelectWithdrawAsset("DAI")}
-              >
-                <div className={styles.coinCardHeader}>
-                  <div className={styles.coinCardIdentity}>
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                      <circle cx="16" cy="16" r="16" fill="#F5AC37" />
-                      <path d="M12 9h4.8c3.4 0 5.7 2.1 6.1 5.2H8.8v1.6h14.1c-.4 3.1-2.7 5.2-6.1 5.2H12v2h-2V9h2zm0 3.2v2.6h8.8c-.3-1.6-1.7-2.6-3.9-2.6H12zm0 4.2v2.6h4.9c2.2 0 3.6-1 3.9-2.6H12z" fill="#fff" />
-                    </svg>
-                    <div>
-                      <div className={styles.coinNameTitle}>{tW.coinDaiName}</div>
-                      <div className={styles.coinTickerSub}>MakerDAO Protocol</div>
-                    </div>
-                  </div>
-                  <div className={styles.coinCardHeaderBadges}>
-                    {withdrawAsset === "DAI" && (
-                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
-                    )}
-                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeDai}`}>
-                      {tW.coinDaiBadge}
-                    </span>
-                  </div>
-                </div>
-                <p className={styles.coinCardDesc}>{tW.coinDaiDesc}</p>
-                <div className={styles.coinCardBalanceMini}>
-                  <span>{tW.availableLabel}:</span>
-                  <span className={styles.coinCardBalanceVal}>${availableDai.toFixed(2)} DAI</span>
-                </div>
-              </button>
+              </div>
             </div>
           </div>
 
