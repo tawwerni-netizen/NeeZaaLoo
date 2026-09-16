@@ -25,7 +25,8 @@ import styles from "./games.module.css";
 type Filter = "ALL" | "ALTERNATING" | "SIMULTANEOUS";
 
 export default function GamesPage() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
+  const isRtl = dir === "rtl";
   const games = listGames();
   const [filter, setFilter] = useState<Filter>("ALL");
 
@@ -42,6 +43,46 @@ export default function GamesPage() {
           <h1 className={styles.heading}>{t("gamesPage.heading")}</h1>
           <p className={styles.subhead}>{t("gamesPage.subhead")}</p>
         </header>
+
+        <div style={{
+          margin: "0 0 24px 0",
+          padding: "16px 20px",
+          background: "linear-gradient(135deg, rgba(201, 169, 110, 0.15) 0%, rgba(14, 19, 29, 0.9) 100%)",
+          border: "1px solid rgba(201, 169, 110, 0.35)",
+          borderRadius: "12px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: "15px", color: "var(--nz-accent, #c9a96e)", marginBottom: "4px" }}>
+              ⚔️ {isRtl ? "ساحة الأرينا المباشرة للنزالات والجوائز" : "Live Duel Arena & Instant Prizes"}
+            </div>
+            <div style={{ fontSize: "13px", color: "var(--nz-text-2)" }}>
+              {isRtl ? "نافس لاعبين حقيقيين فوراً بـ USDT واسحب أرباحك خلال ثوانٍ!" : "Compete against real players for instant USDT prizes and fast payouts!"}
+            </div>
+          </div>
+          <LocaleLink
+            href="/play"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 18px",
+              background: "linear-gradient(135deg, #ff5a2b, #f59e0b)",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "13px",
+              borderRadius: "8px",
+              textDecoration: "none",
+            }}
+          >
+            <span>⚔️</span>
+            <span>{isRtl ? "ادخل الأرينا وابدأ اللعب" : "Enter Arena & Play"}</span>
+          </LocaleLink>
+        </div>
 
         <div className={styles.filters} role="group" aria-label={t("gamesPage.heading")}>
           {(["ALL", "ALTERNATING", "SIMULTANEOUS"] as const).map((f) => (

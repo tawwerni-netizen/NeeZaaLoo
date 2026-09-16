@@ -265,6 +265,29 @@
   box-shadow: 0 6px 24px rgba(201, 169, 110, 0.5), 0 0 12px rgba(201, 169, 110, 0.3);
 }
 
+.directChallengeFriendBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  padding: 10px 18px;
+  background: rgba(37, 211, 102, 0.12);
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  color: #25d366;
+  border-radius: var(--nz-radius-md);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: var(--nz-text-sm, 14px);
+}
+
+.directChallengeFriendBtn:hover {
+  background: rgba(37, 211, 102, 0.22);
+  border-color: #25d366;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+}
+
 /* ==========================================================================
    Instant Quick-Stake Match Selector (1-Click Cash Action & High Rewards)
    ========================================================================== */
@@ -1518,6 +1541,159 @@
   border-color: var(--nz-text-3);
 }
 
+/* ==========================================================================
+   Targeted Direct Duel Deep-Link Banner & Card Highlights
+   ========================================================================== */
+.targetedDuelBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  padding: 14px 18px;
+  margin-bottom: var(--nz-space-4);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(180, 83, 9, 0.22) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  border-radius: var(--nz-radius-lg, 12px);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.2);
+}
+
+.targetedDuelBannerIcon {
+  font-size: 26px;
+  flex: none;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
+}
+
+.targetedDuelBannerText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.targetedDuelBannerText strong {
+  font-size: var(--nz-text-sm, 14px);
+  font-weight: 800;
+  color: #fbbf24;
+}
+
+.targetedDuelBannerText span {
+  font-size: var(--nz-text-xs, 12px);
+  color: #fef3c7;
+  line-height: 1.4;
+}
+
+.targetedDuelBannerClose {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+  transition: all 0.2s ease;
+}
+
+.targetedDuelBannerClose:hover {
+  background: rgba(245, 158, 11, 0.3);
+  color: #fff;
+}
+
+.duelCardTargeted {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.4), 0 0 50px rgba(245, 158, 11, 0.15) !important;
+  animation: targetPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes targetPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(245, 158, 11, 0.65), 0 0 15px rgba(251, 191, 36, 0.5);
+  }
+}
+
+/* ==========================================================================
+   Viral 1-Click Social Sharing Row (WhatsApp, Telegram, Copy Link)
+   ========================================================================== */
+.userShareRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.shareWhatsAppBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 8px;
+  background: #25d366;
+  color: #fff;
+  border: none;
+  border-radius: var(--nz-radius-md, 8px);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.35);
+}
+
+.shareWhatsAppBtn:hover {
+  background: #20ba5a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.5);
+}
+
+.shareTelegramBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 8px;
+  background: #0088cc;
+  color: #fff;
+  border: none;
+  border-radius: var(--nz-radius-md, 8px);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 136, 204, 0.35);
+}
+
+.shareTelegramBtn:hover {
+  background: #0077b5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 136, 204, 0.5);
+}
+
+.copyLinkBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--nz-text);
+  border-radius: var(--nz-radius-md, 8px);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copyLinkBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
 @media (max-width: 640px) {
   .lobbySection {
     padding: var(--nz-space-4);
@@ -1527,6 +1703,18 @@
   }
   .lobbyTitle {
     font-size: 20px;
+  }
+  .lobbyActions {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+  .createChallengeBtn, .directChallengeFriendBtn {
+    width: 100%;
+    justify-content: center;
+  }
+  .userShareRow {
+    grid-template-columns: 1fr;
   }
   .statsBar {
     grid-template-columns: 1fr 1fr;

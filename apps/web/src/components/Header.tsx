@@ -3,7 +3,7 @@
 /**
  * Primary navigation.
  *
- * Primary: PLAY · GAMES · TOURNAMENTS · WATCH · RANK · LEARN.
+ * Primary: PLAY · TOURNAMENTS · RANK · LEARN.
  * Secondary: WALLET · PROFILE · SUPPORT · DOWNLOAD APP (signed in), or the
  * auth entry points (signed out) -- both open the SAME popup
  * (lib/auth-popup-context.tsx) rather than navigating away, so a visitor
@@ -60,10 +60,7 @@ export function Header() {
 
   const PRIMARY_NAV: NavItem[] = [
     { href: "/play", label: t("nav.play"), icon: "⚔️" },
-    { href: "/games", label: t("nav.games"), icon: "🎮" },
-    { href: "/chat", label: t("nav.chat"), icon: "💬" },
     { href: "/tournaments", label: t("nav.tournaments"), icon: "🏆" },
-    { href: "/watch", label: t("nav.watch"), icon: "📺" },
     { href: "/rank", label: t("nav.rank"), icon: "👑" },
     { href: "/learn", label: t("nav.learn"), icon: "📖" },
   ];

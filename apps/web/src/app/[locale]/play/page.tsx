@@ -12,6 +12,7 @@
  * -- deliberately NOT part of GamePlugin (see lib/games/types.ts's own
  * header on what belongs there), so they stay a small local map here.
  */
+import { Suspense } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LocaleLink } from "@/components/LocaleLink";
@@ -44,7 +45,9 @@ export default function PlaySelectPage() {
       <Header />
       <main className="nz-container">
         {/* Real-Time Member-to-Member Live Dueling Lobby */}
-        <LiveDuelLobby />
+        <Suspense fallback={null}>
+          <LiveDuelLobby />
+        </Suspense>
 
         <div className={styles.sectionHeader}>
           <div className={styles.sectionBadge}>

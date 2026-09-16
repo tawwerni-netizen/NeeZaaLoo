@@ -168,6 +168,54 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
     return () => clearInterval(t);
   }, []);
 
+  const [copiedDuelId, setCopiedDuelId] = useState<string | null>(null);
+  const [targetChallengeId, setTargetChallengeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const cId = sp.get("challenge") || sp.get("duel");
+      if (cId) {
+        setTargetChallengeId(cId);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (targetChallengeId && duels.length > 0) {
+      const el = document.getElementById(`duel-${targetChallengeId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [targetChallengeId, duels]);
+
+  const copyChallengeLink = (duelId: string) => {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/${locale}/play?challenge=${duelId}`;
+    void navigator.clipboard.writeText(url);
+    setCopiedDuelId(duelId);
+    setTimeout(() => setCopiedDuelId(null), 2500);
+  };
+
+  const shareOnWhatsApp = (duel: OpenDuel, prize: string) => {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/${locale}/play?challenge=${duel.id}`;
+    const text = isRtl
+      ? `⚔️ أتحدّاك في نزال ${duel.gameName} على منصة نيزالو بجائزة ${prize} USDT! 🔥 ادخل واقبل التحدي الآن:\n${url}`
+      : `⚔️ I challenge you to a ${duel.gameName} duel on Nizalo with a ${prize} USDT prize! 🔥 Accept now:\n${url}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const shareOnTelegram = (duel: OpenDuel, prize: string) => {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/${locale}/play?challenge=${duel.id}`;
+    const text = isRtl
+      ? `⚔️ أتحدّاك في نزال ${duel.gameName} على منصة نيزالو بجائزة ${prize} USDT! 🔥 ادخل واقبل التحدي الآن:\n${url}`
+      : `⚔️ I challenge you to a ${duel.gameName} duel on Nizalo with a ${prize} USDT prize! 🔥 Accept now:\n${url}`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, "_blank");
+  };
+
   const handleQuickStakeClick = (stakeAmt: number) => {
     if (!player) {
       openPopup();
@@ -405,6 +453,23 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             </svg>
             {isRtl ? "إنشاء تحدٍّ مفتوح واربح" : "Create Open Duel"}
           </Button>
+
+          <button
+            type="button"
+            className={styles.directChallengeFriendBtn}
+            onClick={() => {
+              if (!player) {
+                openPopup();
+                return;
+              }
+              setNewTier("CASH");
+              setNewStake(5);
+              setIsModalOpen(true);
+            }}
+          >
+            <span>📲</span>
+            <span>{isRtl ? "تحدَّ صديقك برابط مباشر" : "1-Click Friend Challenge"}</span>
+          </button>
         </div>
       </div>
 
@@ -606,7 +671,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
               {isRtl ? "سحب كاش فوري خلال 60 ثانية" : "Instant 60s Cash Payouts"}
             </strong>
             <span className={styles.pillarDesc}>
-              {isRtl ? "أرباحك تصل مباشرة إلى محفظتك بالعملات المستقرة USDT/USDC بدون أي شروط تعجيزية." : "Winnings credit directly to your wallet in stablecoins with zero hold times."}
+              {isRtl ? "أرباحك تصل مباشرة إلى محفظتك بالـ USDT عبر شبكتي TRC20 و BEP20 بدون أي شروط تعجيزية." : "Winnings credit directly to your wallet in USDT via TRC20/BEP20 with zero hold times."}
             </span>
           </div>
         </div>
@@ -671,6 +736,25 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
         </div>
       </div>
 
+      {/* Targeted Direct Duel Deep-Link Banner */}
+      {targetChallengeId && (
+        <div className={styles.targetedDuelBanner}>
+          <div className={styles.targetedDuelBannerIcon}>🎯</div>
+          <div className={styles.targetedDuelBannerText}>
+            <strong>{isRtl ? "تم توجيهك إلى نزال مخصص بدعوة مباشرة!" : "You've arrived via a direct challenge link!"}</strong>
+            <span>{isRtl ? "تم تمييز النزال المطلوب أدناه بإطار ذهبي متوهج. اضغط على 'قبول التحدي' لتبدأ المعركة فوراً!" : "The requested challenge is highlighted below. Click Accept Challenge to start immediately!"}</span>
+          </div>
+          <button
+            type="button"
+            className={styles.targetedDuelBannerClose}
+            onClick={() => setTargetChallengeId(null)}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Open Duels Grid */}
       <div className={styles.duelsGrid}>
         {filteredDuels.length === 0 ? (
@@ -719,13 +803,17 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             const seconds = remainingSeconds % 60;
             const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
             const expectedPrize = (duel.stakeUSDT * 1.9).toFixed(2);
+            const isTargeted = targetChallengeId === duel.id;
 
             return (
               <div
                 key={duel.id}
+                id={`duel-${duel.id}`}
                 className={`${styles.duelCard} ${
                   duel.tier === "CASH" ? styles.duelCardCash : ""
-                } ${duel.isUserCreated ? styles.duelCardUser : ""}`}
+                } ${duel.isUserCreated ? styles.duelCardUser : ""} ${
+                  isTargeted ? styles.duelCardTargeted : ""
+                }`}
               >
                 <div className={styles.duelCardTop}>
                   <div className={styles.challengerInfo}>
@@ -804,6 +892,38 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                             : `Awaiting Opponent... (${timeStr})`}
                         </span>
                       </div>
+
+                      {/* Viral Social Share Row */}
+                      <div className={styles.userShareRow}>
+                        <button
+                          type="button"
+                          className={styles.shareWhatsAppBtn}
+                          onClick={() => shareOnWhatsApp(duel, expectedPrize)}
+                          title={isRtl ? "مشاركة النزال فوراً عبر واتساب" : "Share via WhatsApp"}
+                        >
+                          <span>💬</span>
+                          <span>{isRtl ? "واتساب" : "WhatsApp"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.shareTelegramBtn}
+                          onClick={() => shareOnTelegram(duel, expectedPrize)}
+                          title={isRtl ? "مشاركة النزال عبر تيليجرام" : "Share via Telegram"}
+                        >
+                          <span>✈️</span>
+                          <span>{isRtl ? "تيليجرام" : "Telegram"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.copyLinkBtn}
+                          onClick={() => copyChallengeLink(duel.id)}
+                          title={isRtl ? "نسخ رابط النزال" : "Copy match link"}
+                        >
+                          <span>{copiedDuelId === duel.id ? "✓" : "📋"}</span>
+                          <span>{copiedDuelId === duel.id ? (isRtl ? "تم النسخ!" : "Copied!") : (isRtl ? "نسخ الرابط" : "Copy Link")}</span>
+                        </button>
+                      </div>
+
                       <div className={styles.userDuelButtons}>
                         <button
                           type="button"
