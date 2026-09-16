@@ -27,6 +27,11 @@ export interface WalletDictionary {
   tabWithdraw: string;
   tabHistory: string;
 
+  // Steps
+  step1Title: string;
+  step2Title: string;
+  step3Title: string;
+
   // Stablecoin Selection
   coinSelectorTitle: string;
   coinSelectorSubtitle: string;
@@ -124,9 +129,15 @@ export interface WalletDictionary {
   // Withdrawal Section
   withdrawEligibleLabel: string;
   totalBalancePrefix: string;
+  withdrawCoinSelectorTitle: string;
+  withdrawCoinSelectorSubtitle: string;
   selectRecipientNetwork: string;
+  withdrawFeeTrc: string;
+  withdrawFeeBep: string;
+  withdrawFeeErc: string;
   withdrawMinAlert: (amount: string) => string;
   recipientAddressLabel: (net: string) => string;
+  recipientAddressLabelDynamic: (asset: string, net: string) => string;
   invalidAddressAlert: (net: string) => string;
   withdrawAmountLabel: string;
   maxAvailable: string;
@@ -183,6 +194,10 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     tabDeposit: "إيداع فوري (USDT · USDC · DAI)",
     tabWithdraw: "سحب الأرباح",
     tabHistory: "سجل العمليات المحاسبية",
+
+    step1Title: "1. العملة المستقرة وشبكة التحويل",
+    step2Title: "2. باقة الإيداع وقوة الفوز التنافسية",
+    step3Title: "3. إتمام التحويل عبر العنوان المخصص",
 
     coinSelectorTitle: "اختر العملة المستقرة المفضلة للإيداع:",
     coinSelectorSubtitle: "جميع العملات متطابقة بنسبة 1:1 مع الدولار الأمريكي ($1.00 USD) بدون أي فروقات سعرية",
@@ -284,22 +299,29 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
 
     withdrawEligibleLabel: "الرصيد المؤهل للسحب الفوري حالياً:",
     totalBalancePrefix: "من إجمالي رصيد",
+    withdrawCoinSelectorTitle: "اختر عملة استلام الأرباح:",
+    withdrawCoinSelectorSubtitle: "يمكنك سحب أرباحك بأي من العملات المستقرة الثلاث (USDT · USDC · DAI) بتعادل 1:1 مع الدولار الأمريكي",
     selectRecipientNetwork: "اختر شبكة استلام السحب:",
+    withdrawFeeTrc: "رسوم شبكة السحب: 1.00$",
+    withdrawFeeBep: "رسوم شبكة السحب: 0.25$",
+    withdrawFeeErc: "رسوم شبكة السحب: 3.50$",
     withdrawMinAlert: (amount: string) =>
-      `رصيدك القابل للسحب حالياً هو $${amount} USDT. الحد الأدنى لإتمام السحب هو 10.00 USDT. يمكنك مضاعفة رصيدك وخوض المباريات لرفع أرباحك وتجاوز الحد الأدنى فوراً!`,
+      `رصيدك القابل للسحب حالياً هو $${amount} USD. الحد الأدنى لإتمام السحب هو 10.00$. يمكنك مضاعفة رصيدك وخوض المباريات لرفع أرباحك وتجاوز الحد الأدنى فوراً!`,
     recipientAddressLabel: (net: string) =>
       `عنوان محفظة استلام الأرباح (${net}):`,
+    recipientAddressLabelDynamic: (asset: string, net: string) =>
+      `عنوان محفظة استلام الأرباح (${asset} - ${net}):`,
     invalidAddressAlert: (net: string) =>
       `يرجى إدخال عنوان صالح لشبكة ${net} يبدأ بالشكل الصحيح.`,
-    withdrawAmountLabel: "المبلغ المراد سحبه (USDT):",
+    withdrawAmountLabel: "المبلغ المراد سحبه ($):",
     maxAvailable: "الحد الأقصى المتاح",
-    minWithdrawPlaceholder: "الحد الأدنى 10.00 USDT...",
+    minWithdrawPlaceholder: "الحد الأدنى 10.00$...",
     amountExceedsError: (req: string, max: string) =>
       `المبلغ المطلوب ($${req}) يتجاوز رصيدك المؤهل للسحب حالياً ($${max}). تنص سياسات الامتثال على تدوير الإيداعات في المباريات قبل سحبها.`,
 
     summaryRequested: "المبلغ المطلوب سحبه:",
     summaryPlatformFee: "رسوم المنصة:",
-    summaryFree: "0.00 USDT (مجاناً)",
+    summaryFree: "0.00$ (مجاناً)",
     summaryNetworkFee: "رسوم معالجة الشبكة:",
     summaryNetReceive: "الصافي الذي سيصل لمحفظتك:",
     submitWithdrawBtn: "تأكيد وتنفيذ السحب الفوري",
@@ -345,6 +367,10 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     tabDeposit: "Instant Deposit (USDT · USDC · DAI)",
     tabWithdraw: "Withdraw Funds",
     tabHistory: "Ledger Audit History",
+
+    step1Title: "1. Select Stablecoin & Network",
+    step2Title: "2. Deposit Tier & Winning Power",
+    step3Title: "3. Complete Transfer via Dedicated Address",
 
     coinSelectorTitle: "Select Your Preferred Stablecoin:",
     coinSelectorSubtitle: "All stablecoins pegged 1:1 with USD ($1.00 USD) with zero price fluctuation",
@@ -446,22 +472,29 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
 
     withdrawEligibleLabel: "Balance Eligible for Instant Withdrawal:",
     totalBalancePrefix: "out of total balance of",
+    withdrawCoinSelectorTitle: "Select Payout Currency:",
+    withdrawCoinSelectorSubtitle: "Withdraw your cash earnings in your preferred USD stablecoin (USDT · USDC · DAI) at 1:1 USD parity",
     selectRecipientNetwork: "Select payout destination network:",
+    withdrawFeeTrc: "Withdrawal Gas: $1.00",
+    withdrawFeeBep: "Withdrawal Gas: $0.25",
+    withdrawFeeErc: "Withdrawal Gas: $3.50",
     withdrawMinAlert: (amount: string) =>
-      `Your withdrawable balance is currently $${amount} USDT. Minimum withdrawal amount is 10.00 USDT. Play matches and duel to grow your earnings and withdraw anytime!`,
+      `Your withdrawable balance is currently $${amount} USD. Minimum withdrawal amount is $10.00. Play matches and duel to grow your earnings and withdraw anytime!`,
     recipientAddressLabel: (net: string) =>
       `Your payout wallet address (${net}):`,
+    recipientAddressLabelDynamic: (asset: string, net: string) =>
+      `Payout destination wallet (${asset} - ${net}):`,
     invalidAddressAlert: (net: string) =>
       `Please provide a valid ${net} address format.`,
-    withdrawAmountLabel: "Amount to Withdraw (USDT):",
+    withdrawAmountLabel: "Amount to Withdraw ($):",
     maxAvailable: "Max Available",
-    minWithdrawPlaceholder: "Minimum 10.00 USDT...",
+    minWithdrawPlaceholder: "Minimum $10.00...",
     amountExceedsError: (req: string, max: string) =>
       `Requested amount ($${req}) exceeds your withdrawable balance ($${max}). AML compliance requires funds to be played once before payout.`,
 
     summaryRequested: "Requested Amount:",
     summaryPlatformFee: "Platform Processing Fee:",
-    summaryFree: "0.00 USDT (FREE)",
+    summaryFree: "$0.00 (FREE)",
     summaryNetworkFee: "Blockchain Network Gas:",
     summaryNetReceive: "Net Amount You Will Receive:",
     submitWithdrawBtn: "Confirm & Request Instant Withdrawal",
@@ -507,6 +540,10 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     tabDeposit: "Depósito Instantáneo (USDT · USDC · DAI)",
     tabWithdraw: "Retirar Fondos",
     tabHistory: "Historial Contable",
+
+    step1Title: "1. Selección de Moneda y Red",
+    step2Title: "2. Monto y Poder de Victoria",
+    step3Title: "3. Transferencia a Dirección Dedicada",
 
     coinSelectorTitle: "Selecciona tu Stablecoin Preferida:",
     coinSelectorSubtitle: "Todas las monedas están vinculadas 1:1 con USD ($1.00 USD) sin variaciones de precio",
@@ -608,22 +645,29 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
 
     withdrawEligibleLabel: "Saldo elegible para retiro inmediato:",
     totalBalancePrefix: "de un saldo total de",
+    withdrawCoinSelectorTitle: "Selecciona la Moneda de Retiro:",
+    withdrawCoinSelectorSubtitle: "Retira tus ganancias en tu stablecoin favorita (USDT · USDC · DAI) con paridad 1:1 USD",
     selectRecipientNetwork: "Selecciona la red de retiro:",
+    withdrawFeeTrc: "Comisión de Red: $1.00",
+    withdrawFeeBep: "Comisión de Red: $0.25",
+    withdrawFeeErc: "Comisión de Red: $3.50",
     withdrawMinAlert: (amount: string) =>
-      `Tu saldo retirable actual es de $${amount} USDT. El retiro mínimo es de 10.00 USDT. ¡Juega partidas para aumentar tus ganancias!`,
+      `Tu saldo retirable actual es de $${amount} USD. El retiro mínimo es de $10.00. ¡Juega partidas para aumentar tus ganancias!`,
     recipientAddressLabel: (net: string) =>
       `Dirección de billetera de destino (${net}):`,
+    recipientAddressLabelDynamic: (asset: string, net: string) =>
+      `Billetera de destino (${asset} - ${net}):`,
     invalidAddressAlert: (net: string) =>
       `Introduce una dirección válida para la red ${net}.`,
-    withdrawAmountLabel: "Monto a Retirar (USDT):",
+    withdrawAmountLabel: "Monto a Retirar ($):",
     maxAvailable: "Máximo disponible",
-    minWithdrawPlaceholder: "Mínimo 10.00 USDT...",
+    minWithdrawPlaceholder: "Mínimo $10.00...",
     amountExceedsError: (req: string, max: string) =>
       `El monto solicitado ($${req}) supera tu saldo retirable ($${max}). Las políticas AML exigen rotar los depósitos en partidas antes de retirarlos.`,
 
     summaryRequested: "Monto solicitado:",
     summaryPlatformFee: "Comisión de plataforma:",
-    summaryFree: "0.00 USDT (GRATIS)",
+    summaryFree: "$0.00 (GRATIS)",
     summaryNetworkFee: "Comisión de red blockchain:",
     summaryNetReceive: "Monto neto a recibir:",
     submitWithdrawBtn: "Confirmar y Solicitar Retiro Inmediato",
@@ -669,6 +713,10 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     tabDeposit: "Dépôt Instantané (USDT · USDC · DAI)",
     tabWithdraw: "Retirer des Fonds",
     tabHistory: "Historique Comptable",
+
+    step1Title: "1. Stablecoin et Réseau de Transfert",
+    step2Title: "2. Montant et Puissance de Victoire",
+    step3Title: "3. Transfert via Adresse Dédiée",
 
     coinSelectorTitle: "Sélectionnez votre Stablecoin Préféré :",
     coinSelectorSubtitle: "Tous les stablecoins sont indexés 1:1 sur l'USD ($1.00 USD) sans variation de prix",
@@ -770,22 +818,29 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
 
     withdrawEligibleLabel: "Solde éligible pour retrait immédiat :",
     totalBalancePrefix: "sur un solde total de",
+    withdrawCoinSelectorTitle: "Sélectionnez la Devise de Retrait :",
+    withdrawCoinSelectorSubtitle: "Retirez vos gains dans le stablecoin de votre choix (USDT · USDC · DAI) avec une parité 1:1 USD",
     selectRecipientNetwork: "Sélectionnez le réseau de retrait :",
+    withdrawFeeTrc: "Frais de Réseau : 1,00 $",
+    withdrawFeeBep: "Frais de Réseau : 0,25 $",
+    withdrawFeeErc: "Frais de Réseau : 3,50 $",
     withdrawMinAlert: (amount: string) =>
-      `Votre solde retirable est actuellement de ${amount} $ USDT. Le retrait minimum est de 10,00 $ USDT. Jouez des duels pour augmenter vos gains !`,
+      `Votre solde retirable est actuellement de ${amount} $ USD. Le retrait minimum est de 10,00 $ USD. Jouez des duels pour augmenter vos gains !`,
     recipientAddressLabel: (net: string) =>
       `Adresse de portefeuille de réception (${net}) :`,
+    recipientAddressLabelDynamic: (asset: string, net: string) =>
+      `Adresse de portefeuille de réception (${asset} - ${net}) :`,
     invalidAddressAlert: (net: string) =>
       `Veuillez entrer une adresse valide pour le réseau ${net}.`,
-    withdrawAmountLabel: "Montant à Retirer (USDT) :",
+    withdrawAmountLabel: "Montant à Retirer ($) :",
     maxAvailable: "Maximum disponible",
-    minWithdrawPlaceholder: "Minimum 10,00 USDT...",
+    minWithdrawPlaceholder: "Minimum 10,00 $...",
     amountExceedsError: (req: string, max: string) =>
       `Le montant demandé (${req} $) dépasse votre solde retirable (${max} $). Les exigences AML imposent de jouer les dépôts avant de les retirer.`,
 
     summaryRequested: "Montant demandé :",
     summaryPlatformFee: "Frais de plateforme :",
-    summaryFree: "0,00 USDT (GRATUIT)",
+    summaryFree: "0,00 $ (GRATUIT)",
     summaryNetworkFee: "Frais de réseau blockchain :",
     summaryNetReceive: "Montant net que vous recevrez :",
     submitWithdrawBtn: "Confirmer et Demander le Retrait Immédiat",
@@ -831,6 +886,10 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     tabDeposit: "तत्काल जमा (USDT · USDC · DAI)",
     tabWithdraw: "राशि निकालें",
     tabHistory: "लेज़र ऑडिट इतिहास",
+
+    step1Title: "1. स्टेबलकॉइन और नेटवर्क चयन",
+    step2Title: "2. जमा राशि और जीत की शक्ति",
+    step3Title: "3. समर्पित पते के माध्यम से ट्रांसफर",
 
     coinSelectorTitle: "अपनी पसंदीदा स्टेबलकॉइन चुनें:",
     coinSelectorSubtitle: "सभी स्टेबलकॉइन शून्य मूल्य उतार-चढ़ाव के साथ 1:1 USD ($1.00 USD) पर आंकी गई हैं",
@@ -932,22 +991,29 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
 
     withdrawEligibleLabel: "तत्काल निकासी के लिए पात्र शेष राशि:",
     totalBalancePrefix: "कुल शेष राशि में से",
+    withdrawCoinSelectorTitle: "निकासी मुद्रा चुनें:",
+    withdrawCoinSelectorSubtitle: "अपनी पसंदीदा स्टेबलकॉइन (USDT · USDC · DAI) में 1:1 USD समानता के साथ कमाई निकालें",
     selectRecipientNetwork: "निकासी गंतव्य नेटवर्क चुनें:",
+    withdrawFeeTrc: "निकासी नेटवर्क शुल्क: $1.00",
+    withdrawFeeBep: "निकासी नेटवर्क शुल्क: $0.25",
+    withdrawFeeErc: "निकासी नेटवर्क शुल्क: $3.50",
     withdrawMinAlert: (amount: string) =>
-      `आपकी निकासी योग्य शेष राशि वर्तमान में $${amount} USDT है। न्यूनतम निकासी राशि 10.00 USDT है। मैच खेलें और कमाई बढ़ाएं!`,
+      `आपकी निकासी योग्य शेष राशि वर्तमान में $${amount} USD है। न्यूनतम निकासी राशि $10.00 है। मैच खेलें और कमाई बढ़ाएं!`,
     recipientAddressLabel: (net: string) =>
       `आपका प्राप्तकर्ता वॉलेट पता (${net}):`,
+    recipientAddressLabelDynamic: (asset: string, net: string) =>
+      `निकासी प्राप्तकर्ता वॉलेट पता (${asset} - ${net}):`,
     invalidAddressAlert: (net: string) =>
       `कृपया ${net} नेटवर्क के लिए मान्य पता प्रारूप दर्ज करें।`,
-    withdrawAmountLabel: "निकासी राशि (USDT):",
+    withdrawAmountLabel: "निकासी राशि ($):",
     maxAvailable: "अधिकतम उपलब्ध",
-    minWithdrawPlaceholder: "न्यूनतम 10.00 USDT...",
+    minWithdrawPlaceholder: "न्यूनतम $10.00...",
     amountExceedsError: (req: string, max: string) =>
       `अनुरोधित राशि ($${req}) आपकी निकासी योग्य शेष राशि ($${max}) से अधिक है। AML अनुपालन के लिए निकासी से पहले फंड को एक बार मैचों में उपयोग करना आवश्यक है।`,
 
     summaryRequested: "अनुरोधित राशि:",
     summaryPlatformFee: "प्लेटफ़ॉर्म शुल्क:",
-    summaryFree: "0.00 USDT (मुफ़्त)",
+    summaryFree: "$0.00 (मुफ़्त)",
     summaryNetworkFee: "ब्लॉकचेन नेटवर्क शुल्क:",
     summaryNetReceive: "आपको प्राप्त होने वाली शुद्ध राशि:",
     submitWithdrawBtn: "पुष्टि करें और तत्काल निकासी का अनुरोध करें",
@@ -993,6 +1059,10 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     tabDeposit: "极速充值 (USDT · USDC · DAI)",
     tabWithdraw: "提现资金",
     tabHistory: "账本流水记录",
+
+    step1Title: "1. 选择充值币种与网络",
+    step2Title: "2. 选择充值档位与胜率能量",
+    step3Title: "3. 通过专属充值地址转账",
 
     coinSelectorTitle: "选择您偏好的美元稳定币：",
     coinSelectorSubtitle: "所有支持的稳定币与美元严格 1:1 锚定（$1.00 USD），无任何汇率滑点",
@@ -1094,22 +1164,29 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
 
     withdrawEligibleLabel: "当前可即时提现金额：",
     totalBalancePrefix: "总资产为",
+    withdrawCoinSelectorTitle: "选择提现到账币种：",
+    withdrawCoinSelectorSubtitle: "您可以选择任意主流稳定币（USDT · USDC · DAI）提取您的现金收益，1:1 刚性兑付美元",
     selectRecipientNetwork: "选择提现到账网络：",
+    withdrawFeeTrc: "提现网络手续费：$1.00",
+    withdrawFeeBep: "提现网络手续费：$0.25",
+    withdrawFeeErc: "提现网络手续费：$3.50",
     withdrawMinAlert: (amount: string) =>
-      `您当前可提现金额为 $${amount} USDT。单笔最低提现金额为 10.00 USDT。参与更多技能对决赢取更多奖金即可随时提现！`,
+      `您当前可提现金额为 $${amount} USD。单笔最低提现金额为 $10.00。参与更多技能对决赢取更多奖金即可随时提现！`,
     recipientAddressLabel: (net: string) =>
       `您的提现接收钱包地址 (${net})：`,
+    recipientAddressLabelDynamic: (asset: string, net: string) =>
+      `提现到账钱包地址 (${asset} - ${net})：`,
     invalidAddressAlert: (net: string) =>
       `请输入有效的 ${net} 格式钱包地址。`,
-    withdrawAmountLabel: "提现金额 (USDT)：",
+    withdrawAmountLabel: "提现金额 ($)：",
     maxAvailable: "全部提现",
-    minWithdrawPlaceholder: "最低 10.00 USDT...",
+    minWithdrawPlaceholder: "最低 $10.00...",
     amountExceedsError: (req: string, max: string) =>
       `申请金额 ($${req}) 超出您当前可提现额度 ($${max})。根据反洗钱风控政策，充值资金须在比赛中完成对决后方可提取。`,
 
     summaryRequested: "申请提现金额：",
     summaryPlatformFee: "平台服务费：",
-    summaryFree: "0.00 USDT (免手续费)",
+    summaryFree: "$0.00 (免手续费)",
     summaryNetworkFee: "区块链网络矿工费：",
     summaryNetReceive: "实际到账净额：",
     submitWithdrawBtn: "确认并提交即时提现申请",

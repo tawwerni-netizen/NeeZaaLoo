@@ -107,6 +107,8 @@ function WalletContent() {
   const [copied, setCopied] = useState(false);
 
   // Withdrawal State
+  const [withdrawAsset, setWithdrawAsset] = useState<SupportedAsset>("USDT");
+  const [withdrawNetwork, setWithdrawNetwork] = useState<NetworkCode>("TRC20");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
@@ -120,6 +122,15 @@ function WalletContent() {
       setSelectedNetwork(validNets[0] ?? "TRC20");
     }
   }, [selectedNetwork]);
+
+  // Handle switching withdrawal asset: automatically select primary supported network
+  const handleSelectWithdrawAsset = useCallback((asset: SupportedAsset) => {
+    setWithdrawAsset(asset);
+    const validNets = ASSET_NETWORKS[asset];
+    if (!validNets.includes(withdrawNetwork)) {
+      setWithdrawNetwork(validNets[0] ?? "TRC20");
+    }
+  }, [withdrawNetwork]);
 
   // Load wallet accounts, ledger balances, and transactions
   const reload = useCallback(async (isManual = false) => {
@@ -299,23 +310,39 @@ function WalletContent() {
   const duelsFunded = Math.max(1, Math.floor(activeDepositAmount / 5));
   const potentialWinEstimate = (activeDepositAmount * 1.8).toFixed(2);
 
+  // Withdrawal network fees mapping
+  const WITHDRAW_FEES: Record<NetworkCode, number> = {
+    TRC20: 1.00,
+    BEP20: 0.25,
+    ERC20: 3.50,
+  };
+  const currentWithdrawFee = WITHDRAW_FEES[withdrawNetwork] ?? 1.00;
+
+  const availableForWithdrawCoin =
+    withdrawAsset === "USDT" ? availableUsdt :
+    withdrawAsset === "USDC" ? availableUsdc :
+    availableDai;
+
+  const maxWithdrawableForAsset = Math.min(withdrawableUsd, availableForWithdrawCoin);
+
   // Withdrawal form validation
   const parsedWithdrawAmount = parseFloat(withdrawAmount);
   const isAmountNumber = !isNaN(parsedWithdrawAmount) && parsedWithdrawAmount > 0;
-  const isAmountOverBalance = isAmountNumber && parsedWithdrawAmount > totalAvailableUsd;
+  const isAmountOverBalance = isAmountNumber && parsedWithdrawAmount > availableForWithdrawCoin;
   const isAmountOverWithdrawable = isAmountNumber && parsedWithdrawAmount > withdrawableUsd;
   const isAmountBelowMin = isAmountNumber && parsedWithdrawAmount < 10;
-  const isAddressValid = withdrawAddress ? isValidAddress(withdrawAddress, selectedNetwork) : false;
+  const isAddressValid = withdrawAddress ? isValidAddress(withdrawAddress, withdrawNetwork) : false;
   const canSubmitWithdraw =
     !isSubmitting &&
-    withdrawableUsd >= 10 &&
+    maxWithdrawableForAsset >= 10 &&
     isAmountNumber &&
     !isAmountOverWithdrawable &&
+    !isAmountOverBalance &&
     !isAmountBelowMin &&
     isAddressValid;
 
-  const netReceiveAmount = isAmountNumber && parsedWithdrawAmount > 1.00
-    ? (parsedWithdrawAmount - 1.00).toFixed(2)
+  const netReceiveAmount = isAmountNumber && parsedWithdrawAmount > currentWithdrawFee
+    ? (parsedWithdrawAmount - currentWithdrawFee).toFixed(2)
     : "0.00";
 
   function handleCopy(text: string) {
@@ -325,8 +352,8 @@ function WalletContent() {
   }
 
   function handleQuickPercent(pct: number) {
-    if (withdrawableUsd <= 0) return;
-    const val = (withdrawableUsd * pct).toFixed(2);
+    if (maxWithdrawableForAsset <= 0) return;
+    const val = (maxWithdrawableForAsset * pct).toFixed(2);
     setWithdrawAmount(val);
     setWithdrawError(null);
   }
@@ -350,20 +377,20 @@ function WalletContent() {
       return;
     }
 
-    if (amt > totalAvailableUsd) {
+    if (amt > availableForWithdrawCoin) {
       setWithdrawError(
         isAr
-          ? `رصيدك المتاح ($${totalAvailableUsd.toFixed(2)}) غير كافٍ لسحب $${amt.toFixed(2)}.`
-          : `Insufficient funds. Available balance is $${totalAvailableUsd.toFixed(2)}.`
+          ? `رصيدك المتاح من عملة ${withdrawAsset} ($${availableForWithdrawCoin.toFixed(2)}) غير كافٍ لسحب $${amt.toFixed(2)}.`
+          : `Insufficient funds. Available ${withdrawAsset} balance is $${availableForWithdrawCoin.toFixed(2)}.`
       );
       return;
     }
 
-    if (!isValidAddress(withdrawAddress, selectedNetwork)) {
+    if (!isValidAddress(withdrawAddress, withdrawNetwork)) {
       setWithdrawError(
         isAr
-          ? `عنوان المحفظة غير صالح لشبكة ${selectedNetwork}.`
-          : `Invalid wallet address for network ${selectedNetwork}.`
+          ? `عنوان المحفظة غير صالح لشبكة ${withdrawNetwork}.`
+          : `Invalid wallet address for network ${withdrawNetwork}.`
       );
       return;
     }
@@ -372,9 +399,9 @@ function WalletContent() {
     try {
       const res = await post<{ ok: boolean; withdrawal?: { id: string } }>(`/v1/players/${player?.id}/withdrawals`, {
         amount: amt,
-        network: selectedNetwork,
+        network: withdrawNetwork,
         destination: withdrawAddress.trim(),
-        asset: selectedAsset,
+        asset: withdrawAsset,
       });
 
       if (res.ok) {
@@ -382,8 +409,8 @@ function WalletContent() {
         setWithdrawAddress("");
         setTxNotice(
           isAr
-            ? `✓ تم إدراج طلب سحب $${amt.toFixed(2)} بنجاح وجاري التوقيع الآلي على البلوكتشين.`
-            : `✓ Withdrawal request of $${amt.toFixed(2)} queued for automated signature.`
+            ? `✓ تم إدراج طلب سحب $${amt.toFixed(2)} (${withdrawAsset} - ${withdrawNetwork}) بنجاح وجاري التوقيع الآلي على البلوكتشين.`
+            : `✓ Withdrawal request of $${amt.toFixed(2)} (${withdrawAsset} - ${withdrawNetwork}) queued for automated signature.`
         );
         void reload();
         setActiveTab("history");
@@ -626,6 +653,14 @@ function WalletContent() {
       {/* ========================================================================= */}
       {activeTab === "deposit" && (
         <div className={styles.actionCard}>
+          {/* ========================================================================= */}
+          {/* STEP 1: STABLECOIN & NETWORK SELECTION                                    */}
+          {/* ========================================================================= */}
+          <div className={styles.stepHeader}>
+            <span className={styles.stepBadge}>1</span>
+            <h2 className={styles.stepTitle}>{tW.step1Title}</h2>
+          </div>
+
           {/* Multi-Stablecoin Selector */}
           <div className={styles.coinSelectorSection}>
             <div className={styles.coinSectionTitle}>
@@ -653,13 +688,15 @@ function WalletContent() {
                       <div className={styles.coinTickerSub}>Tether USD</div>
                     </div>
                   </div>
-                  {selectedAsset === "USDT" && (
-                    <span className={styles.coinCardCheckmark}>✓ {tW.networkSelected}</span>
-                  )}
+                  <div className={styles.coinCardHeaderBadges}>
+                    {selectedAsset === "USDT" && (
+                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
+                    )}
+                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdt}`}>
+                      {tW.coinUsdtBadge}
+                    </span>
+                  </div>
                 </div>
-                <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdt}`}>
-                  {tW.coinUsdtBadge}
-                </span>
                 <p className={styles.coinCardDesc}>{tW.coinUsdtDesc}</p>
               </button>
 
@@ -680,13 +717,15 @@ function WalletContent() {
                       <div className={styles.coinTickerSub}>USD Coin (Circle)</div>
                     </div>
                   </div>
-                  {selectedAsset === "USDC" && (
-                    <span className={styles.coinCardCheckmark}>✓ {tW.networkSelected}</span>
-                  )}
+                  <div className={styles.coinCardHeaderBadges}>
+                    {selectedAsset === "USDC" && (
+                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
+                    )}
+                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdc}`}>
+                      {tW.coinUsdcBadge}
+                    </span>
+                  </div>
                 </div>
-                <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdc}`}>
-                  {tW.coinUsdcBadge}
-                </span>
                 <p className={styles.coinCardDesc}>{tW.coinUsdcDesc}</p>
               </button>
 
@@ -707,16 +746,144 @@ function WalletContent() {
                       <div className={styles.coinTickerSub}>MakerDAO Protocol</div>
                     </div>
                   </div>
-                  {selectedAsset === "DAI" && (
-                    <span className={styles.coinCardCheckmark}>✓ {tW.networkSelected}</span>
-                  )}
+                  <div className={styles.coinCardHeaderBadges}>
+                    {selectedAsset === "DAI" && (
+                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
+                    )}
+                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeDai}`}>
+                      {tW.coinDaiBadge}
+                    </span>
+                  </div>
                 </div>
-                <span className={`${styles.coinCardBadge} ${styles.coinBadgeDai}`}>
-                  {tW.coinDaiBadge}
-                </span>
                 <p className={styles.coinCardDesc}>{tW.coinDaiDesc}</p>
               </button>
             </div>
+          </div>
+
+          {/* Network Selector Cards - Dynamically Filtered per Coin */}
+          <div className={styles.networkSection}>
+            <div className={styles.networkSectionTitle}>
+              <span>🌐</span> {tW.networkTitle}
+            </div>
+            <div className={styles.networkCardsGrid}>
+              {/* TRON (TRC20) */}
+              {ASSET_NETWORKS[selectedAsset].includes("TRC20") && (
+                <button
+                  type="button"
+                  className={`${styles.networkCard} ${selectedNetwork === "TRC20" ? styles.networkCardActiveTrc : ""}`}
+                  onClick={() => setSelectedNetwork("TRC20")}
+                >
+                  <div className={styles.networkCardHeader}>
+                    <div className={styles.networkCardIdentity}>
+                      <div className={styles.networkLogoTrc}>
+                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                          <path d="M2.5 5.5L30 1.5L25 29.5L16 25L2.5 5.5Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" />
+                          <path d="M2.5 5.5L25 29.5M30 1.5L16 25" stroke="white" strokeWidth="2" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={styles.networkNameTitle}>{selectedAsset} - TRC20</div>
+                        <div className={styles.networkChainSubtitle}>{tW.trc20Chain}</div>
+                      </div>
+                    </div>
+                    <div className={styles.networkCardHeaderBadges}>
+                      {selectedNetwork === "TRC20" && (
+                        <span className={styles.networkSelectedPill}>✓ {tW.networkSelected}</span>
+                      )}
+                      <span className={styles.networkHighlightBadgeTrc}>{tW.trc20Badge}</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.networkCardFooterSpecs}>
+                    <span className={styles.networkSpecSpeed}>⚡ {tW.trc20Speed}</span>
+                    <span className={styles.networkSpecFee}>{tW.trc20Fee}</span>
+                  </div>
+                </button>
+              )}
+
+              {/* BNB Chain (BEP20) */}
+              {ASSET_NETWORKS[selectedAsset].includes("BEP20") && (
+                <button
+                  type="button"
+                  className={`${styles.networkCard} ${selectedNetwork === "BEP20" ? styles.networkCardActiveBep : ""}`}
+                  onClick={() => setSelectedNetwork("BEP20")}
+                >
+                  <div className={styles.networkCardHeader}>
+                    <div className={styles.networkCardIdentity}>
+                      <div className={styles.networkLogoBep}>
+                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                          <path d="M16 2.5L21.5 8L16 13.5L10.5 8L16 2.5Z" fill="#111" />
+                          <path d="M24 10.5L29.5 16L24 21.5L18.5 16L24 10.5Z" fill="#111" />
+                          <path d="M8 10.5L13.5 16L8 21.5L2.5 16L8 10.5Z" fill="#111" />
+                          <path d="M16 18.5L21.5 24L16 29.5L10.5 24L16 18.5Z" fill="#111" />
+                          <path d="M16 9.5L19.5 13L16 16.5L12.5 13L16 9.5Z" fill="#111" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={styles.networkNameTitle}>{selectedAsset} - BEP20</div>
+                        <div className={styles.networkChainSubtitle}>{tW.bep20Chain}</div>
+                      </div>
+                    </div>
+                    <div className={styles.networkCardHeaderBadges}>
+                      {selectedNetwork === "BEP20" && (
+                        <span className={styles.networkSelectedPill}>✓ {tW.networkSelected}</span>
+                      )}
+                      <span className={styles.networkHighlightBadgeBep}>{tW.bep20Badge}</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.networkCardFooterSpecs}>
+                    <span className={styles.networkSpecSpeed}>🚀 {tW.bep20Speed}</span>
+                    <span className={styles.networkSpecFee}>{tW.bep20Fee}</span>
+                  </div>
+                </button>
+              )}
+
+              {/* Ethereum (ERC20) */}
+              {ASSET_NETWORKS[selectedAsset].includes("ERC20") && (
+                <button
+                  type="button"
+                  className={`${styles.networkCard} ${selectedNetwork === "ERC20" ? styles.networkCardActiveErc : ""}`}
+                  onClick={() => setSelectedNetwork("ERC20")}
+                >
+                  <div className={styles.networkCardHeader}>
+                    <div className={styles.networkCardIdentity}>
+                      <div className={styles.networkLogoErc}>
+                        <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                          <path d="M16 4L15.6 5.4V20.8L16 21.2L23 17.1L16 4Z" fill="#fff" fillOpacity="0.8" />
+                          <path d="M16 4L9 17.1L16 21.2V4Z" fill="#fff" />
+                          <path d="M16 22.8L15.7 23.1V29.5L16 29.8L23 18.7L16 22.8Z" fill="#fff" fillOpacity="0.8" />
+                          <path d="M16 29.8V22.8L9 18.7L16 29.8Z" fill="#fff" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={styles.networkNameTitle}>{selectedAsset} - ERC20</div>
+                        <div className={styles.networkChainSubtitle}>{tW.erc20Chain}</div>
+                      </div>
+                    </div>
+                    <div className={styles.networkCardHeaderBadges}>
+                      {selectedNetwork === "ERC20" && (
+                        <span className={styles.networkSelectedPill}>✓ {tW.networkSelected}</span>
+                      )}
+                      <span className={styles.networkHighlightBadgeErc}>{tW.erc20Badge}</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.networkCardFooterSpecs}>
+                    <span className={styles.networkSpecSpeed}>💎 {tW.erc20Speed}</span>
+                    <span className={styles.networkSpecFee}>{tW.erc20Fee}</span>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ========================================================================= */}
+          {/* STEP 2: DEPOSIT PRESETS & WINNING POWER                                   */}
+          {/* ========================================================================= */}
+          <div className={styles.stepHeader}>
+            <span className={styles.stepBadge}>2</span>
+            <h2 className={styles.stepTitle}>{tW.step2Title}</h2>
           </div>
 
           {/* High Conversion Presets & Custom Amount */}
@@ -888,116 +1055,12 @@ function WalletContent() {
             </div>
           </div>
 
-          {/* Network Selector Cards - Dynamically Filtered per Coin */}
-          <div className={styles.networkSection}>
-            <div className={styles.networkSectionTitle}>
-              <span>🌐</span> {tW.networkTitle}
-            </div>
-            <div className={styles.networkCardsGrid}>
-              {/* TRON (TRC20) */}
-              {ASSET_NETWORKS[selectedAsset].includes("TRC20") && (
-                <button
-                  type="button"
-                  className={`${styles.networkCard} ${selectedNetwork === "TRC20" ? styles.networkCardActiveTrc : ""}`}
-                  onClick={() => setSelectedNetwork("TRC20")}
-                >
-                  {selectedNetwork === "TRC20" && (
-                    <span className={styles.networkSelectedCheck}>{tW.networkSelected}</span>
-                  )}
-                  <div className={styles.networkCardHeader}>
-                    <div className={styles.networkCardIdentity}>
-                      <div className={styles.networkLogoTrc}>
-                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-                          <path d="M2.5 5.5L30 1.5L25 29.5L16 25L2.5 5.5Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" />
-                          <path d="M2.5 5.5L25 29.5M30 1.5L16 25" stroke="white" strokeWidth="2" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className={styles.networkNameTitle}>{selectedAsset} - TRC20</div>
-                        <div className={styles.networkChainSubtitle}>{tW.trc20Chain}</div>
-                      </div>
-                    </div>
-                    <span className={styles.networkHighlightBadgeTrc}>{tW.trc20Badge}</span>
-                  </div>
-
-                  <div className={styles.networkCardFooterSpecs}>
-                    <span className={styles.networkSpecSpeed}>⚡ {tW.trc20Speed}</span>
-                    <span className={styles.networkSpecFee}>{tW.trc20Fee}</span>
-                  </div>
-                </button>
-              )}
-
-              {/* BNB Chain (BEP20) */}
-              {ASSET_NETWORKS[selectedAsset].includes("BEP20") && (
-                <button
-                  type="button"
-                  className={`${styles.networkCard} ${selectedNetwork === "BEP20" ? styles.networkCardActiveBep : ""}`}
-                  onClick={() => setSelectedNetwork("BEP20")}
-                >
-                  {selectedNetwork === "BEP20" && (
-                    <span className={styles.networkSelectedCheck}>{tW.networkSelected}</span>
-                  )}
-                  <div className={styles.networkCardHeader}>
-                    <div className={styles.networkCardIdentity}>
-                      <div className={styles.networkLogoBep}>
-                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-                          <path d="M16 2.5L21.5 8L16 13.5L10.5 8L16 2.5Z" fill="#111" />
-                          <path d="M24 10.5L29.5 16L24 21.5L18.5 16L24 10.5Z" fill="#111" />
-                          <path d="M8 10.5L13.5 16L8 21.5L2.5 16L8 10.5Z" fill="#111" />
-                          <path d="M16 18.5L21.5 24L16 29.5L10.5 24L16 18.5Z" fill="#111" />
-                          <path d="M16 9.5L19.5 13L16 16.5L12.5 13L16 9.5Z" fill="#111" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className={styles.networkNameTitle}>{selectedAsset} - BEP20</div>
-                        <div className={styles.networkChainSubtitle}>{tW.bep20Chain}</div>
-                      </div>
-                    </div>
-                    <span className={styles.networkHighlightBadgeBep}>{tW.bep20Badge}</span>
-                  </div>
-
-                  <div className={styles.networkCardFooterSpecs}>
-                    <span className={styles.networkSpecSpeed}>🚀 {tW.bep20Speed}</span>
-                    <span className={styles.networkSpecFee}>{tW.bep20Fee}</span>
-                  </div>
-                </button>
-              )}
-
-              {/* Ethereum (ERC20) */}
-              {ASSET_NETWORKS[selectedAsset].includes("ERC20") && (
-                <button
-                  type="button"
-                  className={`${styles.networkCard} ${selectedNetwork === "ERC20" ? styles.networkCardActiveErc : ""}`}
-                  onClick={() => setSelectedNetwork("ERC20")}
-                >
-                  {selectedNetwork === "ERC20" && (
-                    <span className={styles.networkSelectedCheck}>{tW.networkSelected}</span>
-                  )}
-                  <div className={styles.networkCardHeader}>
-                    <div className={styles.networkCardIdentity}>
-                      <div className={styles.networkLogoErc}>
-                        <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
-                          <path d="M16 4L15.6 5.4V20.8L16 21.2L23 17.1L16 4Z" fill="#fff" fillOpacity="0.8" />
-                          <path d="M16 4L9 17.1L16 21.2V4Z" fill="#fff" />
-                          <path d="M16 22.8L15.7 23.1V29.5L16 29.8L23 18.7L16 22.8Z" fill="#fff" fillOpacity="0.8" />
-                          <path d="M16 29.8V22.8L9 18.7L16 29.8Z" fill="#fff" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className={styles.networkNameTitle}>{selectedAsset} - ERC20</div>
-                        <div className={styles.networkChainSubtitle}>{tW.erc20Chain}</div>
-                      </div>
-                    </div>
-                    <span className={styles.networkHighlightBadgeErc}>{tW.erc20Badge}</span>
-                  </div>
-
-                  <div className={styles.networkCardFooterSpecs}>
-                    <span className={styles.networkSpecSpeed}>💎 {tW.erc20Speed}</span>
-                    <span className={styles.networkSpecFee}>{tW.erc20Fee}</span>
-                  </div>
-                </button>
-              )}
-            </div>
+          {/* ========================================================================= */}
+          {/* STEP 3: TRANSFER VIA DEDICATED ADDRESS & QR                               */}
+          {/* ========================================================================= */}
+          <div className={styles.stepHeader}>
+            <span className={styles.stepBadge}>3</span>
+            <h2 className={styles.stepTitle}>{tW.step3Title}</h2>
           </div>
 
           {/* Above the address: Critical Loss Prevention Warning */}
@@ -1096,11 +1159,11 @@ function WalletContent() {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 2: WITHDRAWAL HUB                                                     */}
+      {/* TAB 2: WITHDRAWAL HUB (USDT, USDC, DAI)                                   */}
       {/* ========================================================================= */}
       {activeTab === "withdraw" && (
         <div className={styles.actionCard}>
-          {/* Real Balance Overview */}
+          {/* Real Balance Overview + Stablecoin Breakdown */}
           <div className={styles.withdrawOverview}>
             <div>
               <div className={styles.withdrawOverviewTitle}>
@@ -1109,88 +1172,261 @@ function WalletContent() {
               <div className={styles.withdrawOverviewSub}>
                 {tW.totalBalancePrefix} ${totalBalanceUsd.toFixed(2)} USD
               </div>
+              <div className={styles.balanceBreakdownPills}>
+                <span className={styles.balanceBreakdownPill}>
+                  <span className={styles.balanceBreakdownDotUsdt} />
+                  <span>USDT: ${availableUsdt.toFixed(2)}</span>
+                </span>
+                <span className={styles.balanceBreakdownPill}>
+                  <span className={styles.balanceBreakdownDotUsdc} />
+                  <span>USDC: ${availableUsdc.toFixed(2)}</span>
+                </span>
+                <span className={styles.balanceBreakdownPill}>
+                  <span className={styles.balanceBreakdownDotDai} />
+                  <span>DAI: ${availableDai.toFixed(2)}</span>
+                </span>
+              </div>
             </div>
             <div className={styles.withdrawOverviewAmount}>
               <span className="nz-num">${withdrawableUsd.toFixed(2)}</span> USD
             </div>
           </div>
 
-          {/* Network Selection Cards */}
+          {/* Multi-Stablecoin Withdrawal Currency Selection */}
+          <div className={styles.coinSelectorSection}>
+            <div className={styles.coinSectionTitle}>
+              <span>🪙</span> {tW.withdrawCoinSelectorTitle}
+            </div>
+            <div className={styles.coinSectionSubtitle}>
+              {tW.withdrawCoinSelectorSubtitle}
+            </div>
+
+            <div className={styles.coinCardsGrid}>
+              {/* USDT Card */}
+              <button
+                type="button"
+                className={`${styles.coinCard} ${withdrawAsset === "USDT" ? styles.coinCardActiveUsdt : ""}`}
+                onClick={() => handleSelectWithdrawAsset("USDT")}
+              >
+                <div className={styles.coinCardHeader}>
+                  <div className={styles.coinCardIdentity}>
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                      <circle cx="16" cy="16" r="16" fill="#26A17B" />
+                      <path d="M17.9 16.9v-1.3c2.4-.1 4.4-.8 4.4-1.8s-2-1.7-4.4-1.8V9.3h-3.8v2.7c-2.4.1-4.4.8-4.4 1.8s2 1.7 4.4 1.8v1.3c-3 .2-5.3 1-5.3 2.1s2.3 1.9 5.3 2.1v4.6h3.8v-4.6c3-.2 5.3-1 5.3-2.1s-2.3-1.9-5.3-2.1z" fill="#fff" />
+                    </svg>
+                    <div>
+                      <div className={styles.coinNameTitle}>{tW.coinUsdtName}</div>
+                      <div className={styles.coinTickerSub}>Tether USD</div>
+                    </div>
+                  </div>
+                  <div className={styles.coinCardHeaderBadges}>
+                    {withdrawAsset === "USDT" && (
+                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
+                    )}
+                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdt}`}>
+                      {tW.coinUsdtBadge}
+                    </span>
+                  </div>
+                </div>
+                <p className={styles.coinCardDesc}>{tW.coinUsdtDesc}</p>
+                <div className={styles.coinCardBalanceMini}>
+                  <span>{tW.availableLabel}:</span>
+                  <span className={styles.coinCardBalanceVal}>${availableUsdt.toFixed(2)} USDT</span>
+                </div>
+              </button>
+
+              {/* USDC Card */}
+              <button
+                type="button"
+                className={`${styles.coinCard} ${withdrawAsset === "USDC" ? styles.coinCardActiveUsdc : ""}`}
+                onClick={() => handleSelectWithdrawAsset("USDC")}
+              >
+                <div className={styles.coinCardHeader}>
+                  <div className={styles.coinCardIdentity}>
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                      <circle cx="16" cy="16" r="16" fill="#2775CA" />
+                      <path d="M16 6C10.5 6 6 10.5 6 16s4.5 10 10 10 10-4.5 10-10S21.5 6 16 6zm.8 16.5v1.8h-1.6v-1.8c-2-.2-3.4-1.2-3.6-2.7h2c.2.8.9 1.3 2.1 1.3 1.2 0 1.9-.6 1.9-1.4 0-.8-.6-1.2-2.3-1.6-2.3-.6-3.4-1.4-3.4-2.8 0-1.4 1.2-2.5 3.3-2.7V11h1.6v1.6c1.7.2 2.9 1.1 3.2 2.4h-2c-.2-.6-.7-1.1-1.8-1.1-1.1 0-1.7.5-1.7 1.2 0 .7.5 1.1 2.2 1.5 2.5.6 3.5 1.5 3.5 2.9 0 1.5-1.3 2.7-3.4 3z" fill="#fff" />
+                    </svg>
+                    <div>
+                      <div className={styles.coinNameTitle}>{tW.coinUsdcName}</div>
+                      <div className={styles.coinTickerSub}>USD Coin (Circle)</div>
+                    </div>
+                  </div>
+                  <div className={styles.coinCardHeaderBadges}>
+                    {withdrawAsset === "USDC" && (
+                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
+                    )}
+                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeUsdc}`}>
+                      {tW.coinUsdcBadge}
+                    </span>
+                  </div>
+                </div>
+                <p className={styles.coinCardDesc}>{tW.coinUsdcDesc}</p>
+                <div className={styles.coinCardBalanceMini}>
+                  <span>{tW.availableLabel}:</span>
+                  <span className={styles.coinCardBalanceVal}>${availableUsdc.toFixed(2)} USDC</span>
+                </div>
+              </button>
+
+              {/* DAI Card */}
+              <button
+                type="button"
+                className={`${styles.coinCard} ${withdrawAsset === "DAI" ? styles.coinCardActiveDai : ""}`}
+                onClick={() => handleSelectWithdrawAsset("DAI")}
+              >
+                <div className={styles.coinCardHeader}>
+                  <div className={styles.coinCardIdentity}>
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                      <circle cx="16" cy="16" r="16" fill="#F5AC37" />
+                      <path d="M12 9h4.8c3.4 0 5.7 2.1 6.1 5.2H8.8v1.6h14.1c-.4 3.1-2.7 5.2-6.1 5.2H12v2h-2V9h2zm0 3.2v2.6h8.8c-.3-1.6-1.7-2.6-3.9-2.6H12zm0 4.2v2.6h4.9c2.2 0 3.6-1 3.9-2.6H12z" fill="#fff" />
+                    </svg>
+                    <div>
+                      <div className={styles.coinNameTitle}>{tW.coinDaiName}</div>
+                      <div className={styles.coinTickerSub}>MakerDAO Protocol</div>
+                    </div>
+                  </div>
+                  <div className={styles.coinCardHeaderBadges}>
+                    {withdrawAsset === "DAI" && (
+                      <span className={styles.coinSelectedPill}>✓ {tW.networkSelected}</span>
+                    )}
+                    <span className={`${styles.coinCardBadge} ${styles.coinBadgeDai}`}>
+                      {tW.coinDaiBadge}
+                    </span>
+                  </div>
+                </div>
+                <p className={styles.coinCardDesc}>{tW.coinDaiDesc}</p>
+                <div className={styles.coinCardBalanceMini}>
+                  <span>{tW.availableLabel}:</span>
+                  <span className={styles.coinCardBalanceVal}>${availableDai.toFixed(2)} DAI</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Network Selection Cards - Filtered for the selected withdrawal coin */}
           <div className={styles.networkSection}>
             <div className={styles.networkSectionTitle}>
               <span>🌐</span> {tW.selectRecipientNetwork}
             </div>
             <div className={styles.networkCardsGrid}>
               {/* TRON (TRC20) */}
-              <button
-                type="button"
-                className={`${styles.networkCard} ${selectedNetwork === "TRC20" ? styles.networkCardActiveTrc : ""}`}
-                onClick={() => {
-                  setSelectedNetwork("TRC20");
-                  setWithdrawError(null);
-                }}
-              >
-                {selectedNetwork === "TRC20" && (
-                  <span className={styles.networkSelectedCheck}>{tW.networkSelected}</span>
-                )}
-                <div className={styles.networkCardHeader}>
-                  <div className={styles.networkCardIdentity}>
-                    <div className={styles.networkLogoTrc}>
-                      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-                        <path d="M2.5 5.5L30 1.5L25 29.5L16 25L2.5 5.5Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" />
-                        <path d="M2.5 5.5L25 29.5M30 1.5L16 25" stroke="white" strokeWidth="2" />
-                      </svg>
+              {ASSET_NETWORKS[withdrawAsset].includes("TRC20") && (
+                <button
+                  type="button"
+                  className={`${styles.networkCard} ${withdrawNetwork === "TRC20" ? styles.networkCardActiveTrc : ""}`}
+                  onClick={() => {
+                    setWithdrawNetwork("TRC20");
+                    setWithdrawError(null);
+                  }}
+                >
+                  <div className={styles.networkCardHeader}>
+                    <div className={styles.networkCardIdentity}>
+                      <div className={styles.networkLogoTrc}>
+                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                          <path d="M2.5 5.5L30 1.5L25 29.5L16 25L2.5 5.5Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" />
+                          <path d="M2.5 5.5L25 29.5M30 1.5L16 25" stroke="white" strokeWidth="2" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={styles.networkNameTitle}>{withdrawAsset} - TRC20</div>
+                        <div className={styles.networkChainSubtitle}>{tW.trc20Chain}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className={styles.networkNameTitle}>USDT - TRC20</div>
-                      <div className={styles.networkChainSubtitle}>{tW.trc20Chain}</div>
+                    <div className={styles.networkCardHeaderBadges}>
+                      {withdrawNetwork === "TRC20" && (
+                        <span className={styles.networkSelectedPill}>✓ {tW.networkSelected}</span>
+                      )}
+                      <span className={styles.networkHighlightBadgeTrc}>{tW.trc20Badge}</span>
                     </div>
                   </div>
-                  <span className={styles.networkHighlightBadgeTrc}>{tW.trc20Badge}</span>
-                </div>
 
-                <div className={styles.networkCardFooterSpecs}>
-                  <span className={styles.networkSpecSpeed}>⚡ {tW.trc20Speed}</span>
-                  <span className={styles.networkSpecFee}>{tW.trc20Fee}</span>
-                </div>
-              </button>
+                  <div className={styles.networkCardFooterSpecs}>
+                    <span className={styles.networkSpecSpeed}>⚡ {tW.trc20Speed}</span>
+                    <span className={styles.networkSpecFee}>{tW.withdrawFeeTrc}</span>
+                  </div>
+                </button>
+              )}
 
               {/* BNB Smart Chain (BEP20) */}
-              <button
-                type="button"
-                className={`${styles.networkCard} ${selectedNetwork === "BEP20" ? styles.networkCardActiveBep : ""}`}
-                onClick={() => {
-                  setSelectedNetwork("BEP20");
-                  setWithdrawError(null);
-                }}
-              >
-                {selectedNetwork === "BEP20" && (
-                  <span className={styles.networkSelectedCheck}>{tW.networkSelected}</span>
-                )}
-                <div className={styles.networkCardHeader}>
-                  <div className={styles.networkCardIdentity}>
-                    <div className={styles.networkLogoBep}>
-                      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-                        <path d="M16 2.5L21.5 8L16 13.5L10.5 8L16 2.5Z" fill="#111" />
-                        <path d="M24 10.5L29.5 16L24 21.5L18.5 16L24 10.5Z" fill="#111" />
-                        <path d="M8 10.5L13.5 16L8 21.5L2.5 16L8 10.5Z" fill="#111" />
-                        <path d="M16 18.5L21.5 24L16 29.5L10.5 24L16 18.5Z" fill="#111" />
-                        <path d="M16 9.5L19.5 13L16 16.5L12.5 13L16 9.5Z" fill="#111" />
-                      </svg>
+              {ASSET_NETWORKS[withdrawAsset].includes("BEP20") && (
+                <button
+                  type="button"
+                  className={`${styles.networkCard} ${withdrawNetwork === "BEP20" ? styles.networkCardActiveBep : ""}`}
+                  onClick={() => {
+                    setWithdrawNetwork("BEP20");
+                    setWithdrawError(null);
+                  }}
+                >
+                  <div className={styles.networkCardHeader}>
+                    <div className={styles.networkCardIdentity}>
+                      <div className={styles.networkLogoBep}>
+                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                          <path d="M16 2.5L21.5 8L16 13.5L10.5 8L16 2.5Z" fill="#111" />
+                          <path d="M24 10.5L29.5 16L24 21.5L18.5 16L24 10.5Z" fill="#111" />
+                          <path d="M8 10.5L13.5 16L8 21.5L2.5 16L8 10.5Z" fill="#111" />
+                          <path d="M16 18.5L21.5 24L16 29.5L10.5 24L16 18.5Z" fill="#111" />
+                          <path d="M16 9.5L19.5 13L16 16.5L12.5 13L16 9.5Z" fill="#111" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={styles.networkNameTitle}>{withdrawAsset} - BEP20</div>
+                        <div className={styles.networkChainSubtitle}>{tW.bep20Chain}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className={styles.networkNameTitle}>USDT - BEP20</div>
-                      <div className={styles.networkChainSubtitle}>{tW.bep20Chain}</div>
+                    <div className={styles.networkCardHeaderBadges}>
+                      {withdrawNetwork === "BEP20" && (
+                        <span className={styles.networkSelectedPill}>✓ {tW.networkSelected}</span>
+                      )}
+                      <span className={styles.networkHighlightBadgeBep}>{tW.bep20Badge}</span>
                     </div>
                   </div>
-                  <span className={styles.networkHighlightBadgeBep}>{tW.bep20Badge}</span>
-                </div>
 
-                <div className={styles.networkCardFooterSpecs}>
-                  <span className={styles.networkSpecSpeed}>🚀 {tW.bep20Speed}</span>
-                  <span className={styles.networkSpecFee}>{tW.bep20Fee}</span>
-                </div>
-              </button>
+                  <div className={styles.networkCardFooterSpecs}>
+                    <span className={styles.networkSpecSpeed}>🚀 {tW.bep20Speed}</span>
+                    <span className={styles.networkSpecFee}>{tW.withdrawFeeBep}</span>
+                  </div>
+                </button>
+              )}
+
+              {/* Ethereum Mainnet (ERC20) */}
+              {ASSET_NETWORKS[withdrawAsset].includes("ERC20") && (
+                <button
+                  type="button"
+                  className={`${styles.networkCard} ${withdrawNetwork === "ERC20" ? styles.networkCardActiveErc : ""}`}
+                  onClick={() => {
+                    setWithdrawNetwork("ERC20");
+                    setWithdrawError(null);
+                  }}
+                >
+                  <div className={styles.networkCardHeader}>
+                    <div className={styles.networkCardIdentity}>
+                      <div className={styles.networkLogoErc}>
+                        <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                          <path d="M16 4L15.6 5.4V20.8L16 21.2L23 17.1L16 4Z" fill="#fff" fillOpacity="0.8" />
+                          <path d="M16 4L9 17.1L16 21.2V4Z" fill="#fff" />
+                          <path d="M16 22.8L15.7 23.1V29.5L16 29.8L23 18.7L16 22.8Z" fill="#fff" fillOpacity="0.8" />
+                          <path d="M16 29.8V22.8L9 18.7L16 29.8Z" fill="#fff" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={styles.networkNameTitle}>{withdrawAsset} - ERC20</div>
+                        <div className={styles.networkChainSubtitle}>{tW.erc20Chain}</div>
+                      </div>
+                    </div>
+                    <div className={styles.networkCardHeaderBadges}>
+                      {withdrawNetwork === "ERC20" && (
+                        <span className={styles.networkSelectedPill}>✓ {tW.networkSelected}</span>
+                      )}
+                      <span className={styles.networkHighlightBadgeErc}>{tW.erc20Badge}</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.networkCardFooterSpecs}>
+                    <span className={styles.networkSpecSpeed}>💎 {tW.erc20Speed}</span>
+                    <span className={styles.networkSpecFee}>{tW.withdrawFeeErc}</span>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1212,12 +1448,12 @@ function WalletContent() {
             {/* Recipient Address */}
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>
-                <span>{tW.recipientAddressLabel(selectedNetwork)}</span>
+                <span>{tW.recipientAddressLabelDynamic(withdrawAsset, withdrawNetwork)}</span>
               </label>
               <input
                 type="text"
                 required
-                placeholder={selectedNetwork === "TRC20" ? "T..." : "0x..."}
+                placeholder={withdrawNetwork === "TRC20" ? "T..." : "0x..."}
                 className={styles.formInput}
                 value={withdrawAddress}
                 onChange={(e) => {
@@ -1227,7 +1463,7 @@ function WalletContent() {
               />
               {withdrawAddress && !isAddressValid && (
                 <span style={{ fontSize: "12px", color: "#f87171", marginTop: "4px", display: "block", fontWeight: 600 }}>
-                  {tW.invalidAddressAlert(selectedNetwork)}
+                  {tW.invalidAddressAlert(withdrawNetwork)}
                 </span>
               )}
             </div>
@@ -1237,13 +1473,13 @@ function WalletContent() {
               <div className={styles.formLabel}>
                 <span>{tW.withdrawAmountLabel}</span>
                 <span style={{ fontSize: "12px", color: "#4ade80", fontWeight: 600 }}>
-                  {tW.maxAvailable} ${withdrawableUsd.toFixed(2)}
+                  {tW.maxAvailable}: ${maxWithdrawableForAsset.toFixed(2)} {withdrawAsset}
                 </span>
               </div>
               <input
                 type="number"
                 min="10"
-                max={withdrawableUsd > 0 ? withdrawableUsd.toString() : undefined}
+                max={maxWithdrawableForAsset > 0 ? maxWithdrawableForAsset.toString() : undefined}
                 step="0.01"
                 required
                 placeholder={tW.minWithdrawPlaceholder}
@@ -1279,24 +1515,32 @@ function WalletContent() {
                   {tW.amountExceedsError(parsedWithdrawAmount.toFixed(2), withdrawableUsd.toFixed(2))}
                 </span>
               )}
+
+              {isAmountOverBalance && !isAmountOverWithdrawable && (
+                <span style={{ fontSize: "12px", color: "#f87171", marginTop: "6px", display: "block", fontWeight: 600 }}>
+                  {locale === "ar"
+                    ? `المبلغ المطلوب ($${parsedWithdrawAmount.toFixed(2)}) يتجاوز رصيدك المتاح من عملة ${withdrawAsset} ($${availableForWithdrawCoin.toFixed(2)}).`
+                    : `Requested amount ($${parsedWithdrawAmount.toFixed(2)}) exceeds your available ${withdrawAsset} balance ($${availableForWithdrawCoin.toFixed(2)}).`}
+                </span>
+              )}
             </div>
 
             {/* Transparent Fees Breakdown */}
             <div className={styles.feeSummary}>
               <div className={styles.feeRow}>
                 <span>{tW.summaryPlatformFee}</span>
-                <span style={{ color: "#4ade80", fontWeight: 700 }}>0.00$ ({tW.summaryFree})</span>
+                <span style={{ color: "#4ade80", fontWeight: 700 }}>$0.00 ({tW.summaryFree})</span>
               </div>
               <div className={styles.feeRow}>
                 <span>{tW.summaryNetworkFee}</span>
                 <span style={{ color: "#fff", fontWeight: 600 }}>
-                  {selectedNetwork === "BEP20" ? "0.25 USDT" : "1.00 USDT"}
+                  ${currentWithdrawFee.toFixed(2)} ({withdrawNetwork})
                 </span>
               </div>
               <div className={`${styles.feeRow} ${styles.feeRowTotal}`}>
                 <span>{tW.summaryNetReceive}</span>
                 <span style={{ color: "#22c55e", fontSize: "18px" }} className="nz-num">
-                  ${netReceiveAmount} USD
+                  ${netReceiveAmount} {withdrawAsset}
                 </span>
               </div>
             </div>

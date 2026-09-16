@@ -1438,33 +1438,35 @@ function buildRoutes() {
           return { status: 400, body: errorBody("INVALID_AMOUNT", "Withdrawal amount must be greater than zero") };
         }
         if (amountMinor < 10_000_000n) {
-          return { status: 400, body: errorBody("BELOW_MINIMUM", "Minimum withdrawal is 10 USDT") };
+          return { status: 400, body: errorBody("BELOW_MINIMUM", "Minimum withdrawal is $10.00") };
         }
 
         const destination = String(body?.destination ?? body?.address ?? "").trim();
         if (!destination) {
           return { status: 400, body: errorBody("INVALID_DESTINATION", "Destination address is required") };
         }
-        const network = String(body?.network ?? "TRC20").trim();
-        const asset = String(body?.asset ?? "USDT").trim();
+        const rawNetwork = String(body?.network ?? "TRC20").trim().toUpperCase();
+        const storedNetwork = rawNetwork === "TRC20" ? "TRON" : rawNetwork;
+        const network = rawNetwork;
+        const asset = String(body?.asset ?? "USDT").trim().toUpperCase();
 
         // Mathematical check for blockchain network fee
         const NETWORK_FEES_MINOR = {
-          TRC20: 1_000_000n, // 1.00 USDT
+          TRC20: 1_000_000n, // 1.00 USD
           TRON: 1_000_000n,
-          BEP20: 800_000n,   // 0.80 USDT
-          BSC: 800_000n,
-          ERC20: 5_000_000n, // 5.00 USDT
-          ETH: 5_000_000n,
+          BEP20: 250_000n,   // 0.25 USD
+          BSC: 250_000n,
+          ERC20: 3_500_000n, // 3.50 USD
+          ETH: 3_500_000n,
         };
-        const feeMinor = NETWORK_FEES_MINOR[network] ?? 1_000_000n;
+        const feeMinor = NETWORK_FEES_MINOR[storedNetwork] ?? NETWORK_FEES_MINOR[network] ?? 1_000_000n;
 
         if (amountMinor <= feeMinor) {
           return {
             status: 400,
             body: errorBody(
               "AMOUNT_LESS_THAN_FEE",
-              `Withdrawal amount (${(Number(amountMinor) / 1e6).toFixed(2)} USDT) must exceed network transfer fee of ${(Number(feeMinor) / 1e6).toFixed(2)} USDT`
+              `Withdrawal amount ($${(Number(amountMinor) / 1e6).toFixed(2)}) must exceed network transfer fee of $${(Number(feeMinor) / 1e6).toFixed(2)}`
             ),
           };
         }
@@ -2695,7 +2697,7 @@ function buildRoutes() {
         let rail = null;
         if (rails) {
           const list = await rails.list();
-          const primary = list[0] ?? null;
+          const primary = list.find((r) => r.asset === "USDT" && (r.network === "TRON" || r.network === "TRC20")) ?? list[0] ?? null;
           if (primary) {
             rail = {
               asset: primary.asset, network: primary.network_display_name, status: primary.status,
