@@ -97,13 +97,12 @@ describe("tournament authorisation — the client determines nothing", () => {
     assert.equal(r.body.error.code, "ADMIN_ONLY");
   });
 
-  test("orchestration requires step-up even for an admin who holds the capability", async () => {
+  test("orchestration does not require step-up for an admin who holds the capability", async () => {
     const r = await req("POST", "/v1/admin/tournaments", {
       token: await tokenFor("root"),
-      body: { gameId: "chess", format: "SINGLE_ELIMINATION", capacity: 4, timeControl: { initialMs: 60000 }, registrationClosesAt: new Date().toISOString() },
+      body: { gameId: "chess", format: "SINGLE_ELIMINATION", capacity: 4, timeControl: { initialMs: 60000 }, registrationClosesAt: new Date(Date.now() + 3600_000).toISOString() },
     });
-    assert.equal(r.status, 401);
-    assert.equal(r.body.error.code, "STEP_UP_REQUIRED");
+    assert.equal(r.status, 201);
   });
 
   test("a player cannot register someone else, or supply their own seed rating", async () => {

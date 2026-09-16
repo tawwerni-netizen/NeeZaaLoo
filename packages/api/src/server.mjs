@@ -288,6 +288,7 @@ export function createApi({
       const fixedCapabilities = capabilitiesFor(a.roles ?? []);
       const customPermissions = rbac ? await rbac.effectivePermissions(a.id) : [];
       const capabilities = new Set([...fixedCapabilities, ...customPermissions]);
+
       return {
         type: "ADMIN",
         id: a.id,
@@ -2881,13 +2882,17 @@ function buildRoutes() {
     // the same action the RBAC page's own grant/revoke routes use.
     { method: "POST", path: "/v1/admin/players/:id/promote", action: "admin.rbac.manage",
       subjectType: "player",
-      handler: async ({ params, actor, db, rbac }) => {
+      handler: async ({ params, actor, body, db, rbac }) => {
         if (actor.id === params.id) {
           return { status: 400, body: errorBody("CANNOT_PROMOTE_SELF", "Admins cannot grant roles to themselves") };
         }
         const player = await db.query("SELECT id, handle FROM player WHERE id = $1", [params.id]);
         if (!player.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
         const p = player.rows[0];
+
+        const allowedRoles = ['SUPER_ADMIN', 'ADMIN', 'FINANCE_ADMIN', 'RISK_ADMIN', 'ANTI_CHEAT_MODERATOR', 'CONTENT_MODERATOR', 'SUPPORT', 'ANALYST', 'READ_ONLY'];
+        const chosenRole = (typeof body?.role === "string" && allowedRoles.includes(body.role)) ? body.role : 'ADMIN';
+        const reason = (typeof body?.reason === "string" && body.reason.trim()) ? body.reason.trim() : `Promoted to ${chosenRole} via Admin Panel`;
 
         await db.query(
           `INSERT INTO admin_user (id, email, display_name, mfa_enrolled)
@@ -2898,9 +2903,9 @@ function buildRoutes() {
 
         await db.query(
           `INSERT INTO admin_role_grant (admin_id, role, granted_by, reason)
-           VALUES ($1, 'ADMIN', $2, 'Promoted via Admin Panel')
+           VALUES ($1, $2, $3, $4)
            ON CONFLICT DO NOTHING`,
-          [p.id, actor.id]
+          [p.id, chosenRole, actor.id, reason]
         );
 
         if (rbac) {
@@ -2925,12 +2930,20 @@ function buildRoutes() {
                 [p.id, roleId, actor.id]
               );
             }
+            if (chosenRole === 'SUPPORT' || chosenRole === 'ADMIN' || chosenRole === 'SUPER_ADMIN') {
+              await db.query(
+                `INSERT INTO admin_custom_role_grant (admin_id, role_id, granted_by)
+                 VALUES ($1, 'role_support_lead', $2)
+                 ON CONFLICT (admin_id, role_id) DO NOTHING`,
+                [p.id, actor.id]
+              );
+            }
           } catch {
             // ignore if already granted or creation conflict
           }
         }
 
-        return { body: { ok: true, playerId: p.id, handle: p.handle, role: "ADMIN" } };
+        return { body: { ok: true, playerId: p.id, handle: p.handle, role: chosenRole } };
       } },
 
     { method: "POST", path: "/v1/admin/players/:id/demote", action: "admin.rbac.manage",
@@ -2939,7 +2952,7 @@ function buildRoutes() {
         await db.query(
           `UPDATE admin_role_grant
               SET revoked_at = now(), revoked_by = $2, reason = 'Demoted via Admin Panel'
-            WHERE admin_id = $1 AND role = 'ADMIN' AND revoked_at IS NULL`,
+            WHERE admin_id = $1 AND revoked_at IS NULL`,
           [params.id, actor.id]
         );
         await db.query(
@@ -2947,6 +2960,82 @@ function buildRoutes() {
           [params.id]
         );
         return { body: { ok: true, playerId: params.id } };
+      } },
+
+    { method: "POST", path: "/v1/admin/players/:id/confiscate-and-ban", action: "admin.user.confiscate",
+      subjectType: "player",
+      handler: async ({ params, actor, body, db }) => {
+        if (actor.id === params.id) {
+          return { status: 400, body: errorBody("CANNOT_BAN_SELF", "Admins cannot ban or confiscate themselves") };
+        }
+        const player = await db.query("SELECT id, handle, disabled_at FROM player WHERE id = $1", [params.id]);
+        if (!player.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
+
+        const targetRoles = (await db.query("SELECT admin_roles($1) AS roles", [params.id])).rows[0]?.roles ?? [];
+        if (targetRoles.includes("SUPER_ADMIN")) {
+          return { status: 403, body: errorBody("CANNOT_BAN_SUPER_ADMIN", "Super Admin accounts cannot be banned or confiscated") };
+        }
+
+        const reason = (typeof body?.reason === "string" && body.reason.trim()) ? body.reason.trim() : "Cheating and fair play violation - balance confiscated to platform";
+        const nowIso = new Date().toISOString();
+
+        // 1. Calculate player's positive balances across all user ledger accounts
+        const accountsRes = await db.query(
+          `SELECT a.key, a.id, a.normal_side,
+                  ledger_natural_balance(a.normal_side, (COALESCE(b.balance, (SELECT COALESCE(SUM(e.amount), 0) FROM ledger_entry e WHERE e.account_id = a.id)))::bigint) AS natural_balance
+             FROM ledger_account a
+             LEFT JOIN ledger_balance b ON b.account_id = a.id
+            WHERE a.owner_type = 'USER' AND a.owner_id = $1 AND a.asset = 'USDT'`,
+          [params.id]
+        );
+
+        let totalConfiscatedMinor = 0n;
+        const legs = [];
+        for (const acct of accountsRes.rows) {
+          const naturalBal = BigInt(acct.natural_balance || "0");
+          if (naturalBal > 0n) {
+            totalConfiscatedMinor += naturalBal;
+            legs.push({ account: acct.key, amount: Number(naturalBal) });
+          }
+        }
+
+        // 2. Post double-entry settlement transaction to platform:confiscated
+        if (totalConfiscatedMinor > 0n && legs.length > 0) {
+          legs.push({ account: "platform:confiscated", amount: -Number(totalConfiscatedMinor) });
+          const txKey = `confiscate-${params.id}-${Date.now()}`;
+          await db.query(
+            `SELECT ledger_post($1, 'CONFISCATION', 'ADMIN', $2, $3::jsonb, 'USDT', $4, 'player', $5)`,
+            [txKey, actor.id, JSON.stringify(legs), reason, params.id]
+          );
+        }
+
+        // 3. Mark player permanently disabled
+        await db.query(
+          `UPDATE player
+              SET disabled_at = $2, disabled_reason = $3, disabled_by = $4
+            WHERE id = $1`,
+          [params.id, nowIso, `CHEATING_CONFISCATED: ${reason}`, actor.id]
+        );
+
+        // 4. Revoke all active sessions
+        await db.query(
+          `UPDATE auth_session
+              SET revoked_at = $2, revoked_reason = 'ACCOUNT_CONFISCATED_AND_BANNED'
+            WHERE player_id = $1 AND revoked_at IS NULL`,
+          [params.id, nowIso]
+        );
+
+        return {
+          body: {
+            ok: true,
+            playerId: params.id,
+            confiscatedMinor: totalConfiscatedMinor.toString(),
+            confiscatedUsdt: (Number(totalConfiscatedMinor) / 1_000_000).toFixed(2),
+            disabledAt: nowIso,
+            reason
+          },
+          audit: { event: "PLAYER_CONFISCATED_AND_BANNED", targetId: params.id, confiscatedMinor: totalConfiscatedMinor.toString(), reason },
+        };
       } },
 
     { method: "POST", path: "/v1/admin/players/:id/ban", action: "admin.content.moderate",
@@ -4708,7 +4797,7 @@ function buildRoutes() {
         };
       } },
 
-    { method: "POST", path: "/v1/admin/games/:id/toggle-tournaments", action: "admin.control.toggle",
+    { method: "POST", path: "/v1/admin/games/:id/toggle-tournaments", action: "admin.game.manage",
       handler: async ({ params, db }) => {
         const r = await db.query(
           `UPDATE game
@@ -4721,7 +4810,7 @@ function buildRoutes() {
         return { body: { ok: true, game: r.rows[0] } };
       } },
 
-    { method: "POST", path: "/v1/admin/games/:id/toggle-cash", action: "admin.control.toggle",
+    { method: "POST", path: "/v1/admin/games/:id/toggle-cash", action: "admin.game.manage",
       handler: async ({ params, db }) => {
         const r = await db.query(
           `UPDATE game
@@ -4734,7 +4823,7 @@ function buildRoutes() {
         return { body: { ok: true, game: r.rows[0] } };
       } },
 
-    { method: "POST", path: "/v1/admin/games/:id/toggle-status", action: "admin.control.toggle",
+    { method: "POST", path: "/v1/admin/games/:id/toggle-status", action: "admin.game.manage",
       handler: async ({ params, db }) => {
         const r = await db.query(
           `UPDATE game
@@ -4745,6 +4834,56 @@ function buildRoutes() {
         );
         if (!r.rows.length) return { status: 404, body: errorBody("GAME_NOT_FOUND") };
         return { body: { ok: true, game: r.rows[0] } };
+      } },
+
+    // --- Admin Platform Settings & Economy Rules ---
+    { method: "GET", path: "/v1/admin/settings", action: "admin.settings.read",
+      handler: async ({ db }) => {
+        const [ruleRes, controlsRes, railRes] = await Promise.all([
+          db.query("SELECT rake_bps FROM economy_rule WHERE tier = 'CASH' AND effective_to IS NULL ORDER BY version DESC LIMIT 1"),
+          db.query("SELECT key, enabled FROM platform_control"),
+          db.query("SELECT min_withdrawal_minor, auto_approve_threshold_minor FROM payment_rail WHERE asset = 'USDT' LIMIT 1"),
+        ]);
+        const rakeBps = ruleRes.rows[0]?.rake_bps ?? 1200;
+        const platformRake = (rakeBps / 100).toFixed(1);
+        const controls = Object.fromEntries(controlsRes.rows.map((r) => [r.key, r.enabled]));
+        const maintenanceMode = controls.MATCHMAKING === false || controls.CASH_MATCHES === false;
+        const minWithdrawal = railRes.rows[0]?.min_withdrawal_minor ? (Number(railRes.rows[0].min_withdrawal_minor) / 1_000_000).toFixed(1) : "10.0";
+        const autoApproveLimit = railRes.rows[0]?.auto_approve_threshold_minor ? (Number(railRes.rows[0].auto_approve_threshold_minor) / 1_000_000).toFixed(1) : "100.0";
+        return {
+          body: {
+            ok: true,
+            platformRake,
+            rakeBps,
+            maintenanceMode,
+            minWithdrawal,
+            autoApproveLimit,
+            controls,
+          }
+        };
+      } },
+
+    { method: "POST", path: "/v1/admin/settings", action: "admin.settings.manage",
+      handler: async ({ actor, body, db }) => {
+        const rakeNum = parseFloat(body.platformRake);
+        if (!isNaN(rakeNum) && rakeNum >= 0 && rakeNum <= 50) {
+          const rakeBps = Math.round(rakeNum * 100);
+          const current = await db.query("SELECT version, rake_bps FROM economy_rule WHERE tier = 'CASH' AND effective_to IS NULL ORDER BY version DESC LIMIT 1");
+          if (!current.rows.length || current.rows[0].rake_bps !== rakeBps) {
+            const nextVer = (current.rows[0]?.version ?? 0) + 1;
+            await db.query("UPDATE economy_rule SET effective_to = now() WHERE tier = 'CASH' AND effective_to IS NULL");
+            await db.query(
+              `INSERT INTO economy_rule (id, version, tier, rake_bps, min_rake_minor, effective_from, created_by, approved_by, reason)
+               VALUES ('standard', $1, 'CASH', $2, 0, now(), $3, $3, $4)`,
+              [nextVer, rakeBps, actor.id, `Updated via Admin Settings to ${rakeNum}%`]
+            );
+          }
+        }
+        if (typeof body.maintenanceMode === "boolean") {
+          const enable = !body.maintenanceMode;
+          await db.query("UPDATE platform_control SET enabled = $1 WHERE key IN ('MATCHMAKING', 'CASH_MATCHES')", [enable]);
+        }
+        return { body: { ok: true, message: "Settings saved successfully" } };
       } },
 
     // --- Direct Chat, Members & Friends ---

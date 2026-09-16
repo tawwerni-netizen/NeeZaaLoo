@@ -34,8 +34,10 @@ const CANNED_RESPONSES = [
 ];
 
 export default function AdminSupportPage() {
-  const [tickets, setTickets] = useState<TicketRow[]>(INITIAL_TICKETS);
+  const [tickets, setTickets] = useState<TicketRow[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<TicketRow | null>(null);
+  const [messages, setMessages] = useState<Array<{ id: string; author_type: string; author_id?: string; content: string; visibility: string; created_at: string }>>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [visibility, setVisibility] = useState<"CUSTOMER" | "INTERNAL">("CUSTOMER");
   const [notice, setNotice] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export default function AdminSupportPage() {
       if (statusFilter !== "ALL") params.set("status", statusFilter);
 
       const res = await get<{ tickets: any[] }>(`/v1/admin/tickets?${params.toString()}`);
-      if (res && Array.isArray(res.tickets) && res.tickets.length > 0) {
+      if (res && Array.isArray(res.tickets)) {
         const mapped: TicketRow[] = res.tickets.map((t: any) => ({
           id: t.id,
           playerHandle: t.player_handle || t.player_id || "Player",
@@ -60,19 +62,39 @@ export default function AdminSupportPage() {
           subject: t.subject || "Support Inquiry",
           priority: t.priority || "NORMAL",
           status: t.status || "OPEN",
-          createdAt: new Date(t.created_at).toLocaleDateString(),
+          createdAt: new Date(t.created_at).toLocaleString(),
           duelId: t.duel_id || null,
         }));
         setTickets(mapped);
       }
     } catch {
-      // Keep initialized fallback
+      // Keep empty or current on error
     }
   }, [search, statusFilter]);
 
   useEffect(() => {
     loadBackendTickets();
   }, [loadBackendTickets]);
+
+  async function handleSelectTicket(t: TicketRow) {
+    setSelectedTicket(t);
+    setReplyText("");
+    setWalletInfo(null);
+    setLoadingMessages(true);
+    try {
+      const res = await get<{ ticket: any; messages: any[] }>(`/v1/admin/tickets/${t.id}`);
+      if (res && Array.isArray(res.messages)) {
+        setMessages(res.messages);
+      } else {
+        setMessages([]);
+      }
+    } catch (e) {
+      console.error("Failed to load ticket messages:", e);
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }
 
   async function handleStatusChange(ticketId: string, toStatus: string) {
     setActionBusy(true);
@@ -90,16 +112,14 @@ export default function AdminSupportPage() {
       if (selectedTicket?.id === ticketId) {
         setSelectedTicket((prev) => (prev ? { ...prev, status: toStatus } : null));
       }
-      setNotice(`Ticket ${ticketId} status changed to ${toStatus}.`);
-    } catch (err) {
+      setNotice(`تم تغيير حالة التذكرة ${ticketId} إلى ${toStatus} بنجاح.`);
+      await loadBackendTickets();
+    } catch (err: any) {
       console.error("Failed to change ticket status:", err);
-      // Optimistic fallback
-      setTickets((prev) =>
-        prev.map((t) => (t.id === ticketId ? { ...t, status: toStatus } : t))
-      );
+      setNotice(`فشل تغيير حالة التذكرة: ${err?.message || "خطأ غير متوقع"}`);
     } finally {
       setActionBusy(false);
-      setTimeout(() => setNotice(null), 3000);
+      setTimeout(() => setNotice(null), 3500);
     }
   }
 
@@ -107,9 +127,10 @@ export default function AdminSupportPage() {
     setActionBusy(true);
     try {
       await post(`/v1/admin/tickets/${ticketId}/assign`, {});
-      setNotice(`Ticket ${ticketId} assigned to you.`);
-    } catch {
-      setNotice(`Ticket ${ticketId} assigned.`);
+      setNotice(`تم إسناد التذكرة ${ticketId} إليك بنجاح.`);
+      await loadBackendTickets();
+    } catch (err: any) {
+      setNotice(`فشل إسناد التذكرة: ${err?.message || "خطأ"}`);
     } finally {
       setActionBusy(false);
       setTimeout(() => setNotice(null), 3000);
@@ -120,12 +141,13 @@ export default function AdminSupportPage() {
     setActionBusy(true);
     try {
       await post(`/v1/admin/tickets/${ticketId}/escalate`, { toTeam });
-      setNotice(`Ticket ${ticketId} escalated to ${toTeam} team.`);
+      setNotice(`تم تصعيد التذكرة ${ticketId} إلى قسم ${toTeam}.`);
       setTickets((prev) =>
         prev.map((t) => (t.id === ticketId ? { ...t, status: "IN_PROGRESS" } : t))
       );
-    } catch (err) {
-      console.error("Escalation error:", err);
+      await loadBackendTickets();
+    } catch (err: any) {
+      setNotice(`فشل التصعيد: ${err?.message || "خطأ"}`);
     } finally {
       setActionBusy(false);
       setTimeout(() => setNotice(null), 3500);
@@ -140,8 +162,8 @@ export default function AdminSupportPage() {
       );
       if (res?.accounts) {
         const available = res.accounts.find((a) => a.key.includes("available"));
-        const bal = available ? Number(available.balance) / 100 : 0;
-        setWalletInfo(`Available Balance: ${bal.toFixed(2)} USDT (Accounts: ${res.accounts.length})`);
+        const bal = available ? Number(available.balance) / 1_000_000 : 0;
+        setWalletInfo(`Available Balance: $${bal.toFixed(2)} USDT (Accounts: ${res.accounts.length})`);
       } else {
         setWalletInfo("Ledger available: 0.00 USDT");
       }
@@ -157,33 +179,28 @@ export default function AdminSupportPage() {
     setActionBusy(true);
     try {
       await post(`/v1/admin/tickets/${selectedTicket.id}/messages`, {
-        content: replyText,
+        content: replyText.trim(),
         visibility,
       });
       if (visibility === "CUSTOMER") {
         await post(`/v1/admin/tickets/${selectedTicket.id}/resolve`, {}).catch(() => {});
       }
-    } catch {
-      // Fallback
+      setNotice(
+        visibility === "CUSTOMER"
+          ? `تم إرسال الرد الرسمي للعميل (${selectedTicket.playerHandle}) وتحديث التذكرة.`
+          : `تم حفظ الملاحظة الداخلية الخاصة بالإدارة بنجاح.`
+      );
+      // Refresh messages
+      const res = await get<{ ticket: any; messages: any[] }>(`/v1/admin/tickets/${selectedTicket.id}`);
+      if (res?.messages) setMessages(res.messages);
+      setReplyText("");
+      await loadBackendTickets();
+    } catch (err: any) {
+      setNotice(`فشل إرسال الرد: ${err?.message || "خطأ غير متوقع"}`);
+    } finally {
+      setActionBusy(false);
+      setTimeout(() => setNotice(null), 3500);
     }
-
-    setTickets((prev) =>
-      prev.map((t) =>
-        t.id === selectedTicket.id
-          ? { ...t, status: visibility === "CUSTOMER" ? "RESOLVED" : t.status }
-          : t
-      )
-    );
-    setNotice(
-      visibility === "CUSTOMER"
-        ? `Reply sent to ${selectedTicket.playerHandle}. Ticket resolved.`
-        : `Internal note saved on ${selectedTicket.id}.`
-    );
-    setReplyText("");
-    setSelectedTicket(null);
-    setWalletInfo(null);
-    setActionBusy(false);
-    setTimeout(() => setNotice(null), 3500);
   }
 
   const filteredTickets = tickets.filter((t) => {
@@ -406,6 +423,59 @@ export default function AdminSupportPage() {
             </div>
           </div>
 
+          {/* Real Ticket Conversation History */}
+          <div style={{ marginBottom: "20px", background: "rgba(0, 0, 0, 0.25)", border: "1px solid rgba(242, 237, 227, 0.08)", borderRadius: "10px", padding: "16px" }}>
+            <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--nz-mat-gold)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>💬 سجل المحادثة والرسائل ({messages.length})</span>
+              {loadingMessages && <span style={{ fontSize: "12px", color: "#94a3b8" }}>جاري تحميل الرسائل...</span>}
+            </h4>
+            {messages.length === 0 ? (
+              <p style={{ fontSize: "13px", color: "#94a3b8", fontStyle: "italic", margin: "8px 0" }}>
+                لا توجد رسائل سابقة في هذه التذكرة حتى الآن.
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "300px", overflowY: "auto", paddingRight: "4px" }}>
+                {messages.map((m) => {
+                  const isStaff = m.author_type === "STAFF";
+                  const isInternal = m.visibility === "INTERNAL";
+                  return (
+                    <div
+                      key={m.id}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        background: isInternal
+                          ? "rgba(245, 158, 11, 0.08)"
+                          : isStaff
+                          ? "rgba(34, 197, 94, 0.08)"
+                          : "rgba(255, 255, 255, 0.04)",
+                        border: `1px solid ${
+                          isInternal
+                            ? "rgba(245, 158, 11, 0.3)"
+                            : isStaff
+                            ? "rgba(34, 197, 94, 0.3)"
+                            : "rgba(255, 255, 255, 0.08)"
+                        }`,
+                        alignSelf: isStaff ? "flex-end" : "flex-start",
+                        maxWidth: "85%",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", marginBottom: "4px", fontSize: "11px" }}>
+                        <span style={{ fontWeight: 700, color: isInternal ? "#fbbf24" : isStaff ? "#22c55e" : "var(--nz-mat-gold)" }}>
+                          {isInternal ? "🔒 ملاحظة داخلية (Staff Note)" : isStaff ? "🛡️ دعم المنصة (Nizalo Support)" : `👤 ${selectedTicket.playerHandle}`}
+                        </span>
+                        <span style={{ color: "#64748b" }}>{new Date(m.created_at).toLocaleString()}</span>
+                      </div>
+                      <div style={{ fontSize: "13px", color: "var(--nz-mat-ivory)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                        {m.content}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Canned Responses Palette */}
           <div style={{ marginBottom: "12px" }}>
             <span style={{ fontSize: "12px", color: "#94a3b8", display: "block", marginBottom: "6px" }}>
@@ -559,10 +629,7 @@ export default function AdminSupportPage() {
                       <button
                         type="button"
                         className={`${styles.actionBtn} ${selectedTicket?.id === t.id ? styles.actionBtnPrimary : ""}`}
-                        onClick={() => {
-                          setSelectedTicket(t);
-                          setWalletInfo(null);
-                        }}
+                        onClick={() => handleSelectTicket(t)}
                       >
                         {t.status === "RESOLVED" ? "Inspect" : "Inspect & Action"}
                       </button>

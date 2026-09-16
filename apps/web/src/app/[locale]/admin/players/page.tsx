@@ -91,6 +91,17 @@ export default function AdminPlayersPage() {
   const [muteReason, setMuteReason] = useState("");
   const [muteDuration, setMuteDuration] = useState<number>(86400000); // 24h default
 
+  // Multi-tier Promotion Modal state
+  const [promoteTarget, setPromoteTarget] = useState<PlayerRecord | null>(null);
+  const [promoteRole, setPromoteRole] = useState<string>("SUPPORT");
+  const [promoteReason, setPromoteReason] = useState<string>("");
+  const [isPromoting, setIsPromoting] = useState(false);
+
+  // Cheat Confiscation & Ban Modal state
+  const [confiscateTarget, setConfiscateTarget] = useState<{ id: string; handle: string; availableMinor?: number | string | undefined } | null>(null);
+  const [confiscateReason, setConfiscateReason] = useState<string>("Cheating / Fair Play Violation - balance confiscated");
+  const [isConfiscating, setIsConfiscating] = useState(false);
+
   // Player Financial & AML inspection state
   const [inspectTarget, setInspectTarget] = useState<PlayerRecord | null>(null);
   const [inspectLoading, setInspectLoading] = useState(false);
@@ -134,17 +145,47 @@ export default function AdminPlayersPage() {
 
   function showNotice(msg: string) {
     setActionNotice(msg);
-    setTimeout(() => setActionNotice(null), 3500);
+    setTimeout(() => setActionNotice(null), 4500);
   }
 
-  async function promoteUser(id: string) {
-    if (!window.confirm("Are you sure you want to promote this user to Admin?")) return;
+  async function handlePromotePlayer() {
+    if (!promoteTarget) return;
+    setIsPromoting(true);
     try {
-      await post(`/v1/admin/players/${id}/promote`);
-      showNotice("User promoted to Admin with chat moderation capabilities!");
+      await post(`/v1/admin/players/${promoteTarget.id}/promote`, {
+        role: promoteRole,
+        reason: promoteReason.trim() || `Promoted to ${promoteRole} via Admin Panel`,
+      });
+      showNotice(`✓ تم ترقية @${promoteTarget.handle} إلى (${promoteRole}) بنجاح!`);
+      setPromoteTarget(null);
+      setPromoteReason("");
       loadPlayers();
-    } catch (e) {
-      alert("Failed to promote user");
+    } catch (e: any) {
+      alert(e?.message || "فشلت عملية ترقية المستخدم");
+    } finally {
+      setIsPromoting(false);
+    }
+  }
+
+  async function handleConfiscateAndBan() {
+    if (!confiscateTarget) return;
+    setIsConfiscating(true);
+    try {
+      const res = await post<{ ok: boolean; confiscatedUsdt?: string; confiscatedMinor?: string }>(
+        `/v1/admin/players/${confiscateTarget.id}/confiscate-and-ban`,
+        { reason: confiscateReason.trim() || "Cheating and fair play violation - balance confiscated" }
+      );
+      showNotice(`🚨 تم حظر الغشاش @${confiscateTarget.handle} ومصادرة ${res.confiscatedUsdt ?? "0.00"} USDT فوراً لخزينة المنصة!`);
+      setConfiscateTarget(null);
+      setConfiscateReason("Cheating / Fair Play Violation - balance confiscated");
+      if (inspectTarget?.id === confiscateTarget.id) {
+        setInspectTarget(null);
+      }
+      loadPlayers();
+    } catch (e: any) {
+      alert(e?.message || "فشلت عملية المصادرة والحظر");
+    } finally {
+      setIsConfiscating(false);
     }
   }
 
@@ -267,7 +308,7 @@ export default function AdminPlayersPage() {
               ) : (
                 players.map((p) => {
                   const isSuperAdmin = p.roles?.includes("SUPER_ADMIN");
-                  const isAdmin = p.roles?.includes("ADMIN") || isSuperAdmin;
+                  const isStaff = Boolean(p.roles && p.roles.length > 0);
                   const isBanned = Boolean(p.disabled_at);
 
                   return (
@@ -289,13 +330,30 @@ export default function AdminPlayersPage() {
                         )}
                       </td>
                       <td>
-                        {isSuperAdmin ? (
-                          <span className={`${styles.badge} ${styles.badgeWarning}`}>Super Admin</span>
-                        ) : isAdmin ? (
-                          <span className={`${styles.badge} ${styles.badgePrimary || styles.badgeSuccess}`}>Admin</span>
-                        ) : (
-                          <span className={`${styles.badge} ${styles.badgeNeutral}`}>Player</span>
-                        )}
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                          {p.roles && p.roles.length > 0 ? (
+                            p.roles.map((r) => {
+                              if (r === "SUPER_ADMIN") {
+                                return <span key={r} className={styles.badge} style={{ background: "rgba(168, 85, 247, 0.2)", color: "#c084fc", border: "1px solid #c084fc" }}>👑 Super Admin</span>;
+                              }
+                              if (r === "ADMIN") {
+                                return <span key={r} className={styles.badge} style={{ background: "rgba(59, 130, 246, 0.2)", color: "#60a5fa", border: "1px solid #60a5fa" }}>⚙️ Admin</span>;
+                              }
+                              if (r === "FINANCE_ADMIN") {
+                                return <span key={r} className={styles.badge} style={{ background: "rgba(16, 185, 129, 0.2)", color: "#34d399", border: "1px solid #34d399" }}>💼 Finance Admin</span>;
+                              }
+                              if (r === "ANTI_CHEAT_MODERATOR") {
+                                return <span key={r} className={styles.badge} style={{ background: "rgba(245, 158, 11, 0.2)", color: "#fbbf24", border: "1px solid #fbbf24" }}>🛡️ Anti-Cheat</span>;
+                              }
+                              if (r === "SUPPORT") {
+                                return <span key={r} className={styles.badge} style={{ background: "rgba(6, 182, 212, 0.2)", color: "#22d3ee", border: "1px solid #22d3ee" }}>🎧 Support Lead</span>;
+                              }
+                              return <span key={r} className={styles.badge}>{r}</span>;
+                            })
+                          ) : (
+                            <span className={`${styles.badge} ${styles.badgeNeutral}`}>Player</span>
+                          )}
+                        </div>
                       </td>
                       <td className="nz-num" style={{ fontSize: "12px", color: "#94a3b8" }}>
                         {new Date(p.created_at).toLocaleDateString()}
@@ -323,6 +381,22 @@ export default function AdminPlayersPage() {
                             🔇 Mute Chat
                           </button>
 
+                          {/* Cheat Ban & Confiscate */}
+                          {!isBanned && !isSuperAdmin && (
+                            <button
+                              type="button"
+                              className={styles.actionBtn}
+                              style={{ background: "rgba(239, 68, 68, 0.18)", borderColor: "#ef4444", color: "#fca5a5" }}
+                              onClick={() => {
+                                setConfiscateTarget({ id: p.id, handle: p.handle });
+                                setConfiscateReason("Cheating / Fair Play Violation - balance confiscated");
+                              }}
+                              title="حظر نهائي ومصادرة رصيد المحفظة بالكامل لصالح خزينة المنصة بسبب الغش"
+                            >
+                              🚨 مصادرة وحظر غش
+                            </button>
+                          )}
+
                           {/* Site-wide Ban / Unban */}
                           {isBanned ? (
                             <button
@@ -338,31 +412,53 @@ export default function AdminPlayersPage() {
                             <button
                               type="button"
                               className={`${styles.actionBtn}`}
-                              style={{ background: "rgba(239, 68, 68, 0.2)", borderColor: "#ef4444", color: "#ef4444" }}
+                              style={{ background: "rgba(100, 116, 139, 0.2)", borderColor: "#475569", color: "#cbd5e1" }}
                               onClick={() => { setBanTarget(p); setBanReason(""); }}
                               title="Ban player from platform"
                             >
-                              🚫 Ban Site
+                              🚫 Ban
                             </button>
                           ) : null}
 
                           {/* Promote / Demote */}
-                          {!isAdmin ? (
+                          {!isStaff ? (
                             <button
                               type="button"
                               className={styles.actionBtn}
-                              onClick={() => promoteUser(p.id)}
+                              style={{ background: "rgba(168, 85, 247, 0.15)", borderColor: "#a855f7", color: "#c084fc" }}
+                              onClick={() => {
+                                setPromoteTarget(p);
+                                setPromoteRole("SUPPORT");
+                                setPromoteReason("");
+                              }}
+                              title="ترقية لدرجة إدارية محددة"
                             >
-                              Promote Admin
+                              🎖️ ترقية إدارية
                             </button>
                           ) : !isSuperAdmin ? (
-                            <button
-                              type="button"
-                              className={styles.actionBtn}
-                              onClick={() => demoteUser(p.id)}
-                            >
-                              Demote
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                className={styles.actionBtn}
+                                style={{ background: "rgba(168, 85, 247, 0.15)", borderColor: "#a855f7", color: "#c084fc" }}
+                                onClick={() => {
+                                  setPromoteTarget(p);
+                                  setPromoteRole(p.roles?.[0] || "ADMIN");
+                                  setPromoteReason("");
+                                }}
+                                title="تعديل الرتبة الإدارية"
+                              >
+                                ✏️ تعديل الرتبة
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.actionBtn}
+                                onClick={() => demoteUser(p.id)}
+                                title="إلغاء الصلاحيات الإدارية"
+                              >
+                                Demote
+                              </button>
+                            </>
                           ) : null}
                         </div>
                       </td>
@@ -492,6 +588,206 @@ export default function AdminPlayersPage() {
                 onClick={handleMutePlayer}
               >
                 Apply Mute
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Multi-Tier Role Promotion Modal */}
+      {promoteTarget && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)",
+          backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 10000, padding: "16px",
+        }}>
+          <div style={{
+            background: "#161922", border: "1px solid #3b82f6", borderRadius: "14px",
+            maxWidth: "520px", width: "100%", padding: "24px", color: "#fff",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+          }}>
+            <h3 style={{ margin: "0 0 6px 0", color: "#60a5fa", fontSize: "18px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>🎖️</span> تعيين الصلاحيات والترقية الإدارية (Staff Role)
+            </h3>
+            <p style={{ fontSize: "13px", color: "#94a3b8", margin: "0 0 16px 0" }}>
+              تحديد الدرجة والمسؤولية الإدارية للاعب: <strong style={{ color: "#fff" }}>@{promoteTarget.handle}</strong>
+            </p>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", fontSize: "13px", color: "#cbd5e1", marginBottom: "8px", fontWeight: 600 }}>
+                اختر الدرجة الإدارية (Role):
+              </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {[
+                  {
+                    role: "SUPPORT",
+                    title: "🎧 خدمة العملاء والدعم الفني (Customer Support)",
+                    desc: "إدارة والرد على تذاكر واستفسارات اللاعبين، حل النزاعات، والتعامل مع المحادثات المباشرة."
+                  },
+                  {
+                    role: "FINANCE_ADMIN",
+                    title: "💼 الإدارة المالية والحسابات (Finance & Accounts)",
+                    desc: "مراجعة واعتماد طلبات السحب والإيداع، والتحقق من قيود مكافحة غسيل الأموال (AML)."
+                  },
+                  {
+                    role: "ANTI_CHEAT_MODERATOR",
+                    title: "🛡️ مكافحة الغش والرقابة (Fair Play & Anti-Cheat)",
+                    desc: "مراقبة النزاهة وكشف الغشاشين، حظر الحسابات المتلاعبة، ومصادرة الأرصدة، وكتم الشات."
+                  },
+                  {
+                    role: "ADMIN",
+                    title: "⚙️ مدير تشغيلي عام (Operational Admin)",
+                    desc: "إدارة شاملة لكتالوج الألعاب، البطولات، المستخدمين، وتذاكر الدعم وعمليات المنصة."
+                  },
+                  {
+                    role: "SUPER_ADMIN",
+                    title: "👑 مدير تنفيذي كامل الصلاحيات (Super Admin)",
+                    desc: "صلاحيات سيادية كاملة على إعدادات المنصة الاقتصادية، توزيع الرتب الإدارية، وسياسات النظام."
+                  },
+                ].map((item) => {
+                  const isSelected = promoteRole === item.role;
+                  return (
+                    <div
+                      key={item.role}
+                      onClick={() => setPromoteRole(item.role)}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        border: isSelected ? "2px solid #3b82f6" : "1px solid #252b37",
+                        background: isSelected ? "rgba(59, 130, 246, 0.12)" : "#0e1015",
+                        cursor: "pointer",
+                        transition: "all 120ms ease",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <strong style={{ fontSize: "13px", color: isSelected ? "#60a5fa" : "#e2e8f0" }}>
+                          {item.title}
+                        </strong>
+                        <input
+                          type="radio"
+                          name="promoteRoleRadio"
+                          checked={isSelected}
+                          onChange={() => setPromoteRole(item.role)}
+                          style={{ cursor: "pointer" }}
+                        />
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px", lineHeight: 1.4 }}>
+                        {item.desc}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", fontSize: "12px", color: "#94a3b8", marginBottom: "6px" }}>
+                سبب الترقية / التكليف الإداري (اختياري):
+              </label>
+              <input
+                type="text"
+                placeholder="مثال: تكليف بمسؤولية الدعم الفني، ترقية من مجلس الإدارة..."
+                value={promoteReason}
+                onChange={(e) => setPromoteReason(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", background: "#0e1015",
+                  border: "1px solid #252b37", borderRadius: "6px", color: "#fff", fontSize: "13px",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={() => setPromoteTarget(null)}
+                disabled={isPromoting}
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
+                style={{ background: "#3b82f6", borderColor: "#3b82f6", color: "#fff", fontWeight: 700 }}
+                onClick={handlePromotePlayer}
+                disabled={isPromoting}
+              >
+                {isPromoting ? "جاري الحفظ..." : "تأكيد التعيين والترقية"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cheat Confiscation & Ban Modal */}
+      {confiscateTarget && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)",
+          backdropFilter: "blur(6px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 10001, padding: "16px",
+        }}>
+          <div style={{
+            background: "#161922", border: "2px solid #ef4444", borderRadius: "14px",
+            maxWidth: "500px", width: "100%", padding: "24px", color: "#fff",
+            boxShadow: "0 25px 60px rgba(239, 68, 68, 0.25)",
+          }}>
+            <h3 style={{ margin: "0 0 8px 0", color: "#ef4444", fontSize: "19px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>🚨</span> مصادرة الرصيد والحظر الدائم بسبب الغش
+            </h3>
+            <p style={{ fontSize: "13px", color: "#cbd5e1", margin: "0 0 16px 0", lineHeight: 1.6 }}>
+              أنت على وشك معاقبة اللاعب <strong style={{ color: "#fff" }}>@{confiscateTarget.handle}</strong> بسبب انتهاك قواعد النزاهة والغش في المنافسات.
+            </p>
+
+            <div style={{
+              background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.4)",
+              borderRadius: "10px", padding: "14px", marginBottom: "16px",
+            }}>
+              <div style={{ fontSize: "13px", color: "#fca5a5", fontWeight: 700, marginBottom: "6px" }}>
+                ⚡ الإجراءات الفورية التي سيتم تنفيذها في دفتر الأستاذ:
+              </div>
+              <ul style={{ margin: 0, paddingRight: "18px", fontSize: "12px", color: "#fed7d7", lineHeight: 1.6, display: "flex", flexDirection: "column", gap: "4px" }}>
+                <li>حساب الرصيد المالي المتاح في كافة حسابات اللاعب وتصفيره بالكامل.</li>
+                <li>تحويل الرصيد عبر قيد محاسبي مزدوج فوري (Double-Entry) إلى حساب المنصة: <code style={{ color: "#fff", background: "#300", padding: "1px 4px", borderRadius: "3px" }}>platform:confiscated</code>.</li>
+                <li>حظر اللاعب نهائياً من تسجيل الدخول والمنافسات (<code style={{ color: "#fff" }}>disabled_at = now()</code>).</li>
+                <li>إلغاء كافة جلسات الدخول النشطة الخاصة به فوراً.</li>
+              </ul>
+            </div>
+
+            <div style={{ marginBottom: "18px" }}>
+              <label style={{ display: "block", fontSize: "12px", color: "#94a3b8", marginBottom: "6px" }}>
+                سبب الحظر والمصادرة (لتسجيله في سجل التدقيق المالي):
+              </label>
+              <input
+                type="text"
+                placeholder="مثال: استخدام برامج مساعدة / غش في نزال الشطرنج..."
+                value={confiscateReason}
+                onChange={(e) => setConfiscateReason(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 12px", background: "#0e1015",
+                  border: "1px solid #252b37", borderRadius: "6px", color: "#fff", fontSize: "13px",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={() => setConfiscateTarget(null)}
+                disabled={isConfiscating}
+              >
+                إلغاء وتراجع
+              </button>
+              <button
+                type="button"
+                className={styles.actionBtn}
+                style={{ background: "#dc2626", borderColor: "#dc2626", color: "#fff", fontWeight: 800 }}
+                onClick={handleConfiscateAndBan}
+                disabled={isConfiscating}
+              >
+                {isConfiscating ? "جاري المصادرة والحظر..." : "تأكيد المصادرة والحظر النهائي"}
               </button>
             </div>
           </div>
@@ -898,8 +1194,32 @@ export default function AdminPlayersPage() {
             {/* Modal Footer */}
             <div style={{
               padding: "14px 24px", borderTop: "1px solid #252b37",
-              display: "flex", justifyContent: "flex-end", background: "#161924",
+              display: "flex", justifyContent: "space-between", alignItems: "center", background: "#161924",
             }}>
+              {!inspectTarget.disabled_at ? (
+                <button
+                  type="button"
+                  className={styles.actionBtn}
+                  style={{
+                    background: "#dc2626", borderColor: "#ef4444", color: "#fff",
+                    fontWeight: 700, display: "flex", alignItems: "center", gap: "6px",
+                  }}
+                  onClick={() => {
+                    setConfiscateTarget({
+                      id: inspectTarget.id,
+                      handle: inspectTarget.handle,
+                      availableMinor: inspectData?.amlSummary.availableMinor,
+                    });
+                    setConfiscateReason("Cheating / Fair Play Violation - balance confiscated");
+                  }}
+                >
+                  <span>🚨</span> حظر الغشاش ومصادرة رصيده ({inspectData ? formatUsdt(inspectData.amlSummary.availableMinor) : "..."} USDT)
+                </button>
+              ) : (
+                <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: 600 }}>
+                  🚫 هذا الحساب محظور حالياً
+                </div>
+              )}
               <button
                 type="button"
                 className={styles.actionBtn}

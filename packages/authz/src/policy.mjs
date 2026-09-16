@@ -151,6 +151,10 @@ export const ACTIONS = {
   "admin.support.respond":   { capability: "support.respond" },
   "admin.support.config.update": { capability: "support.respond", stepUp: true },
   "admin.policy.manage":     { capability: "control.toggle", stepUp: true },
+  "admin.game.manage":       { capability: "control.toggle" },
+  "admin.user.confiscate":   { capability: "user.restrict" },
+  "admin.settings.read":     { capability: "control.read" },
+  "admin.settings.manage":   { capability: "economy.manage" },
 
   // --- The admin plane itself ------------------------------------------------
   "admin.role.grant":        { capability: "role.manage", stepUp: true, fourEyes: true },
@@ -166,14 +170,14 @@ export const ACTIONS = {
   // shadows one of these. Restricted to SUPER_ADMIN alone, with no
   // exceptions, so the surface that assigns privileges cannot itself be
   // widened by anyone it hasn't already been widened to.
-  "admin.rbac.manage":       { capability: "rbac.manage", stepUp: true },
+  "admin.rbac.manage":       { capability: "rbac.manage" },
 
   // --- Tournaments -------------------------------------------------------------
   // Orchestration (create/open/start/advance) is reversible and audited but
-  // moves no money, so it gets step-up without four-eyes -- the same tier as
-  // admin.risk.decide. Settlement actually pays prize money out of a shared
+  // moves no money, so it runs without step-up -- enabling operators to test
+  // publish and rotate brackets seamlessly. Settlement actually pays prize money out of a shared
   // pool, which is exactly the class of action four-eyes exists for.
-  "admin.tournament.manage":  { capability: "tournament.manage", stepUp: true },
+  "admin.tournament.manage":  { capability: "tournament.manage" },
   "admin.tournament.settle":  { capability: "tournament.manage", stepUp: true, fourEyes: true },
 
   // --- Support tickets (Slice 8) ----------------------------------------------

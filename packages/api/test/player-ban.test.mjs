@@ -172,4 +172,62 @@ describe("Admin player site-wide banning", () => {
     const loginAfterUnban = await auth.login({ identifier: "badPlayer", password: PASSWORD });
     assert.equal(loginAfterUnban.ok, true);
   });
+
+  test("promoting with specific multi-tier role assigns correct role without step-up", async () => {
+    const superToken = await tokenFor("adminSuper");
+    const res = await req("POST", "/v1/admin/players/badPlayer/promote", {
+      token: superToken,
+      body: { role: "SUPPORT", reason: "Promoted to Customer Support Team" },
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.role, "SUPPORT");
+
+    const grants = await db.query("SELECT role FROM admin_role_grant WHERE admin_id = 'badPlayer' AND revoked_at IS NULL");
+    assert.ok(grants.rows.some((r) => r.role === "SUPPORT"));
+  });
+
+  test("cheater confiscate-and-ban transfers balance to platform:confiscated and bans player", async () => {
+    const superToken = await tokenFor("adminSuper");
+    // Seed $50 USDT balance (50_000_000 minor) to badPlayer
+    const legs = [
+      { account: "platform:custody:USDT:TRON", amount: 50_000_000 },
+      { account: "user:badPlayer:available", amount: -50_000_000 },
+    ];
+    await db.query(
+      `SELECT ledger_post('seed-badplayer-funds', 'DEPOSIT', 'SYSTEM', NULL, $1::jsonb, 'USDT')`,
+      [JSON.stringify(legs)]
+    );
+
+    // Execute confiscate-and-ban
+    const r = await req("POST", "/v1/admin/players/badPlayer/confiscate-and-ban", {
+      token: superToken,
+      body: { reason: "Wallhack and aimbot in tournament" },
+    });
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    assert.equal(r.body.ok, true);
+    assert.equal(r.body.confiscatedMinor, "50000000");
+
+    // Verify player is disabled
+    const p = await db.query("SELECT disabled_at FROM player WHERE id = 'badPlayer'");
+    assert.ok(p.rows[0].disabled_at !== null);
+
+    // Verify balance in user:badPlayer:available is 0
+    const userBal = await db.query(
+      `SELECT COALESCE(SUM(e.amount), 0)::text as balance
+         FROM ledger_account a
+         JOIN ledger_entry e ON e.account_id = a.id
+        WHERE a.key = 'user:badPlayer:available'`
+    );
+    assert.equal(userBal.rows[0].balance, "0");
+
+    // Verify natural balance in platform:confiscated received 50_000_000
+    const confBal = await db.query(
+      `SELECT ledger_natural_balance(a.normal_side, COALESCE(SUM(e.amount), 0)::bigint)::text as balance
+         FROM ledger_account a
+         JOIN ledger_entry e ON e.account_id = a.id
+        WHERE a.key = 'platform:confiscated'
+        GROUP BY a.normal_side`
+    );
+    assert.equal(confBal.rows[0].balance, "50000000");
+  });
 });
