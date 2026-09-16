@@ -1193,13 +1193,15 @@ function buildRoutes() {
         const existingDep = await db.query(
           `SELECT id, address, asset, network, provider_ref, expires_at
              FROM deposit
-            WHERE player_id = $1 AND asset = $2 AND network = $3 AND provider = 'oxapay'
+            WHERE player_id = $1 AND asset = $2 AND network = $3
               AND status NOT IN ('EXPIRED', 'ORPHANED', 'QUARANTINED')
+              AND address NOT LIKE 'Tsbx_%'
             ORDER BY created_at DESC LIMIT 1`,
           [params.id, asset, storedNetwork]
         );
         if (existingDep.rows.length) {
           const row = existingDep.rows[0];
+          const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(row.address)}&size=160x160`;
           return {
             status: 200,
             body: {
@@ -1207,10 +1209,12 @@ function buildRoutes() {
               deposit: {
                 id: row.id,
                 address: row.address,
+                qrCodeUrl,
                 asset: row.asset,
                 network,
                 display: `${row.asset} — ${network}`,
-                expiresAt: row.expires_at || new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
+                expiresAt: row.expires_at || new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000).toISOString(),
+                isStatic: true,
               },
             },
           };
@@ -1233,11 +1237,12 @@ function buildRoutes() {
               deposit: {
                 id: res.depositId,
                 address: res.address,
-                qrCodeUrl: res.qrCodeUrl ?? null,
+                qrCodeUrl: res.qrCodeUrl ?? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(res.address)}&size=160x160`,
                 asset: res.asset,
                 network,
                 display: res.display,
-                expiresAt: depRow.rows[0]?.expires_at || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+                isStatic: true,
+                expiresAt: depRow.rows[0]?.expires_at || new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000).toISOString(),
               },
             },
           };

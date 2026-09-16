@@ -39,6 +39,13 @@ function safeReturnTo(returnTo: string | null): string | null {
   return returnTo;
 }
 
+function getRedirectTarget(returnTo: string | null, locale: string): string {
+  if (!returnTo) return `/${locale}/home`;
+  if (returnTo.startsWith(`/${locale}/`) || returnTo === `/${locale}`) return returnTo;
+  if (returnTo.startsWith("/")) return `/${locale}${returnTo}`;
+  return `/${locale}/home`;
+}
+
 function GoogleCompleteInner() {
   const params = useSearchParams();
   const router = useRouter();
@@ -68,7 +75,7 @@ function GoogleCompleteInner() {
         "/v1/auth/google/finalize", { handoffCode: handoff, totpCode: withTotp }
       );
       await applySession(r.accessToken, r.refreshToken);
-      router.replace(`/${locale}${returnTo ?? "/home"}`);
+      router.replace(getRedirectTarget(returnTo, locale));
     } catch (e) {
       const code = e instanceof ApiError ? (e.code ?? "BAD_STATE") : "NETWORK_ERROR";
       if (code === "TOTP_REQUIRED") {
@@ -88,14 +95,14 @@ function GoogleCompleteInner() {
         setStatus("working");
         applySession(access, refresh)
           .then(() => {
-            router.replace(`/${locale}${returnTo ?? "/home"}`);
+            router.replace(getRedirectTarget(returnTo, locale));
           })
           .catch(() => {
             setStatus("error");
             setError(t(authErrorKey("BAD_STATE")));
           });
       } else {
-        router.replace(`/${locale}${returnTo ?? "/home"}`);
+        router.replace(getRedirectTarget(returnTo, locale));
       }
       return;
     }

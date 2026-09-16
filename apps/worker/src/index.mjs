@@ -25,6 +25,7 @@ import { createChallengeService } from "../../../packages/matchmaking/src/challe
 import { createDispatchWorker } from "../../../packages/matchmaking/src/dispatch.mjs";
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
 import { createSandboxProvider } from "../../../packages/payments/src/provider.mjs";
+import { createOxapayProvider } from "../../../packages/payments/src/oxapay.mjs";
 import { createChainReader } from "../../../packages/chain/src/reader.mjs";
 import { createReconciliationService } from "../../../packages/reconciliation/src/reconcile.mjs";
 import { createExpService } from "../../../packages/profile/src/exp.mjs";
@@ -87,12 +88,14 @@ async function main() {
     settlement, store, plugins, mm, emit: logger.emit,
   });
 
-  // Sandbox only -- see the header comment. `chain`, by contrast, IS the
-  // real on-chain reader: createChainReader() honours CHAIN_READER=tron
-  // (with TRON_API_KEY) when configured, and REFUSES TO START under
-  // NODE_ENV=production without it -- deposits must never be able to
-  // "confirm" from a reader that always answers null.
-  const provider = createSandboxProvider();
+  // OxaPay provider when configured, otherwise Sandbox in dev/test.
+  const provider = process.env.OXAPAY_MERCHANT_API_KEY
+    ? createOxapayProvider({
+        merchantApiKey: process.env.OXAPAY_MERCHANT_API_KEY,
+        payoutApiKey: process.env.OXAPAY_PAYOUT_API_KEY,
+        callbackUrl: process.env.OXAPAY_CALLBACK_URL,
+      })
+    : createSandboxProvider();
   const chain = createChainReader();
   const paymentSvc = createPaymentService(db, {
     provider,

@@ -81,6 +81,9 @@ function getEnv(childPort) {
       path.join(here, "apps", "web", "public", "avatars"),
     AVATAR_PUBLIC_BASE_URL:
       process.env.AVATAR_PUBLIC_BASE_URL || "/avatars",
+    OXAPAY_MERCHANT_API_KEY: process.env.OXAPAY_MERCHANT_API_KEY || "",
+    OXAPAY_PAYOUT_API_KEY:   process.env.OXAPAY_PAYOUT_API_KEY || "",
+    OXAPAY_CALLBACK_URL:     process.env.OXAPAY_CALLBACK_URL || "https://nizalo.com/v1/payments/oxapay/webhook",
   });
 }
 

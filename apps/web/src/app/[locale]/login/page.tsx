@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/Button";
@@ -11,6 +11,16 @@ import { get, ApiError } from "@/lib/api";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import styles from "@/components/auth/AuthForm.module.css";
 
+function getSafeRedirect(returnTo: string | null, locale: string): string {
+  if (!returnTo || !returnTo.startsWith("/") || returnTo.startsWith("//")) {
+    return `/${locale}/home`;
+  }
+  if (returnTo.startsWith(`/${locale}/`) || returnTo === `/${locale}`) {
+    return returnTo;
+  }
+  return `/${locale}${returnTo}`;
+}
+
 export default function LoginPage() {
   return (
     <Suspense fallback={<><Header /><div className={styles.wrap} /></>}>
@@ -20,7 +30,7 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const { login } = useAuth();
+  const { login, loading, player } = useAuth();
   const { t, locale } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -36,6 +46,13 @@ function LoginForm() {
   const [submitting, setSubmitting] = useState(false);
   const [googleStarting, setGoogleStarting] = useState(false);
 
+  // If already authenticated, redirect immediately away from login
+  useEffect(() => {
+    if (!loading && player) {
+      router.replace(getSafeRedirect(returnTo, locale));
+    }
+  }, [loading, player, returnTo, locale, router]);
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -47,11 +64,7 @@ function LoginForm() {
     const result = await login(identifier, password, remember);
     setSubmitting(false);
     if (result.ok) {
-      if (returnTo && returnTo.startsWith("/")) {
-        router.push(returnTo);
-      } else {
-        router.push(`/${locale}/home`);
-      }
+      router.push(getSafeRedirect(returnTo, locale));
     } else {
       setError(t(authErrorKey(result.reason)));
     }
@@ -65,7 +78,8 @@ function LoginForm() {
     setError(null);
     setGoogleStarting(true);
     try {
-      const { url } = await get<{ url: string }>(`/v1/auth/google/start?locale=${locale}`);
+      const returnParam = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : "";
+      const { url } = await get<{ url: string }>(`/v1/auth/google/start?locale=${locale}${returnParam}`);
       if (url) {
         window.location.href = url;
         return;
@@ -75,7 +89,7 @@ function LoginForm() {
       if (clientId) {
         const redirectUri = `${window.location.origin}/api/auth/google/callback`;
         const scope = encodeURIComponent("openid email profile");
-        const state = encodeURIComponent(JSON.stringify({ locale }));
+        const state = encodeURIComponent(JSON.stringify({ locale, returnTo }));
         window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
           redirectUri
         )}&response_type=code&scope=${scope}&state=${state}&prompt=select_account`;
@@ -150,7 +164,7 @@ function LoginForm() {
 
           <div className={styles.divider}><span>{t("auth.login.or_divider")}</span></div>
 
-          <GoogleButton onError={(err) => setError(err)} />
+          <GoogleButton onError={(err) => setError(err)} returnTo={returnTo} />
 
           <LocaleLink href="/login/code" className={styles.secondaryLink}>
             {t("auth.login.email_code_cta")}

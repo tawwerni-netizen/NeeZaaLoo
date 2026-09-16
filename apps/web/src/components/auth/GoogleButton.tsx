@@ -10,16 +10,18 @@ type GoogleButtonProps = {
   onError?: (err: string) => void;
   className?: string;
   label?: string;
+  returnTo?: string | null;
 };
 
-export function GoogleButton({ onError, className, label }: GoogleButtonProps) {
+export function GoogleButton({ onError, className, label, returnTo }: GoogleButtonProps) {
   const { t, locale } = useI18n();
   const [starting, setStarting] = useState(false);
 
   async function onClick() {
     setStarting(true);
     try {
-      const { url } = await get<{ url: string }>(`/v1/auth/google/start?locale=${locale}`);
+      const returnParam = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : "";
+      const { url } = await get<{ url: string }>(`/v1/auth/google/start?locale=${locale}${returnParam}`);
       if (url) {
         window.location.href = url;
         return;
@@ -29,7 +31,7 @@ export function GoogleButton({ onError, className, label }: GoogleButtonProps) {
       if (clientId) {
         const redirectUri = `${window.location.origin}/api/auth/google/callback`;
         const scope = encodeURIComponent("openid email profile");
-        const state = encodeURIComponent(JSON.stringify({ locale }));
+        const state = encodeURIComponent(JSON.stringify({ locale, returnTo }));
         window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
           redirectUri
         )}&response_type=code&scope=${scope}&state=${state}&prompt=select_account`;

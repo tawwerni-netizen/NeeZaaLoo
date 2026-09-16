@@ -78,6 +78,7 @@ function WalletContent() {
     address?: string;
     qrCodeUrl?: string | null;
     expiresAt?: string;
+    isStatic?: boolean;
   } | null>(null);
   const [depositLoading, setDepositLoading] = useState(false);
   const [depositError, setDepositError] = useState<string | null>(null);
@@ -158,7 +159,7 @@ function WalletContent() {
     try {
       const res = await post<{
         ok: boolean;
-        deposit: { id: string; address: string; qrCodeUrl?: string | null; expiresAt?: string; asset: string; network: string };
+        deposit: { id: string; address: string; qrCodeUrl?: string | null; expiresAt?: string; asset: string; network: string; isStatic?: boolean };
       }>(`/v1/players/${player.id}/deposits`, {
         asset: "USDT",
         network: net,
@@ -183,20 +184,33 @@ function WalletContent() {
     }
   }, [activeTab, selectedNetwork, loadDeposit, reload]);
 
-  // Expiry countdown timer for OxaPay deposit address
+  // Check if address is permanent / static (not expiring in the near term)
+  const isPermanent = Boolean(
+    depositData?.isStatic ||
+    !depositData?.expiresAt ||
+    (depositData?.expiresAt && new Date(depositData.expiresAt).getTime() > Date.now() + 30 * 86400000)
+  );
+
+  const effectiveQrUrl = depositData?.qrCodeUrl || (depositData?.address ? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(depositData.address)}&size=160x160` : null);
+
+  // Expiry countdown timer for OxaPay temporary deposit address only
   useEffect(() => {
-    if (!depositData?.expiresAt) {
+    if (isPermanent || !depositData?.expiresAt) {
       setDepositTimeLeft("");
       return;
     }
     const timer = setInterval(() => {
       const diff = Math.max(0, Math.floor((new Date(depositData.expiresAt!).getTime() - Date.now()) / 1000));
+      if (diff <= 0) {
+        setDepositTimeLeft("");
+        return;
+      }
       const mins = Math.floor(diff / 60);
       const secs = diff % 60;
       setDepositTimeLeft(`${mins}:${secs < 10 ? "0" : ""}${secs}`);
     }, 1000);
     return () => clearInterval(timer);
-  }, [depositData?.expiresAt]);
+  }, [depositData?.expiresAt, isPermanent]);
 
   // Initial load
   useEffect(() => {
@@ -628,37 +642,44 @@ function WalletContent() {
                 <span style={{ fontSize: "28px" }}>⏳</span>
                 <span style={{ fontSize: "12px" }}>{isAr ? "جاري توليد العنوان..." : "Generating..."}</span>
               </div>
-            ) : depositData?.qrCodeUrl ? (
+            ) : effectiveQrUrl ? (
               <div className={styles.qrFrame}>
                 <img
-                  src={depositData.qrCodeUrl}
+                  src={effectiveQrUrl}
                   alt="USDT Deposit QR"
                   width={140}
                   height={140}
-                  style={{ display: "block" }}
+                  style={{ display: "block", borderRadius: "8px" }}
                 />
               </div>
             ) : (
-              <div className={styles.qrFrame}>
-                <svg viewBox="0 0 100 100" width="140" height="140">
-                  <rect width="100" height="100" fill="#fff" />
-                  <rect x="10" y="10" width="25" height="25" fill="#000" />
-                  <rect x="15" y="15" width="15" height="15" fill="#fff" />
-                  <rect x="18" y="18" width="9" height="9" fill="#000" />
-                  <rect x="65" y="10" width="25" height="25" fill="#000" />
-                  <rect x="70" y="15" width="15" height="15" fill="#fff" />
-                  <rect x="73" y="18" width="9" height="9" fill="#000" />
-                  <rect x="10" y="65" width="25" height="25" fill="#000" />
-                  <rect x="15" y="70" width="15" height="15" fill="#fff" />
-                  <rect x="18" y="73" width="9" height="9" fill="#000" />
-                  <rect x="45" y="20" width="8" height="8" fill="#000" />
-                  <rect x="45" y="45" width="12" height="12" fill="#000" />
-                  <rect x="65" y="65" width="15" height="15" fill="#000" />
-                </svg>
+              <div style={{ width: "160px", height: "160px", background: "rgba(255,255,255,0.04)", borderRadius: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", color: "#94a3b8" }}>
+                <span style={{ fontSize: "28px" }}>💳</span>
+                <span style={{ fontSize: "12px" }}>{depositData?.address ? (isAr ? "جاهز للتحويل" : "Ready") : "—"}</span>
               </div>
             )}
 
-            {depositTimeLeft && (
+            {isPermanent && depositData?.address && !depositLoading && (
+              <div style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(34, 197, 94, 0.12)",
+                border: "1px solid rgba(34, 197, 94, 0.35)",
+                padding: "8px 16px",
+                borderRadius: "20px",
+                color: "#4ade80",
+                fontSize: "13px",
+                fontWeight: 600,
+                marginTop: "6px",
+                marginBottom: "2px",
+              }}>
+                <span style={{ fontSize: "12px" }}>🟢</span>
+                <span>{isAr ? "عنوان محفظة ثابت ودائم مخصص لحسابك (لا تنتهي صلاحيته)" : "Permanent Dedicated Wallet (Never Expires)"}</span>
+              </div>
+            )}
+
+            {!isPermanent && depositTimeLeft && (
               <div className={styles.timerBadge}>
                 <span>⏱️</span>
                 <span>{isAr ? `ينتهي هذا العنوان خلال: ${depositTimeLeft}` : `Address expires in: ${depositTimeLeft}`}</span>
@@ -697,8 +718,8 @@ function WalletContent() {
               💡 {isAr ? "إرشادات الإيداع الآمن:" : "Safe Deposit Guidelines:"}
             </strong>
             {isAr
-              ? `أرسل عملة USDT فقط عبر شبكة (${selectedNetwork}) إلى العنوان الموضح أعلاه. الحد الأدنى للإيداع هو 5.00 USDT. سيتم إضافة الرصيد إلى محفظتك تلقائياً فور تأكيد المعاملة في دفتر البلوكتشين (يستغرق عادةً من دقيقة إلى دقيقتين).`
-              : `Send only USDT over the (${selectedNetwork}) network to this address. Minimum deposit is 5.00 USDT. Your funds will be credited automatically once confirmed on the blockchain (typically 1-2 minutes).`}
+              ? `هذا العنوان مخصص لحسابك وثابت لا يتغير. يمكنك التحويل إليه في أي وقت من أي محفظة أو منصة (Binance, TrustWallet, OKX وغيرها) عبر شبكة (${selectedNetwork}). الحد الأدنى للإيداع هو 5.00 USDT. سيتم قيد الرصيد تلقائياً في حسابك فور تأكيد المعاملة في دفتر البلوكتشين.`
+              : `This deposit address is dedicated to your account and permanent. You can transfer to it anytime from any exchange or wallet (Binance, TrustWallet, OKX, etc.) via (${selectedNetwork}). Minimum deposit is 5.00 USDT. Funds will be credited automatically once confirmed on the blockchain.`}
           </div>
         </div>
       )}

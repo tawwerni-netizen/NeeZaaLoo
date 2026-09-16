@@ -58,8 +58,16 @@ export { VerifyOutcome, DEFAULT_USDT_TRC20_CONTRACT };
  * exhausted. Shared by the mock and the real reader so both produce
  * EXACTLY the same discriminated outcome shape from the same inputs.
  */
-async function verifyIncomingVia(provider, { network, address, requiredConfirmations }) {
+async function verifyIncomingVia(provider, { network, address, requiredConfirmations, txHash }) {
   if (network !== provider.network) return { outcome: VerifyOutcome.WRONG_NETWORK };
+
+  if (txHash) {
+    const v = await provider.verifyTransfer({
+      txHash, expectedNetwork: network, expectedRecipient: address, requiredConfirmations,
+    });
+    if (v.outcome === VerifyOutcome.VERIFIED) return { ...v, outputIndex: 0 };
+    if (v.outcome === VerifyOutcome.PROVIDER_UNAVAILABLE) return v;
+  }
 
   const candidates = await provider.listIncomingTransfers({ address });
   if (candidates.length === 0) return { outcome: VerifyOutcome.NOT_FOUND };
@@ -178,8 +186,8 @@ export function createMockChainReader({
       return { outcome: VerifyOutcome.VERIFIED, ...base };
     },
 
-    async verifyIncoming({ network: n, address, requiredConfirmations: required = requiredConfirmations }) {
-      return verifyIncomingVia(provider, { network: n, address, requiredConfirmations: required });
+    async verifyIncoming({ network: n, address, requiredConfirmations: required = requiredConfirmations, txHash }) {
+      return verifyIncomingVia(provider, { network: n, address, requiredConfirmations: required, txHash });
     },
 
     /**
@@ -235,8 +243,8 @@ export function createTronChainReader({
   return {
     ...provider,
     _isMock: false,
-    async verifyIncoming({ network, address, requiredConfirmations: required = requiredConfirmations }) {
-      return verifyIncomingVia(provider, { network, address, requiredConfirmations: required });
+    async verifyIncoming({ network, address, requiredConfirmations: required = requiredConfirmations, txHash }) {
+      return verifyIncomingVia(provider, { network, address, requiredConfirmations: required, txHash });
     },
     /**
      * The real health-check primitive: an actual round trip to the chain

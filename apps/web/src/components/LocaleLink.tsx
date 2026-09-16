@@ -16,6 +16,8 @@ type LocaleLinkProps = Omit<ComponentProps<typeof Link>, "href"> & { href: strin
 
 export function LocaleLink({ href, ...rest }: LocaleLinkProps) {
   const { locale } = useI18n();
-  const localizedHref = href.startsWith("/") ? `/${locale}${href}` : href;
+  const localizedHref = href.startsWith(`/${locale}/`) || href === `/${locale}`
+    ? href
+    : (href.startsWith("/") ? `/${locale}${href}` : href);
   return <Link href={localizedHref} {...rest} />;
 }

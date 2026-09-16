@@ -89,7 +89,15 @@ export function createOxapayProvider({
     async createDepositIntent({ userId, asset = "USDT", network = "TRC20", idempotencyKey, amountMinor }) {
       const parsedAmount = amountMinor ? Number(amountMinor) / 1e6 : 10;
       const normalizedNetwork = network === "TRON" ? "TRC20" : network;
-      const staticNetwork = normalizedNetwork === "TRC20" ? "TRON" : normalizedNetwork;
+      // OxaPay static-address natively supports: "TRON", "BEP20", "ERC20"
+      let staticNetwork = "TRON";
+      if (normalizedNetwork === "BEP20" || normalizedNetwork === "BSC") {
+        staticNetwork = "BEP20";
+      } else if (normalizedNetwork === "ERC20" || normalizedNetwork === "ETH") {
+        staticNetwork = "ERC20";
+      } else {
+        staticNetwork = "TRON";
+      }
 
       let address = null;
       let trackId = null;
@@ -117,10 +125,11 @@ export function createOxapayProvider({
         });
 
         const resData = staticRes?.data || staticRes;
-        if (resData && (staticRes?.result === 100 || resData.address || staticRes.address)) {
-          address = resData.address || staticRes.address;
-          trackId = resData.trackId || resData.track_id || staticRes.trackId || `static_${Date.now()}`;
-          qrCode = resData.qrCode || staticRes.qrCode || null;
+        const candidateAddress = resData?.address || staticRes?.address;
+        if (candidateAddress) {
+          address = candidateAddress;
+          trackId = resData?.track_id || resData?.trackId || staticRes?.track_id || staticRes?.trackId || `static_${Date.now()}`;
+          qrCode = resData?.qr_code || resData?.qrCode || staticRes?.qr_code || staticRes?.qrCode || null;
           isStatic = true;
         }
       } catch (err) {
@@ -152,13 +161,18 @@ export function createOxapayProvider({
         });
 
         const respData = response?.data || response;
-        trackId = respData.trackId || respData.track_id || response.trackId || response.id;
-        address = respData.address || respData.payAddress || response.address || response.payAddress;
-        qrCode = respData.qrCode || response.qrCode || null;
+        trackId = respData?.track_id || respData?.trackId || response?.track_id || response?.trackId || response?.id;
+        address = respData?.address || respData?.payAddress || response?.address || response?.payAddress;
+        qrCode = respData?.qr_code || respData?.qrCode || response?.qr_code || response?.qrCode || null;
       }
 
       if (!address) {
         throw new Error("OxaPay did not return a deposit address");
+      }
+
+      // Always guarantee a valid, scannable QR code
+      if (!qrCode && address) {
+        qrCode = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(address)}&size=160x160`;
       }
 
       return {
@@ -169,7 +183,7 @@ export function createOxapayProvider({
         network: normalizedNetwork,
         isStatic,
         expiresAt: isStatic
-          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year
+          ? new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000).toISOString() // 10 years (permanent dedicated)
           : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       };
     },
@@ -291,11 +305,13 @@ export function createOxapayProvider({
         headers: { payout_api_key: payoutApiKey },
       });
 
-      const rawStatus = String(body.status || "processing").toLowerCase();
+      const resData = body?.data || body;
+      const rawStatus = String(resData?.status || body?.status || "processing").toLowerCase();
+      const txHash = resData?.txID || resData?.txId || resData?.tx_hash || body?.txID || body?.txId || body?.tx_hash || null;
       return {
         providerRef,
         state: mapPayoutStatus(rawStatus),
-        txHash: body.txID || body.txId || body.tx_hash || null,
+        txHash,
       };
     },
   };

@@ -164,27 +164,51 @@ export function createPaymentService(db, {
       if (rail && !railOperationAllowed(rail, "deposits_enabled")) {
         return { ok: false, reason: DepositError.CONTROL_DISABLED };
       }
+
+      // 1. Reuse existing permanent dedicated address if present and valid (not sandbox mock)
+      const existing = await db.query(
+        `SELECT id, address, asset, network, provider_ref, expires_at
+           FROM deposit
+          WHERE player_id = $1 AND asset = $2 AND network = $3
+            AND status NOT IN ('EXPIRED', 'ORPHANED', 'QUARANTINED')
+            AND address NOT LIKE 'Tsbx_%'
+          ORDER BY created_at DESC LIMIT 1`,
+        [playerId, asset, network]
+      );
+      if (existing.rows.length) {
+        const row = existing.rows[0];
+        const qr = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(row.address)}&size=160x160`;
+        return {
+          ok: true,
+          depositId: row.id,
+          address: row.address,
+          qrCodeUrl: qr,
+          display: `${asset} — ${network} (${network === "TRON" ? "TRC20" : network})`,
+          asset,
+          network,
+          isStatic: true,
+          expiresAt: row.expires_at || new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000).toISOString(),
+        };
+      }
+
       const id = `dep_${randomUUID()}`;
       const intent = await provider.createDepositIntent({
         userId: playerId, asset, network, idempotencyKey: id,
       });
+      const expiresAt = intent.expiresAt || (intent.isStatic ? new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000).toISOString() : null);
       await db.query(
         `INSERT INTO deposit (id, player_id, asset, network, provider, provider_ref,
                               address, status, expires_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,'AWAITING_PAYMENT', now() + interval '24 hours')`,
-        [id, playerId, asset, network, provider.id, intent.providerRef, intent.address]
+         VALUES ($1,$2,$3,$4,$5,$6,$7,'AWAITING_PAYMENT', COALESCE($8::timestamptz, now() + interval '10 years'))`,
+        [id, playerId, asset, network, provider.id, intent.providerRef, intent.address, expiresAt]
       );
       return {
         ok: true, depositId: id, address: intent.address,
-        // Whatever the provider gave us to render on the deposit modal --
-        // dropped here previously, which meant the wallet UI fell back to a
-        // static placeholder graphic instead of a QR that actually encodes
-        // the user's real, unique deposit address.
-        qrCodeUrl: intent.qrCodeUrl ?? null,
-        // Asset and network always travel together, everywhere, per the brand
-        // rule -- never a bare "USDT".
+        qrCodeUrl: intent.qrCodeUrl ?? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(intent.address)}&size=160x160`,
         display: `${asset} — ${network} (${network === "TRON" ? "TRC20" : network})`,
         asset, network,
+        isStatic: Boolean(intent.isStatic),
+        expiresAt,
       };
     },
 
@@ -234,7 +258,10 @@ export function createPaymentService(db, {
       // verification attempt silently.
       let result;
       try {
-        result = await svc.verifyAndCredit(ev.providerRef);
+        result = await svc.verifyAndCredit(ev.providerRef, {
+          address: ev.address,
+          txHash: ev.reportedTxHash,
+        });
       } catch (e) {
         await db.query(
           `UPDATE provider_event SET processed_at = now(), outcome = $2
@@ -273,10 +300,14 @@ export function createPaymentService(db, {
      * itself) and reports `retryable: true` so a caller polls again --
      * never FAILED, and definitely never CONFIRMED.
      */
-    async verifyAndCredit(providerRef) {
+    async verifyAndCredit(providerRef, opts = {}) {
+      const lookupAddress = opts.address || null;
       const d = await db.query(
-        `SELECT * FROM deposit WHERE provider = $1 AND provider_ref = $2`,
-        [provider.id, providerRef]
+        `SELECT * FROM deposit
+          WHERE provider = $1
+            AND (provider_ref = $2 OR ($3::text IS NOT NULL AND address = $3))
+          ORDER BY created_at DESC LIMIT 1`,
+        [provider.id, providerRef, lookupAddress]
       );
       if (!d.rows.length) return { credited: false, reason: "UNKNOWN_DEPOSIT" };
       const dep = d.rows[0];
@@ -300,7 +331,10 @@ export function createPaymentService(db, {
       let result;
       try {
         result = await chain.verifyIncoming({
-          network: dep.network, address: dep.address, requiredConfirmations: confirmationDepth,
+          network: dep.network,
+          address: dep.address,
+          requiredConfirmations: confirmationDepth,
+          txHash: opts.txHash || dep.observed_tx_hash || null,
         });
       } catch (e) {
         // A well-behaved reader resolves its own transient failures to
