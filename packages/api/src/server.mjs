@@ -4506,7 +4506,15 @@ function buildRoutes() {
           SELECT
             count(*)::int as total_tournaments,
             count(*) FILTER (WHERE status IN ('REGISTRATION', 'LIVE', 'FINALS'))::int as active_brackets,
-            COALESCE(sum(entry_fee_minor * capacity * 88 / 100) FILTER (WHERE status IN ('REGISTRATION', 'LIVE', 'FINALS') AND tier = 'CASH'), 0)::text as total_prize_pool_minor,
+            -- Each tournament's own priced_rake_bps (set at creation from
+            -- economy_resolve(), the same source settlement itself reads
+            -- via computeRake() in tournament.mjs) -- not a hardcoded 88%,
+            -- which both disagreed with the platform's real default (10%
+            -- rake, economy_rule's own seeded default) and would silently
+            -- diverge again the moment any tournament is priced at a
+            -- different rate. NULL (a tournament created before this
+            -- column existed) falls back to that same 10% default.
+            COALESCE(sum(entry_fee_minor * capacity * (10000 - COALESCE(priced_rake_bps, 1000)) / 10000) FILTER (WHERE status IN ('REGISTRATION', 'LIVE', 'FINALS') AND tier = 'CASH'), 0)::text as total_prize_pool_minor,
             (SELECT count(DISTINCT tr2.player_id)::int FROM tournament_registration tr2) as total_players,
             (SELECT count(*)::int FROM tournament_registration tr3 WHERE tr3.registered_at >= now() - interval '24 hours') as registrations_today,
             count(*) FILTER (WHERE status IN ('COMPLETED', 'SETTLED'))::int as completed_brackets

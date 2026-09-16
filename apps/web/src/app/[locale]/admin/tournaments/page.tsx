@@ -118,7 +118,7 @@ export default function AdminTournamentsPage() {
       });
       setFeedback({
         type: 'success',
-        message: `⚡ Quick Test Published: ${gameName} 16-Player Tournament ($10 USDT entry, 88% winner pool). Now OPEN for registration!`,
+        message: `⚡ Quick Test Published: ${gameName} 16-Player Tournament ($10 USDT entry, 90% winner pool). Now OPEN for registration!`,
       });
       await fetchTournaments();
     } catch (err) {
@@ -133,12 +133,12 @@ export default function AdminTournamentsPage() {
 
   const totalPrizeUsd = stats?.total_prize_pool_minor
     ? (Number(stats.total_prize_pool_minor) / 1_000_000).toFixed(2)
-    : tournaments.reduce((acc, t) => acc + (Number(t.entry_fee_minor || '0') / 1_000_000) * t.capacity * 0.88, 0).toFixed(2);
+    : tournaments.reduce((acc, t) => acc + (Number(t.entry_fee_minor || '0') / 1_000_000) * t.capacity * 0.90, 0).toFixed(2);
 
   return (
     <AdminPageLayout
       title="Tournaments & Brackets Control"
-      subtitle="Automated 16-player continuous brackets, Swiss rounds, and transparent 88% prize pool settlements."
+      subtitle="Automated 16-player continuous brackets, Swiss rounds, and transparent 90% prize pool settlements."
       breadcrumb={['Home', 'Admin', 'Tournaments']}
       stats={[
         {
@@ -149,7 +149,7 @@ export default function AdminTournamentsPage() {
         {
           label: 'Total Prize Pool',
           value: `$${totalPrizeUsd} USDT`,
-          trend: '88% Winner Pool',
+          trend: '90% Winner Pool',
         },
         {
           label: 'Total Participants',
@@ -213,8 +213,8 @@ export default function AdminTournamentsPage() {
           </div>
           <div style={{ fontSize: '12px', color: '#94a3b8' }}>
             Entry: <strong style={{ color: '#fff' }}>10 USDT</strong> | Players: <strong style={{ color: '#fff' }}>16</strong> | Winner:{' '}
-            <strong style={{ color: '#10b981' }}>88% ($140.80)</strong> | Platform:{' '}
-            <strong style={{ color: '#6366f1' }}>12% ($19.20)</strong>
+            <strong style={{ color: '#10b981' }}>90% ($144.00)</strong> | Platform:{' '}
+            <strong style={{ color: '#6366f1' }}>10% ($16.00)</strong>
           </div>
         </div>
 
@@ -427,8 +427,8 @@ export default function AdminTournamentsPage() {
                 <th>Game</th>
                 <th>Bracket Format</th>
                 <th>Entry Fee</th>
-                <th>Prize Pool (88%)</th>
-                <th>Platform Rake (12%)</th>
+                <th>Prize Pool (90%)</th>
+                <th>Platform Rake (10%)</th>
                 <th>Participants</th>
                 <th>Status</th>
                 <th>Schedule</th>
@@ -450,8 +450,8 @@ export default function AdminTournamentsPage() {
               ) : (
                 tournaments.map((t) => {
                   const entryUsd = Number(t.entry_fee_minor || '0') / 1_000_000;
-                  const prizeUsd = (entryUsd * t.capacity * 0.88).toFixed(2);
-                  const rakeUsd = (entryUsd * t.capacity * 0.12).toFixed(2);
+                  const prizeUsd = (entryUsd * t.capacity * 0.90).toFixed(2);
+                  const rakeUsd = (entryUsd * t.capacity * 0.10).toFixed(2);
                   const isLive = t.status === 'LIVE' || t.status === 'FINALS';
                   const isOpen = t.status === 'REGISTRATION';
 
