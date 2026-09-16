@@ -4,16 +4,24 @@
  * migrate() the test suite runs against PGlite -- forward-only, numbered,
  * idempotent (already-applied files are skipped via schema_migration).
  *
- * Usage (DATABASE_URL must already be set in the SAME shell):
+ * Usage -- DATABASE_URL is read from the project's .env automatically
+ * (an already-exported variable still wins, see scripts/load-env.mjs):
  *   node scripts/run-migration.mjs
  */
 import pg from "pg";
+import { loadEnv } from "./load-env.mjs";
 import { createPgAdapter } from "../packages/ledger/src/pg-adapter.mjs";
 import { migrate } from "../packages/ledger/src/migrate.mjs";
 
 async function main() {
+  loadEnv();
+
   if (!process.env.DATABASE_URL) {
-    console.error("FATAL: DATABASE_URL is not set in this shell.");
+    console.error(
+      "FATAL: DATABASE_URL is not set.\n" +
+      "  Expected it in the project's .env file (DATABASE_URL=postgres://...),\n" +
+      "  or exported in this shell. .env is gitignored and is the normal place for it."
+    );
     process.exit(1);
   }
 

@@ -10,10 +10,17 @@
  *   node scripts/check-game-flags.mjs
  */
 import pg from "pg";
+import { loadEnv } from "./load-env.mjs";
 
 async function main() {
+  loadEnv();
+
   if (!process.env.DATABASE_URL) {
-    console.error("FATAL: DATABASE_URL is not set in this shell.");
+    console.error(
+      "FATAL: DATABASE_URL is not set.\n" +
+      "  Expected it in the project's .env file (DATABASE_URL=postgres://...),\n" +
+      "  or exported in this shell. .env is gitignored and is the normal place for it."
+    );
     process.exit(1);
   }
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
