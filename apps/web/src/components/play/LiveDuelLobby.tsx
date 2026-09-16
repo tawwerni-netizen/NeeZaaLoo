@@ -45,15 +45,6 @@ const AVAILABLE_GAMES = [
   { id: "speed-math", labelEn: "Speed Math", labelAr: "الحساب السريع" },
 ];
 
-export const RECENT_WINNERS = [
-  { id: "w1", winner: "Karim_Master", avatar: "K", amount: 47.50, asset: "USDT", gameAr: "شطرنج خاطف", gameEn: "Blitz Chess", timeAr: "منذ دقيقتين", timeEn: "2m ago" },
-  { id: "w2", winner: "Tariq_Pro", avatar: "T", amount: 19.00, asset: "USDT", gameAr: "طاولة زهر (1v1)", gameEn: "Backgammon", timeAr: "منذ 4 دقائق", timeEn: "4m ago" },
-  { id: "w3", winner: "Sara_Queen", avatar: "S", amount: 95.00, asset: "USDT", gameAr: "داما تكتيكية", gameEn: "Checkers", timeAr: "منذ 6 دقائق", timeEn: "6m ago" },
-  { id: "w4", winner: "Fahad_99", avatar: "F", amount: 38.00, asset: "USDT", gameAr: "دومينو محترفين", gameEn: "Dominoes", timeAr: "منذ 8 دقائق", timeEn: "8m ago" },
-  { id: "w5", winner: "Ziad_Speed", avatar: "Z", amount: 19.00, asset: "USDT", gameAr: "الحساب السريع", gameEn: "Speed Math", timeAr: "منذ 11 دقيقة", timeEn: "11m ago" },
-  { id: "w6", winner: "Othman_Ace", avatar: "O", amount: 190.00, asset: "USDT", gameAr: "أربعة على التوالي", gameEn: "Connect Four", timeAr: "منذ 15 دقيقة", timeEn: "15m ago" },
-];
-
 export const QUICK_STAKES = [
   { stake: 2, prize: 3.80, tagAr: "بداية سريعة 🚀", tagEn: "Fast Start 🚀" },
   { stake: 5, prize: 9.50, tagAr: "نزال الأبطال 🔥 الأكثر طلباً", tagEn: "Popular 🔥 Most Wanted", popular: true },
@@ -70,7 +61,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   const router = useRouter();
 
   const [duels, setDuels] = useState<OpenDuel[]>(INITIAL_OPEN_DUELS);
-  const [lobbyStats, setLobbyStats] = useState({ activeMatches: 0, activePlayers: 0, openChallenges: 0 });
+  const [lobbyStats, setLobbyStats] = useState({ activeMatches: 0, activePlayers: 0, openChallenges: 0, paidTodayUsd: 0 });
 
   const loadOpenChallenges = async () => {
     try {
@@ -104,12 +95,22 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
     }
 
     try {
-      const statsRes = await get<{ activeMatches: number; activePlayers: number; openChallenges: number }>("/v1/lobby/stats");
+      const statsRes = await get<{
+        activeMatches: number; activePlayers: number; openChallenges: number;
+        paidTodayByAsset?: Record<string, string>;
+      }>("/v1/lobby/stats");
       if (statsRes) {
+        // Every coin the platform pays out is a $1-pegged stablecoin, so
+        // summing them is a real total, not an approximation -- but it is
+        // ALWAYS the real figure, including a real zero on a day nothing
+        // has been withdrawn yet (e.g. cash play not yet enabled).
+        const paidTodayUsd = Object.values(statsRes.paidTodayByAsset ?? {})
+          .reduce((sum, minor) => sum + Number(minor || "0") / 1_000_000, 0);
         setLobbyStats({
           activeMatches: statsRes.activeMatches || 0,
           activePlayers: statsRes.activePlayers || 0,
           openChallenges: statsRes.openChallenges || 0,
+          paidTodayUsd,
         });
       }
     } catch {}
@@ -159,14 +160,6 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   // Balance in the coin being staked -- coins are never pooled or converted.
   const userBalanceUSDT = balances ? balances[newAsset] : null;
   const [balanceWarningModal, setBalanceWarningModal] = useState<{ open: boolean; requiredStake: number } | null>(null);
-
-  const [activeWinnerIdx, setActiveWinnerIdx] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => {
-      setActiveWinnerIdx((prev) => (prev + 1) % RECENT_WINNERS.length);
-    }, 4500);
-    return () => clearInterval(t);
-  }, []);
 
   const [copiedDuelId, setCopiedDuelId] = useState<string | null>(null);
   const [targetChallengeId, setTargetChallengeId] = useState<string | null>(null);
@@ -372,49 +365,6 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
         </div>
       )}
 
-      {/* Live Wins / Cashout Proof Ticker (Neuro-Design Social Proof & FOMO) */}
-      <div className={styles.liveWinsTicker}>
-        <div className={styles.tickerBadge}>
-          <span className={styles.tickerLiveDot} />
-          <span className={styles.tickerBadgeText}>
-            {isRtl ? "سحب فوري تم للتو ⚡" : "Live Cashout ⚡"}
-          </span>
-        </div>
-        <div className={styles.tickerSlideWrap}>
-          {(() => {
-            const currentWin = RECENT_WINNERS[activeWinnerIdx] ?? RECENT_WINNERS[0];
-            if (!currentWin) return null;
-            return (
-              <div key={currentWin.id} className={styles.tickerSlide}>
-                <span className={styles.winnerAvatar}>{currentWin.avatar}</span>
-                <span className={styles.winnerText}>
-                  {isRtl ? (
-                    <>
-                      فاز اللاعب <strong>{currentWin.winner}</strong> بجائزة{" "}
-                      <span className={styles.winnerAmount}>
-                        +{currentWin.amount.toFixed(2)} {currentWin.asset}
-                      </span>{" "}
-                      في لعبة <em>{currentWin.gameAr}</em> ({currentWin.timeAr})
-                    </>
-                  ) : (
-                    <>
-                      Player <strong>{currentWin.winner}</strong> won{" "}
-                      <span className={styles.winnerAmount}>
-                        +{currentWin.amount.toFixed(2)} {currentWin.asset}
-                      </span>{" "}
-                      in <em>{currentWin.gameEn}</em> ({currentWin.timeEn})
-                    </>
-                  )}
-                </span>
-                <span className={styles.instantVerifiedBadge}>
-                  {isRtl ? "✓ مسحوبة للمحفظة" : "✓ Paid to Wallet"}
-                </span>
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-
       {/* Top Banner & Radar Status */}
       <div className={styles.lobbyHeader}>
         <div className={styles.lobbyTitleGroup}>
@@ -575,7 +525,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
           </div>
           <div className={styles.metricCardBody}>
             <div className={styles.metricNumber}>
-              {lobbyStats.openChallenges || duels.length || 13}
+              {lobbyStats.openChallenges || duels.length}
             </div>
             <div className={styles.metricTitle}>
               {isRtl ? "تحديات مفتوحة للنزال" : "Open Duels Waiting"}
@@ -596,7 +546,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
           </div>
           <div className={styles.metricCardBody}>
             <div className={styles.metricNumber}>
-              {lobbyStats.activePlayers || 48}+
+              {lobbyStats.activePlayers}{lobbyStats.activePlayers > 0 ? "+" : ""}
             </div>
             <div className={styles.metricTitle}>
               {isRtl ? "أبطال ولاعبون متصلون الآن" : "Active Challengers Online"}
@@ -617,7 +567,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
           </div>
           <div className={styles.metricCardBody}>
             <div className={styles.metricNumber}>
-              $14,850+
+              ${lobbyStats.paidTodayUsd.toLocaleString(isRtl ? "ar" : "en", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}{lobbyStats.paidTodayUsd > 0 ? "+" : ""}
             </div>
             <div className={styles.metricTitle}>
               {isRtl ? "جوائز كاش وُزعت اليوم" : "Total Cash Won Today"}
@@ -802,7 +752,10 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             const minutes = Math.floor(remainingSeconds / 60);
             const seconds = remainingSeconds % 60;
             const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-            const expectedPrize = (duel.stakeUSDT * 1.9).toFixed(2);
+            // 2x stake, minus the platform's default 10% rake (economy_rule's own
+            // seeded default -- see db/migrations/0004 and 0035). Not the exact
+            // rake for every game/tier, but never an overpromise the way 1.9x was.
+            const expectedPrize = (duel.stakeUSDT * 1.8).toFixed(2);
             const isTargeted = targetChallengeId === duel.id;
 
             return (

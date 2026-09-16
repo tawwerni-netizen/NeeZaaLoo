@@ -195,10 +195,10 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
           {tournament.tier === "CASH" ? (
             <>
               <span style={{ color: "#10b981", fontWeight: 700 }}>
-                Winner Pool (88%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.88).toFixed(2)} USDT
+                Winner Pool (90%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.90).toFixed(2)} USDT
               </span>
               <span style={{ color: "#818cf8" }}>
-                Platform Fee (12%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.12).toFixed(2)} USDT
+                Platform Fee (10%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.10).toFixed(2)} USDT
               </span>
             </>
           ) : (

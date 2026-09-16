@@ -2034,11 +2034,24 @@ function buildRoutes() {
           `SELECT ((SELECT count(*)::int FROM matchmaking_ticket) +
                    (SELECT count(*)::int FROM lobby_open_challenge WHERE status = 'OPEN' AND expires_at > now()))::int AS tickets`
         );
+        // Real USDT paid out today -- every other coin's withdrawals are
+        // summed separately since a raw cross-asset sum would silently mix
+        // units. Genuinely zero (e.g. cash play not yet enabled) renders
+        // as zero on the lobby, never a placeholder figure standing in
+        // for real activity that hasn't happened yet.
+        const paidToday = await db.query(
+          `SELECT asset, COALESCE(SUM(amount_minor - fee_minor), 0)::text AS minor
+             FROM withdrawal
+            WHERE status = 'COMPLETED' AND completed_at >= date_trunc('day', now())
+            GROUP BY asset`
+        );
+        const paidTodayByAsset = Object.fromEntries(paidToday.rows.map((r) => [r.asset, r.minor]));
         return {
           body: {
             activeMatches: liveDuels.rows[0]?.matches || 0,
             activePlayers: liveDuels.rows[0]?.players || 0,
-            openChallenges: openChallenges.rows[0]?.tickets || 0
+            openChallenges: openChallenges.rows[0]?.tickets || 0,
+            paidTodayByAsset,
           }
         };
       } },

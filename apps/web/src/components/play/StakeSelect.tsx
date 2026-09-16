@@ -165,15 +165,15 @@ export function StakeSelect({ plugin, onContinue }: {
                   <span>{t("play.stake.platform_fee")}</span>
                   <span className={styles.economicsBadge}>{t("play.stake.fixed_badge")}</span>
                 </span>
-                <span style={{ direction: "ltr" }}>-${(stakeUsd * 0.12).toFixed(2)} {asset}</span>
+                <span style={{ direction: "ltr" }}>-${(stakeUsd * 0.10).toFixed(2)} {asset}</span>
               </div>
               <div className={styles.economicsRow}>
                 <span>{t("play.stake.net_prize_contrib")}</span>
-                <span style={{ direction: "ltr" }}>${(stakeUsd * 0.88).toFixed(2)} {asset}</span>
+                <span style={{ direction: "ltr" }}>${(stakeUsd * 0.90).toFixed(2)} {asset}</span>
               </div>
               <div className={styles.economicsTotal}>
                 <span>{t("play.stake.winner_payout")}</span>
-                <span style={{ direction: "ltr" }}>${(stakeUsd * 2 * 0.88).toFixed(2)} {asset}</span>
+                <span style={{ direction: "ltr" }}>${(stakeUsd * 2 * 0.90).toFixed(2)} {asset}</span>
               </div>
             </div>
           )}
