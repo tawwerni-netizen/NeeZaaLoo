@@ -569,7 +569,19 @@ function chatErrorStatus(reason) {
 function buildRoutes() {
   return [
     { method: "GET", path: "/v1/health", action: "player.login", anonymous: true,
-      handler: async () => ({ body: { ok: true } }) },
+      // `payments` reports whether THIS RUNNING PROCESS has a real payment
+      // provider wired, as a bare boolean -- no key, no key fragment, no
+      // provider name beyond what any deposit response already reveals.
+      //
+      // It exists because the alternative was unanswerable from outside: the
+      // API silently fell back to sandbox deposit addresses while the keys
+      // were correctly set in the hosting panel, and the only way anyone
+      // found out was reading minted addresses out of the database hours
+      // later. Whether payments are live is an operational fact about the
+      // deployment, and one a status check should be able to state.
+      handler: async ({ paymentSvc }) => ({
+        body: { ok: true, payments: paymentSvc ? "configured" : "unavailable" },
+      }) },
 
     // --- Auth ----------------------------------------------------------------
     { method: "POST", path: "/v1/auth/register", action: "player.register", anonymous: true,
