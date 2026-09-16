@@ -45,8 +45,8 @@ type Props = {
 
 type FilterType = "ALL" | "REGISTRATION" | "FREE" | "CASH" | "LIVE";
 
-function countdownFor(iso: string, locale: SupportedLocale): string {
-  const diffMs = new Date(iso).getTime() - Date.now();
+function countdownFor(iso: string, locale: SupportedLocale, nowMs: number): string {
+  const diffMs = new Date(iso).getTime() - nowMs;
   const diffMin = Math.round(diffMs / 60000);
   if (Math.abs(diffMin) < 60) return formatRelativeTime(diffMin, "minute", locale);
   const diffHr = Math.round(diffMin / 60);
@@ -90,121 +90,6 @@ export function formatTournamentTitle(row: TournamentRow, gameName: string, loca
   return rawTitle || `${gameName} Grand Championship`;
 }
 
-export const DEFAULT_FLAGSHIP_TOURNAMENTS: TournamentRow[] = [
-  {
-    id: "tourn_xo_daily",
-    game_id: "xo",
-    format: "SINGLE_ELIMINATION",
-    status: "REGISTRATION",
-    tier: "FREE",
-    entry_fee_minor: "0",
-    asset: "USDT",
-    capacity: 16,
-    registered_count: 12,
-    title: "بطولة نخبة الإكس أو الخاطفة",
-    scheduled_starts_at: new Date(Date.now() + 1000 * 60 * 35).toISOString(),
-    registration_closes_at: new Date(Date.now() + 1000 * 60 * 30).toISOString(),
-    starts_at: null,
-    completed_at: null,
-  },
-  {
-    id: "tourn_speed_math_cup",
-    game_id: "speed-math",
-    format: "SINGLE_ELIMINATION",
-    status: "REGISTRATION",
-    tier: "CASH",
-    entry_fee_minor: "5000000",
-    asset: "USDT",
-    capacity: 32,
-    registered_count: 26,
-    title: "أولمبياد الحساب الذهني السريع",
-    scheduled_starts_at: new Date(Date.now() + 1000 * 60 * 75).toISOString(),
-    registration_closes_at: new Date(Date.now() + 1000 * 60 * 70).toISOString(),
-    starts_at: null,
-    completed_at: null,
-  },
-  {
-    id: "tourn_chess_blitz",
-    game_id: "chess",
-    format: "SINGLE_ELIMINATION",
-    status: "LIVE",
-    tier: "CASH",
-    entry_fee_minor: "10000000",
-    asset: "USDT",
-    capacity: 16,
-    registered_count: 16,
-    title: "كأس الأبطال للشطرنج الخاطف",
-    scheduled_starts_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    registration_closes_at: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
-    starts_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    completed_at: null,
-  },
-  {
-    id: "tourn_connect4_cup",
-    game_id: "connect-four",
-    format: "SINGLE_ELIMINATION",
-    status: "REGISTRATION",
-    tier: "FREE",
-    entry_fee_minor: "0",
-    asset: "USDT",
-    capacity: 16,
-    registered_count: 14,
-    title: "بطولة الأربعة المتتالية الكبرى",
-    scheduled_starts_at: new Date(Date.now() + 1000 * 60 * 110).toISOString(),
-    registration_closes_at: new Date(Date.now() + 1000 * 60 * 105).toISOString(),
-    starts_at: null,
-    completed_at: null,
-  },
-  {
-    id: "tourn_checkers_crown",
-    game_id: "checkers",
-    format: "SINGLE_ELIMINATION",
-    status: "REGISTRATION",
-    tier: "CASH",
-    entry_fee_minor: "3000000",
-    asset: "USDT",
-    capacity: 16,
-    registered_count: 11,
-    title: "كأس تاج الداما للمحترفين",
-    scheduled_starts_at: new Date(Date.now() + 1000 * 60 * 150).toISOString(),
-    registration_closes_at: new Date(Date.now() + 1000 * 60 * 145).toISOString(),
-    starts_at: null,
-    completed_at: null,
-  },
-  {
-    id: "tourn_seega_clash",
-    game_id: "seega",
-    format: "SINGLE_ELIMINATION",
-    status: "REGISTRATION",
-    tier: "FREE",
-    entry_fee_minor: "0",
-    asset: "USDT",
-    capacity: 16,
-    registered_count: 8,
-    title: "كأس أساتذة السيجة التكتيكية",
-    scheduled_starts_at: new Date(Date.now() + 1000 * 60 * 210).toISOString(),
-    registration_closes_at: new Date(Date.now() + 1000 * 60 * 200).toISOString(),
-    starts_at: null,
-    completed_at: null,
-  },
-  {
-    id: "tourn_reversi_masters",
-    game_id: "reversi",
-    format: "SINGLE_ELIMINATION",
-    status: "REGISTRATION",
-    tier: "CASH",
-    entry_fee_minor: "5000000",
-    asset: "USDT",
-    capacity: 16,
-    registered_count: 13,
-    title: "بطولة أوتيللو الكبرى للمحترفين",
-    scheduled_starts_at: new Date(Date.now() + 1000 * 60 * 270).toISOString(),
-    registration_closes_at: new Date(Date.now() + 1000 * 60 * 260).toISOString(),
-    starts_at: null,
-    completed_at: null,
-  },
-];
-
 export function UpcomingTournaments({
   variant = "cards",
   heading,
@@ -216,9 +101,21 @@ export function UpcomingTournaments({
   banners,
 }: Props) {
   const { t, locale } = useI18n();
-  const [rows, setRows] = useState<TournamentRow[]>(DEFAULT_FLAGSHIP_TOURNAMENTS);
+  const [rows, setRows] = useState<TournamentRow[] | null>(null);
+  // Countdown text is only ever computed client-side, after mount, from
+  // this clock snapshot -- never read live during render, so the server-
+  // rendered placeholder and the client's first render always agree.
+  // Refreshed periodically so a countdown actually counts down instead of
+  // freezing at whatever it read when the tournament list loaded.
+  const [nowMs, setNowMs] = useState<number | null>(null);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [filter, setFilter] = useState<FilterType>("ALL");
+
+  useEffect(() => {
+    setNowMs(Date.now());
+    const timer = setInterval(() => setNowMs(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!banners || banners.length <= 1) return;
@@ -233,15 +130,12 @@ export function UpcomingTournaments({
     void get<{ tournaments: TournamentRow[] }>("/v1/tournaments?status=SCHEDULED,REGISTRATION,LIVE,FINALS")
       .then((r) => {
         if (!cancelled) {
-          if (r.tournaments && r.tournaments.length > 0) {
-            setRows(r.tournaments);
-          } else {
-            setRows(DEFAULT_FLAGSHIP_TOURNAMENTS);
-          }
+          setRows(r.tournaments ?? []);
         }
       })
       .catch(() => {
-        if (!cancelled) setRows(DEFAULT_FLAGSHIP_TOURNAMENTS);
+        // A failed fetch is an honest empty state, never invented rows.
+        if (!cancelled) setRows([]);
       });
     return () => {
       cancelled = true;
@@ -307,8 +201,8 @@ export function UpcomingTournaments({
                       ) : (
                         <span className={styles.compactFree}>{locale === "ar" ? "🎁 مجاني" : "Free"}</span>
                       )}
-                      {countdownTarget && (
-                        <span className={styles.compactCountdown}>⏱️ {countdownFor(countdownTarget, locale)}</span>
+                      {countdownTarget && nowMs !== null && (
+                        <span className={styles.compactCountdown}>⏱️ {countdownFor(countdownTarget, locale, nowMs)}</span>
                       )}
                       <span className={`${styles.statusPill} ${styles[`status_${row.status}`] ?? ""}`}>
                         {t(`tournamentsPage.status.${row.status}`)}
@@ -622,7 +516,9 @@ export function UpcomingTournaments({
                       <div className={styles.timeInfo}>
                         <span className={styles.timeIcon}>⏱️</span>
                         <span className={styles.countdown}>
-                          {countdownTarget ? countdownFor(countdownTarget, locale) : (locale === "ar" ? "قريباً" : "Soon")}
+                          {countdownTarget && nowMs !== null
+                            ? countdownFor(countdownTarget, locale, nowMs)
+                            : (locale === "ar" ? "قريباً" : "Soon")}
                         </span>
                       </div>
 

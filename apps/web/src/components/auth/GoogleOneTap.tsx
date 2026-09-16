@@ -13,7 +13,20 @@ export function GoogleOneTap() {
   const { locale } = useI18n();
   const [showCustomCard, setShowCustomCard] = useState(false);
   const [startingOAuth, setStartingOAuth] = useState(false);
+  // Neither the real Google prompt nor the styled fallback card should ever
+  // appear when Google sign-in cannot actually complete -- that is a broken
+  // flow (GOOGLE_LOGIN_UNAVAILABLE on every click), not a degraded one.
+  // 'null' while unknown, so nothing renders before the check resolves.
+  const [googleAvailable, setGoogleAvailable] = useState<boolean | null>(null);
   const gisInitialized = useRef(false);
+
+  useEffect(() => {
+    let live = true;
+    get<{ googleLogin?: string }>("/v1/health")
+      .then((res) => { if (live) setGoogleAvailable(res?.googleLogin === "configured"); })
+      .catch(() => { if (live) setGoogleAvailable(false); });
+    return () => { live = false; };
+  }, []);
 
   const isDismissed = useCallback(() => {
     try {
@@ -82,7 +95,7 @@ export function GoogleOneTap() {
   );
 
   useEffect(() => {
-    if (loading || player) {
+    if (loading || player || googleAvailable !== true) {
       setShowCustomCard(false);
       return;
     }
@@ -157,7 +170,7 @@ export function GoogleOneTap() {
     return () => {
       clearTimeout(fallbackTimer);
     };
-  }, [loading, player, isDismissed, dismiss, handleCredentialResponse]);
+  }, [loading, player, googleAvailable, isDismissed, dismiss, handleCredentialResponse]);
 
   if (loading || player || !showCustomCard) {
     return null;

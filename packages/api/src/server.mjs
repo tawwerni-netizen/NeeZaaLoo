@@ -605,8 +605,16 @@ function buildRoutes() {
       // found out was reading minted addresses out of the database hours
       // later. Whether payments are live is an operational fact about the
       // deployment, and one a status check should be able to state.
-      handler: async ({ paymentSvc }) => ({
-        body: { ok: true, payments: paymentSvc ? "configured" : "unavailable" },
+      handler: async ({ paymentSvc, googleOAuth }) => ({
+        body: {
+          ok: true,
+          payments: paymentSvc ? "configured" : "unavailable",
+          // The web client uses this to decide whether to show ANY Google
+          // sign-in UI at all -- showing a "Continue with Google" prompt
+          // that always fails (GOOGLE_LOGIN_UNAVAILABLE on every click) is
+          // a broken, confusing flow, not a degraded one.
+          googleLogin: googleOAuth ? "configured" : "unavailable",
+        },
       }) },
 
     // The asset/network pairs money can actually move on end to end -- what
