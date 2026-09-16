@@ -45,29 +45,6 @@ const AVAILABLE_GAMES = [
   { id: "speed-math", labelEn: "Speed Math", labelAr: "الحساب السريع" },
 ];
 
-interface LiveFeedEvent {
-  id: number;
-  type: string;
-  user: string;
-  game: string;
-  gameEn: string;
-  amount: string;
-  amountEn: string;
-  time: string;
-  timeEn: string;
-  icon: string;
-}
-
-const LIVE_FEED_EVENTS: LiveFeedEvent[] = [
-  { id: 1, type: "win", user: "Sultan", game: "شطرنج", gameEn: "Chess", amount: "+45.00 USDT", amountEn: "+45.00 USDT", time: "منذ 30 ثانية", timeEn: "30s ago", icon: "🏆" },
-  { id: 2, type: "streak", user: "Nour", game: "إكس أو", gameEn: "Tic-Tac-Toe", amount: "سلسلة 5 انتصارات", amountEn: "5-Win Streak", time: "منذ دقيقة", timeEn: "1m ago", icon: "⚡" },
-  { id: 3, type: "challenge", user: "Tariq", game: "طاولة زهر", gameEn: "Backgammon", amount: "تحدي 25.00 USDT", amountEn: "25.00 USDT Challenge", time: "منذ دقيقتين", timeEn: "2m ago", icon: "🔥" },
-  { id: 4, type: "win", user: "Zaid", game: "دومينو", gameEn: "Dominoes", amount: "+80.00 USDT", amountEn: "+80.00 USDT", time: "منذ 3 دقائق", timeEn: "3m ago", icon: "💰" },
-  { id: 5, type: "live", user: "Fahad vs Karim", game: "أربعة على التوالي", gameEn: "Connect Four", amount: "مبارزة 10.00 USDT", amountEn: "10.00 USDT Duel", time: "جارية الآن", timeEn: "Live Now", icon: "⚔️" },
-  { id: 6, type: "master", user: "Sara", game: "الحساب السريع", gameEn: "Speed Math", amount: "تصنيف الماسترز 1850", amountEn: "Master ELO 1850", time: "منذ 4 دقائق", timeEn: "4m ago", icon: "👑" },
-  { id: 7, type: "win", user: "Hassan", game: "داما", gameEn: "Checkers", amount: "+20.00 USDT", amountEn: "+20.00 USDT", time: "منذ 5 دقائق", timeEn: "5m ago", icon: "🎯" },
-];
-
 export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   const { locale, dir } = useI18n();
   const isRtl = dir === "rtl";
@@ -77,15 +54,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
 
   const [duels, setDuels] = useState<OpenDuel[]>(INITIAL_OPEN_DUELS);
   const [lobbyStats, setLobbyStats] = useState({ activeMatches: 0, activePlayers: 0, openChallenges: 0 });
-  const [tickerIdx, setTickerIdx] = useState(0);
 
-  useEffect(() => {
-    const t = setInterval(() => {
-      setTickerIdx((prev) => (prev + 1) % LIVE_FEED_EVENTS.length);
-    }, 3800);
-    return () => clearInterval(t);
-  }, []);
-  
   const loadOpenChallenges = async () => {
     try {
       const res = await get<{ challenges: any[] }>("/v1/challenges/open");
@@ -293,19 +262,6 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
     }
   }
 
-  const DEFAULT_FEED_EVENT: LiveFeedEvent = {
-    id: 1,
-    type: "win",
-    user: "Sultan",
-    game: "شطرنج",
-    gameEn: "Chess",
-    amount: "+45.00 USDT",
-    amountEn: "+45.00 USDT",
-    time: "منذ 30 ثانية",
-    timeEn: "30s ago",
-    icon: "🏆",
-  };
-  const activeEvent = LIVE_FEED_EVENTS[tickerIdx] ?? DEFAULT_FEED_EVENT;
   const activeModalGame = AVAILABLE_GAMES.find((g) => g.id === newGameId);
 
   return (
@@ -368,21 +324,6 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             </svg>
             {isRtl ? "إنشاء تحدٍّ مفتوح" : "Create Open Duel"}
           </Button>
-        </div>
-      </div>
-
-      {/* Live Social Proof & Activity Ticker Ribbon */}
-      <div className={styles.liveTickerRibbon}>
-        <span className={styles.tickerTag}>
-          <span>●</span> {isRtl ? "نشاط حي" : "LIVE FEED"}
-        </span>
-        <div className={styles.tickerContent} key={activeEvent.id}>
-          <span className={styles.tickerIcon}>{activeEvent.icon}</span>
-          <span className={styles.tickerUser}>@{activeEvent.user}</span>
-          <span>{isRtl ? "في" : "in"}</span>
-          <span className={styles.tickerGame}>{isRtl ? activeEvent.game : activeEvent.gameEn}:</span>
-          <span className={styles.tickerAmount}>{isRtl ? activeEvent.amount : activeEvent.amountEn}</span>
-          <span className={styles.tickerTime}>{isRtl ? activeEvent.time : activeEvent.timeEn}</span>
         </div>
       </div>
 
