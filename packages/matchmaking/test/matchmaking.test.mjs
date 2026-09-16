@@ -30,10 +30,10 @@ async function enqueue(db, playerId, {
 } = {}) {
   const r = await db.query(
     `INSERT INTO matchmaking_ticket
-       (player_id, game_id, mode, time_control, tier, stake_minor, rating_x100, expires_at)
-     VALUES ($1,'chess',$2,$3::jsonb,$4::entry_tier,$5,$6, now() + ($7 || ' seconds')::interval)
+       (player_id, game_id, mode, time_control, tier, stake_minor, rating_x100, expires_at, asset)
+     VALUES ($1,'chess',$2,$3::jsonb,$4::entry_tier,$5,$6, now() + ($7 || ' seconds')::interval, $8)
      RETURNING id`,
-    [playerId, mode, TC, tier, stake, Math.round(rating * 100), String(ttlSeconds)]
+    [playerId, mode, TC, tier, stake, Math.round(rating * 100), String(ttlSeconds), tier === "CASH" ? "USDT" : null]
   );
   return r.rows[0].id;
 }

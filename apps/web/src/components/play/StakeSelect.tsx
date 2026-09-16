@@ -26,14 +26,14 @@ import Link from "next/link";
 import { Button } from "@/components/Button";
 import { useI18n } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth-context";
-import { get } from "@/lib/api";
+import { CoinPicker, useCoinBalances, richestCoin, type StakeAsset } from "./CoinPicker";
 import type { GamePlugin } from "@/lib/games";
 import styles from "./StakeSelect.module.css";
 
 export const STAKE_PRESETS_USD = [2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000] as const;
 const USDT_MINOR = 1_000_000n;
 
-export type StakeChoice = { tier: "FREE" } | { tier: "CASH"; stakeMinor: string };
+export type StakeChoice = { tier: "FREE" } | { tier: "CASH"; stakeMinor: string; asset: StakeAsset };
 
 export function StakeSelect({ plugin, onContinue }: {
   plugin: GamePlugin;
@@ -44,33 +44,14 @@ export function StakeSelect({ plugin, onContinue }: {
   const { player } = useAuth();
   const [selected, setSelected] = useState<"FREE" | "CASH" | null>(plugin.cashEnabled ? null : "FREE");
   const [stakeUsd, setStakeUsd] = useState<number | null>(null);
-  const [userBalanceUSDT, setUserBalanceUSDT] = useState<number | null>(null);
-  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
-
+  const balances = useCoinBalances(player?.id);
+  const [asset, setAsset] = useState<StakeAsset>("USDT");
+  const [assetTouched, setAssetTouched] = useState(false);
+  // Preselect the coin the player actually holds, until they pick one.
   useEffect(() => {
-    if (!player?.id) {
-      setUserBalanceUSDT(0);
-      return;
-    }
-    setIsLoadingBalance(true);
-    get<{ accounts: { key: string; balance: string; asset: string }[] }>(`/v1/players/${player.id}/wallet`)
-      .then((res) => {
-        const usdtAcc = res?.accounts?.find(
-          (a) => a.asset === "USDT" && (a.key.endsWith(":available") || a.key.includes("available"))
-        );
-        if (usdtAcc) {
-          setUserBalanceUSDT(Number(usdtAcc.balance) / 1_000_000);
-        } else {
-          setUserBalanceUSDT(0);
-        }
-      })
-      .catch(() => {
-        setUserBalanceUSDT(0);
-      })
-      .finally(() => {
-        setIsLoadingBalance(false);
-      });
-  }, [player?.id]);
+    if (!assetTouched && balances) setAsset(richestCoin(balances));
+  }, [balances, assetTouched]);
+  const userBalanceUSDT = balances ? balances[asset] : null;
 
   const hasInsufficientBalance = selected === "CASH" && stakeUsd !== null && (userBalanceUSDT !== null && userBalanceUSDT < stakeUsd);
 
@@ -112,6 +93,12 @@ export function StakeSelect({ plugin, onContinue }: {
 
       {selected === "CASH" && (
         <>
+          <CoinPicker
+            value={asset}
+            onChange={(c) => { setAsset(c); setAssetTouched(true); }}
+            balances={balances}
+            label={isRtl ? "العملة التي تلعب بها (يُدفع الفوز بنفس العملة)" : "Coin to stake (winnings are paid in the same coin)"}
+          />
           <div className={styles.presetGrid}>
             {STAKE_PRESETS_USD.map((usd) => (
               <button
@@ -131,7 +118,7 @@ export function StakeSelect({ plugin, onContinue }: {
                 {isRtl ? "رصيدك المتاح حالياً:" : "Current Available Balance:"}
               </span>
               <span className={userBalanceUSDT >= (stakeUsd ?? 0) ? styles.balanceValueOk : styles.balanceValueLow}>
-                ${userBalanceUSDT.toFixed(2)} USDT
+                ${userBalanceUSDT.toFixed(2)} {asset}
               </span>
             </div>
           )}
@@ -146,8 +133,8 @@ export function StakeSelect({ plugin, onContinue }: {
               </div>
               <p className={styles.insufficientBannerDesc}>
                 {isRtl
-                  ? `النزال يتطلب رصيد $${stakeUsd} USDT بينما رصيدك الحالي $${userBalanceUSDT?.toFixed(2) || "0.00"} USDT. يرجى شحن محفظتك للمتابعة أو اختيار اللعب المجاني.`
-                  : `This match requires $${stakeUsd} USDT but your balance is $${userBalanceUSDT?.toFixed(2) || "0.00"} USDT. Please deposit to your wallet or switch to Free play.`}
+                  ? `النزال يتطلب رصيد $${stakeUsd} ${asset} بينما رصيدك الحالي $${userBalanceUSDT?.toFixed(2) || "0.00"} ${asset}. يرجى شحن محفظتك للمتابعة أو اختيار اللعب المجاني.`
+                  : `This match requires $${stakeUsd} ${asset} but your balance is $${userBalanceUSDT?.toFixed(2) || "0.00"} ${asset}. Please deposit to your wallet or switch to Free play.`}
               </p>
               <div className={styles.insufficientActions}>
                 <Link href={`/${locale}/wallet`} className={styles.depositCtaBtn}>
@@ -171,22 +158,22 @@ export function StakeSelect({ plugin, onContinue }: {
             <div className={styles.economicsCard}>
               <div className={styles.economicsRow}>
                 <span>{t("play.stake.entry_fee")}</span>
-                <strong style={{ color: "#fff", direction: "ltr" }}>${stakeUsd.toFixed(2)} USDT</strong>
+                <strong style={{ color: "#fff", direction: "ltr" }}>${stakeUsd.toFixed(2)} {asset}</strong>
               </div>
               <div className={styles.economicsRow}>
                 <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <span>{t("play.stake.platform_fee")}</span>
                   <span className={styles.economicsBadge}>{t("play.stake.fixed_badge")}</span>
                 </span>
-                <span style={{ direction: "ltr" }}>-${(stakeUsd * 0.12).toFixed(2)} USDT</span>
+                <span style={{ direction: "ltr" }}>-${(stakeUsd * 0.12).toFixed(2)} {asset}</span>
               </div>
               <div className={styles.economicsRow}>
                 <span>{t("play.stake.net_prize_contrib")}</span>
-                <span style={{ direction: "ltr" }}>${(stakeUsd * 0.88).toFixed(2)} USDT</span>
+                <span style={{ direction: "ltr" }}>${(stakeUsd * 0.88).toFixed(2)} {asset}</span>
               </div>
               <div className={styles.economicsTotal}>
                 <span>{t("play.stake.winner_payout")}</span>
-                <span style={{ direction: "ltr" }}>${(stakeUsd * 2 * 0.88).toFixed(2)} USDT</span>
+                <span style={{ direction: "ltr" }}>${(stakeUsd * 2 * 0.88).toFixed(2)} {asset}</span>
               </div>
             </div>
           )}
@@ -199,7 +186,7 @@ export function StakeSelect({ plugin, onContinue }: {
         onClick={() => {
           if (selected === "FREE") onContinue({ tier: "FREE" });
           else if (selected === "CASH" && stakeUsd !== null && !hasInsufficientBalance) {
-            onContinue({ tier: "CASH", stakeMinor: (BigInt(stakeUsd) * USDT_MINOR).toString() });
+            onContinue({ tier: "CASH", stakeMinor: (BigInt(stakeUsd) * USDT_MINOR).toString(), asset });
           }
         }}
       >

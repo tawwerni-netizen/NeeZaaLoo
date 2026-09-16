@@ -218,8 +218,12 @@ describe("kpis and panels are real counts, never fabricated", () => {
 
   test("platform fees reads the real platform:rake ledger balance, starting at zero", async () => {
     const r = await req("GET", "/v1/admin/dashboard/summary", { token: await tokenFor("viewer") });
-    assert.equal(r.body.kpis.platformFees.asset, "USDT");
-    assert.equal(BigInt(r.body.kpis.platformFees.minor) >= 0n, true);
+    // Fees are collected per coin; the headline is their dollar sum.
+    assert.equal(r.body.kpis.platformFees.asset, "USD");
+    const byAsset = r.body.kpis.platformFees.byAsset;
+    assert.deepEqual(Object.keys(byAsset).sort(), ["DAI", "USDC", "USDT"]);
+    const sum = Object.values(byAsset).reduce((a, v) => a + BigInt(v), 0n);
+    assert.equal(BigInt(r.body.kpis.platformFees.minor), sum);
   });
 
   test("the withdrawal queue lists the real pending row, oldest first, never a FAILED or COMPLETED one", async () => {

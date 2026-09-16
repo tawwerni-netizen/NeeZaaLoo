@@ -65,6 +65,7 @@ export function createDispatchWorker(db, {
         mode: pool.mode,
         tier: pool.tier,
         stakeMinor: pool.stakeMinor,
+        asset: pool.asset,
         initialState,
         timeControl: pool.timeControl,
         seed,

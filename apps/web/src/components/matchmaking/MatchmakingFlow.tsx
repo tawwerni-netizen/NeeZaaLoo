@@ -70,7 +70,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
       try {
         const res = await post<{ ticketId?: string }>("/v1/matchmaking/tickets", {
           gameId,
-          ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor } : {}),
+          ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor, asset: stake.asset } : {}),
         });
         if (res?.ticketId) {
           ticketIdRef.current = String(res.ticketId);

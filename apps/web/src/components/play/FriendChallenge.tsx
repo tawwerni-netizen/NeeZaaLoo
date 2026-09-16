@@ -88,7 +88,7 @@ export function FriendChallenge({ gameId, stake }: {
     try {
       const r = await post<{ challengeId: string; expiresAt: string }>("/v1/challenges", {
         gameId, opponentNickname: nickname,
-        ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor } : {}),
+        ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor, asset: stake.asset } : {}),
       });
       setSentTo(nickname);
       if (r.challengeId) {
@@ -128,7 +128,7 @@ export function FriendChallenge({ gameId, stake }: {
                   {t("play.challenge.waiting_for", { handle: c.opponent_handle })}
                   {c.tier === "CASH" && (
                     <span className={styles.stakeTag}>
-                      {t("play.challenge.mode_competitive_stake", { amount: Number(BigInt(c.stake_minor) / 1_000_000n) })}
+                      {t("play.challenge.mode_competitive_stake", { amount: `${Number(BigInt(c.stake_minor) / 1_000_000n)} ${c.asset ?? "USDT"}` })}
                     </span>
                   )}
                 </span>

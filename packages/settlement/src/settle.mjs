@@ -26,6 +26,10 @@ export const SettleResult = {
   NO_ECONOMY_RULE: "NO_ECONOMY_RULE",
 };
 
+// `asset` is only the fallback for a cash duel stamped before duels carried
+// their coin. Every posting uses the duel's OWN asset: a DAI match locks,
+// pays and rakes DAI, never the service default -- settling it in USDT would
+// move coins neither player staked.
 export function createSettlementService(db, { asset = "USDT" } = {}) {
   return {
     /**
@@ -50,7 +54,7 @@ export function createSettlementService(db, { asset = "USDT" } = {}) {
         const posted = await post(tx, {
           key: `duel:${duelId}:reserve`,
           kind: "DUEL_ENTRY",
-          legs, asset, referenceType: "duel", referenceId: duelId,
+          legs, asset: duel.asset ?? asset, referenceType: "duel", referenceId: duelId,
         });
 
         await tx.query(
@@ -148,7 +152,7 @@ export function createSettlementService(db, { asset = "USDT" } = {}) {
           const posted = await post(tx, {
             key: `duel:${duelId}:settle`,
             kind: "DUEL_SETTLE",
-            legs, asset, referenceType: "duel", referenceId: duelId,
+            legs, asset: duel.asset ?? asset, referenceType: "duel", referenceId: duelId,
           });
           transactionId = posted.transaction_id;
         }
@@ -206,7 +210,7 @@ export function createSettlementService(db, { asset = "USDT" } = {}) {
             legs: refundLegs({
               seat0: duel.seat_0, seat1: duel.seat_1, stakeMinor: duel.stake_minor,
             }),
-            asset, referenceType: "duel", referenceId: duelId,
+            asset: duel.asset ?? asset, referenceType: "duel", referenceId: duelId,
           });
           transactionId = posted.transaction_id;
         }
@@ -249,7 +253,7 @@ export function createSettlementService(db, { asset = "USDT" } = {}) {
 
 async function lockDuel(tx, duelId) {
   const r = await tx.query(
-    `SELECT id, game_id, seat_0, seat_1, tier, stake_minor::text AS stake_minor,
+    `SELECT id, game_id, seat_0, seat_1, tier, stake_minor::text AS stake_minor, asset,
             status, result, termination_reason, completed_at,
             reservation_tx_id, settlement_tx_id, fairplay_hold, rating_applied,
             is_vs_computer, priced_rake_bps, priced_economy_rule_id,

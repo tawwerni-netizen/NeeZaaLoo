@@ -67,8 +67,9 @@ export function ChallengePopup({ challenge, onAccepted, onDeclined, onExpired }:
   const stakeLabel = useMemo(() => {
     if (challenge.tier !== "CASH") return t("play.challenge.mode_free");
     const usd = Number(BigInt(challenge.stake_minor) / 1_000_000n);
-    return t("play.challenge.mode_competitive_stake", { amount: usd });
-  }, [challenge.tier, challenge.stake_minor, t]);
+    // The acceptor stakes the challenger's coin, so the coin is always shown.
+    return t("play.challenge.mode_competitive_stake", { amount: `${usd} ${challenge.asset ?? "USDT"}` });
+  }, [challenge.tier, challenge.stake_minor, challenge.asset, t]);
 
   async function accept() {
     setBusy(true);

@@ -48,6 +48,7 @@ export default function AdminTournamentsPage() {
   const [newTitle, setNewTitle] = useState('');
   const [newGame, setNewGame] = useState('chess');
   const [newFee, setNewFee] = useState('10.00');
+  const [newAsset, setNewAsset] = useState<'USDT' | 'USDC' | 'DAI'>('USDT');
   const [submitting, setSubmitting] = useState(false);
   const [quickPublishing, setQuickPublishing] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -84,6 +85,8 @@ export default function AdminTournamentsPage() {
         gameId: newGame.toLowerCase(),
         title: newTitle.trim(),
         entryFeeUsd: newFee,
+        // Entry fees and prizes are both paid in this coin.
+        asset: newAsset,
         capacity: 16,
         format: 'SINGLE_ELIMINATION',
         autoOpen: true,
@@ -330,7 +333,7 @@ export default function AdminTournamentsPage() {
           </div>
           <div>
             <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
-              Entry Fee (USDT)
+              Entry Fee ({newAsset})
             </label>
             <input
               type="number"
@@ -347,6 +350,20 @@ export default function AdminTournamentsPage() {
                 borderRadius: '6px',
               }}
             />
+          </div>
+          <div>
+            <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+              Coin (fees and prizes)
+            </label>
+            <select
+              value={newAsset}
+              onChange={(e) => setNewAsset(e.target.value as 'USDT' | 'USDC' | 'DAI')}
+              style={{ width: '100%', background: '#0e1015', border: '1px solid #252b37', color: '#fff', padding: '8px', borderRadius: '6px' }}
+            >
+              <option value="USDT">USDT</option>
+              <option value="USDC">USDC</option>
+              <option value="DAI">DAI</option>
+            </select>
           </div>
           <button
             type="submit"

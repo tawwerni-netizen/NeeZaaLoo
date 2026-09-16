@@ -32,7 +32,7 @@ export function createMatchmakingService(db, { now = () => Date.now() } = {}) {
      */
     async enqueue({
       playerId, gameId, mode = "standard", tier = "FREE", stakeMinor = 0n,
-      ratingX100, timeControl, ttlSeconds = 60,
+      asset = "USDT", ratingX100, timeControl, ttlSeconds = 60,
     }) {
       // RANDOM OPPONENT, Competitive: the UI offers only the fixed preset
       // ladder, but this is the actual enforcement -- a client that is
@@ -47,11 +47,13 @@ export function createMatchmakingService(db, { now = () => Date.now() } = {}) {
       try {
         const r = await db.query(
           `INSERT INTO matchmaking_ticket
-             (player_id, game_id, mode, time_control, tier, stake_minor, rating_x100, expires_at)
-           VALUES ($1,$2,$3,$4::jsonb,$5::entry_tier,$6,$7, now() + ($8 || ' seconds')::interval)
+             (player_id, game_id, mode, time_control, tier, stake_minor, rating_x100, expires_at, asset)
+           VALUES ($1,$2,$3,$4::jsonb,$5::entry_tier,$6,$7, now() + ($8 || ' seconds')::interval, $9)
            RETURNING id, expires_at`,
           [playerId, gameId, mode, JSON.stringify(timeControl), tier,
-           stakeMinor.toString(), ratingX100, String(ttlSeconds)]
+           stakeMinor.toString(), ratingX100, String(ttlSeconds),
+           // A cash ticket is in exactly one coin; a free ticket has none.
+           tier === "CASH" ? asset : null]
         );
         return { ok: true, ticketId: String(r.rows[0].id), expiresAt: r.rows[0].expires_at };
       } catch (e) {
@@ -80,12 +82,13 @@ export function createMatchmakingService(db, { now = () => Date.now() } = {}) {
      * after an ambiguous failure returns the SAME duel rather than creating
      * a second one.
      */
-    async pair({ gameId, mode = "standard", tier = "FREE", stakeMinor = 0n, initialState, timeControl, seed = null }) {
+    async pair({ gameId, mode = "standard", tier = "FREE", stakeMinor = 0n, asset = null, initialState, timeControl, seed = null }) {
       const duelId = `duel_${randomUUID()}`;
       const r = await db.query(
-        `SELECT * FROM mm_pair($1,$2,$3::entry_tier,$4,$5,$6::jsonb,$7::jsonb,$8)`,
+        `SELECT * FROM mm_pair($1,$2,$3::entry_tier,$4,$5,$6::jsonb,$7::jsonb,$8,$9)`,
         [gameId, mode, tier, stakeMinor.toString(), duelId,
-         JSON.stringify(initialState), JSON.stringify(timeControl), seed]
+         JSON.stringify(initialState), JSON.stringify(timeControl), seed,
+         tier === "CASH" ? (asset ?? "USDT") : null]
       );
       if (!r.rows.length) return { ok: true, paired: false };
       const row = r.rows[0];
@@ -178,17 +181,18 @@ export function createMatchmakingService(db, { now = () => Date.now() } = {}) {
      */
     async activePools() {
       const r = await db.query(
-        `SELECT DISTINCT ON (game_id, mode, tier, stake_minor)
-                game_id, mode, tier, stake_minor::text AS stake_minor, time_control
+        `SELECT DISTINCT ON (game_id, mode, tier, stake_minor, asset)
+                game_id, mode, tier, stake_minor::text AS stake_minor, asset, time_control
            FROM matchmaking_ticket
           WHERE status = 'ACTIVE' AND expires_at > now()
-          ORDER BY game_id, mode, tier, stake_minor, enqueued_at, id`
+          ORDER BY game_id, mode, tier, stake_minor, asset, enqueued_at, id`
       );
       return r.rows.map((row) => ({
         gameId: row.game_id,
         mode: row.mode,
         tier: row.tier,
         stakeMinor: BigInt(row.stake_minor),
+        asset: row.asset,
         timeControl: row.time_control,
       }));
     },

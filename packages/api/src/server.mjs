@@ -25,6 +25,7 @@ import { createMatchmakingService, MatchmakingError } from "../../matchmaking/sr
 import { createVsComputerService } from "../../matchmaking/src/vs-computer.mjs";
 import { createChallengeService, ChallengeError } from "../../matchmaking/src/challenge.mjs";
 import { DEFAULT_SPAWNERS } from "../../matchmaking/src/spawn.mjs";
+import { isValidStakeMinor } from "../../matchmaking/src/stakes.mjs";
 import { tryResolveTimeControl, resolveTimeControl, DEFAULT_TIME_PROFILE } from "../../duel-engine/src/time-profiles.mjs";
 import { SUPPORTED_LOCALE_CODES, DEFAULT_LOCALE } from "../../i18n/src/locales.mjs";
 import { RbacError } from "../../authz/src/rbac.mjs";
@@ -533,6 +534,31 @@ export function createApi({
 // ---------------------------------------------------------------------------
 
 /** Maps a ticket.mjs error reason to the HTTP status the routes below return. */
+/**
+ * The coin a cash stake is placed in. Every enabled stablecoin can be staked
+ * and a winner is paid in that same coin -- nothing is ever converted, so a
+ * request naming a coin the platform does not hold is refused, never
+ * quietly staked as USDT.
+ */
+async function resolveStakeAsset(q, raw) {
+  const code = String(raw ?? "USDT").trim().toUpperCase();
+  if (!/^[A-Z0-9]{2,10}$/.test(code)) return null;
+  const r = await q.query("SELECT code FROM asset WHERE code = $1 AND enabled IS NOT FALSE", [code]);
+  return r.rows.length ? code : null;
+}
+
+/** A player's spendable balance in one coin, in minor units. */
+async function availableMinor(q, playerId, asset) {
+  const r = await q.query(
+    `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
+       FROM ledger_account a
+       LEFT JOIN ledger_balance b ON b.account_id = a.id
+      WHERE a.key = 'user:' || $1 || ':available' AND a.asset = $2`,
+    [playerId, asset]
+  );
+  return r.rows.length ? BigInt(r.rows[0].bal || 0) : 0n;
+}
+
 function ticketErrorStatus(reason) {
   if (reason === TicketError.NOT_FOUND) return 404;
   if (reason === TicketError.DUPLICATE_OPEN_TICKET || reason === TicketError.TICKET_CLOSED
@@ -1625,30 +1651,20 @@ function buildRoutes() {
         // permission behind PAUSE ALL REAL-MONEY PLAY -- on top of the
         // base `duel.play.free` every ticket needs regardless of stake.
         const tier = body.tier === "CASH" ? "CASH" : "FREE";
+        let stakeAsset = null;
         if (tier === "CASH") {
           const decision = authorize({ actor, action: "duel.play.cash", controls });
           if (decision.decision !== Decision.ALLOW) {
             return { status: decision.reason === "CONTROL_DISABLED" ? 503 : 403, body: errorBody(decision.reason) };
           }
+          stakeAsset = await resolveStakeAsset(db, body.asset);
+          if (!stakeAsset) return { status: 400, body: errorBody("UNSUPPORTED_ASSET") };
           const stakeMinor = BigInt(body.stakeMinor ?? "0");
-          if (stakeMinor > 0n) {
-            const balRes = await db.query(
-              `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
-                 FROM ledger_account a
-                 LEFT JOIN ledger_balance b ON b.account_id = a.id
-                WHERE a.key = 'user:' || $1 || ':available'
-                  -- One account per key PER ASSET since 0055: unscoped, this matched the
-                  -- USDC and DAI accounts too and read whichever row came back first.
-                  AND a.asset = 'USDT'`,
-              [actor.id]
-            );
-            const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
-            if (availableBal < stakeMinor) {
-              return {
-                status: 400,
-                body: errorBody("INSUFFICIENT_FUNDS", "Insufficient wallet balance. Please deposit USDT to play cash matches.")
-              };
-            }
+          if (stakeMinor > 0n && (await availableMinor(db, actor.id, stakeAsset)) < stakeMinor) {
+            return {
+              status: 400,
+              body: errorBody("INSUFFICIENT_FUNDS", `Insufficient ${stakeAsset} balance. Please deposit ${stakeAsset} to play cash matches.`)
+            };
           }
         }
         const rating = await db.query(
@@ -1658,6 +1674,7 @@ function buildRoutes() {
         const r = await mm.enqueue({
           playerId: actor.id, gameId, mode, timeControl, tier,
           stakeMinor: tier === "CASH" ? String(body.stakeMinor ?? "0") : "0",
+          asset: stakeAsset ?? "USDT",
           ratingX100: rating.rows[0]?.rating_x100 ?? 150000,
         });
         if (!r.ok) {
@@ -1697,36 +1714,27 @@ function buildRoutes() {
         const gameId = String(body.gameId ?? "chess");
         const opponentNickname = String(body.opponentNickname ?? "");
         const tier = body.tier === "CASH" ? "CASH" : "FREE";
+        let stakeAsset = null;
         if (tier === "CASH") {
           const decision = authorize({ actor, action: "duel.play.cash", controls });
           if (decision.decision !== Decision.ALLOW) {
             return { status: decision.reason === "CONTROL_DISABLED" ? 503 : 403, body: errorBody(decision.reason) };
           }
+          stakeAsset = await resolveStakeAsset(db, body.asset);
+          if (!stakeAsset) return { status: 400, body: errorBody("UNSUPPORTED_ASSET") };
           const stakeMinor = BigInt(body.stakeMinor ?? "0");
-          if (stakeMinor > 0n) {
-            const balRes = await db.query(
-              `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
-                 FROM ledger_account a
-                 LEFT JOIN ledger_balance b ON b.account_id = a.id
-                WHERE a.key = 'user:' || $1 || ':available'
-                  -- One account per key PER ASSET since 0055: unscoped, this matched the
-                  -- USDC and DAI accounts too and read whichever row came back first.
-                  AND a.asset = 'USDT'`,
-              [actor.id]
-            );
-            const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
-            if (availableBal < stakeMinor) {
-              return {
-                status: 400,
-                body: errorBody("INSUFFICIENT_FUNDS", "Insufficient wallet balance. Please deposit USDT to create this cash challenge.")
-              };
-            }
+          if (stakeMinor > 0n && (await availableMinor(db, actor.id, stakeAsset)) < stakeMinor) {
+            return {
+              status: 400,
+              body: errorBody("INSUFFICIENT_FUNDS", `Insufficient ${stakeAsset} balance. Please deposit ${stakeAsset} to create this cash challenge.`)
+            };
           }
         }
         const challenge = createChallengeService(db, { channels: chat?.channels });
         const r = await challenge.create({
           gameId, challengerId: actor.id, opponentNickname, tier,
           stakeMinor: tier === "CASH" ? String(body.stakeMinor ?? "0") : "0",
+          asset: stakeAsset ?? "USDT",
         });
         if (!r.ok) {
           const status = r.reason === ChallengeError.ALREADY_PENDING ? 409
@@ -1770,7 +1778,10 @@ function buildRoutes() {
               gameId: row.game_id,
               tier: row.tier,
               stakeMinor: row.stake_minor,
-              stakeUSDT: Number(row.stake_minor || 0) / 100,
+              // Minor units are 6 decimals for every coin (asset.minor_units).
+              stakeUSDT: Number(row.stake_minor || 0) / 1_000_000,
+              stakeAmount: Number(row.stake_minor || 0) / 1_000_000,
+              asset: row.asset,
               timeControl: row.time_control,
               createdAt: row.created_at,
               expiresAt: row.expires_at,
@@ -1820,6 +1831,7 @@ function buildRoutes() {
         const tier = body.tier === "CASH" ? "CASH" : "FREE";
         const timeControlName = String(body.timeControl ?? "BLITZ").toUpperCase();
         const stakeMinor = tier === "CASH" ? String(body.stakeMinor ?? "0") : "0";
+        let openAsset = null;
 
         const gameCheck = await db.query("SELECT id, cash_enabled, is_live FROM game WHERE id = $1", [gameId]);
         if (!gameCheck.rows.length || !gameCheck.rows[0].is_live) {
@@ -1832,16 +1844,13 @@ function buildRoutes() {
           if (!gameCheck.rows[0].cash_enabled) {
             return { status: 400, body: errorBody("CASH_NOT_ENABLED_FOR_GAME") };
           }
-          const stakeNum = Number(stakeMinor);
-          if (!Number.isSafeInteger(stakeNum) || stakeNum <= 0) {
+          // Same canonical ladder as matchmaking and friend challenges.
+          if (!isValidStakeMinor(stakeMinor)) {
             return { status: 400, body: errorBody("INVALID_STAKE") };
           }
-          const bal = await db.query(
-            `SELECT balance FROM ledger_account WHERE player_id = $1 AND asset = 'USDT' AND role = 'PLAYER_AVAILABLE'`,
-            [actor.id]
-          );
-          const available = BigInt(bal.rows[0]?.balance ?? 0);
-          if (available < BigInt(stakeMinor)) {
+          openAsset = await resolveStakeAsset(db, body.asset);
+          if (!openAsset) return { status: 400, body: errorBody("UNSUPPORTED_ASSET") };
+          if ((await availableMinor(db, actor.id, openAsset)) < BigInt(stakeMinor)) {
             return { status: 400, body: errorBody("INSUFFICIENT_FUNDS") };
           }
         }
@@ -1853,7 +1862,7 @@ function buildRoutes() {
           `INSERT INTO lobby_open_challenge
              (id, creator_id, game_id, tier, stake_minor, asset, time_control, status, expires_at)
            VALUES ($1, $2, $3, $4::entry_tier, $5, $6, $7, 'OPEN', $8)`,
-          [challengeId, actor.id, gameId, tier, stakeMinor, tier === "CASH" ? "USDT" : null, timeControlName, expiresAt.toISOString()]
+          [challengeId, actor.id, gameId, tier, stakeMinor, tier === "CASH" ? openAsset : null, timeControlName, expiresAt.toISOString()]
         );
 
         return {
@@ -1888,12 +1897,8 @@ function buildRoutes() {
             if (controls?.killSwitches?.cashDuels) {
               return { status: 503, body: errorBody("CASH_PLAY_DISABLED") };
             }
-            const bal = await tx.query(
-              `SELECT balance FROM ledger_account WHERE player_id = $1 AND asset = 'USDT' AND role = 'PLAYER_AVAILABLE'`,
-              [actor.id]
-            );
-            const available = BigInt(bal.rows[0]?.balance ?? 0);
-            if (available < BigInt(row.stake_minor)) {
+            // The acceptor stakes the coin the creator chose, not their own.
+            if ((await availableMinor(tx, actor.id, row.asset ?? "USDT")) < BigInt(row.stake_minor)) {
               return { status: 400, body: errorBody("INSUFFICIENT_FUNDS") };
             }
           }
@@ -2573,17 +2578,10 @@ function buildRoutes() {
 
         // Check wallet balance if CASH tournament
         if (t.rows[0].tier === "CASH" && BigInt(t.rows[0].entry_fee_minor || 0) > 0n) {
-          const balRes = await db.query(
-            `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
-               FROM ledger_account a
-               LEFT JOIN ledger_balance b ON b.account_id = a.id
-              WHERE a.key = 'user:' || $1 || ':available'
-                  -- One account per key PER ASSET since 0055: unscoped, this matched the
-                  -- USDC and DAI accounts too and read whichever row came back first.
-                  AND a.asset = 'USDT'`,
-            [actor.id]
-          );
-          const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
+          // The entry fee is paid in the tournament's own coin, and prizes
+          // are paid back in that same coin.
+          const feeAsset = t.rows[0].asset ?? "USDT";
+          const availableBal = await availableMinor(db, actor.id, feeAsset);
           const requiredBal = BigInt(t.rows[0].entry_fee_minor);
           if (availableBal < requiredBal) {
             const reqUsd = (Number(requiredBal) / 1_000_000).toFixed(2);
@@ -2592,7 +2590,7 @@ function buildRoutes() {
               status: 400,
               body: errorBody(
                 "INSUFFICIENT_FUNDS",
-                `Insufficient wallet balance. You have $${curUsd} USDT, but this tournament requires $${reqUsd} USDT. Please deposit USDT to register.`
+                `Insufficient wallet balance. You have ${curUsd} ${feeAsset}, but this tournament requires ${reqUsd} ${feeAsset}. Please deposit ${feeAsset} to register.`
               )
             };
           }
@@ -2650,9 +2648,13 @@ function buildRoutes() {
           feeTrend, matchVolumeByGame, withdrawalQueue, recentTransactions,
         ] = await poolBatch([
           () => db.query(
-            `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance,0))::text AS balance
+            // One platform:rake account per coin. Every enabled coin is a
+            // dollar stablecoin at 6 decimals, so the headline is their sum;
+            // the per-coin split is returned alongside it.
+            `SELECT a.asset, ledger_natural_balance(a.normal_side, COALESCE(b.balance,0))::text AS balance
                FROM ledger_account a LEFT JOIN ledger_balance b ON b.account_id = a.id
-              WHERE a.key = 'platform:rake' AND a.asset = 'USDT'`
+              WHERE a.key = 'platform:rake'
+              ORDER BY a.asset`
           ),
           () => db.query(
             `SELECT count(DISTINCT d.id)::int AS matches,
@@ -2698,7 +2700,7 @@ function buildRoutes() {
                     -- across the GROUP BY without repeating the join filter.
                     ledger_natural_balance('CREDIT', sum(e.amount)::bigint)::text AS minor
                FROM ledger_entry e JOIN ledger_account a ON a.id = e.account_id
-              WHERE a.key = 'platform:rake' AND a.asset = 'USDT' AND e.created_at >= now() - interval '14 days'
+              WHERE a.key = 'platform:rake' AND e.created_at >= now() - interval '14 days'
               GROUP BY 1 ORDER BY 1`
           ),
           // Match volume per game over the last 7 days -- real counts,
@@ -2766,7 +2768,11 @@ function buildRoutes() {
           body: {
             generatedAt: new Date().toISOString(),
             kpis: {
-              platformFees: { minor: rakeBalance.rows[0]?.balance ?? "0", asset: "USDT" },
+              platformFees: {
+                minor: rakeBalance.rows.reduce((sum, r) => sum + BigInt(r.balance ?? "0"), 0n).toString(),
+                asset: "USD",
+                byAsset: Object.fromEntries(rakeBalance.rows.map((r) => [r.asset, r.balance ?? "0"])),
+              },
               activeMatches: liveDuels.rows[0].matches,
               livePlayers: liveDuels.rows[0].players,
               pendingWithdrawals: pendingWithdrawals.rows[0].c,
@@ -2826,14 +2832,15 @@ function buildRoutes() {
 
     { method: "POST", path: "/v1/admin/tournaments", action: "admin.tournament.manage",
       subjectType: "tournament",
-      handler: async ({ body, actor, tournament }) => {
+      handler: async ({ body, actor, tournament, db }) => {
         let entryFeeMinor = body?.entryFeeMinor;
         if (entryFeeMinor === undefined && body?.entryFeeUsd !== undefined) {
           const fee = parseFloat(body.entryFeeUsd || "0");
           entryFeeMinor = BigInt(Math.round(fee * 1_000_000));
         }
         const tier = body?.tier || (entryFeeMinor && BigInt(entryFeeMinor) > 0n ? "CASH" : "FREE");
-        const asset = tier === "CASH" ? (body?.asset || "USDT") : null;
+        const asset = tier === "CASH" ? await resolveStakeAsset(db, body?.asset) : null;
+        if (tier === "CASH" && !asset) return { status: 400, body: errorBody("UNSUPPORTED_ASSET") };
         const closesAt = body?.registrationClosesAt || new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
         const r = await tournament.create({
           ...body,
@@ -3073,31 +3080,35 @@ function buildRoutes() {
 
         // 1. Calculate player's positive balances across all user ledger accounts
         const accountsRes = await db.query(
-          `SELECT a.key, a.id, a.normal_side,
+          `SELECT a.key, a.id, a.normal_side, a.asset,
                   ledger_natural_balance(a.normal_side, (COALESCE(b.balance, (SELECT COALESCE(SUM(e.amount), 0) FROM ledger_entry e WHERE e.account_id = a.id)))::bigint) AS natural_balance
              FROM ledger_account a
              LEFT JOIN ledger_balance b ON b.account_id = a.id
-            WHERE a.owner_type = 'USER' AND a.owner_id = $1 AND a.asset = 'USDT'`,
+            WHERE a.owner_type = 'USER' AND a.owner_id = $1`,
           [params.id]
         );
 
+        // Every coin the player holds is seized. A ledger transaction is
+        // single-asset, so each coin is its own posting.
         let totalConfiscatedMinor = 0n;
-        const legs = [];
+        const byAsset = new Map();
         for (const acct of accountsRes.rows) {
           const naturalBal = BigInt(acct.natural_balance || "0");
-          if (naturalBal > 0n) {
-            totalConfiscatedMinor += naturalBal;
-            legs.push({ account: acct.key, amount: Number(naturalBal) });
-          }
+          if (naturalBal <= 0n) continue;
+          totalConfiscatedMinor += naturalBal;
+          const entry = byAsset.get(acct.asset) ?? { total: 0n, legs: [] };
+          entry.total += naturalBal;
+          entry.legs.push({ account: acct.key, amount: naturalBal.toString() });
+          byAsset.set(acct.asset, entry);
         }
 
-        // 2. Post double-entry settlement transaction to platform:confiscated
-        if (totalConfiscatedMinor > 0n && legs.length > 0) {
-          legs.push({ account: "platform:confiscated", amount: -Number(totalConfiscatedMinor) });
-          const txKey = `confiscate-${params.id}-${Date.now()}`;
+        // 2. Post double-entry settlement transactions to platform:confiscated
+        const stamp = Date.now();
+        for (const [coin, entry] of byAsset) {
+          const legs = [...entry.legs, { account: "platform:confiscated", amount: (-entry.total).toString() }];
           await db.query(
-            `SELECT ledger_post($1, 'CONFISCATION', 'ADMIN', $2, $3::jsonb, 'USDT', $4, 'player', $5)`,
-            [txKey, actor.id, JSON.stringify(legs), reason, params.id]
+            `SELECT ledger_post($1, 'CONFISCATION', 'ADMIN', $2, $3::jsonb, $6, $4, 'player', $5)`,
+            [`confiscate-${params.id}-${coin}-${stamp}`, actor.id, JSON.stringify(legs), reason, params.id, coin]
           );
         }
 
@@ -3123,6 +3134,7 @@ function buildRoutes() {
             playerId: params.id,
             confiscatedMinor: totalConfiscatedMinor.toString(),
             confiscatedUsdt: (Number(totalConfiscatedMinor) / 1_000_000).toFixed(2),
+            confiscatedByAsset: Object.fromEntries([...byAsset].map(([coin, e]) => [coin, e.total.toString()])),
             disabledAt: nowIso,
             reason
           },
@@ -4682,7 +4694,7 @@ function buildRoutes() {
               await tx.query(
                 `SELECT * FROM ledger_post($1,'ADJUSTMENT','ADMIN',$2,$3::jsonb,$4,$5,'fairplay_case',$6)`,
                 [
-                  `fairplay:${params.id}:seize:${state}`,
+                  row.asset === "USDT" ? `fairplay:${params.id}:seize:${state}` : `fairplay:${params.id}:seize:${state}:${row.asset}`,
                   actor.id,
                   // Both user wallet accounts and platform:confiscated are
                   // CREDIT-normal (LIABILITY / REVENUE respectively) -- for
