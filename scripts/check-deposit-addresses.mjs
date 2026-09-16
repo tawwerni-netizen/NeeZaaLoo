@@ -46,31 +46,47 @@ async function main() {
     `);
     const t = totals.rows[0];
 
+    // `provider` is written from provider.id at creation time, so it names
+    // exactly which adapter was live in the API process for each row --
+    // "sandbox" vs the real one. That is the decisive field: an address can
+    // be guessed at by shape, but this was recorded by the code itself.
     const recent = await client.query(`
-      SELECT id, player_id, asset, network, address, status, created_at
+      SELECT id, player_id, asset, network, address, status, provider, created_at
         FROM deposit
        ORDER BY created_at DESC
-       LIMIT 10
+       LIMIT 12
     `);
 
     console.log(`Deposit rows: ${t.total} total, ${t.sandbox} with a sandbox address (${t.sandbox_last_7d} in the last 7 days)\n`);
     console.log("Most recent deposit addresses:");
-    console.log("  created                    status              address");
+    console.log("  created            provider    status              address");
     for (const r of recent.rows) {
       const fake = r.address?.startsWith(SANDBOX_PREFIX);
       const when = new Date(r.created_at).toISOString().slice(0, 16).replace("T", " ");
       console.log(
-        `  ${when}   ${String(r.status).padEnd(18)} ${r.address}` +
-        (fake ? "   <-- SANDBOX, money sent here is lost" : "")
+        `  ${when}   ${String(r.provider ?? "?").padEnd(10)} ${String(r.status).padEnd(18)} ${r.address}` +
+        (fake ? "   <-- SANDBOX" : "")
       );
     }
 
     console.log("");
     if (t.sandbox_last_7d > 0) {
+      const newestSandbox = recent.rows.find((r) => r.address?.startsWith(SANDBOX_PREFIX));
+      const newestReal = recent.rows.find((r) => r.address && !r.address.startsWith(SANDBOX_PREFIX));
+
       console.log("RESULT: production is STILL minting sandbox addresses.");
       console.log("  The API process cannot see OXAPAY_MERCHANT_API_KEY. Setting it in the");
-      console.log("  hosting panel is not enough on its own -- the app has to be restarted so");
-      console.log("  the running process picks it up.");
+      console.log("  hosting panel is not enough on its own -- environment variables are read");
+      console.log("  once, when the process starts, so the app has to be RESTARTED.");
+
+      if (newestReal && newestSandbox && new Date(newestReal.created_at) < new Date(newestSandbox.created_at)) {
+        console.log("");
+        console.log("  Note: a REAL address was minted at " +
+          new Date(newestReal.created_at).toISOString().slice(0, 16).replace("T", " ") +
+          ", before the sandbox ones above.");
+        console.log("  So the key reached the process at some point and was lost again -- which is");
+        console.log("  what a restart or redeploy that did not carry the variable through looks like.");
+      }
       process.exitCode = 1;
     } else if (t.sandbox > 0) {
       console.log("RESULT: no NEW sandbox addresses in the last 7 days -- the real provider is live.");
