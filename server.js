@@ -89,14 +89,32 @@ const workerScript = path.join(here, "apps", "worker", "src", "index.mjs");
 
 const crypto = require("node:crypto");
 
+// Resolved ONCE per boot and shared by every child. This used to run inside
+// getEnv(), which is called per spawn -- so with the variables unset, the
+// API, the realtime gateway and the worker each minted a DIFFERENT random
+// key: a token the API issued failed verification in the gateway, and a
+// crashed child that respawned came back with yet another key. Even shared,
+// a random key still dies with the process: every restart logs every player
+// out, and TOTP secrets encrypted under the old key can no longer be
+// decrypted. So it is also reported loudly -- these must be set for real.
+const bootSigningKey = process.env.AUTH_SIGNING_KEY_B64 || crypto.randomBytes(32).toString("base64");
+const bootEncryptionKey = process.env.AUTH_ENCRYPTION_KEY_B64 || crypto.randomBytes(32).toString("base64");
+if (!process.env.AUTH_SIGNING_KEY_B64 || !process.env.AUTH_ENCRYPTION_KEY_B64) {
+  console.error(
+    "[config] WARNING: AUTH_SIGNING_KEY_B64 / AUTH_ENCRYPTION_KEY_B64 not set -- using a random key\n" +
+    "[config]          for THIS boot only. Every restart will sign all players out and make\n" +
+    "[config]          existing 2FA secrets unreadable. Set both to fixed base64 values."
+  );
+}
+
 function getEnv(childPort) {
   if (!process.env.DATABASE_URL) {
     console.error("FATAL: DATABASE_URL environment variable is required.");
     process.exit(1);
   }
 
-  const signingKey = process.env.AUTH_SIGNING_KEY_B64 || crypto.randomBytes(32).toString("base64");
-  const encryptionKey = process.env.AUTH_ENCRYPTION_KEY_B64 || crypto.randomBytes(32).toString("base64");
+  const signingKey = bootSigningKey;
+  const encryptionKey = bootEncryptionKey;
 
   return Object.assign({}, process.env, {
     NODE_ENV:               process.env.API_NODE_ENV || "production",

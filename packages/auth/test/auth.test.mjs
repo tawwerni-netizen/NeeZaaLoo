@@ -188,9 +188,12 @@ describe("registration", () => {
 
     const p = await db.query("SELECT 1 FROM player WHERE id='alice'");
     const c = await db.query("SELECT password_hash FROM credential WHERE player_id='alice'");
-    const w = await db.query("SELECT count(*)::int n FROM ledger_account WHERE owner_id='alice'");
+    const w = await db.query(
+      "SELECT asset, count(*)::int n FROM ledger_account WHERE owner_id='alice' GROUP BY asset ORDER BY asset"
+    );
     assert.equal(p.rows.length, 1);
-    assert.equal(w.rows[0].n, 5, "all five wallet accounts");
+    // Five wallet states, for each stablecoin the platform holds (0055).
+    assert.deepEqual(w.rows, [{ asset: "DAI", n: 5 }, { asset: "USDC", n: 5 }, { asset: "USDT", n: 5 }]);
     assert.match(c.rows[0].password_hash, /^\$argon2id\$/, "Argon2id, not a home-made scheme");
     assert.ok(!c.rows[0].password_hash.includes(PASSWORD), "the password is nowhere in the row");
   });

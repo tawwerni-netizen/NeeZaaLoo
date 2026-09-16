@@ -5,6 +5,9 @@ import { migrate } from "../../ledger/src/migrate.mjs";
 import { createAuthService } from "../../auth/src/service.mjs";
 import { createApi } from "../src/server.mjs";
 import { createDirectChatService } from "../../chat/src/direct.mjs";
+import { createPaymentService } from "../../payments/src/payments.mjs";
+import { createSandboxProvider } from "../../payments/src/provider.mjs";
+import { createMockChainReader } from "../../chain/src/reader.mjs";
 
 const SIGNING_KEY = Buffer.alloc(32, 7);
 const ENCRYPTION_KEY = Buffer.alloc(32, 8);
@@ -74,10 +77,19 @@ describe("AML Playthrough and Search-Only Members API", () => {
 
     directChat = createDirectChatService(db);
 
+    // A real payment service, as every deployment that can take a
+    // withdrawal has. Without one the route now refuses outright rather
+    // than locking a player's funds into a withdrawal nothing will process.
+    const paymentSvc = createPaymentService(db, {
+      provider: createSandboxProvider(),
+      chain: createMockChainReader({ network: "TRON" }),
+      config: { reviewThresholdMinor: 500_000_000n },
+    });
     api = createApi({
       db,
       auth,
       directChat,
+      paymentSvc,
       rateLimit: { capacity: 5000, refillPerSecond: 5000 },
     });
     await api.listen();
@@ -224,7 +236,9 @@ describe("AML Playthrough and Search-Only Members API", () => {
 
     assert.equal(withRes.status, 201);
     assert.equal(withRes.body.ok, true);
-    assert.equal(withRes.body.withdrawal.status, "REQUESTED");
+    // Below the review threshold the route assesses and hands it to the
+    // provider in the same request, exactly as in production.
+    assert.equal(withRes.body.withdrawal.status, "PROCESSING");
   });
 
   test("4. GET /v1/admin/players/:id returns comprehensive AML breakdown and history", async () => {

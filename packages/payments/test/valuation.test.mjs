@@ -46,7 +46,10 @@ describe("record_valuation_snapshot()", () => {
       observedAt: new Date().toISOString(), createdBy: "admin-1", reason: "observed depeg",
     });
     assert.equal(res.status, "DEPEGGED");
-    assert.equal(res.railsPaused, 1);
+    // Every ACTIVE rail for the asset, on every chain it is seeded for.
+    const usdtRails = await db.query("SELECT count(*)::int c FROM payment_rail WHERE asset='USDT' AND status='RISK_PAUSED'");
+    assert.ok(res.railsPaused >= 1);
+    assert.equal(res.railsPaused, usdtRails.rows[0].c);
 
     const rail = await db.query("SELECT status, deposits_enabled, withdrawals_enabled FROM payment_rail WHERE id='USDT_TRON'");
     assert.equal(rail.rows[0].status, "RISK_PAUSED");
@@ -201,10 +204,12 @@ describe("the rail model actually gates the live deposit/withdrawal paths", () =
 
 describe("the Admin Payment & Stablecoin Control Center's rail service", () => {
   test("list() returns every rail joined with its asset/network display data and its current risk status", async () => {
-    const { rails } = await fresh();
+    const { db, rails } = await fresh();
     const list = await rails.list();
-    assert.equal(list.length, 1);
-    const usdtTron = list[0];
+    const seeded = await db.query("SELECT count(*)::int c FROM payment_rail");
+    assert.equal(list.length, seeded.rows[0].c, "every seeded rail, no more and no fewer");
+    const usdtTron = list.find((r) => r.id === "USDT_TRON");
+    assert.ok(usdtTron);
     assert.equal(usdtTron.id, "USDT_TRON");
     assert.equal(usdtTron.network_display_name, "TRON (TRC20)");
     assert.equal(usdtTron.asset_kind, "STABLECOIN");

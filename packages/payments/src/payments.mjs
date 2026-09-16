@@ -20,7 +20,23 @@ import { randomUUID } from "node:crypto";
 import { ProviderPaymentState, ProviderPayoutState } from "./provider.mjs";
 import { authorize, Decision } from "../../authz/src/policy.mjs";
 
+/**
+ * Display labels players and providers use, folded onto the chain names the
+ * verifier, rails and custody accounts are keyed by. "TRC20" and "TRON" are
+ * the same chain; treating them as different is how a real payout came back
+ * WRONG_NETWORK from its own verifier.
+ */
+const NETWORK_ALIASES = { TRC20: "TRON", BSC: "BEP20", ETH: "ERC20" };
+export function canonicalNetwork(network) {
+  const n = String(network ?? "").trim().toUpperCase();
+  return NETWORK_ALIASES[n] ?? n;
+}
+
 export const DepositError = {
+  // The asset/network pair has no independent verifier. A deposit address
+  // is refused rather than issued: anything paid into it could never be
+  // confirmed, so it would be quarantined and never credited.
+  UNSUPPORTED_RAIL: "UNSUPPORTED_RAIL",
   CONTROL_DISABLED: "CONTROL_DISABLED",
   UNDERPAID: "UNDERPAID",
   WRONG_ASSET: "WRONG_ASSET",
@@ -53,6 +69,9 @@ const TERMINAL_NON_CREDIT_STATUSES = new Set([
 ]);
 
 export const WithdrawalError = {
+  // No independent verifier for this pair: the payout could be sent but
+  // never confirmed, leaving it in BROADCASTED with the funds locked.
+  UNSUPPORTED_RAIL: "UNSUPPORTED_RAIL",
   INSUFFICIENT_FUNDS: "INSUFFICIENT_FUNDS",
   ADDRESS_NOT_ALLOWLISTED: "ADDRESS_NOT_ALLOWLISTED",
   ADDRESS_TIME_LOCKED: "ADDRESS_TIME_LOCKED",
@@ -146,12 +165,44 @@ export function createPaymentService(db, {
     return r.rows[0] ?? null;
   };
 
+  /**
+   * Can the chain verifier actually confirm money moving on this pair?
+   *
+   * A payment_rail row being enabled is an operator's intent; it is not
+   * evidence that anything can verify the chain. Rails were enabled for
+   * USDT on BEP20/ERC20 and for USDC/DAI while the only verifier reads one
+   * contract on Tron -- so deposits there were quarantined and never
+   * credited, and payouts there could never leave BROADCASTED. The verifier
+   * declares what it covers (`supportedRails`); this is the one place that
+   * reads it. A verifier that declares nothing (older test doubles) is left
+   * unrestricted, exactly as before.
+   */
+  const railVerifiable = (asset, network) => {
+    const declared = chain?.supportedRails;
+    if (!Array.isArray(declared)) return true;
+    const a = String(asset ?? "").trim().toUpperCase();
+    const n = canonicalNetwork(network);
+    return declared.some((r) => String(r.asset).toUpperCase() === a && canonicalNetwork(r.network) === n);
+  };
+
   const svc = {
+    /** The asset/network pairs money can actually move on end to end. */
+    supportedRails() {
+      const declared = chain?.supportedRails;
+      return Array.isArray(declared)
+        ? declared.map((r) => ({ asset: String(r.asset).toUpperCase(), network: canonicalNetwork(r.network) }))
+        : null;
+    },
+    isRailVerifiable: railVerifiable,
+
     // =========================================================================
     // DEPOSITS
     // =========================================================================
 
     async createDeposit({ playerId, asset = "USDT", network = "TRON" }) {
+      if (!railVerifiable(asset, network)) {
+        return { ok: false, reason: DepositError.UNSUPPORTED_RAIL };
+      }
       if (!(await controlOn("DEPOSITS"))) {
         return { ok: false, reason: DepositError.CONTROL_DISABLED };
       }
@@ -542,6 +593,10 @@ export function createPaymentService(db, {
      */
     async request({ playerId, asset = "USDT", network = "TRON", destination, amountMinor, authorised }) {
       const amount = BigInt(amountMinor);
+
+      if (!railVerifiable(asset, network)) {
+        return { ok: false, reason: WithdrawalError.UNSUPPORTED_RAIL };
+      }
 
       if (!(await controlOn("WITHDRAWALS"))) {
         return { ok: false, reason: WithdrawalError.CONTROL_DISABLED };

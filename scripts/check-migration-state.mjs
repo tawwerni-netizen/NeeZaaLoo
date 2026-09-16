@@ -66,6 +66,8 @@ const CHECKS = [
   ["0052_fairplay_sanction_and_seizure.sql", "column", "player.disabled_category"],
   ["0053_game_auto_tournaments_column.sql", "column", "game.auto_tournaments_enabled"],
   ["0054_rail_auto_approve_threshold.sql", "column", "payment_rail.auto_approve_threshold_minor"],
+  ["0055_multi_stablecoin_usdc_dai.sql", "row", "payment_rail.USDC_TRON"],
+  ["0056_normalize_tron_network_label.sql", "notrc20", "withdrawal"],
 ];
 
 async function objectExists(client, kind, name) {
@@ -104,6 +106,12 @@ async function objectExists(client, kind, name) {
     case "row": {
       const [table, id] = name.split(".");
       return (await client.query(`SELECT 1 FROM ${table} WHERE id = $1`, [id])).rows.length > 0;
+    }
+    case "notrc20": {
+      // 0056 changes data, not schema: applied means no row still says TRC20.
+      const w = await client.query("SELECT count(*)::int c FROM withdrawal WHERE network = 'TRC20'");
+      const d = await client.query("SELECT count(*)::int c FROM deposit WHERE network = 'TRC20'");
+      return w.rows[0].c === 0 && d.rows[0].c === 0;
     }
     default:
       return null;

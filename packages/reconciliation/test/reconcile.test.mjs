@@ -58,7 +58,7 @@ describe("L1: ledger drift", () => {
     // could ever occur (a bug or an intrusion, never normal operation).
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 999
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
 
     const svc = createReconciliationService(db);
@@ -86,7 +86,7 @@ describe("L1: ledger drift", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 999
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     const svc = createReconciliationService(db);
     const first = await svc.runLedgerDrift();
@@ -560,7 +560,7 @@ describe("resolveCase", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 1
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     const svc = createReconciliationService(db);
     await svc.runLedgerDrift();
@@ -576,7 +576,7 @@ describe("resolveCase", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 1
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     const svc = createReconciliationService(db);
     await svc.runLedgerDrift();
@@ -592,7 +592,7 @@ describe("resolveCase", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 1
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     const svc = createReconciliationService(db);
     await svc.runLedgerDrift();
@@ -659,7 +659,7 @@ describe("reviewCase", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 1
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     const svc = createReconciliationService(db);
     const caseId = await openADrift(svc);
@@ -679,7 +679,7 @@ describe("reviewCase", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 1
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     const svc = createReconciliationService(db);
     const caseId = await openADrift(svc);
@@ -697,7 +697,7 @@ describe("reviewCase", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 1
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     const svc = createReconciliationService(db);
     const caseId = await openADrift(svc);
@@ -723,7 +723,7 @@ describe("listCases, getCase, getCaseEvents", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 1
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     await db.query(
       `INSERT INTO deposit (id, player_id, asset, network, provider, address, status, created_at, expires_at)
@@ -757,7 +757,7 @@ describe("listCases, getCase, getCaseEvents", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 1
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     await svc.runLedgerDrift();
     const caseId = (await svc.listOpenCases())[0].id;
@@ -771,7 +771,7 @@ describe("listCases, getCase, getCaseEvents", () => {
     await player(db, "alice", 100);
     await db.query(
       `UPDATE ledger_balance SET balance = balance + 1
-         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available')`
+         WHERE account_id = (SELECT id FROM ledger_account WHERE key='user:alice:available' AND asset='USDT')`
     );
     const svc = createReconciliationService(db);
     await svc.runLedgerDrift();

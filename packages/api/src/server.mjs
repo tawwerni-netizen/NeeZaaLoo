@@ -583,6 +583,15 @@ function buildRoutes() {
         body: { ok: true, payments: paymentSvc ? "configured" : "unavailable" },
       }) },
 
+    // The asset/network pairs money can actually move on end to end -- what
+    // the wallet should offer. Public and read-only: it describes the
+    // platform, not any player. `null` means the verifier does not declare
+    // its coverage; an empty list means payments are not wired at all.
+    { method: "GET", path: "/v1/payments/rails", action: "player.login", anonymous: true,
+      handler: async ({ paymentSvc }) => ({
+        body: { ok: true, rails: paymentSvc ? paymentSvc.supportedRails() : [] },
+      }) },
+
     // --- Auth ----------------------------------------------------------------
     { method: "POST", path: "/v1/auth/register", action: "player.register", anonymous: true,
       handler: async ({ body, auth, welcomeEmail, ip, userAgent }) => {
@@ -1226,6 +1235,17 @@ function buildRoutes() {
         const rawAmount = body?.amountMinor ?? (body?.amount != null ? Math.round(Number(body.amount) * 1_000_000) : null);
         const amountMinor = rawAmount ? BigInt(rawAmount) : 10_000_000n;
 
+        // Before anything else -- including handing back an address issued
+        // earlier -- refuse a pair the chain verifier cannot confirm. An
+        // address already sitting on such a pair is exactly as unsafe to pay
+        // into as a new one: the deposit is quarantined, never credited.
+        if (paymentSvc && !paymentSvc.isRailVerifiable(asset, storedNetwork)) {
+          return {
+            status: 422,
+            body: errorBody("UNSUPPORTED_RAIL", `${asset} deposits on ${network} are not available yet.`),
+          };
+        }
+
         // Ensure player wallet exists in ledger
         await db.query("SELECT ledger_open_user_wallet($1)", [params.id]);
 
@@ -1321,29 +1341,23 @@ function buildRoutes() {
             };
           } catch (e) {
             console.error("Failed to create deposit via provider:", e);
+            return { status: 502, body: errorBody("DEPOSIT_PROVIDER_FAILED", "The payment provider could not issue a deposit address. Please try again shortly.") };
           }
         }
 
-        // Fallback: internal dynamic deposit address
-        const id = `dep_${randomUUID()}`;
-        const fallbackAddress = `T${randomUUID().replace(/-/g, "").slice(0, 33)}`;
-        await db.query(
-          `INSERT INTO deposit (id, player_id, asset, network, provider, provider_ref, address, status, expires_at)
-           VALUES ($1, $2, $3, $4, 'internal', $1, $5, 'AWAITING_PAYMENT', now() + interval '24 hours')`,
-          [id, params.id, asset, storedNetwork, fallbackAddress]
-        );
+        // No provider at all. There used to be a "fallback" here that minted
+        // `T` + 32 random hex characters, stored it as a real AWAITING_PAYMENT
+        // deposit, and handed it to the player as their address -- under ANY
+        // network, BEP20 and ERC20 included. It looks like a genuine Tron
+        // address, so unlike the sandbox's `Tsbx_` prefix nothing downstream
+        // could tell it apart: it passed the reuse filter, showed in wallet
+        // history, and anything paid into it was simply gone. It was also the
+        // path a production process with no payment keys fell straight into.
+        // A deposit address is either issued by the real provider or not
+        // issued at all.
         return {
-          status: 201,
-          body: {
-            ok: true,
-            deposit: {
-              id,
-              address: fallbackAddress,
-              asset,
-              network,
-              expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
-            },
-          },
+          status: 503,
+          body: errorBody("PAYMENTS_UNAVAILABLE", "Deposits are temporarily unavailable. No address has been issued."),
         };
       } },
 
@@ -1450,6 +1464,19 @@ function buildRoutes() {
         const network = rawNetwork;
         const asset = String(body?.asset ?? "USDT").trim().toUpperCase();
 
+        // Refused before any funds are locked. A payout on a pair the chain
+        // verifier cannot read would be sent and then never confirmed --
+        // stuck in BROADCASTED, the player's balance locked indefinitely.
+        if (!paymentSvc) {
+          return { status: 503, body: errorBody("PAYMENTS_UNAVAILABLE", "Withdrawals are temporarily unavailable.") };
+        }
+        if (!paymentSvc.isRailVerifiable(asset, storedNetwork)) {
+          return {
+            status: 422,
+            body: errorBody("UNSUPPORTED_RAIL", `${asset} withdrawals on ${network} are not available yet.`),
+          };
+        }
+
         // Mathematical check for blockchain network fee
         const NETWORK_FEES_MINOR = {
           TRC20: 1_000_000n, // 1.00 USD
@@ -1515,11 +1542,18 @@ function buildRoutes() {
                 id,
               ]
             );
+            // storedNetwork, never the raw label: the row's network is what
+            // reconcile() hands the chain verifier, and the Tron reader only
+            // answers for "TRON". Storing "TRC20" here meant every website
+            // withdrawal came back WRONG_NETWORK from its own chain and sat in
+            // BROADCASTED forever -- payout sent, player's funds still locked,
+            // ledger never settled. It also missed its payment_rail row
+            // (keyed TRON), so rail pauses and limits never applied to it.
             const r = await tx.query(
               `INSERT INTO withdrawal (id, player_id, asset, network, destination, amount_minor, fee_minor, status, lock_tx_id)
                VALUES ($1, $2, $3, $4, $5, $6, $7, 'REQUESTED', $8)
                RETURNING id, player_id, asset, network, destination, amount_minor::text, fee_minor::text, status::text, requested_at`,
-              [id, params.id, asset, network, destination, amountMinor.toString(), feeMinor.toString(), posted.rows[0].transaction_id]
+              [id, params.id, asset, storedNetwork, destination, amountMinor.toString(), feeMinor.toString(), posted.rows[0].transaction_id]
             );
             return r.rows[0];
           });
@@ -1602,7 +1636,10 @@ function buildRoutes() {
               `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
                  FROM ledger_account a
                  LEFT JOIN ledger_balance b ON b.account_id = a.id
-                WHERE a.key = 'user:' || $1 || ':available'`,
+                WHERE a.key = 'user:' || $1 || ':available'
+                  -- One account per key PER ASSET since 0055: unscoped, this matched the
+                  -- USDC and DAI accounts too and read whichever row came back first.
+                  AND a.asset = 'USDT'`,
               [actor.id]
             );
             const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
@@ -1671,7 +1708,10 @@ function buildRoutes() {
               `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
                  FROM ledger_account a
                  LEFT JOIN ledger_balance b ON b.account_id = a.id
-                WHERE a.key = 'user:' || $1 || ':available'`,
+                WHERE a.key = 'user:' || $1 || ':available'
+                  -- One account per key PER ASSET since 0055: unscoped, this matched the
+                  -- USDC and DAI accounts too and read whichever row came back first.
+                  AND a.asset = 'USDT'`,
               [actor.id]
             );
             const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
@@ -2537,7 +2577,10 @@ function buildRoutes() {
             `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0)) AS bal
                FROM ledger_account a
                LEFT JOIN ledger_balance b ON b.account_id = a.id
-              WHERE a.key = 'user:' || $1 || ':available'`,
+              WHERE a.key = 'user:' || $1 || ':available'
+                  -- One account per key PER ASSET since 0055: unscoped, this matched the
+                  -- USDC and DAI accounts too and read whichever row came back first.
+                  AND a.asset = 'USDT'`,
             [actor.id]
           );
           const availableBal = balRes.rows.length ? BigInt(balRes.rows[0].bal || 0) : 0n;
@@ -2609,7 +2652,7 @@ function buildRoutes() {
           () => db.query(
             `SELECT ledger_natural_balance(a.normal_side, COALESCE(b.balance,0))::text AS balance
                FROM ledger_account a LEFT JOIN ledger_balance b ON b.account_id = a.id
-              WHERE a.key = 'platform:rake'`
+              WHERE a.key = 'platform:rake' AND a.asset = 'USDT'`
           ),
           () => db.query(
             `SELECT count(DISTINCT d.id)::int AS matches,
@@ -2655,7 +2698,7 @@ function buildRoutes() {
                     -- across the GROUP BY without repeating the join filter.
                     ledger_natural_balance('CREDIT', sum(e.amount)::bigint)::text AS minor
                FROM ledger_entry e JOIN ledger_account a ON a.id = e.account_id
-              WHERE a.key = 'platform:rake' AND e.created_at >= now() - interval '14 days'
+              WHERE a.key = 'platform:rake' AND a.asset = 'USDT' AND e.created_at >= now() - interval '14 days'
               GROUP BY 1 ORDER BY 1`
           ),
           // Match volume per game over the last 7 days -- real counts,

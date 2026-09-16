@@ -118,23 +118,59 @@ function WalletContent() {
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // What money can actually move on, from the server -- not a hardcoded list.
+  // Rails were once shown (and enabled) for coins and chains nothing could
+  // verify on-chain: deposits there were quarantined and never credited,
+  // payouts never left BROADCASTED. An option only appears once the backend
+  // can see it through end to end. `null` = not loaded yet / not declared,
+  // in which case the static list stands until the answer arrives.
+  const [liveRails, setLiveRails] = useState<Set<string> | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    get<{ rails: Array<{ asset: string; network: string }> | null }>("/v1/payments/rails")
+      .then((r) => {
+        if (cancelled || !Array.isArray(r.rails)) return;
+        setLiveRails(new Set(r.rails.map((x) => `${x.asset}:${x.network === "TRON" ? "TRC20" : x.network}`)));
+      })
+      .catch(() => { /* keep the static list; the server still refuses anything it cannot verify */ });
+    return () => { cancelled = true; };
+  }, []);
+  const networksFor = useCallback(
+    (asset: SupportedAsset): NetworkCode[] =>
+      ASSET_NETWORKS[asset].filter((net) => !liveRails || liveRails.has(`${asset}:${net}`)),
+    [liveRails]
+  );
+  const assetLive = (asset: SupportedAsset) => networksFor(asset).length > 0;
+
+  useEffect(() => {
+    if (!liveRails) return;
+    if (!networksFor(selectedAsset).includes(selectedNetwork)) {
+      const firstAsset = (["USDT", "USDC", "DAI"] as SupportedAsset[]).find((a) => networksFor(a).length > 0);
+      if (firstAsset) { setSelectedAsset(firstAsset); setSelectedNetwork(networksFor(firstAsset)[0]!); }
+    }
+    if (!networksFor(withdrawAsset).includes(withdrawNetwork)) {
+      const firstAsset = (["USDT", "USDC", "DAI"] as SupportedAsset[]).find((a) => networksFor(a).length > 0);
+      if (firstAsset) { setWithdrawAsset(firstAsset); setWithdrawNetwork(networksFor(firstAsset)[0]!); }
+    }
+  }, [liveRails, networksFor, selectedAsset, selectedNetwork, withdrawAsset, withdrawNetwork]);
+
   // Handle switching asset: automatically select primary supported network
   const handleSelectAsset = useCallback((asset: SupportedAsset) => {
     setSelectedAsset(asset);
-    const validNets = ASSET_NETWORKS[asset];
+    const validNets = networksFor(asset);
     if (!validNets.includes(selectedNetwork)) {
       setSelectedNetwork(validNets[0] ?? "TRC20");
     }
-  }, [selectedNetwork]);
+  }, [selectedNetwork, networksFor]);
 
   // Handle switching withdrawal asset: automatically select primary supported network
   const handleSelectWithdrawAsset = useCallback((asset: SupportedAsset) => {
     setWithdrawAsset(asset);
-    const validNets = ASSET_NETWORKS[asset];
+    const validNets = networksFor(asset);
     if (!validNets.includes(withdrawNetwork)) {
       setWithdrawNetwork(validNets[0] ?? "TRC20");
     }
-  }, [withdrawNetwork]);
+  }, [withdrawNetwork, networksFor]);
 
   // Load wallet accounts, ledger balances, and transactions
   const reload = useCallback(async (isManual = false) => {
@@ -728,6 +764,7 @@ function WalletContent() {
               {/* USDC Card */}
               <button
                 type="button"
+                style={assetLive("USDC") ? undefined : { display: "none" }}
                 className={`${styles.coinCard} ${selectedAsset === "USDC" ? styles.coinCardActiveUsdc : ""}`}
                 onClick={() => handleSelectAsset("USDC")}
               >
@@ -757,6 +794,7 @@ function WalletContent() {
               {/* DAI Card */}
               <button
                 type="button"
+                style={assetLive("DAI") ? undefined : { display: "none" }}
                 className={`${styles.coinCard} ${selectedAsset === "DAI" ? styles.coinCardActiveDai : ""}`}
                 onClick={() => handleSelectAsset("DAI")}
               >
@@ -792,7 +830,7 @@ function WalletContent() {
             </div>
             <div className={styles.networkCardsGrid}>
               {/* TRON (TRC20) */}
-              {ASSET_NETWORKS[selectedAsset].includes("TRC20") && (
+              {networksFor(selectedAsset).includes("TRC20") && (
                 <button
                   type="button"
                   className={`${styles.networkCard} ${selectedNetwork === "TRC20" ? styles.networkCardActiveTrc : ""}`}
@@ -827,7 +865,7 @@ function WalletContent() {
               )}
 
               {/* BNB Chain (BEP20) */}
-              {ASSET_NETWORKS[selectedAsset].includes("BEP20") && (
+              {networksFor(selectedAsset).includes("BEP20") && (
                 <button
                   type="button"
                   className={`${styles.networkCard} ${selectedNetwork === "BEP20" ? styles.networkCardActiveBep : ""}`}
@@ -865,7 +903,7 @@ function WalletContent() {
               )}
 
               {/* Ethereum (ERC20) */}
-              {ASSET_NETWORKS[selectedAsset].includes("ERC20") && (
+              {networksFor(selectedAsset).includes("ERC20") && (
                 <button
                   type="button"
                   className={`${styles.networkCard} ${selectedNetwork === "ERC20" ? styles.networkCardActiveErc : ""}`}
@@ -1369,6 +1407,7 @@ function WalletContent() {
               {/* USDC Card */}
               <button
                 type="button"
+                style={assetLive("USDC") ? undefined : { display: "none" }}
                 className={`${styles.coinCard} ${withdrawAsset === "USDC" ? styles.coinCardActiveUsdc : ""}`}
                 onClick={() => handleSelectWithdrawAsset("USDC")}
               >
@@ -1402,6 +1441,7 @@ function WalletContent() {
               {/* DAI Card */}
               <button
                 type="button"
+                style={assetLive("DAI") ? undefined : { display: "none" }}
                 className={`${styles.coinCard} ${withdrawAsset === "DAI" ? styles.coinCardActiveDai : ""}`}
                 onClick={() => handleSelectWithdrawAsset("DAI")}
               >
@@ -1441,7 +1481,7 @@ function WalletContent() {
             </div>
             <div className={styles.networkCardsGrid}>
               {/* TRON (TRC20) */}
-              {ASSET_NETWORKS[withdrawAsset].includes("TRC20") && (
+              {networksFor(withdrawAsset).includes("TRC20") && (
                 <button
                   type="button"
                   className={`${styles.networkCard} ${withdrawNetwork === "TRC20" ? styles.networkCardActiveTrc : ""}`}
@@ -1479,7 +1519,7 @@ function WalletContent() {
               )}
 
               {/* BNB Smart Chain (BEP20) */}
-              {ASSET_NETWORKS[withdrawAsset].includes("BEP20") && (
+              {networksFor(withdrawAsset).includes("BEP20") && (
                 <button
                   type="button"
                   className={`${styles.networkCard} ${withdrawNetwork === "BEP20" ? styles.networkCardActiveBep : ""}`}
@@ -1520,7 +1560,7 @@ function WalletContent() {
               )}
 
               {/* Ethereum Mainnet (ERC20) */}
-              {ASSET_NETWORKS[withdrawAsset].includes("ERC20") && (
+              {networksFor(withdrawAsset).includes("ERC20") && (
                 <button
                   type="button"
                   className={`${styles.networkCard} ${withdrawNetwork === "ERC20" ? styles.networkCardActiveErc : ""}`}

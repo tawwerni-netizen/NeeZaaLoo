@@ -272,12 +272,14 @@ describe("structural guards", () => {
     // requires a peg_asset -- this fixture only needs a second, otherwise
     // unrelated asset code to prove the composite FK, so it declares USDC
     // unpegged rather than asserting anything about its real-world peg.
-    await db.query(`INSERT INTO asset (code, minor_units, is_pegged) VALUES ('USDC', 6, FALSE)`);
+    // USDC is a real seeded asset since 0055, so the fixture uses a code
+    // nothing seeds, and pins the account to its USDT copy.
+    await db.query(`INSERT INTO asset (code, minor_units, is_pegged) VALUES ('TESTCOIN', 6, FALSE)`);
     await rejects(
       () =>
         db.query(
           `INSERT INTO ledger_entry (transaction_id, account_id, asset, amount)
-           SELECT 1, a.id, 'USDC', 100 FROM ledger_account a WHERE a.key = 'user:1:available'`
+           SELECT 1, a.id, 'TESTCOIN', 100 FROM ledger_account a WHERE a.key = 'user:1:available' AND a.asset = 'USDT'`
         ),
       /ledger_entry_account_asset_fk|violates foreign key/
     );

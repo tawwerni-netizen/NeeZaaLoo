@@ -136,6 +136,9 @@ export function createMockChainReader({
     _isMock: true,
     network,
     contractAddress,
+    // See createTronChainReader's supportedRails: a reader states exactly
+    // which asset/network pairs it can independently verify.
+    supportedRails: [{ asset: "USDT", network }],
 
     async listIncomingTransfers({ address }) {
       const hashes = byAddress.get(address) ?? [];
@@ -243,6 +246,14 @@ export function createTronChainReader({
   return {
     ...provider,
     _isMock: false,
+    // Exactly what this reader can independently verify: one contract, one
+    // chain. Payments uses this to refuse issuing a deposit address or
+    // accepting a withdrawal on any other pair -- a deposit this reader
+    // cannot see is quarantined and never credited, and a payout it cannot
+    // confirm sits in BROADCASTED forever with the player's funds locked.
+    // Adding a BSC or Ethereum reader means declaring its pairs here, and
+    // those rails open on their own.
+    supportedRails: [{ asset: "USDT", network: provider.network }],
     async verifyIncoming({ network, address, requiredConfirmations: required = requiredConfirmations, txHash }) {
       return verifyIncomingVia(provider, { network, address, requiredConfirmations: required, txHash });
     },

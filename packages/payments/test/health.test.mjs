@@ -112,8 +112,10 @@ describe("the solvency check", () => {
 
   test("an asset with no ledger activity yet is UNKNOWN, not OK", async () => {
     const db = await fresh();
+    // USDC stopped qualifying once 0055 seeded accounts for it; the case
+    // under test is a coin with no ledger rows at all.
     const health = createHealthService({ db, chain: chainThatPings({ latencyMs: 10 }) });
-    const result = await health.checkRail("USDC", "TRON");
+    const result = await health.checkRail("NO_LEDGER_COIN", "TRON");
     assert.equal(result.checks.find((c) => c.name === "SOLVENCY").status, HealthStatus.UNKNOWN);
   });
 });

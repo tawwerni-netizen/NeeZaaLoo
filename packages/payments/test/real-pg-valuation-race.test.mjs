@@ -80,8 +80,9 @@ describe(
       // Reset to a known ACTIVE state in case an earlier test in this file
       // already paused it.
       await admin.client.query(
-        `UPDATE payment_rail SET status='ACTIVE', deposits_enabled=TRUE, withdrawals_enabled=TRUE WHERE id='USDT_TRON'`
+        `UPDATE payment_rail SET status='ACTIVE', deposits_enabled=TRUE, withdrawals_enabled=TRUE WHERE asset='USDT'`
       );
+      const usdtRails = (await admin.client.query("SELECT count(*)::int c FROM payment_rail WHERE asset='USDT'")).rows[0].c;
 
       const A = await connection();
       const B = await connection();
@@ -101,8 +102,10 @@ describe(
       // (reports 0) -- never both reporting 1, which would mean the rail
       // was "paused" twice, and never both reporting 0, which would mean
       // neither actually paused it.
-      assert.equal(ra.railsPaused + rb.railsPaused, 1,
-        "exactly one of the two concurrent depeg observations performed the real transition");
+      // Per rail, exactly one of the two observations performs the transition;
+      // across every USDT rail that sums to the rail count, never double it.
+      assert.equal(ra.railsPaused + rb.railsPaused, usdtRails,
+        "each USDT rail was paused by exactly one of the two concurrent depeg observations");
 
       const rail = await admin.client.query("SELECT status, deposits_enabled FROM payment_rail WHERE id='USDT_TRON'");
       assert.equal(rail.rows[0].status, "RISK_PAUSED");
