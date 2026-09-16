@@ -203,6 +203,11 @@
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
   color: #cbd5e1;
+  /* "TRC-20" is a Latin run, a neutral hyphen and a number: inside an RTL
+     paragraph the bidi algorithm renders that as "20-TRC". Network names
+     are identifiers, so they are pinned LTR. */
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .securityBadge {

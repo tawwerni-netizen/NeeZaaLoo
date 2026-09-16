@@ -358,6 +358,11 @@
   font-size: var(--nz-text-lg, 18px);
   font-weight: 800;
   color: var(--nz-accent, #c9a96e);
+  /* Measurements like "< 20ms" are a neutral operator plus a number plus a
+     Latin unit -- the RTL bidi algorithm flips that to "20ms >". Stat
+     values are pinned LTR so the comparison keeps pointing the right way. */
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .statLbl {

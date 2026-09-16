@@ -183,6 +183,11 @@
 }
 
 .prizeAmount {
+  /* Money is a Latin-and-digits run: under RTL the bidi algorithm moves
+     the currency and the sign away from the amount. Pinned LTR so a prize
+     always reads as the figure it is. */
+  direction: ltr;
+  unicode-bidi: isolate;
   font-size: 16px;
   font-weight: 800;
   color: #facc15;
@@ -240,6 +245,11 @@
 }
 
 .entryFeeVal {
+  /* Money is a Latin-and-digits run: under RTL the bidi algorithm moves
+     the currency and the sign away from the amount. Pinned LTR so a prize
+     always reads as the figure it is. */
+  direction: ltr;
+  unicode-bidi: isolate;
   font-size: 14px;
   font-weight: 700;
   color: #e2e8f0;
