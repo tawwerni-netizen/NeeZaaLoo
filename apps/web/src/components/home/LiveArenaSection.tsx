@@ -24,7 +24,8 @@ const POLL_MS = 10000;
 const PREVIEW_LIMIT = 3;
 
 export function LiveArenaSection() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
+  const isRtl = dir === "rtl";
   const [matches, setMatches] = useState<LiveMatch[] | null>(null);
 
   useEffect(() => {
@@ -57,7 +58,22 @@ export function LiveArenaSection() {
             <div className={styles.skeleton} />
           </div>
         ) : matches.length === 0 ? (
-          <div className={styles.empty}>{t("home.liveArena.empty")}</div>
+          <div className={styles.emptyCard}>
+            <div className={styles.emptyIcon}>⚔️</div>
+            <div className={styles.emptyContent}>
+              <h3 className={styles.emptyTitle}>
+                {isRtl ? "الميدان بانتظار بطلك القادم!" : "The Arena Awaits Your Next Challenge!"}
+              </h3>
+              <p className={styles.emptySub}>
+                {isRtl
+                  ? "لا توجد مباريات جارية في هذه اللحظة. بادر بإنشاء نزال أو انضم إلى طاولة مفتوحة واكسب 190% من قيمة الرهان فوراً."
+                  : "No live duels active right now. Create a challenge or join an open table to win up to 190% payout instantly."}
+              </p>
+            </div>
+            <LocaleLink href="/play" className={styles.emptyCta}>
+              <span>{isRtl ? "⚡ ادخل ميدان التحديات واكسب الآن" : "⚡ Enter Arena & Win Now"}</span>
+            </LocaleLink>
+          </div>
         ) : (
           <div className={styles.grid}>
             {matches.map((m) => {
