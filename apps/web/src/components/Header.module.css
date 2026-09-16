@@ -14,8 +14,13 @@
 .inner {
   display: flex;
   align-items: center;
-  gap: var(--nz-space-8);
+  gap: var(--nz-space-5);
   height: 64px;
+  max-width: 1400px !important;
+  width: 100%;
+  margin: 0 auto;
+  padding-inline: clamp(16px, 2.5vw, 32px) !important;
+  box-sizing: border-box;
 }
 
 .brand {
@@ -27,8 +32,8 @@
 .primaryNav {
   display: flex;
   align-items: center;
-  gap: var(--nz-space-6);
-  margin-inline-start: var(--nz-space-8);
+  gap: clamp(12px, 1.4vw, 20px);
+  margin-inline-start: clamp(8px, 1.2vw, 16px);
   flex: 1;
 }
 
@@ -103,7 +108,7 @@
 .secondary {
   display: flex;
   align-items: center;
-  gap: var(--nz-space-3);
+  gap: clamp(6px, 0.8vw, 12px);
   flex: none;
 }
 
@@ -563,6 +568,26 @@
   border-color: #ef4444;
 }
 
+@media (min-width: 961px) and (max-width: 1220px) {
+  .inner {
+    gap: var(--nz-space-3);
+  }
+  .primaryNav {
+    gap: 10px;
+    margin-inline-start: 6px;
+  }
+  .navLink, .navActive {
+    font-size: 13px;
+    padding: var(--nz-space-1) 0;
+  }
+  .secondary {
+    gap: 6px;
+  }
+  .walletLabel {
+    display: none;
+  }
+}
+
 @media (max-width: 960px) {
   .primaryNav, .secondary {
     display: none !important;
@@ -577,3 +602,4 @@
     gap: var(--nz-space-3);
   }
 }
+
