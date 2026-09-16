@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { formatDate } from "@/lib/i18n/format";
 import { getGame } from "@/lib/games";
+import { formatTournamentTitle, formatTournamentDescription, getTournamentCover } from "@/components/tournaments/UpcomingTournaments";
 import styles from "./tournament-detail.module.css";
 
 type TournamentDetail = {
@@ -171,43 +172,99 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   }
   const roundNumbers = [...rounds.keys()].sort((a, b) => a - b);
 
+  const gameName = t(`common.game_names.${nameKey}`) || tournament.game_id;
+  const cleanTitle = formatTournamentTitle(tournament, gameName, locale);
+  const cleanDesc = formatTournamentDescription(tournament, locale);
+  const coverImg = getTournamentCover(tournament.game_id);
+  const entryFeeUsdt = (Number(tournament.entry_fee_minor || 0) / 1_000_000).toFixed(2);
+  const winnerPoolUsdt = ((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.90).toFixed(2);
+  const platformFeeUsdt = ((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.10).toFixed(2);
+  const remainingSpots = Math.max(0, tournament.capacity - (tournament.registeredCount || 0));
+  const registeredPct = Math.min(100, Math.round(((tournament.registeredCount || 0) / (tournament.capacity || 1)) * 100));
+
   return (
     <>
       <Header />
       <main className="nz-container">
-        <LocaleLink href="/tournaments" className={styles.back}>{t("tournamentsPage.back")}</LocaleLink>
-        <div className={styles.headingRow}>
-          <span className={styles.gameName}>{t(`common.game_names.${nameKey}`)}</span>
-          <span className={`${styles.statusPill} ${styles[`status_${tournament.status}`] ?? ""}`}>
-            {t(`tournamentsPage.status.${tournament.status}`)}
-          </span>
-        </div>
-        <h1 className={styles.heading}>{tournament.title ?? t(`tournamentsPage.format.${tournament.format}`)}</h1>
-        {tournament.description && <p className={styles.description}>{tournament.description}</p>}
+        <LocaleLink href="/tournaments" className={styles.back}>
+          {t("tournamentsPage.back")}
+        </LocaleLink>
 
-        <div className={styles.metaRow}>
-          <span>{t(`tournamentsPage.format.${tournament.format}`)}</span>
-          <span>
-            {tournament.tier === "FREE"
-              ? t("tournamentsPage.entry_free")
-              : `Entry: ${(Number(tournament.entry_fee_minor) / 1_000_000).toFixed(2)} ${tournament.asset ?? "USDT"}`}
-          </span>
-          {tournament.tier === "CASH" ? (
-            <>
-              <span style={{ color: "#10b981", fontWeight: 700 }}>
-                Winner Pool (90%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.90).toFixed(2)} USDT
+        {/* Esports Championship Hero Banner Card */}
+        <div className={styles.heroCard}>
+          <div className={styles.bannerWrap}>
+            <img
+              src={coverImg}
+              alt={cleanTitle}
+              className={styles.bannerImg}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "/images/games/chess-hero.webp";
+              }}
+            />
+            <div className={styles.bannerOverlay} />
+            <div className={styles.topBadgesRow}>
+              <span className={styles.gameBadge}>
+                <span>🎮</span>
+                <span>{gameName}</span>
               </span>
-              <span style={{ color: "#818cf8" }}>
-                Platform Fee (10%): ${((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.10).toFixed(2)} USDT
+              <span className={styles.formatBadge}>
+                <span>🏆</span>
+                <span>
+                  {t(`tournamentsPage.format.${tournament.format}`)} ({tournament.capacity} {locale === "ar" ? "لاعب" : "p"})
+                </span>
               </span>
-            </>
-          ) : (
-            <span style={{ color: "#10b981", fontWeight: 600 }}>
-              🏆 Prove Skill & Climb Rankings
-            </span>
-          )}
-          <span className="nz-num">{t("tournamentsPage.registered_count", { count: tournament.registeredCount, capacity: tournament.capacity })}</span>
-          {startTarget && <span>{t("tournamentsPage.starts_at", { date: formatDate(startTarget, locale) })}</span>}
+              <span className={`${styles.statusPill} ${styles[`status_${tournament.status}`] ?? ""}`}>
+                {tournament.status === "LIVE" && <span className={styles.liveDot} />}
+                {t(`tournamentsPage.status.${tournament.status}`)}
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.heroContent}>
+            <h1 className={styles.heading}>{cleanTitle}</h1>
+            <p className={styles.description}>{cleanDesc}</p>
+
+            {/* Metrics HUD Row */}
+            <div className={styles.metricsGrid}>
+              {tournament.tier === "CASH" ? (
+                <>
+                  <div className={`${styles.metricCard} ${styles.metricGold}`}>
+                    <span className={styles.metricLabel}>💰 {locale === "ar" ? "مجموع جوائز الفائز (90%)" : "Winner Pool (90%)"}</span>
+                    <span className={`${styles.metricVal} nz-num`}><bdi>${winnerPoolUsdt} USDT</bdi></span>
+                    <span className={styles.metricSub}>{locale === "ar" ? "تسوية كاش فورية للمحفظة" : "Instant settlement"}</span>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <span className={styles.metricLabel}>🎟️ {locale === "ar" ? "رسوم الاشتراك" : "Entry Fee"}</span>
+                    <span className={`${styles.metricVal} nz-num`}><bdi>${entryFeeUsdt} USDT</bdi></span>
+                    <span className={styles.metricSub}>{t("tournamentsPage.platform_fee", { amount: platformFeeUsdt, asset: "USDT" })}</span>
+                  </div>
+                </>
+              ) : (
+                <div className={`${styles.metricCard} ${styles.metricFree}`}>
+                  <span className={styles.metricLabel}>🎁 {t("tournamentsPage.entry_free")}</span>
+                  <span className={styles.metricVal}>{t("tournamentsPage.entry_free")}</span>
+                  <span className={styles.metricSub}>{t("tournamentsPage.prove_skill")}</span>
+                </div>
+              )}
+
+              <div className={styles.metricCard}>
+                <div className={styles.metricLabelRow}>
+                  <span className={styles.metricLabel}>👥 {t("tournamentsPage.registered_count", { count: tournament.registeredCount, capacity: tournament.capacity })}</span>
+                  {tournament.status === "REGISTRATION" && remainingSpots > 0 && (
+                    <span className={styles.spotsBadge}>
+                      {locale === "ar" ? `متبقي ${remainingSpots} مقاعد` : `${remainingSpots} spots left`}
+                    </span>
+                  )}
+                </div>
+                <div className={styles.progressTrack}>
+                  <div className={styles.progressFill} style={{ width: `${registeredPct}%` }} />
+                </div>
+                <span className={styles.metricSub}>
+                  {startTarget ? t("tournamentsPage.starts_at", { date: formatDate(startTarget, locale) }) : (locale === "ar" ? "تبدأ عند اكتمال العدد" : "Starts when filled")}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {myLivePairing?.duel_id && (
@@ -219,51 +276,50 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
         {tournament.status === "REGISTRATION" && (
           <div className={styles.actions}>
             {player && tournament.tier === "CASH" && walletBalance !== null && (
-              <div style={{
-                background: walletBalance < BigInt(tournament.entry_fee_minor || 0) ? "rgba(239, 68, 68, 0.08)" : "rgba(16, 185, 129, 0.08)",
-                border: `1px solid ${walletBalance < BigInt(tournament.entry_fee_minor || 0) ? "rgba(239, 68, 68, 0.3)" : "rgba(16, 185, 129, 0.3)"}`,
-                borderRadius: "8px",
-                padding: "10px 16px",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                width: "100%",
-                maxWidth: "600px"
-              }}>
-                <span>
-                  Wallet Balance: <strong>${(Number(walletBalance) / 1_000_000).toFixed(2)} USDT</strong>
+              <div className={`${styles.walletNotice} ${walletBalance < BigInt(tournament.entry_fee_minor || 0) ? styles.walletNoticeLow : styles.walletNoticeOk}`}>
+                <div className={styles.walletNoticeText}>
+                  <span>{t("tournamentsPage.wallet_balance_label")} <strong className="nz-num">${(Number(walletBalance) / 1_000_000).toFixed(2)} USDT</strong></span>
                   {walletBalance < BigInt(tournament.entry_fee_minor || 0) && (
-                    <span style={{ color: "#f87171", marginLeft: "6px" }}>
-                      (Entry requires ${(Number(tournament.entry_fee_minor) / 1_000_000).toFixed(2)} USDT)
+                    <span className={styles.entryRequires}>
+                      {t("tournamentsPage.entry_requires", {
+                        amount: entryFeeUsdt,
+                        asset: "USDT"
+                      })}
                     </span>
                   )}
-                </span>
+                </div>
                 {walletBalance < BigInt(tournament.entry_fee_minor || 0) && (
-                  <LocaleLink href="/wallet">
+                  <LocaleLink href="/wallet" className={styles.depositBtnWrap}>
                     <Button variant="primary">💳 {t("tournamentsPage.deposit_cta")}</Button>
                   </LocaleLink>
                 )}
               </div>
             )}
 
-            {!player ? (
-              <LocaleLink href="/login"><Button variant="primary">{t("tournamentsPage.login_to_register")}</Button></LocaleLink>
-            ) : registered ? (
-              <Button variant="secondary" onClick={() => void withdraw()} disabled={busy}>{t("tournamentsPage.withdraw")}</Button>
-            ) : (
-              <Button variant="primary" onClick={() => void register()} disabled={busy}>
-                {busy ? t("tournamentsPage.registering") : t("tournamentsPage.register")}
-              </Button>
-            )}
-            {registered && !error && <span className={styles.registeredNote}>{t("tournamentsPage.registered")}</span>}
+            <div className={styles.mainActionBtnGroup}>
+              {!player ? (
+                <LocaleLink href="/login" className={styles.fullWidthActionLink}>
+                  <Button variant="primary">{t("tournamentsPage.login_to_register")}</Button>
+                </LocaleLink>
+              ) : registered ? (
+                <div className={styles.registeredRow}>
+                  <Button variant="secondary" onClick={() => void withdraw()} disabled={busy}>
+                    {t("tournamentsPage.withdraw")}
+                  </Button>
+                  <span className={styles.registeredNote}>✅ {t("tournamentsPage.registered")}</span>
+                </div>
+              ) : (
+                <Button variant="primary" onClick={() => void register()} disabled={busy}>
+                  {busy ? t("tournamentsPage.registering") : t("tournamentsPage.register")}
+                </Button>
+              )}
+            </div>
+
             {error && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", width: "100%", maxWidth: "600px" }}>
-                <p className={styles.error} role="alert" style={{ width: "100%", textAlign: "center" }}>{error}</p>
+              <div className={styles.errorContainer}>
+                <p className={styles.error} role="alert">{error}</p>
                 {errorCode === "INSUFFICIENT_FUNDS" && (
-                  <LocaleLink href="/wallet">
+                  <LocaleLink href="/wallet" className={styles.depositBtnWrap}>
                     <Button variant="primary">
                       💳 {t("tournamentsPage.deposit_cta")}
                     </Button>

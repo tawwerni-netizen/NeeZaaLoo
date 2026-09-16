@@ -70,7 +70,7 @@ export function getTournamentCover(gameId: string): string {
   return customCovers[gameId] ?? `/images/games/${gameId}-hero.webp`;
 }
 
-export function formatTournamentTitle(row: TournamentRow, gameName: string, locale: string): string {
+export function formatTournamentTitle(row: { game_id: string; title?: string | null }, gameName: string, locale: string): string {
   const rawTitle = (row.title || "").replace(/\[.*?\]/gi, "").trim();
   if (locale === "ar") {
     const g = row.game_id.toLowerCase();
@@ -89,6 +89,36 @@ export function formatTournamentTitle(row: TournamentRow, gameName: string, loca
   }
   return rawTitle || `${gameName} Grand Championship`;
 }
+
+export function formatTournamentDescription(
+  row: {
+    game_id: string;
+    tier?: "FREE" | "RANKED" | "CASH";
+    format?: string;
+    capacity?: number;
+    entry_fee_minor?: string;
+    description?: string | null;
+  },
+  locale: string
+): string {
+  if (locale === "ar") {
+    const formatAr = row.format === "SWISS" ? "النظام السويسري" : "خروج المغلوب";
+    const cap = row.capacity ?? 16;
+    if (row.tier === "FREE") {
+      return `بطولة ${formatAr} تضم ${cap} لاعباً. اشتراك مجاني لإثبات المهارة، صعود سلم التصنيف، وكسب نقاط الصدارة.`;
+    }
+    const entryFeeUsdt = Number(row.entry_fee_minor || 0) / 1_000_000;
+    const winnerUsd = (entryFeeUsdt * cap * 0.90).toFixed(2);
+    return `بطولة ${formatAr} تضم ${cap} لاعباً بنظام الجوائز الكبرى. يحصل الفائز بالمركز الأول على 90% ($${winnerUsd} USDT). رسوم تنظيم المنصة 10%.`;
+  }
+  return (
+    row.description ||
+    (row.tier === "FREE"
+      ? `${row.capacity ?? 16}-Player ${row.format === "SWISS" ? "Swiss System" : "Single Elimination"}. Free entry to prove skill and climb rankings.`
+      : `${row.capacity ?? 16}-Player ${row.format === "SWISS" ? "Swiss System" : "Single Elimination"}. Winner takes 90%. 10% Platform Fee.`)
+  );
+}
+
 
 export function UpcomingTournaments({
   variant = "cards",
