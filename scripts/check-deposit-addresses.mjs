@@ -109,6 +109,53 @@ async function main() {
       console.log(`  ${t.sandbox} sandbox row(s) remain in history. They are barred from reuse and`);
       console.log("  hidden from the wallet, so no player is handed one -- but never pay into them.");
     }
+
+    // Does each address match the chain it is filed under?
+    //
+    // USDT is one token living on several chains, and an address is only
+    // valid on its own: Tron addresses are base58 starting with "T", BNB
+    // Smart Chain and Ethereum are 0x-prefixed 20-byte hex. A row filed
+    // under the wrong network would hand a player an address their wallet
+    // sends to the wrong chain, and those funds do not come back. The
+    // provider has been right about this so far -- this is here so that
+    // stays true rather than being assumed.
+    const SHAPES = {
+      TRON:  { test: (a) => /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(a), label: "Tron (T..., base58, 34 chars)" },
+      TRC20: { test: (a) => /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(a), label: "Tron (T..., base58, 34 chars)" },
+      BEP20: { test: (a) => /^0x[0-9a-fA-F]{40}$/.test(a),         label: "BNB Smart Chain (0x..., 42 chars)" },
+      BSC:   { test: (a) => /^0x[0-9a-fA-F]{40}$/.test(a),         label: "BNB Smart Chain (0x..., 42 chars)" },
+      ERC20: { test: (a) => /^0x[0-9a-fA-F]{40}$/.test(a),         label: "Ethereum (0x..., 42 chars)" },
+      ETH:   { test: (a) => /^0x[0-9a-fA-F]{40}$/.test(a),         label: "Ethereum (0x..., 42 chars)" },
+    };
+
+    const real = await client.query(`
+      SELECT address, network, provider, status::text, created_at
+        FROM deposit
+       WHERE address NOT LIKE 'Tsbx\\_%'
+       ORDER BY created_at DESC
+    `);
+
+    const mismatched = [];
+    const unknownNetwork = [];
+    for (const r of real.rows) {
+      const shape = SHAPES[String(r.network).toUpperCase()];
+      if (!shape) { unknownNetwork.push(r); continue; }
+      if (!shape.test(r.address)) mismatched.push({ ...r, expected: shape.label });
+    }
+
+    console.log("");
+    if (mismatched.length === 0 && unknownNetwork.length === 0) {
+      console.log(`Address/network check: OK -- all ${real.rows.length} real address(es) match their chain.`);
+    } else {
+      for (const r of mismatched) {
+        console.log(`  MISMATCH: ${r.address}`);
+        console.log(`            filed under ${r.network}, which expects ${r.expected}`);
+      }
+      for (const r of unknownNetwork) {
+        console.log(`  UNRECOGNISED NETWORK: ${r.network} (${r.address}) -- cannot verify its shape`);
+      }
+      process.exitCode = 1;
+    }
   } finally {
     await client.end();
   }
