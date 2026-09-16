@@ -126,6 +126,22 @@ export interface WalletDictionary {
   sendWarningBodyDynamic: (asset: string, net: string) => string;
   safeDepositBodyDynamic: (asset: string, net: string) => string;
 
+  // Deposit Confirmation & Payment Slip Terminal
+  confirmDepositBtn: (amount: string, asset: string) => string;
+  confirmDepositSubtitle: string;
+  confirmedDepositTitle: string;
+  confirmedDepositSubtitle: string;
+  confirmedDepositOrderLabel: string;
+  confirmedDepositAmountLabel: string;
+  confirmedDepositNetworkLabel: string;
+  confirmedDepositFeeLabel: string;
+  confirmedDepositSpeedLabel: string;
+  editDepositSelection: string;
+  iHaveTransferredBtn: string;
+  depositStatusChecked: string;
+  depositAwaitingConfirmPrompt: string;
+  depositAwaitingConfirmBtn: string;
+
   // Withdrawal Section
   withdrawEligibleLabel: string;
   totalBalancePrefix: string;
@@ -296,6 +312,25 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
       `أرسل عملة ${asset} فقط، وعبر شبكة ${net} وحدها. إرسال أي عملة أخرى أو عبر شبكة مختلفة سيؤدي إلى فقدان أموالك نهائياً دون إمكانية استردادها.`,
     safeDepositBodyDynamic: (asset: string, net: string) =>
       `هذا العنوان مخصص ومحمي بنظام التشفير لحسابك. يمكنك التحويل إليه بأمان من أي محفظة أو منصة عالمية (Binance, Bybit, TrustWallet, OKX, MetaMask) بعملة ${asset} وشبكة (${net}). الحد الأدنى للإيداع هو 5.00$. يتم قيد الرصيد فور تأكيد المعاملة في البلوكتشين.`,
+
+    confirmDepositBtn: (amount: string, asset: string) =>
+      `⚡ تأكيد ومتابعة إيداع $${amount} (${asset})`,
+    confirmDepositSubtitle:
+      "انقر لإصدار فاتورة التحويل الآمن المعتمدة وعنوان المحفظة المخصص",
+    confirmedDepositTitle: "فاتورة الإيداع المؤكدة (جاهزة للتحويل)",
+    confirmedDepositSubtitle:
+      "تم تجهيز عنوان المحفظة المخصص لمطابقة إيداعك فورياً وبأمان في دفتر الأستاذ المشفر",
+    confirmedDepositOrderLabel: "أمر إيداع رقمي معتمد",
+    confirmedDepositAmountLabel: "المبلغ المحدد للإيداع:",
+    confirmedDepositNetworkLabel: "الشبكة المعتمدة للتحويل:",
+    confirmedDepositFeeLabel: "رسوم الإيداع للمنصة:",
+    confirmedDepositSpeedLabel: "زمن المعالجة المتوقع:",
+    editDepositSelection: "تعديل المبلغ أو الشبكة",
+    iHaveTransferredBtn: "لقد قمت بالتحويل — فحص وتحديث الرصيد الآن",
+    depositStatusChecked: "جاري فحص وتأكيد المعاملة عبر البلوكتشين...",
+    depositAwaitingConfirmPrompt:
+      "اختر العملة والشبكة والمبلغ أعلاه، ثم اضغط على زر تأكيد الإيداع لإصدار فاتورة الدفع والباركود المخصص.",
+    depositAwaitingConfirmBtn: "تأكيد ومتابعة الإيداع الآن",
 
     withdrawEligibleLabel: "الرصيد المؤهل للسحب الفوري حالياً:",
     totalBalancePrefix: "من إجمالي رصيد",
@@ -470,6 +505,26 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     safeDepositBodyDynamic: (asset: string, net: string) =>
       `This address is dedicated and cryptographically bound to your account. Send ${asset} from any exchange or wallet (Binance, Bybit, TrustWallet, OKX, MetaMask) via (${net}). Minimum deposit is $5.00. Your balance credits automatically upon blockchain confirmation.`,
 
+    confirmDepositBtn: (amount: string, asset: string) =>
+      `⚡ Confirm & Proceed to Deposit $${amount} (${asset})`,
+    confirmDepositSubtitle:
+      "Click to generate your verified payment slip and dedicated blockchain address",
+    confirmedDepositTitle: "Confirmed Deposit Voucher (Ready to Transfer)",
+    confirmedDepositSubtitle:
+      "Your dedicated address is locked and monitored for instant ledger crediting",
+    confirmedDepositOrderLabel: "Digital Deposit Order",
+    confirmedDepositAmountLabel: "Selected Amount:",
+    confirmedDepositNetworkLabel: "Selected Network:",
+    confirmedDepositFeeLabel: "Platform Deposit Fee:",
+    confirmedDepositSpeedLabel: "Estimated Speed:",
+    editDepositSelection: "Edit Amount or Network",
+    iHaveTransferredBtn: "I Have Transferred — Verify & Sync Balance Now",
+    depositStatusChecked:
+      "Scanning blockchain ledger for matching incoming transfer...",
+    depositAwaitingConfirmPrompt:
+      "Select your asset, network, and amount above, then click Confirm Deposit to generate your payment voucher and QR code.",
+    depositAwaitingConfirmBtn: "Confirm & Proceed Now",
+
     withdrawEligibleLabel: "Balance Eligible for Instant Withdrawal:",
     totalBalancePrefix: "out of total balance of",
     withdrawCoinSelectorTitle: "Select Payout Currency:",
@@ -642,6 +697,27 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
       `Envía únicamente ${asset} a través de la red ${net}. Enviar otra moneda o usar otra red provocará la pérdida permanente e irreversible de los fondos.`,
     safeDepositBodyDynamic: (asset: string, net: string) =>
       `Esta dirección está dedicada a tu cuenta. Transfiere ${asset} desde cualquier exchange o billetera (Binance, Bybit, TrustWallet, OKX, MetaMask) vía (${net}). El depósito mínimo es $5.00. El saldo se acredita automáticamente al confirmarse en blockchain.`,
+
+    confirmDepositBtn: (amount: string, asset: string) =>
+      `⚡ Confirmar y Proceder al Depósito de $${amount} (${asset})`,
+    confirmDepositSubtitle:
+      "Haz clic para generar tu comprobante de pago seguro y dirección de billetera dedicada",
+    confirmedDepositTitle:
+      "Comprobante de Depósito Confirmado (Listo para Transferir)",
+    confirmedDepositSubtitle:
+      "Tu dirección dedicada está asignada y monitoreada para acreditar tu saldo al instante",
+    confirmedDepositOrderLabel: "Orden de Depósito Digital",
+    confirmedDepositAmountLabel: "Monto Seleccionado:",
+    confirmedDepositNetworkLabel: "Red Seleccionada:",
+    confirmedDepositFeeLabel: "Comisión de Depósito:",
+    confirmedDepositSpeedLabel: "Velocidad Estimada:",
+    editDepositSelection: "Modificar Monto o Red",
+    iHaveTransferredBtn: "Ya he Transferido — Verificar y Sincronizar Saldo",
+    depositStatusChecked:
+      "Escaneando el libro mayor de la blockchain para verificar la transferencia...",
+    depositAwaitingConfirmPrompt:
+      "Selecciona la moneda, la red y el monto arriba, luego confirma para generar el código QR y la dirección.",
+    depositAwaitingConfirmBtn: "Confirmar y Proceder Ahora",
 
     withdrawEligibleLabel: "Saldo elegible para retiro inmediato:",
     totalBalancePrefix: "de un saldo total de",
@@ -816,6 +892,27 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     safeDepositBodyDynamic: (asset: string, net: string) =>
       `Cette adresse est dédiée à votre compte. Envoyez du ${asset} depuis n'importe quel exchange ou portefeuille (Binance, Bybit, TrustWallet, OKX, MetaMask) via (${net}). Dépôt minimum de 5,00 $. Crédit automatique après confirmation blockchain.`,
 
+    confirmDepositBtn: (amount: string, asset: string) =>
+      `⚡ Confirmer et Procéder au Dépôt de $${amount} (${asset})`,
+    confirmDepositSubtitle:
+      "Cliquez pour générer votre bordereau de paiement sécurisé et votre adresse de portefeuille dédiée",
+    confirmedDepositTitle:
+      "Bordereau de Dépôt Confirmé (Prêt pour le Virement)",
+    confirmedDepositSubtitle:
+      "Votre adresse dédiée est assignée et surveillée pour une synchronisation instantanée du solde",
+    confirmedDepositOrderLabel: "Ordre de Dépôt Numérique",
+    confirmedDepositAmountLabel: "Montant Sélectionné :",
+    confirmedDepositNetworkLabel: "Réseau Sélectionné :",
+    confirmedDepositFeeLabel: "Frais de Dépôt de la Plateforme :",
+    confirmedDepositSpeedLabel: "Vitesse Estimée :",
+    editDepositSelection: "Modifier le Montant ou le Réseau",
+    iHaveTransferredBtn: "J'ai Transféré — Vérifier et Actualiser le Solde",
+    depositStatusChecked:
+      "Recherche du virement entrant sur le registre de la blockchain...",
+    depositAwaitingConfirmPrompt:
+      "Sélectionnez l'actif, le réseau et le montant ci-dessus, puis confirmez pour afficher l'adresse et le code QR.",
+    depositAwaitingConfirmBtn: "Confirmer et Procéder Maintenant",
+
     withdrawEligibleLabel: "Solde éligible pour retrait immédiat :",
     totalBalancePrefix: "sur un solde total de",
     withdrawCoinSelectorTitle: "Sélectionnez la Devise de Retrait :",
@@ -989,6 +1086,27 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     safeDepositBodyDynamic: (asset: string, net: string) =>
       `यह पता आपके खाते के लिए समर्पित है। किसी भी एक्सचेंज या वॉलेट (Binance, Bybit, TrustWallet, OKX, MetaMask) से (${net}) के माध्यम से ${asset} भेजें। न्यूनतम जमा $5.00 है। ब्लॉकचेन पुष्टि पर राशि तुरंत जमा हो जाती है।`,
 
+    confirmDepositBtn: (amount: string, asset: string) =>
+      `⚡ $${amount} (${asset}) जमा की पुष्टि करें और आगे बढ़ें`,
+    confirmDepositSubtitle:
+      "अपनी सुरक्षित भुगतान पर्ची और समर्पित ब्लॉकचेन पता जनरेट करने के लिए क्लिक करें",
+    confirmedDepositTitle:
+      "पुष्टि की गई जमा पर्ची (स्थानांतरण के लिए तैयार)",
+    confirmedDepositSubtitle:
+      "तत्काल लेज़र क्रेडिटिंग के लिए आपका समर्पित पता सुरक्षित और सक्रिय है",
+    confirmedDepositOrderLabel: "डिजिटल जमा आदेश",
+    confirmedDepositAmountLabel: "चयनित राशि:",
+    confirmedDepositNetworkLabel: "चयनित नेटवर्क:",
+    confirmedDepositFeeLabel: "प्लेटफ़ॉर्म जमा शुल्क:",
+    confirmedDepositSpeedLabel: "अनुमानित गति:",
+    editDepositSelection: "राशि या नेटवर्क बदलें",
+    iHaveTransferredBtn: "मैंने ट्रांसफर कर दिया है — अब बैलेंस जांचें और सिंक करें",
+    depositStatusChecked:
+      "ब्लॉकचेन लेज़र पर इनकमिंग ट्रांसफर की पुष्टि की जा रही है...",
+    depositAwaitingConfirmPrompt:
+      "ऊपर अपनी संपत्ति, नेटवर्क और राशि चुनें, फिर भुगतान वाउचर और क्यूआर कोड जनरेट करने के लिए कन्फर्म पर क्लिक करें।",
+    depositAwaitingConfirmBtn: "पुष्टि करें और आगे बढ़ें",
+
     withdrawEligibleLabel: "तत्काल निकासी के लिए पात्र शेष राशि:",
     totalBalancePrefix: "कुल शेष राशि में से",
     withdrawCoinSelectorTitle: "निकासी मुद्रा चुनें:",
@@ -1161,6 +1279,25 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
       `请务必仅通过 ${net} 网络发送 ${asset}。转账任何其他币种或选错区块链网络将导致资金永久丢失且无法找回。`,
     safeDepositBodyDynamic: (asset: string, net: string) =>
       `此地址已为您专属生成并受到密码学安全保护。您可从任何交易所或钱包（Binance、Bybit、TrustWallet、OKX、MetaMask）通过 (${net}) 充值 ${asset}。最低充值金额为 $5.00。区块链确认后系统将立即自动为您入账。`,
+
+    confirmDepositBtn: (amount: string, asset: string) =>
+      `⚡ 确认并继续充值 $${amount} (${asset})`,
+    confirmDepositSubtitle:
+      "点击生成安全充值凭证及专属区块链收款地址",
+    confirmedDepositTitle: "已确认充值凭单（可立即转账）",
+    confirmedDepositSubtitle:
+      "已为您分配专属监控地址，链上确认后即刻自动计入游戏账户余额",
+    confirmedDepositOrderLabel: "数字充值订单",
+    confirmedDepositAmountLabel: "选定金额：",
+    confirmedDepositNetworkLabel: "选定网络：",
+    confirmedDepositFeeLabel: "平台充值手续费：",
+    confirmedDepositSpeedLabel: "预计到账速度：",
+    editDepositSelection: "修改金额或网络",
+    iHaveTransferredBtn: "我已完成转账 — 立即核对并同步余额",
+    depositStatusChecked: "正在区块链网络核实对应充值交易...",
+    depositAwaitingConfirmPrompt:
+      "请在上方选择币种、网络和充值金额，然后点击“确认充值”生成专属收款地址和二维码。",
+    depositAwaitingConfirmBtn: "立即确认并继续",
 
     withdrawEligibleLabel: "当前可即时提现金额：",
     totalBalancePrefix: "总资产为",

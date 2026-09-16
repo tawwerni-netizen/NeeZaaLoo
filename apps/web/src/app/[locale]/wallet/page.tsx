@@ -105,6 +105,9 @@ function WalletContent() {
   const [selectedPreset, setSelectedPreset] = useState<number | null>(25);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [isDepositConfirmed, setIsDepositConfirmed] = useState(false);
+  const [isSyncingLedger, setIsSyncingLedger] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
   // Withdrawal State
   const [withdrawAsset, setWithdrawAsset] = useState<SupportedAsset>("USDT");
@@ -350,6 +353,26 @@ function WalletContent() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   }
+
+  const handleConfirmDeposit = useCallback(() => {
+    setIsDepositConfirmed(true);
+    setTimeout(() => {
+      const el = document.getElementById("deposit-terminal-card");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 50);
+  }, []);
+
+  const handleSyncLedger = useCallback(async () => {
+    setIsSyncingLedger(true);
+    setSyncFeedback(tW.depositStatusChecked);
+    await reload(true);
+    setTimeout(() => {
+      setIsSyncingLedger(false);
+      setTimeout(() => setSyncFeedback(null), 4000);
+    }, 1200);
+  }, [reload, tW.depositStatusChecked]);
 
   function handleQuickPercent(pct: number) {
     if (maxWithdrawableForAsset <= 0) return;
@@ -1037,6 +1060,24 @@ function WalletContent() {
                 <span>{tW.powerSocialProof}</span>
               </div>
             </div>
+
+            {/* High-Converting Interactive Confirm Deposit CTA Button */}
+            <div className={styles.depositConfirmSection}>
+              <button
+                type="button"
+                className={styles.depositConfirmBtn}
+                onClick={handleConfirmDeposit}
+              >
+                <span className={styles.depositConfirmIcon}>⚡</span>
+                <span className={styles.depositConfirmText}>
+                  {tW.confirmDepositBtn(activeDepositAmount.toFixed(2), selectedAsset)}
+                </span>
+                <span className={styles.depositConfirmArrow}>{isAr ? "←" : "→"}</span>
+              </button>
+              <p className={styles.depositConfirmSubtitle}>
+                {tW.confirmDepositSubtitle}
+              </p>
+            </div>
           </div>
 
           {/* Value Pillars */}
@@ -1056,105 +1097,193 @@ function WalletContent() {
           </div>
 
           {/* ========================================================================= */}
-          {/* STEP 3: TRANSFER VIA DEDICATED ADDRESS & QR                               */}
+          {/* STEP 3: TRANSFER VIA DEDICATED ADDRESS & QR (PAYMENT TERMINAL)           */}
           {/* ========================================================================= */}
           <div className={styles.stepHeader}>
             <span className={styles.stepBadge}>3</span>
             <h2 className={styles.stepTitle}>{tW.step3Title}</h2>
           </div>
 
-          {/* Above the address: Critical Loss Prevention Warning */}
-          <div className={styles.sendWarning} role="alert">
-            <span className={styles.sendWarningIcon} aria-hidden="true">⚠️</span>
-            <div>
-              <strong className={styles.sendWarningTitle}>{tW.sendWarningTitle}</strong>
-              <p className={styles.sendWarningBody}>{tW.sendWarningBodyDynamic(selectedAsset, selectedNetwork)}</p>
+          {!isDepositConfirmed ? (
+            /* Awaiting User Confirmation Teaser Card */
+            <div className={styles.depositAwaitingCard}>
+              <div className={styles.depositAwaitingIconWrap}>
+                <span>🔒</span>
+              </div>
+              <div className={styles.depositAwaitingBody}>
+                <div className={styles.depositAwaitingTitle}>{tW.step3Title}</div>
+                <p className={styles.depositAwaitingPrompt}>
+                  {tW.depositAwaitingConfirmPrompt}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.depositAwaitingBtn}
+                onClick={handleConfirmDeposit}
+              >
+                <span>⚡</span>
+                <span>{tW.depositAwaitingConfirmBtn}</span>
+              </button>
             </div>
-          </div>
+          ) : (
+            /* Confirmed Payment Voucher Terminal Slip */
+            <div id="deposit-terminal-card" className={styles.confirmedTerminalCard}>
+              {/* Terminal Header */}
+              <div className={styles.confirmedTerminalHeader}>
+                <div className={styles.confirmedTerminalBadges}>
+                  <span className={styles.confirmedVerifiedBadge}>
+                    <span>🛡️</span> {tW.confirmedDepositOrderLabel}
+                  </span>
+                  <span className={styles.confirmedActiveBadge}>
+                    <span className={styles.pulseDot} />
+                    <span>{tW.qrReady}</span>
+                  </span>
+                </div>
+                <h3 className={styles.confirmedTerminalTitle}>
+                  {tW.confirmedDepositTitle}
+                </h3>
+                <p className={styles.confirmedTerminalSubtitle}>
+                  {tW.confirmedDepositSubtitle}
+                </p>
+              </div>
 
-          {/* QR & Dedicated Address Card - 100% INTERNAL VECTOR SVG */}
-          <div className={styles.qrDisplayCard}>
-            {depositLoading ? (
-              <div style={{ width: "170px", height: "170px", background: "rgba(255,255,255,0.04)", borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", color: "#94a3b8" }}>
-                <span style={{ fontSize: "32px" }}>⏳</span>
-                <span style={{ fontSize: "12px" }}>{tW.qrGenerating}</span>
+              {/* Order Summary Slip */}
+              <div className={styles.confirmedSlipGrid}>
+                <div className={styles.confirmedSlipItem}>
+                  <span className={styles.confirmedSlipLabel}>{tW.confirmedDepositAmountLabel}</span>
+                  <span className={styles.confirmedSlipValAmount}>
+                    ${activeDepositAmount.toFixed(2)} <span style={{ fontSize: "14px", color: "#38bdf8" }}>{selectedAsset}</span>
+                  </span>
+                </div>
+                <div className={styles.confirmedSlipItem}>
+                  <span className={styles.confirmedSlipLabel}>{tW.confirmedDepositNetworkLabel}</span>
+                  <span className={styles.confirmedSlipValNet}>
+                    <span className={styles.slipNetDot} />
+                    {selectedAsset} - {selectedNetwork}
+                  </span>
+                </div>
+                <div className={styles.confirmedSlipItem}>
+                  <span className={styles.confirmedSlipLabel}>{tW.confirmedDepositFeeLabel}</span>
+                  <span className={styles.confirmedSlipValFree}>0.00$ (0%)</span>
+                </div>
+                <div className={styles.confirmedSlipItem}>
+                  <span className={styles.confirmedSlipLabel}>{tW.confirmedDepositSpeedLabel}</span>
+                  <span className={styles.confirmedSlipValSpeed}>⚡ {selectedNetwork === "TRC20" ? tW.trc20Speed : selectedNetwork === "BEP20" ? tW.bep20Speed : tW.erc20Speed}</span>
+                </div>
               </div>
-            ) : qrValue ? (
-              <div className={styles.qrFrame}>
-                <QrCode
-                  value={qrValue}
-                  size={168}
-                  title={`${selectedAsset} ${selectedNetwork} deposit address`}
-                />
-              </div>
-            ) : (
-              <div style={{ width: "170px", height: "170px", background: "rgba(255,255,255,0.04)", borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", color: "#94a3b8" }}>
-                <span style={{ fontSize: "32px" }}>💳</span>
-                <span style={{ fontSize: "12px" }}>{depositData?.address ? tW.qrReady : "—"}</span>
-              </div>
-            )}
 
-            {isPermanent && depositData?.address && !depositLoading && (
-              <div style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "rgba(34, 197, 94, 0.12)",
-                border: "1px solid rgba(34, 197, 94, 0.35)",
-                padding: "8px 16px",
-                borderRadius: "20px",
-                color: "#4ade80",
-                fontSize: "13px",
-                fontWeight: 600,
-                marginTop: "6px",
-                marginBottom: "2px",
-              }}>
-                <span style={{ fontSize: "12px" }}>🟢</span>
-                <span>{tW.permanentWalletBadge}</span>
+              {/* Above the address: Critical Loss Prevention Warning */}
+              <div className={styles.sendWarning} role="alert">
+                <span className={styles.sendWarningIcon} aria-hidden="true">⚠️</span>
+                <div>
+                  <strong className={styles.sendWarningTitle}>{tW.sendWarningTitle}</strong>
+                  <p className={styles.sendWarningBody}>{tW.sendWarningBodyDynamic(selectedAsset, selectedNetwork)}</p>
+                </div>
               </div>
-            )}
 
-            {!isPermanent && depositTimeLeft && (
-              <div className={styles.timerBadge}>
-                <span>⏱️</span>
-                <span>{`Expires: ${depositTimeLeft}`}</span>
+              {/* QR & Dedicated Address Card - 100% INTERNAL VECTOR SVG */}
+              <div className={styles.qrDisplayCard}>
+                {depositLoading ? (
+                  <div style={{ width: "170px", height: "170px", background: "rgba(255,255,255,0.04)", borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", color: "#94a3b8" }}>
+                    <span style={{ fontSize: "32px" }}>⏳</span>
+                    <span style={{ fontSize: "12px" }}>{tW.qrGenerating}</span>
+                  </div>
+                ) : qrValue ? (
+                  <div className={styles.qrFrame}>
+                    <QrCode
+                      value={qrValue}
+                      size={168}
+                      title={`${selectedAsset} ${selectedNetwork} deposit address`}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ width: "170px", height: "170px", background: "rgba(255,255,255,0.04)", borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", color: "#94a3b8" }}>
+                    <span style={{ fontSize: "32px" }}>💳</span>
+                    <span style={{ fontSize: "12px" }}>{depositData?.address ? tW.qrReady : "—"}</span>
+                  </div>
+                )}
+
+                {isPermanent && depositData?.address && !depositLoading && (
+                  <div className={styles.permanentBadgeWrap}>
+                    <span style={{ fontSize: "12px" }}>🟢</span>
+                    <span>{tW.permanentWalletBadge}</span>
+                  </div>
+                )}
+
+                {!isPermanent && depositTimeLeft && (
+                  <div className={styles.timerBadge}>
+                    <span>⏱️</span>
+                    <span>{`Expires: ${depositTimeLeft}`}</span>
+                  </div>
+                )}
+
+                {depositError && (
+                  <div style={{ color: "#ef4444", fontSize: "13px", fontWeight: 600 }}>
+                    {depositError}
+                  </div>
+                )}
+
+                {/* Dedicated Address Row with Copy Animation */}
+                <div className={styles.addressRow}>
+                  <span className={styles.addressString}>
+                    {depositLoading
+                      ? tW.connectingOxaPay
+                      : depositData?.address || (isAr ? "جاري الاتصال بالبوابة..." : "Connecting...")}
+                  </span>
+                  {depositData?.address && (
+                    <button
+                      type="button"
+                      className={`${styles.copyBtn} ${copied ? styles.copyBtnSuccess : ""}`}
+                      onClick={() => handleCopy(depositData.address!)}
+                      disabled={depositLoading}
+                    >
+                      <span>{copied ? "✓" : "📋"}</span>
+                      <span>{copied ? tW.copied : tW.copy}</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Interactive Actions Row */}
+                <div className={styles.confirmedActionsRow}>
+                  <button
+                    type="button"
+                    className={styles.iHaveTransferredBtn}
+                    onClick={() => void handleSyncLedger()}
+                    disabled={isSyncingLedger}
+                  >
+                    <span style={{ display: "inline-block", transform: isSyncingLedger ? "rotate(180deg)" : "none", transition: "transform 400ms" }}>
+                      🔄
+                    </span>
+                    <span>{isSyncingLedger ? (isAr ? "جاري فحص البلوكتشين..." : "Scanning...") : tW.iHaveTransferredBtn}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.editDepositBtn}
+                    onClick={() => setIsDepositConfirmed(false)}
+                  >
+                    <span>✏️</span>
+                    <span>{tW.editDepositSelection}</span>
+                  </button>
+                </div>
+
+                {syncFeedback && (
+                  <div className={styles.syncFeedbackToast}>
+                    <span>⚡</span>
+                    <span>{syncFeedback}</span>
+                  </div>
+                )}
+
+                {/* Instruction Guide */}
+                <div className={styles.depositHelpNote}>
+                  <strong>{tW.safeDepositTitle}</strong>
+                  <p>
+                    {tW.safeDepositBodyDynamic(selectedAsset, selectedNetwork)}
+                  </p>
+                </div>
               </div>
-            )}
-
-            {depositError && (
-              <div style={{ color: "#ef4444", fontSize: "13px", fontWeight: 600 }}>
-                {depositError}
-              </div>
-            )}
-
-            {/* Dedicated Address Row with Copy Animation */}
-            <div className={styles.addressRow}>
-              <span className={styles.addressString}>
-                {depositLoading
-                  ? tW.connectingOxaPay
-                  : depositData?.address || (isAr ? "جاري الاتصال بالبوابة..." : "Connecting...")}
-              </span>
-              {depositData?.address && (
-                <button
-                  type="button"
-                  className={styles.copyBtn}
-                  onClick={() => handleCopy(depositData.address!)}
-                  disabled={depositLoading}
-                >
-                  <span>{copied ? "✓" : "📋"}</span>
-                  <span>{copied ? tW.copied : tW.copy}</span>
-                </button>
-              )}
             </div>
-
-            {/* Instruction Guide */}
-            <div className={styles.depositHelpNote}>
-              <strong>{tW.safeDepositTitle}</strong>
-              <p>
-                {tW.safeDepositBodyDynamic(selectedAsset, selectedNetwork)}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
