@@ -33,16 +33,27 @@ import { NotificationCenter } from "./notifications/NotificationCenter";
 import { UserMenu } from "./UserMenu";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthPopup } from "@/lib/auth-popup-context";
+import { useWalletBalance } from "@/lib/use-wallet-balance";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import styles from "./Header.module.css";
 
 type NavItem = { href: string; label: string; icon: string };
 
+const DEPOSIT_LABELS: Record<string, string> = {
+  ar: "إيداع",
+  en: "Deposit",
+  es: "Depositar",
+  fr: "Dépôt",
+  hi: "जमा",
+  zh: "充值",
+};
+
 export function Header() {
   const pathname = usePathname();
   const { player, loading, logout } = useAuth();
   const { openPopup } = useAuthPopup();
+  const { totalUsd, availableUsd, loading: balanceLoading } = useWalletBalance();
   const { locale, t } = useI18n();
   const reduceMotion = useReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -88,10 +99,45 @@ export function Header() {
         <div className={styles.secondary}>
           {loading ? null : player ? (
             <>
-              <LocaleLink href="/wallet" className={styles.walletPill}>
-                <span className={styles.walletIcon}>💳</span>
-                <span className={styles.walletLabel}>{t("nav.wallet")}</span>
-              </LocaleLink>
+              {/* Ultra-Professional Wallet Balance & Deposit Widget */}
+              <div className={styles.walletBalanceWidget}>
+                <LocaleLink
+                  href="/wallet"
+                  className={styles.walletBalanceMain}
+                  title={
+                    locale === "ar"
+                      ? `إجمالي الرصيد: $${totalUsd.toFixed(2)} USD (المتاح للعب: $${availableUsd.toFixed(2)})`
+                      : `Total Balance: $${totalUsd.toFixed(2)} USD (Available: $${availableUsd.toFixed(2)})`
+                  }
+                >
+                  <div className={styles.walletIconWrap}>
+                    <span className={styles.walletLiveDot} />
+                    <span className={styles.walletIcon}>💳</span>
+                  </div>
+                  <div className={styles.walletAmountWrap}>
+                    <span className={styles.walletAmountNum}>
+                      {balanceLoading ? (
+                        <span className={styles.walletShimmer}>$0.00</span>
+                      ) : (
+                        `$${totalUsd.toFixed(2)}`
+                      )}
+                    </span>
+                    <span className={styles.walletAssetTag}>USD</span>
+                  </div>
+                </LocaleLink>
+
+                <LocaleLink
+                  href="/wallet"
+                  className={styles.walletDepositQuickBtn}
+                  title={locale === "ar" ? "إيداع وشحن الرصيد فوراً" : "Deposit funds"}
+                >
+                  <span className={styles.walletDepositPlus}>+</span>
+                  <span className={styles.walletDepositLabel}>
+                    {DEPOSIT_LABELS[locale] || "Deposit"}
+                  </span>
+                </LocaleLink>
+              </div>
+
               <LocaleLink href="/chat" className={styles.chatPill} aria-label={t("nav.chat")}>
                 <span className={styles.chatIcon}>💬</span>
               </LocaleLink>
@@ -116,8 +162,17 @@ export function Header() {
         <div className={styles.mobileActions}>
           {loading ? null : player ? (
             <>
-              <LocaleLink href="/wallet" className={styles.mobileWalletBtn} aria-label={t("nav.wallet")}>
+              <LocaleLink
+                href="/wallet"
+                className={styles.mobileWalletBalancePill}
+                aria-label={t("nav.wallet")}
+                title={locale === "ar" ? "رصيد المحفظة" : "Wallet Balance"}
+              >
                 <span className={styles.walletIcon}>💳</span>
+                <span className={styles.mobileBalanceNum}>
+                  ${totalUsd.toFixed(2)}
+                </span>
+                <span className={styles.mobileDepositPlus}>+</span>
               </LocaleLink>
               <LocaleLink href="/chat" className={styles.mobileChatBtn} aria-label={t("nav.chat")}>
                 <span className={styles.chatIcon}>💬</span>
@@ -168,6 +223,18 @@ export function Header() {
                     </div>
                   </div>
                 </div>
+
+                {/* Mobile Drawer Balance Showcase */}
+                <div className={styles.mobileDrawerBalanceBox}>
+                  <div className={styles.mobileDrawerBalanceLabel}>
+                    <span>💳</span>
+                    <span>{locale === "ar" ? "رصيد المحفظة:" : "Wallet Balance:"}</span>
+                  </div>
+                  <div className={styles.mobileDrawerBalanceVal}>
+                    ${totalUsd.toFixed(2)} <span style={{ fontSize: "11px", color: "#4ade80" }}>USD</span>
+                  </div>
+                </div>
+
                 <div className={styles.mobileUserActions}>
                   <LocaleLink href="/wallet" className={styles.mobileCardWalletBtn} onClick={closeMenu}>
                     <span className={styles.walletIcon}>💳</span>

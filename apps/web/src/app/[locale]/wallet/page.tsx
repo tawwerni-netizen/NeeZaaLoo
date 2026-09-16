@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { get, post, ApiError } from "@/lib/api";
 import { fromMinorUnits } from "@/lib/money";
+import { triggerBalanceRefresh } from "@/lib/use-wallet-balance";
 import type { SupportedLocale } from "@/lib/i18n/locale";
 import { WALLET_TRANSLATIONS } from "./translations";
 import styles from "./wallet.module.css";
@@ -185,6 +186,7 @@ function WalletContent() {
 
       // Sort newest first
       setTransactions(allTxs.reverse());
+      triggerBalanceRefresh();
     } catch (e) {
       if (e instanceof ApiError && e.status === 403) { setForbidden(true); return; }
       setAccounts([
