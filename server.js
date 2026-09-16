@@ -40,6 +40,39 @@ if (fs.existsSync(envPath)) {
 
 process.env.NODE_ENV = "production";
 
+// A boot-time report of what this process can actually SEE -- names and
+// presence only, never a value.
+//
+// This exists because of a real and expensive failure: the API fell back to
+// the sandbox payment provider and handed players `Tsbx_...` deposit
+// addresses, while the keys sat correctly configured in the hosting panel
+// the whole time. Reading the panel proves nothing about what the running
+// process received, and there was no way to tell the two apart from
+// outside. Now the answer is the first thing in the runtime log, every
+// boot.
+//
+// Note .env is gitignored, so it is NOT deployed by git: on the server it
+// exists only if it was put there directly. When it is absent, every
+// variable below has to come from the host's own environment injection.
+(function reportConfig() {
+  const required = ["DATABASE_URL", "AUTH_SIGNING_KEY_B64", "AUTH_ENCRYPTION_KEY_B64"];
+  const payments = ["OXAPAY_MERCHANT_API_KEY", "OXAPAY_PAYOUT_API_KEY", "OXAPAY_CALLBACK_URL"];
+  const present = (k) => (process.env[k] ? "present" : "MISSING");
+
+  console.log("[config] .env file on disk:", fs.existsSync(envPath) ? "found" : "not present");
+  for (const k of required) console.log(`[config] ${k}: ${present(k)}`);
+  for (const k of payments) console.log(`[config] ${k}: ${present(k)}`);
+
+  if (!process.env.OXAPAY_MERCHANT_API_KEY) {
+    console.error(
+      "[config] WARNING: OXAPAY_MERCHANT_API_KEY is not visible to this process.\n" +
+      "[config]          Deposits and withdrawals will be DISABLED (they will not\n" +
+      "[config]          fall back to sandbox addresses). Set the variable and\n" +
+      "[config]          restart, or place it in a .env file next to server.js."
+    );
+  }
+})();
+
 const avatarDir = process.env.AVATAR_STORAGE_DIR || path.join(here, "apps", "web", "public", "avatars");
 try { fs.mkdirSync(avatarDir, { recursive: true }); } catch {}
 
