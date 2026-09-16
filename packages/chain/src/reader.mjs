@@ -49,6 +49,7 @@
  */
 import { createTronRpcClient } from "./tron-rpc.mjs";
 import { createTronBlockchainProvider, VerifyOutcome, DEFAULT_USDT_TRC20_CONTRACT } from "./provider.mjs";
+import { createBscChainReader } from "./bsc.mjs";
 
 export { VerifyOutcome, DEFAULT_USDT_TRC20_CONTRACT };
 
@@ -289,15 +290,29 @@ export function createChainReader({
   indexerUrl = process.env.TRON_INDEXER_URL,
   contractAddress = process.env.USDT_TRC20_CONTRACT_ADDRESS,
   requiredConfirmations = Number(process.env.TRON_CONFIRMATION_DEPTH || 20),
+  bscEnabled = String(process.env.BSC_ENABLED ?? "true").toLowerCase() !== "false",
+  bscRpcUrl = process.env.BSC_RPC_URL,
+  bscConfirmations = Number(process.env.BSC_CONFIRMATION_DEPTH || 15),
   fetchImpl,
 } = {}) {
   if (kind === "tron") {
-    return createTronChainReader({
+    const tron = createTronChainReader({
       fetchImpl, apiKey, requiredConfirmations,
       ...(fullNodeUrl ? { fullNodeUrl } : {}),
       ...(indexerUrl ? { indexerUrl } : {}),
       ...(contractAddress ? { contractAddress } : {}),
     });
+    // BNB Smart Chain alongside Tron unless explicitly switched off. Each
+    // reader declares its own supportedRails; payments only opens a rail a
+    // reader actually covers, so BSC=off simply closes the BEP20 rails.
+    if (bscEnabled) {
+      const bsc = createBscChainReader({
+        fetchImpl, requiredConfirmations: bscConfirmations,
+        ...(bscRpcUrl ? { rpcUrl: bscRpcUrl } : {}),
+      });
+      return createMultiChainReader([tron, bsc]);
+    }
+    return tron;
   }
 
   if (nodeEnv === "production") {
@@ -311,4 +326,65 @@ export function createChainReader({
   // check of the exact same rule -- belt and braces on the one thing this
   // module exists to prevent.
   return createMockChainReader({ nodeEnv });
+}
+
+/**
+ * Several single-chain readers behind the one reader interface payments uses.
+ *
+ * Each call is routed by network to the reader that speaks it; a network no
+ * reader speaks is WRONG_NETWORK, exactly as a single reader answers. When a
+ * caller names the asset it expects, a VERIFIED transfer of a DIFFERENT
+ * asset is refused as NO_TRANSFER_EVENT -- one BSC address can receive
+ * USDT, USDC and DAI alike, and a deposit intent for one must never be
+ * satisfied by another.
+ */
+const CANONICAL_NETWORK = { TRC20: "TRON", BSC: "BEP20", BNB: "BEP20", ETH: "ERC20" };
+const canonicalNet = (n) => {
+  const u = String(n ?? "").trim().toUpperCase();
+  return CANONICAL_NETWORK[u] ?? u;
+};
+
+export function createMultiChainReader(readers) {
+  const route = (network) => readers.find((r) => canonicalNet(r.network) === canonicalNet(network)) ?? null;
+
+  const pinAsset = (result, asset) => {
+    if (asset && result?.outcome === VerifyOutcome.VERIFIED && result.asset
+        && String(result.asset).toUpperCase() !== String(asset).toUpperCase()) {
+      return { outcome: VerifyOutcome.NO_TRANSFER_EVENT, observedAsset: result.asset };
+    }
+    return result;
+  };
+
+  return {
+    id: "multi",
+    _isMock: readers.every((r) => r._isMock),
+    network: readers[0]?.network ?? null,
+    readers,
+    supportedRails: readers.flatMap((r) => r.supportedRails ?? []),
+
+    async verifyIncoming(args) {
+      const r = route(args.network);
+      if (!r) return { outcome: VerifyOutcome.WRONG_NETWORK };
+      return pinAsset(await r.verifyIncoming({ ...args, network: r.network }), args.asset);
+    },
+
+    async verifyTransfer(args) {
+      const r = route(args.expectedNetwork);
+      if (!r) return { outcome: VerifyOutcome.WRONG_NETWORK };
+      return pinAsset(await r.verifyTransfer({ ...args, expectedNetwork: r.network }), args.asset);
+    },
+
+    /** Pings the reader for `network` when given, otherwise every reader (all must answer). */
+    async ping({ network } = {}) {
+      const targets = network ? [route(network)].filter(Boolean) : readers;
+      if (targets.length === 0) throw new Error(`no chain reader for network ${network}`);
+      let latencyMs = 0, blockNumber = null;
+      for (const r of targets) {
+        const p = await r.ping();
+        latencyMs = Math.max(latencyMs, p.latencyMs);
+        blockNumber = blockNumber ?? p.blockNumber;
+      }
+      return { ok: true, latencyMs, blockNumber };
+    },
+  };
 }

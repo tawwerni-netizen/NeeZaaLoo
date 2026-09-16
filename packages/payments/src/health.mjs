@@ -46,7 +46,7 @@ export function createHealthService({ db, chain, degradedLatencyMs = 3000 } = {}
     async checkRail(asset, network) {
       const checks = [];
 
-      checks.push(await checkChain(chain));
+      checks.push(await checkChain(chain, network));
       if (db) {
         checks.push(await checkSolvency(db, asset));
         checks.push(await checkIncidents(db, asset));
@@ -58,12 +58,13 @@ export function createHealthService({ db, chain, degradedLatencyMs = 3000 } = {}
   };
 }
 
-async function checkChain(chain) {
+async function checkChain(chain, network) {
   if (!chain || typeof chain.ping !== "function") {
     return { name: "CHAIN_REACHABLE", status: HealthStatus.UNKNOWN, detail: "no chain reader configured" };
   }
   try {
-    const result = await chain.ping();
+    // A multi-chain reader pings the chain this rail runs on; single readers ignore the argument.
+    const result = await chain.ping({ network });
     if (result.latencyMs > 3000) {
       return { name: "CHAIN_REACHABLE", status: HealthStatus.DEGRADED, detail: `slow response: ${result.latencyMs}ms` };
     }

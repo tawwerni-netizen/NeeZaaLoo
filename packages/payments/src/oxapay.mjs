@@ -221,18 +221,25 @@ export function createOxapayProvider({
       const state = mapPaymentStatus(rawStatus);
       const trackId = String(parsed.trackId || parsed.track_id || parsed.order_id || "");
       const address = String(parsed.address || parsed.pay_address || "");
+      // Static-address callbacks nest the transfer under `txs`. The hash is
+      // what lets the BSC verifier confirm by receipt (a public BSC node
+      // cannot discover a deposit without it), and it is what makes a
+      // retried callback dedupe instead of looking like a new event.
+      const txHash = parsed.txID || parsed.txId || parsed.tx_hash
+        || (Array.isArray(parsed.txs) ? (parsed.txs[0]?.tx_hash || parsed.txs[0]?.txID || parsed.txs[0]?.txId) : null)
+        || null;
 
       return {
         ok: true,
         event: {
-          providerEventId: `${trackId || address}:${rawStatus}:${parsed.txID || parsed.txId || Date.now()}`,
+          providerEventId: `${trackId || address}:${rawStatus}:${txHash || Date.now()}`,
           type: "payment.status",
           providerRef: trackId,
           address: address || null,
           state,
           reportedAmount: parsed.amount ? String(parsed.amount) : null,
           reportedAsset: parsed.pay_currency || parsed.currency || "USDT",
-          reportedTxHash: parsed.txID || parsed.txId || parsed.tx_hash || null,
+          reportedTxHash: txHash,
           raw: parsed,
         },
       };

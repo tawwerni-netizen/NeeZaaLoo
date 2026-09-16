@@ -387,6 +387,10 @@ export function createPaymentService(db, {
         result = await chain.verifyIncoming({
           network: dep.network,
           address: dep.address,
+          // The coin this intent is FOR. On BSC one address receives USDT,
+          // USDC and DAI alike; without this a transfer of the wrong coin
+          // could satisfy the intent.
+          asset: dep.asset,
           requiredConfirmations: confirmationDepth,
           txHash: opts.txHash || dep.observed_tx_hash || null,
         });
@@ -1081,7 +1085,7 @@ export function createPaymentService(db, {
       let verified;
       try {
         verified = await chain.verifyTransfer({
-          txHash: cur.tx_hash, expectedNetwork: w.network, expectedRecipient: w.destination, requiredConfirmations,
+          txHash: cur.tx_hash, expectedNetwork: w.network, expectedRecipient: w.destination, asset: w.asset, requiredConfirmations,
         });
       } catch (e) {
         return { ok: true, status: "BROADCASTED", unchanged: true, reason: "PROVIDER_UNAVAILABLE" };
