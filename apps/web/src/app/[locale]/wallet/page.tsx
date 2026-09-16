@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { get, post, ApiError } from "@/lib/api";
 import { fromMinorUnits } from "@/lib/money";
+import type { SupportedLocale } from "@/lib/i18n/locale";
+import { WALLET_TRANSLATIONS } from "./translations";
 import styles from "./wallet.module.css";
 
 type Account = { key: string; balance: string; asset: string };
@@ -56,6 +58,7 @@ function WalletContent() {
   const { player } = useAuth();
   const { t, locale } = useI18n();
   const isAr = locale === "ar";
+  const tW = WALLET_TRANSLATIONS[(locale as SupportedLocale)] || WALLET_TRANSLATIONS.en;
 
   // Tab navigation: "deposit" | "withdraw" | "history"
   const [activeTab, setActiveTab] = useState<"deposit" | "withdraw" | "history">("deposit");
@@ -84,6 +87,7 @@ function WalletContent() {
   const [depositError, setDepositError] = useState<string | null>(null);
   const [depositTimeLeft, setDepositTimeLeft] = useState<string>("");
   const [selectedPreset, setSelectedPreset] = useState<number | null>(25);
+  const [customAmount, setCustomAmount] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
   // Withdrawal State
@@ -368,22 +372,20 @@ function WalletContent() {
         <div className={styles.titleRow}>
           <div>
             <h1 className={styles.pageTitle}>
-              <span>💼</span> {isAr ? "محفظة التيذر (USDT Vault)" : "USDT Player Vault"}
+              <span>💼</span> {tW.heading}
             </h1>
             <p className={styles.pageSubtitle}>
-              {isAr
-                ? "إيداع وسحب مؤتمت وفوري، شفافية محاسبية مطلقة على البلوكتشين، وحماية مصرفية متقدمة لجميع أموالك."
-                : "Automated instant deposits and withdrawals, immutable blockchain transparency, and institutional-grade player security."}
+              {tW.subhead}
             </p>
           </div>
           <button
             type="button"
             className={styles.refreshBtn}
             onClick={() => reload(true)}
-            title={isAr ? "تحديث الأرصدة والبيانات" : "Refresh Balances"}
+            title={locale === "ar" ? "تحديث الأرصدة والبيانات" : "Refresh Balances"}
           >
             <span style={{ display: "inline-block", transform: isRefreshing ? "rotate(360deg)" : "none", transition: "transform 500ms ease" }}>🔄</span>
-            {isRefreshing ? (isAr ? "جاري التحديث..." : "Updating...") : (isAr ? "تحديث المحفظة" : "Refresh")}
+            {isRefreshing ? (locale === "ar" ? "جاري التحديث..." : "Updating...") : (locale === "ar" ? "تحديث المحفظة" : "Refresh")}
           </button>
         </div>
       </header>
@@ -417,19 +419,19 @@ function WalletContent() {
               <path d="M12.6 13.2v-1.1c1.9-.1 3.5-.7 3.5-1.5s-1.6-1.4-3.5-1.5V7.4h-1.2v1.7C9.5 9.2 8 9.8 8 10.6s1.6 1.4 3.4 1.5v1.1c-2.4.2-4.2.8-4.2 1.7 0 .9 1.8 1.6 4.2 1.7v2.2h1.2v-2.2c2.4-.2 4.2-.8 4.2-1.7 0-.9-1.8-1.5-4.2-1.7z" fill="#fff" />
             </svg>
             <span>Tether USD (USDT)</span>
-            <span className={styles.peggedBadge}>1 USDT = 1.00 USD</span>
+            <span className={styles.peggedBadge}>{tW.peggedRate}</span>
           </div>
 
           <div className={styles.instantPayoutBadge}>
             <span className={styles.pulseDot} />
-            <span>{isAr ? "سحوبات مؤتمتة فورية 24/7" : "Automated Instant Payouts Active"}</span>
+            <span>{tW.instantPayoutBadge}</span>
           </div>
         </div>
 
         {/* Balance Section */}
         <div className={styles.heroBalanceSection}>
           <div className={styles.totalBalanceLabel}>
-            {isAr ? "إجمالي المركز المالي في حسابك" : "Total Net Financial Balance"}
+            {tW.totalBalanceLabel}
           </div>
           <div className={styles.totalBalanceAmount}>
             <span className="nz-num">${totalBalanceUsdt.toFixed(2)}</span>
@@ -444,14 +446,14 @@ function WalletContent() {
             <div className={styles.statPillHeader}>
               <span>🟢</span>
               <span className={styles.statPillTitle}>
-                {isAr ? "المتاح للمنافسات والنزال" : "Available to Play"}
+                {tW.availableLabel}
               </span>
             </div>
             <div className={styles.statPillAmount}>
               <span className="nz-num">${availableUsdt.toFixed(2)}</span> <span style={{ fontSize: "14px", fontWeight: 600, color: "#94a3b8" }}>USDT</span>
             </div>
             <div className={styles.statPillSub}>
-              {isAr ? "جاهز فوراً لدخول أي مباراة أو بطولة" : "Ready for match stakes & tournaments"}
+              {tW.availableSub}
             </div>
           </div>
 
@@ -460,14 +462,14 @@ function WalletContent() {
             <div className={styles.statPillHeader}>
               <span>🔒</span>
               <span className={styles.statPillTitle}>
-                {isAr ? "في النزالات الجارية" : "In Active Matches"}
+                {tW.lockedLabel}
               </span>
             </div>
             <div className={styles.statPillAmount}>
               <span className="nz-num">${lockedUsdt.toFixed(2)}</span> <span style={{ fontSize: "14px", fontWeight: 600, color: "#94a3b8" }}>USDT</span>
             </div>
             <div className={styles.statPillSub}>
-              {isAr ? "محتجز في مباريات أو بطولات لم تنتهِ بعد" : "Reserved in active matches or brackets"}
+              {tW.lockedSub}
             </div>
           </div>
 
@@ -476,14 +478,14 @@ function WalletContent() {
             <div className={styles.statPillHeader}>
               <span>✨</span>
               <span className={`${styles.statPillTitle} ${styles.statPillTitleWithdrawable}`}>
-                {isAr ? "القابل للسحب الفوري" : "Ready to Withdraw"}
+                {tW.withdrawableLabel}
               </span>
             </div>
             <div className={`${styles.statPillAmount} ${styles.statPillAmountWithdrawable}`}>
               <span className="nz-num">${withdrawableUsdt.toFixed(2)}</span> <span style={{ fontSize: "14px", fontWeight: 600, color: "#4ade80" }}>USDT</span>
             </div>
             <div className={styles.statPillSub} style={{ color: "#86efac" }}>
-              {isAr ? "أموال مستوفية لشروط اللعب وجاهزة للتحويل الخارجي" : "Cleared funds eligible for instant cashout"}
+              {tW.withdrawableSub}
             </div>
           </div>
         </div>
@@ -495,14 +497,10 @@ function WalletContent() {
           <div className={styles.amlIcon}>🛡️</div>
           <div className={styles.amlContent}>
             <div className={`${styles.amlTitle} ${styles.amlTitleActive}`}>
-              {isAr
-                ? `شرط تدوير مبالغ الإيداع للنزاهة نشط (${amlPercentage}% مكتمل)`
-                : `AML Playthrough Requirement Active (${amlPercentage}% Completed)`}
+              {tW.amlTitlePending} ({amlPercentage}%)
             </div>
             <div className={styles.amlDesc}>
-              {isAr
-                ? `وفقاً لقوانين مكافحة غسيل الأموال، يتطلب سحب مبالغ الإيداع استخدامها في خوض المبارزات أولاً. لعبت حتى الآن بمبلغ $${totalPlayedUsdt.toFixed(2)} USDT من إجمالي إيداعاتك $${totalDepositedUsdt.toFixed(2)} USDT. متبقي $${unplayedUsdt.toFixed(2)} USDT لتأهيل كامل الرصيد للسحب.`
-                : `To prevent money laundering, deposited capital must be used in games before withdrawal. You have played $${totalPlayedUsdt.toFixed(2)} USDT of your $${totalDepositedUsdt.toFixed(2)} USDT deposit. $${unplayedUsdt.toFixed(2)} USDT remaining to unlock full withdrawals.`}
+              {tW.amlDescPending} ${unplayedUsdt.toFixed(2)} USDT
             </div>
             <div className={styles.amlProgressBarWrap}>
               <div
@@ -511,12 +509,12 @@ function WalletContent() {
               />
             </div>
             <div className={styles.amlFootMetrics}>
-              <span>{isAr ? "التقدّم:" : "Progress:"} {amlPercentage}%</span>
-              <span>{isAr ? "المتبقي للفتح:" : "Remaining:"} ${unplayedUsdt.toFixed(2)} USDT</span>
+              <span>{tW.amlPlayed} ${totalPlayedUsdt.toFixed(2)} ({amlPercentage}%)</span>
+              <span>{tW.amlRemaining} ${unplayedUsdt.toFixed(2)} USDT</span>
             </div>
           </div>
           <Link href={`/${locale}/games`} className={styles.duelCtaBtn}>
-            <span>⚔️</span> {isAr ? "خوض نزال الآن" : "Play a Match"}
+            <span>⚔️</span> {tW.playNowCta}
           </Link>
         </section>
       ) : (
@@ -524,12 +522,10 @@ function WalletContent() {
           <div className={styles.amlIcon}>✓</div>
           <div className={styles.amlContent}>
             <div className={`${styles.amlTitle} ${styles.amlTitleCompleted}`}>
-              {isAr ? "حسابك مستوفي لشروط مكافحة غسيل الأموال (AML Completed)" : "AML Playthrough Completed — 100% Cleared"}
+              {tW.amlTitleReady}
             </div>
             <div className={styles.amlDesc}>
-              {isAr
-                ? "لقد خضت مبارزات بمبالغ تفوق كامل إيداعاتك على المنصة! كامل رصيدك المتاح مؤهل للسحب الفوري إلى محفظتك الخارجية دون أي قيود."
-                : "You have wagered all deposited funds in duels. 100% of your available balance is fully cleared and ready for immediate withdrawal."}
+              {tW.amlDescReady}
             </div>
           </div>
         </section>
@@ -543,7 +539,7 @@ function WalletContent() {
           onClick={() => setActiveTab("deposit")}
         >
           <span className={styles.tabIcon}>📥</span>
-          <span>{isAr ? "إيداع USDT (OxaPay)" : "Deposit USDT"}</span>
+          <span>{tW.tabDeposit}</span>
         </button>
 
         <button
@@ -552,7 +548,7 @@ function WalletContent() {
           onClick={() => setActiveTab("withdraw")}
         >
           <span className={styles.tabIcon}>📤</span>
-          <span>{isAr ? "سحب الأرباح (Withdraw)" : "Withdraw USDT"}</span>
+          <span>{tW.tabWithdraw}</span>
         </button>
 
         <button
@@ -561,7 +557,7 @@ function WalletContent() {
           onClick={() => setActiveTab("history")}
         >
           <span className={styles.tabIcon}>📜</span>
-          <span>{isAr ? `سجل المعاملات (${transactions.length})` : `Activity History (${transactions.length})`}</span>
+          <span>{tW.tabHistory} ({transactions.length})</span>
         </button>
       </nav>
 
@@ -570,67 +566,187 @@ function WalletContent() {
       {/* ========================================================================= */}
       {activeTab === "deposit" && (
         <div className={styles.actionCard}>
-          {/* High Conversion Presets */}
+          {/* High Conversion Presets & Custom Amount */}
           <div className={styles.presetsSection}>
             <div className={styles.presetsSectionTitle}>
-              <span>⚡</span> {isAr ? "اختر باقة إيداع سريعة للبدء:" : "Select a Quick Deposit Preset:"}
+              <span>⚡</span> {tW.presetsTitle}
             </div>
             <div className={styles.presetsGrid}>
               {[
-                { amount: 10, label: isAr ? "نزال سريع" : "Quick Duel", tag: null },
-                { amount: 25, label: isAr ? "الأكثر اختياراً 🔥" : "Most Popular 🔥", tag: isAr ? "شائع" : "HOT" },
-                { amount: 50, label: isAr ? "منافس البطولات 🏆" : "Tournament Pro 🏆", tag: null },
-                { amount: 100, label: isAr ? "بطل النخبة 💎" : "VIP Elite 💎", tag: isAr ? "نخبة" : "VIP" },
-              ].map((p) => (
-                <div
-                  key={p.amount}
-                  className={`${styles.presetBtn} ${selectedPreset === p.amount ? styles.presetBtnActive : ""}`}
-                  onClick={() => setSelectedPreset(p.amount)}
-                >
-                  {p.tag && <span className={styles.presetTag}>{p.tag}</span>}
-                  <span className={styles.presetAmount}>${p.amount}</span>
-                  <span className={styles.presetLabel}>{p.label}</span>
-                </div>
-              ))}
+                { amount: 5, label: tW.presetStarter, tag: tW.badgeStarter, isStarter: true },
+                { amount: 10, label: tW.presetQuick, tag: null },
+                { amount: 25, label: tW.presetPopular, tag: tW.badgePopular },
+                { amount: 50, label: tW.presetTournaments, tag: null },
+                { amount: 100, label: tW.presetElite, tag: tW.badgeElite },
+                { amount: 200, label: tW.presetMaster, tag: null },
+                { amount: 500, label: tW.presetArena, tag: null },
+                { amount: 1000, label: tW.presetVip, tag: tW.badgeVip, isVip: true },
+                { amount: 2000, label: tW.presetWhaleSilver, tag: null },
+                { amount: 5000, label: tW.presetWhaleGold, tag: tW.badgeWhale, isVip: true },
+              ].map((p) => {
+                const isActive = selectedPreset === p.amount && !customAmount;
+                return (
+                  <button
+                    key={p.amount}
+                    type="button"
+                    className={`${styles.presetBtn} ${p.isStarter ? styles.presetBtnStarter : ""} ${isActive ? styles.presetBtnActive : ""}`}
+                    onClick={() => {
+                      setSelectedPreset(p.amount);
+                      setCustomAmount("");
+                    }}
+                  >
+                    {p.tag && (
+                      <span className={`${styles.presetTag} ${p.isStarter ? styles.presetTagStarter : p.isVip ? styles.presetTagVip : ""}`}>
+                        {p.tag}
+                      </span>
+                    )}
+                    <span className={styles.presetAmount}>${p.amount}</span>
+                    <span className={styles.presetLabel}>{p.label}</span>
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Custom Amount Input Bar */}
+            <div className={styles.customAmountCard}>
+              <div className={styles.customAmountLabelWrap}>
+                <span className={styles.customAmountIcon}>💵</span>
+                <div>
+                  <div className={styles.customAmountLabelTitle}>{tW.customAmountLabel}</div>
+                  <div className={styles.customAmountHint}>{tW.customAmountMinHint}</div>
+                </div>
+              </div>
+
+              <div className={styles.customAmountInputBox}>
+                <span className={styles.customAmountCurrency}>$ USDT</span>
+                <input
+                  type="number"
+                  min="5"
+                  step="any"
+                  placeholder={tW.customAmountPlaceholder}
+                  className={styles.customAmountField}
+                  value={customAmount}
+                  onChange={(e) => {
+                    setCustomAmount(e.target.value);
+                    if (selectedPreset !== null) setSelectedPreset(null);
+                  }}
+                />
+                {customAmount && (
+                  <button
+                    type="button"
+                    className={styles.customAmountClearBtn}
+                    onClick={() => {
+                      setCustomAmount("");
+                      setSelectedPreset(25);
+                    }}
+                    title="Clear"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Selected preview feedback */}
+            {(customAmount || selectedPreset) && (
+              <div className={styles.customSelectedPreview}>
+                <span>✓</span>
+                <span>
+                  {tW.customSelectedPreview.replace(
+                    "{amount}",
+                    customAmount ? customAmount : (selectedPreset || 25).toString()
+                  )}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Value Pillars */}
           <div className={styles.benefitsStrip}>
             <div className={styles.benefitItem}>
               <span>⚡</span>
-              <span>{isAr ? "عمولة إيداع 0% (لا نخصم أي فلس)" : "0% Platform Deposit Fee"}</span>
+              <span>{tW.benefitFee}</span>
             </div>
             <div className={styles.benefitItem}>
               <span>⏱️</span>
-              <span>{isAr ? "قيد فوري بعد تأكيد 1 على البلوكتشين" : "Instant Credit after 1 Block Confirmation"}</span>
+              <span>{tW.benefitInstant}</span>
             </div>
             <div className={styles.benefitItem}>
               <span>🛡️</span>
-              <span>{isAr ? "بوابة OxaPay مشفرة ومؤمنة 100%" : "Secured by OxaPay Gateway"}</span>
+              <span>{tW.benefitOxaPay}</span>
             </div>
           </div>
 
-          {/* Network Selector */}
+          {/* Network Selector Cards */}
           <div className={styles.networkSection}>
             <div className={styles.networkSectionTitle}>
-              {isAr ? "اختر شبكة التحويل المفضلة لديك:" : "Select Transfer Network:"}
+              <span>🌐</span> {tW.networkTitle}
             </div>
-            <div className={styles.networkTabs}>
-              {[
-                { net: "TRC20" as const, label: "USDT-TRC20 (Tron)", rec: isAr ? "موصى به · الأسرع" : "Fast & Cheap" },
-                { net: "BEP20" as const, label: "USDT-BEP20 (BNB Chain)", rec: isAr ? "رسوم منخفضة" : "Low Gas" },
-              ].map((item) => (
-                <button
-                  key={item.net}
-                  type="button"
-                  className={`${styles.networkPill} ${selectedNetwork === item.net ? styles.networkPillActive : ""}`}
-                  onClick={() => setSelectedNetwork(item.net)}
-                >
-                  <span>{item.label}</span>
-                  {item.rec && <span className={styles.networkRecommendedBadge}>{item.rec}</span>}
-                </button>
-              ))}
+            <div className={styles.networkCardsGrid}>
+              {/* TRON (TRC20) */}
+              <button
+                type="button"
+                className={`${styles.networkCard} ${selectedNetwork === "TRC20" ? styles.networkCardActiveTrc : ""}`}
+                onClick={() => setSelectedNetwork("TRC20")}
+              >
+                {selectedNetwork === "TRC20" && (
+                  <span className={styles.networkSelectedCheck}>{tW.networkSelected}</span>
+                )}
+                <div className={styles.networkCardHeader}>
+                  <div className={styles.networkCardIdentity}>
+                    <div className={styles.networkLogoTrc}>
+                      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                        <path d="M2.5 5.5L30 1.5L25 29.5L16 25L2.5 5.5Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" />
+                        <path d="M2.5 5.5L25 29.5M30 1.5L16 25" stroke="white" strokeWidth="2" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className={styles.networkNameTitle}>{tW.trc20Name}</div>
+                      <div className={styles.networkChainSubtitle}>{tW.trc20Chain}</div>
+                    </div>
+                  </div>
+                  <span className={styles.networkHighlightBadgeTrc}>{tW.trc20Badge}</span>
+                </div>
+
+                <div className={styles.networkCardFooterSpecs}>
+                  <span className={styles.networkSpecSpeed}>⚡ {tW.trc20Speed}</span>
+                  <span className={styles.networkSpecFee}>{tW.trc20Fee}</span>
+                </div>
+              </button>
+
+              {/* BNB Smart Chain (BEP20) */}
+              <button
+                type="button"
+                className={`${styles.networkCard} ${selectedNetwork === "BEP20" ? styles.networkCardActiveBep : ""}`}
+                onClick={() => setSelectedNetwork("BEP20")}
+              >
+                {selectedNetwork === "BEP20" && (
+                  <span className={styles.networkSelectedCheck}>{tW.networkSelected}</span>
+                )}
+                <div className={styles.networkCardHeader}>
+                  <div className={styles.networkCardIdentity}>
+                    <div className={styles.networkLogoBep}>
+                      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 2.5L21.5 8L16 13.5L10.5 8L16 2.5Z" fill="#111" />
+                        <path d="M24 10.5L29.5 16L24 21.5L18.5 16L24 10.5Z" fill="#111" />
+                        <path d="M8 10.5L13.5 16L8 21.5L2.5 16L8 10.5Z" fill="#111" />
+                        <path d="M16 18.5L21.5 24L16 29.5L10.5 24L16 18.5Z" fill="#111" />
+                        <path d="M16 9.5L19.5 13L16 16.5L12.5 13L16 9.5Z" fill="#111" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className={styles.networkNameTitle}>{tW.bep20Name}</div>
+                      <div className={styles.networkChainSubtitle}>{tW.bep20Chain}</div>
+                    </div>
+                  </div>
+                  <span className={styles.networkHighlightBadgeBep}>{tW.bep20Badge}</span>
+                </div>
+
+                <div className={styles.networkCardFooterSpecs}>
+                  <span className={styles.networkSpecSpeed}>🚀 {tW.bep20Speed}</span>
+                  <span className={styles.networkSpecFee}>{tW.bep20Fee}</span>
+                </div>
+              </button>
             </div>
           </div>
 
@@ -639,7 +755,7 @@ function WalletContent() {
             {depositLoading ? (
               <div style={{ width: "160px", height: "160px", background: "rgba(255,255,255,0.04)", borderRadius: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", color: "#94a3b8" }}>
                 <span style={{ fontSize: "28px" }}>⏳</span>
-                <span style={{ fontSize: "12px" }}>{isAr ? "جاري توليد العنوان..." : "Generating..."}</span>
+                <span style={{ fontSize: "12px" }}>{tW.qrGenerating}</span>
               </div>
             ) : effectiveQrUrl ? (
               <div className={styles.qrFrame}>
@@ -654,7 +770,7 @@ function WalletContent() {
             ) : (
               <div style={{ width: "160px", height: "160px", background: "rgba(255,255,255,0.04)", borderRadius: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", color: "#94a3b8" }}>
                 <span style={{ fontSize: "28px" }}>💳</span>
-                <span style={{ fontSize: "12px" }}>{depositData?.address ? (isAr ? "جاهز للتحويل" : "Ready") : "—"}</span>
+                <span style={{ fontSize: "12px" }}>{depositData?.address ? tW.qrReady : "—"}</span>
               </div>
             )}
 
@@ -674,14 +790,14 @@ function WalletContent() {
                 marginBottom: "2px",
               }}>
                 <span style={{ fontSize: "12px" }}>🟢</span>
-                <span>{isAr ? "عنوان محفظة ثابت ودائم مخصص لحسابك (لا تنتهي صلاحيته)" : "Permanent Dedicated Wallet (Never Expires)"}</span>
+                <span>{tW.permanentWalletBadge}</span>
               </div>
             )}
 
             {!isPermanent && depositTimeLeft && (
               <div className={styles.timerBadge}>
                 <span>⏱️</span>
-                <span>{isAr ? `ينتهي هذا العنوان خلال: ${depositTimeLeft}` : `Address expires in: ${depositTimeLeft}`}</span>
+                <span>{`Expires: ${depositTimeLeft}`}</span>
               </div>
             )}
 
@@ -695,7 +811,7 @@ function WalletContent() {
             <div className={styles.addressRow}>
               <span className={styles.addressString}>
                 {depositLoading
-                  ? (isAr ? "جاري الاتصال ببوابة OxaPay..." : "Connecting to OxaPay gateway...")
+                  ? tW.connectingOxaPay
                   : (depositData?.address || "—")}
               </span>
               {depositData?.address && !depositLoading && (
@@ -705,7 +821,7 @@ function WalletContent() {
                   onClick={() => handleCopy(depositData.address!)}
                 >
                   <span>{copied ? "✓" : "📋"}</span>
-                  <span>{copied ? (isAr ? "تم النسخ!" : "Copied!") : (isAr ? "نسخ" : "Copy")}</span>
+                  <span>{copied ? tW.copied : tW.copy}</span>
                 </button>
               )}
             </div>
@@ -714,11 +830,9 @@ function WalletContent() {
           {/* Clear Guidance Notice */}
           <div className={styles.instructionsBox}>
             <strong style={{ color: "#4ade80", display: "block", marginBottom: "4px" }}>
-              💡 {isAr ? "إرشادات الإيداع الآمن:" : "Safe Deposit Guidelines:"}
+              💡 {tW.safeDepositTitle}
             </strong>
-            {isAr
-              ? `هذا العنوان مخصص لحسابك وثابت لا يتغير. يمكنك التحويل إليه في أي وقت من أي محفظة أو منصة (Binance, TrustWallet, OKX وغيرها) عبر شبكة (${selectedNetwork}). الحد الأدنى للإيداع هو 5.00 USDT. سيتم قيد الرصيد تلقائياً في حسابك فور تأكيد المعاملة في دفتر البلوكتشين.`
-              : `This deposit address is dedicated to your account and permanent. You can transfer to it anytime from any exchange or wallet (Binance, TrustWallet, OKX, etc.) via (${selectedNetwork}). Minimum deposit is 5.00 USDT. Funds will be credited automatically once confirmed on the blockchain.`}
+            {tW.safeDepositBody(selectedNetwork)}
           </div>
         </div>
       )}
@@ -732,10 +846,10 @@ function WalletContent() {
           <div className={styles.withdrawOverview}>
             <div>
               <div className={styles.withdrawOverviewLabel}>
-                {isAr ? "الرصيد المؤهل للسحب الفوري حالياً:" : "Eligible Withdrawable Balance:"}
+                {tW.withdrawEligibleLabel}
               </div>
               <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>
-                {isAr ? "إجمالي رصيدك في المحفظة: " : "Total Balance: "}
+                {tW.totalBalancePrefix}
                 ${availableUsdt.toFixed(2)} USDT
               </div>
             </div>
@@ -744,38 +858,89 @@ function WalletContent() {
             </div>
           </div>
 
-          {/* Network Selection */}
+          {/* Network Selection Cards */}
           <div className={styles.networkSection}>
             <div className={styles.networkSectionTitle}>
-              {isAr ? "اختر شبكة استلام السحب:" : "Select Recipient Network:"}
+              <span>🌐</span> {tW.selectRecipientNetwork}
             </div>
-            <div className={styles.networkTabs}>
-              {[
-                { net: "TRC20" as const, label: "USDT-TRC20 (Tron)", rec: isAr ? "رسوم 1$" : "$1 Fee" },
-                { net: "BEP20" as const, label: "USDT-BEP20 (BNB Chain)", rec: isAr ? "رسوم 1$" : "$1 Fee" },
-              ].map((item) => (
-                <button
-                  key={item.net}
-                  type="button"
-                  className={`${styles.networkPill} ${selectedNetwork === item.net ? styles.networkPillActive : ""}`}
-                  onClick={() => {
-                    setSelectedNetwork(item.net);
-                    setWithdrawError(null);
-                  }}
-                >
-                  <span>{item.label}</span>
-                  {item.rec && <span className={styles.networkRecommendedBadge}>{item.rec}</span>}
-                </button>
-              ))}
+            <div className={styles.networkCardsGrid}>
+              {/* TRON (TRC20) */}
+              <button
+                type="button"
+                className={`${styles.networkCard} ${selectedNetwork === "TRC20" ? styles.networkCardActiveTrc : ""}`}
+                onClick={() => {
+                  setSelectedNetwork("TRC20");
+                  setWithdrawError(null);
+                }}
+              >
+                {selectedNetwork === "TRC20" && (
+                  <span className={styles.networkSelectedCheck}>{tW.networkSelected}</span>
+                )}
+                <div className={styles.networkCardHeader}>
+                  <div className={styles.networkCardIdentity}>
+                    <div className={styles.networkLogoTrc}>
+                      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                        <path d="M2.5 5.5L30 1.5L25 29.5L16 25L2.5 5.5Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" />
+                        <path d="M2.5 5.5L25 29.5M30 1.5L16 25" stroke="white" strokeWidth="2" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className={styles.networkNameTitle}>{tW.trc20Name}</div>
+                      <div className={styles.networkChainSubtitle}>{tW.trc20Chain}</div>
+                    </div>
+                  </div>
+                  <span className={styles.networkHighlightBadgeTrc}>{tW.trc20Badge}</span>
+                </div>
+
+                <div className={styles.networkCardFooterSpecs}>
+                  <span className={styles.networkSpecSpeed}>⚡ {tW.trc20Speed}</span>
+                  <span className={styles.networkSpecFee}>{tW.trc20Fee}</span>
+                </div>
+              </button>
+
+              {/* BNB Smart Chain (BEP20) */}
+              <button
+                type="button"
+                className={`${styles.networkCard} ${selectedNetwork === "BEP20" ? styles.networkCardActiveBep : ""}`}
+                onClick={() => {
+                  setSelectedNetwork("BEP20");
+                  setWithdrawError(null);
+                }}
+              >
+                {selectedNetwork === "BEP20" && (
+                  <span className={styles.networkSelectedCheck}>{tW.networkSelected}</span>
+                )}
+                <div className={styles.networkCardHeader}>
+                  <div className={styles.networkCardIdentity}>
+                    <div className={styles.networkLogoBep}>
+                      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 2.5L21.5 8L16 13.5L10.5 8L16 2.5Z" fill="#111" />
+                        <path d="M24 10.5L29.5 16L24 21.5L18.5 16L24 10.5Z" fill="#111" />
+                        <path d="M8 10.5L13.5 16L8 21.5L2.5 16L8 10.5Z" fill="#111" />
+                        <path d="M16 18.5L21.5 24L16 29.5L10.5 24L16 18.5Z" fill="#111" />
+                        <path d="M16 9.5L19.5 13L16 16.5L12.5 13L16 9.5Z" fill="#111" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className={styles.networkNameTitle}>{tW.bep20Name}</div>
+                      <div className={styles.networkChainSubtitle}>{tW.bep20Chain}</div>
+                    </div>
+                  </div>
+                  <span className={styles.networkHighlightBadgeBep}>{tW.bep20Badge}</span>
+                </div>
+
+                <div className={styles.networkCardFooterSpecs}>
+                  <span className={styles.networkSpecSpeed}>🚀 {tW.bep20Speed}</span>
+                  <span className={styles.networkSpecFee}>{tW.bep20Fee}</span>
+                </div>
+              </button>
             </div>
           </div>
 
           {/* Warnings & Alerts */}
           {withdrawableUsdt < 10 && (
             <div style={{ padding: "14px 18px", background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.35)", borderRadius: "12px", color: "#fca5a5", fontSize: "13px", lineHeight: 1.6, marginBottom: "20px" }}>
-              ⚠️ {isAr
-                ? `الحد الأدنى للسحب هو 10.00 USDT. رصيدك القابل للسحب حالياً ($${withdrawableUsdt.toFixed(2)} USDT) أقل من الحد الأدنى. يرجى استخدام مبالغ الإيداع في خوض النزالات لتأهيلها للسحب.`
-                : `Minimum withdrawal is 10.00 USDT. Your withdrawable balance ($${withdrawableUsdt.toFixed(2)} USDT) is below the minimum threshold. Play matches to unlock deposited funds.`}
+              ⚠️ {tW.withdrawMinAlert(withdrawableUsdt.toFixed(2))}
             </div>
           )}
 
@@ -790,7 +955,7 @@ function WalletContent() {
             {/* Recipient Address */}
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>
-                <span>{isAr ? `عنوان محفظتك المستلمة (${selectedNetwork}):` : `Recipient Wallet Address (${selectedNetwork}):`}</span>
+                <span>{tW.recipientAddressLabel(selectedNetwork)}</span>
               </label>
               <input
                 type="text"
@@ -805,7 +970,7 @@ function WalletContent() {
               />
               {withdrawAddress && !isAddressValid && (
                 <span style={{ fontSize: "12px", color: "#f87171", marginTop: "4px", display: "block", fontWeight: 600 }}>
-                  {isAr ? `تنبيه: صيغة العنوان غير صالحة لشبكة ${selectedNetwork}` : `Invalid address format for ${selectedNetwork}`}
+                  {tW.invalidAddressAlert(selectedNetwork)}
                 </span>
               )}
             </div>
@@ -813,9 +978,9 @@ function WalletContent() {
             {/* Amount */}
             <div className={styles.formGroup}>
               <div className={styles.formLabel}>
-                <span>{isAr ? "مبلغ السحب (USDT):" : "Withdrawal Amount (USDT):"}</span>
+                <span>{tW.withdrawAmountLabel}</span>
                 <span style={{ fontSize: "12px", color: "#4ade80", fontWeight: 600 }}>
-                  {isAr ? "الحد الأقصى المتاح:" : "Max Available:"} ${withdrawableUsdt.toFixed(2)}
+                  {tW.maxAvailable} ${withdrawableUsdt.toFixed(2)}
                 </span>
               </div>
               <input
@@ -824,7 +989,7 @@ function WalletContent() {
                 max={withdrawableUsdt > 0 ? withdrawableUsdt.toString() : undefined}
                 step="0.01"
                 required
-                placeholder={isAr ? "الحد الأدنى 10.00 USDT" : "Min 10.00 USDT"}
+                placeholder={tW.minWithdrawPlaceholder}
                 className={styles.formInput}
                 value={withdrawAmount}
                 onChange={(e) => {
@@ -839,7 +1004,7 @@ function WalletContent() {
                   { pct: 0.25, label: "25%" },
                   { pct: 0.50, label: "50%" },
                   { pct: 0.75, label: "75%" },
-                  { pct: 1.00, label: isAr ? "الكل (MAX)" : "MAX" },
+                  { pct: 1.00, label: locale === "ar" ? "الكل (MAX)" : "MAX" },
                 ].map((item) => (
                   <button
                     key={item.label}
@@ -854,9 +1019,7 @@ function WalletContent() {
 
               {isAmountOverWithdrawable && (
                 <span style={{ fontSize: "12px", color: "#f87171", marginTop: "6px", display: "block", fontWeight: 600 }}>
-                  {isAr
-                    ? `المبلغ المطلوب ($${parsedWithdrawAmount.toFixed(2)}) يتجاوز رصيدك القابل للسحب ($${withdrawableUsdt.toFixed(2)} USDT).`
-                    : `Requested amount exceeds withdrawable balance ($${withdrawableUsdt.toFixed(2)} USDT).`}
+                  {tW.amountExceedsError(parsedWithdrawAmount.toFixed(2), withdrawableUsdt.toFixed(2))}
                 </span>
               )}
             </div>
@@ -864,15 +1027,17 @@ function WalletContent() {
             {/* Transparent Fees Breakdown */}
             <div className={styles.feeSummary}>
               <div className={styles.feeRow}>
-                <span>{isAr ? "عمولة المنصة:" : "Platform Commission:"}</span>
-                <span style={{ color: "#4ade80", fontWeight: 700 }}>0.00 USDT (0%)</span>
+                <span>{tW.summaryPlatformFee}</span>
+                <span style={{ color: "#4ade80", fontWeight: 700 }}>0.00 USDT ({tW.summaryFree})</span>
               </div>
               <div className={styles.feeRow}>
-                <span>{isAr ? "رسوم البلوكتشين للشبكة:" : "Network Gas Fee:"}</span>
-                <span style={{ color: "#fff", fontWeight: 600 }}>1.00 USDT</span>
+                <span>{tW.summaryNetworkFee}</span>
+                <span style={{ color: "#fff", fontWeight: 600 }}>
+                  {selectedNetwork === "BEP20" ? "0.25 USDT" : "1.00 USDT"}
+                </span>
               </div>
               <div className={`${styles.feeRow} ${styles.feeRowTotal}`}>
-                <span>{isAr ? "صافي المبلغ الذي ستستلمه في محفظتك:" : "Net Amount You Will Receive:"}</span>
+                <span>{tW.summaryNetReceive}</span>
                 <span style={{ color: "#22c55e", fontSize: "18px" }} className="nz-num">
                   ${netReceiveAmount} USDT
                 </span>
@@ -887,9 +1052,7 @@ function WalletContent() {
             >
               <span>{isSubmitting ? "⏳" : "⚡"}</span>
               <span>
-                {isSubmitting
-                  ? (isAr ? "جاري توقيع الطلب آلياً..." : "Processing automated withdrawal...")
-                  : (isAr ? "تأكيد طلب السحب الفوري" : "Confirm Instant Withdrawal")}
+                {isSubmitting ? tW.submittingWithdraw : tW.submitWithdrawBtn}
               </span>
             </button>
           </form>
@@ -905,19 +1068,17 @@ function WalletContent() {
             <div className={styles.emptyState}>
               <div className={styles.emptyStateIcon}>📜</div>
               <div className={styles.emptyStateTitle}>
-                {isAr ? "لا توجد معاملات مسجلة في المحفظة بعد" : "No wallet transactions recorded yet"}
+                {tW.historyEmpty}
               </div>
               <p style={{ fontSize: "13px", maxWidth: "400px", margin: "0 auto 18px", lineHeight: 1.5 }}>
-                {isAr
-                  ? "ابدأ أول إيداع لك لخوض النزالات وتحقيق أرباح فورية من مهاراتك في الألعاب!"
-                  : "Make your first deposit to start dueling and earning rewards with your gaming skills!"}
+                {tW.subhead}
               </p>
               <button
                 type="button"
                 className={styles.duelCtaBtn}
                 onClick={() => setActiveTab("deposit")}
               >
-                <span>📥</span> {isAr ? "إيداع USDT الآن" : "Deposit USDT Now"}
+                <span>📥</span> {tW.tabDeposit}
               </button>
             </div>
           ) : (
@@ -930,9 +1091,7 @@ function WalletContent() {
                     </div>
                     <div className={styles.txMeta}>
                       <div className={styles.txTitle}>
-                        {tx.type === "DEPOSIT"
-                          ? (isAr ? "إيداع معتمد" : "Deposit")
-                          : (isAr ? "طلب سحب أرباح" : "Withdrawal")}
+                        {tx.type === "DEPOSIT" ? tW.txDeposit : tW.txWithdraw}
                         <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 500, marginInlineStart: "8px" }}>
                           ({tx.network})
                         </span>
@@ -948,9 +1107,7 @@ function WalletContent() {
                       {tx.type === "DEPOSIT" ? `+${tx.amount}` : `-${tx.amount}`} USDT
                     </div>
                     <span className={`${styles.statusPill} ${tx.status === "CONFIRMED" ? styles.statusConfirmed : styles.statusPending}`}>
-                      {tx.status === "CONFIRMED"
-                        ? (isAr ? "مكتملة ✓" : "CONFIRMED")
-                        : (isAr ? "قيد المعالجة ⏱️" : "PENDING")}
+                      {tx.status === "CONFIRMED" ? tW.statusConfirmed : tW.statusPending}
                     </span>
                   </div>
                 </div>

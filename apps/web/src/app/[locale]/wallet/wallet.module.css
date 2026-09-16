@@ -402,18 +402,30 @@
 
 .presetsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
+}
+
+@media (max-width: 960px) {
+  .presetsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 580px) {
+  .presetsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .presetBtn {
   background: #0e121a;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 14px 12px;
+  border-radius: 14px;
+  padding: 14px 10px;
   text-align: center;
   cursor: pointer;
-  transition: all 140ms ease;
+  transition: all 160ms cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -424,18 +436,36 @@
   border-color: rgba(255, 90, 43, 0.4);
   transform: translateY(-2px);
   background: #151b26;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 .presetBtnActive {
-  background: rgba(255, 90, 43, 0.12) !important;
+  background: rgba(255, 90, 43, 0.14) !important;
   border-color: #ff5a2b !important;
+  box-shadow: 0 0 16px rgba(255, 90, 43, 0.3) !important;
+}
+
+/* Chic style for $5 starter */
+.presetBtnStarter {
+  background: linear-gradient(145deg, rgba(34, 197, 94, 0.06), #0e121a);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+.presetBtnStarter:hover {
+  border-color: rgba(34, 197, 94, 0.6);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.2);
+}
+.presetBtnStarter.presetBtnActive {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border-color: #22c55e !important;
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.35) !important;
 }
 
 .presetAmount {
   font-family: var(--nz-font-num);
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 800;
   color: #fff;
+  letter-spacing: -0.02em;
 }
 
 .presetLabel {
@@ -447,14 +477,131 @@
 .presetTag {
   position: absolute;
   top: -8px;
-  right: 10px;
+  right: 8px;
   background: #ff5a2b;
   color: #fff;
   font-size: 9px;
   font-weight: 800;
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 999px;
   letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(255, 90, 43, 0.4);
+}
+
+.presetTagStarter {
+  background: #22c55e !important;
+  color: #052e16 !important;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4) !important;
+}
+
+.presetTagVip {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* Custom Amount Box */
+.customAmountCard {
+  margin-top: 14px;
+  background: #0d121c;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 180ms ease;
+}
+.customAmountCard:focus-within {
+  border-color: rgba(38, 161, 123, 0.7);
+  box-shadow: 0 0 16px rgba(38, 161, 123, 0.18);
+  background: #101623;
+}
+
+.customAmountLabelWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.customAmountIcon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.customAmountLabelTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.customAmountHint {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.customAmountInputBox {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 4px 12px;
+  gap: 8px;
+  min-width: 200px;
+  max-width: 260px;
+}
+
+.customAmountCurrency {
+  font-size: 13px;
+  font-weight: 800;
+  color: #26a17b;
+}
+
+.customAmountField {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-family: var(--nz-font-num);
+  font-size: 17px;
+  font-weight: 700;
+  width: 100%;
+}
+.customAmountField::placeholder {
+  color: #475569;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.customAmountClearBtn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 120ms ease;
+}
+.customAmountClearBtn:hover {
+  color: #fff;
+}
+
+.customSelectedPreview {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .benefitsStrip {
@@ -467,6 +614,12 @@
   border-radius: 12px;
   padding: 14px 18px;
 }
+@media (max-width: 768px) {
+  .benefitsStrip {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
 
 .benefitItem {
   display: flex;
@@ -477,59 +630,183 @@
   font-weight: 600;
 }
 
+/* Network Selector Section */
 .networkSection {
-  margin-bottom: 24px;
+  margin-bottom: 26px;
 }
 
 .networkSectionTitle {
   font-size: 14px;
   font-weight: 700;
   color: #cbd5e1;
-  margin-bottom: 10px;
-}
-
-.networkTabs {
+  margin-bottom: 12px;
   display: flex;
-  gap: 10px;
-  background: #0e121a;
-  padding: 6px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  align-items: center;
+  gap: 8px;
 }
 
-.networkPill {
-  flex: 1;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 700;
+.networkCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 680px) {
+  .networkCardsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.networkCard {
+  background: #0e131d;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px 20px;
   cursor: pointer;
-  transition: all 120ms ease;
+  text-align: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.networkCard:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  background: #131926;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.networkCardActiveTrc {
+  border-color: #ef0027 !important;
+  background: linear-gradient(145deg, rgba(239, 0, 39, 0.12), rgba(14, 19, 29, 0.96)) !important;
+  box-shadow: 0 6px 24px rgba(239, 0, 39, 0.22) !important;
+}
+
+.networkCardActiveBep {
+  border-color: #f0b90b !important;
+  background: linear-gradient(145deg, rgba(240, 185, 11, 0.12), rgba(14, 19, 29, 0.96)) !important;
+  box-shadow: 0 6px 24px rgba(240, 185, 11, 0.22) !important;
+}
+
+.networkCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.networkCardIdentity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.networkLogoTrc {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ef0027, #b8001f);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-}
-.networkPill:hover {
   color: #fff;
+  font-weight: 900;
+  font-size: 17px;
+  box-shadow: 0 4px 12px rgba(239, 0, 39, 0.35);
+  flex-shrink: 0;
 }
 
-.networkPillActive {
-  background: #202738;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+.networkLogoBep {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f0b90b, #d49e00);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111;
+  font-weight: 900;
+  font-size: 17px;
+  box-shadow: 0 4px 12px rgba(240, 185, 11, 0.35);
+  flex-shrink: 0;
 }
 
-.networkRecommendedBadge {
+.networkNameTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.networkChainSubtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+.networkHighlightBadgeTrc {
+  background: rgba(239, 0, 39, 0.2);
+  border: 1px solid rgba(239, 0, 39, 0.5);
+  color: #ff6b7b;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.networkHighlightBadgeBep {
+  background: rgba(240, 185, 11, 0.18);
+  border: 1px solid rgba(240, 185, 11, 0.5);
+  color: #fbd64d;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.networkCardFooterSpecs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 10px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.networkSpecSpeed {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #4ade80;
+}
+
+.networkSpecFee {
+  color: #cbd5e1;
+}
+
+.networkSelectedCheck {
+  position: absolute;
+  top: 10px;
+  left: 10px;
   background: #22c55e;
-  color: #000;
+  color: #052e16;
   font-size: 10px;
   font-weight: 800;
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+:global([dir="rtl"]) .networkSelectedCheck {
+  left: auto;
+  right: 10px;
 }
 
 /* QR & Address Container */
