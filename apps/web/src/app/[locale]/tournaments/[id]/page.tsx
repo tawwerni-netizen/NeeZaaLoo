@@ -304,26 +304,28 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
         {standings.length > 0 && (
           <section className={styles.standings}>
             <h2 className={styles.standingsHeading}>{t("tournamentsPage.standings_heading")}</h2>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>{t("tournamentsPage.standings_rank")}</th>
-                  <th>{t("tournamentsPage.standings_player")}</th>
-                  <th>{t("tournamentsPage.standings_points")}</th>
-                  <th>{t("tournamentsPage.standings_record")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {standings.map((s) => (
-                  <tr key={s.player_id}>
-                    <td>{s.rank ?? "—"}</td>
-                    <td>{previews[s.player_id]?.nickname ?? s.player_id}</td>
-                    <td className="nz-num">{s.points}</td>
-                    <td className="nz-num">{s.wins}-{s.losses}-{s.draws}</td>
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>{t("tournamentsPage.standings_rank")}</th>
+                    <th>{t("tournamentsPage.standings_player")}</th>
+                    <th>{t("tournamentsPage.standings_points")}</th>
+                    <th>{t("tournamentsPage.standings_record")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {standings.map((s) => (
+                    <tr key={s.player_id}>
+                      <td>{s.rank ?? "—"}</td>
+                      <td>{previews[s.player_id]?.nickname ?? s.player_id}</td>
+                      <td className="nz-num">{s.points}</td>
+                      <td className="nz-num">{s.wins}-{s.losses}-{s.draws}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
       </main>

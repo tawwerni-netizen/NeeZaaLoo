@@ -762,9 +762,15 @@ function TournamentsList() {
                           <span>💰</span>
                           <span>{texts.prizePoolLabel}</span>
                         </div>
-                        <span className={`${styles.prizeAmount} nz-num`}>
-                          {Number(prizePool) > 0 ? `$${prizePool} USDT` : texts.honorTrophy}
-                        </span>
+                        {Number(prizePool) > 0 ? (
+                          <span className={`${styles.prizeAmount} nz-num`}>
+                            <bdi>{`$${prizePool} USDT`}</bdi>
+                          </span>
+                        ) : (
+                          <span className={styles.prizeTrophy}>
+                            {texts.honorTrophy}
+                          </span>
+                        )}
                       </div>
 
                       {/* Capacity Progress Bar */}

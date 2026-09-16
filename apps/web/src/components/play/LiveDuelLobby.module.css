@@ -1578,6 +1578,9 @@
   .lobbySection {
     padding: var(--nz-space-4);
   }
+  .cornerTechTL, .cornerTechTR, .cornerTechBL, .cornerTechBR {
+    display: none;
+  }
   .duelsGrid {
     grid-template-columns: 1fr;
   }
@@ -1592,9 +1595,11 @@
   .createChallengeBtn, .directChallengeFriendBtn {
     width: 100%;
     justify-content: center;
+    min-height: 42px;
   }
   .userShareRow {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
   .statsBar {
     grid-template-columns: 1fr 1fr;

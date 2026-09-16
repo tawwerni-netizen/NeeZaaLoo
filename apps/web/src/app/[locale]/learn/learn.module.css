@@ -577,10 +577,37 @@
 }
 
 @media (max-width: 640px) {
+  .megaHero {
+    padding: var(--nz-space-6) var(--nz-space-4);
+    border-radius: var(--nz-radius-lg);
+  }
+  .megaHeading {
+    font-size: 22px;
+  }
+  .megaSubhead {
+    font-size: 14px;
+    margin-bottom: var(--nz-space-6);
+  }
+  .megaActions {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+  .megaPlayBtn, .megaTourneyBtn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .statsStrip {
+    border-radius: var(--nz-radius-lg);
+    gap: var(--nz-space-3);
+    padding: 12px 16px;
+  }
   .howItDecidedContainer {
     padding: var(--nz-space-4);
   }
   .grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
