@@ -59,6 +59,13 @@ export default function AdminChatPage() {
   const [banTarget, setBanTarget] = useState<{ id: string; handle: string } | null>(null);
   const [banReason, setBanReason] = useState("");
 
+  // A CHAT_VIEW/CHAT_MUTE/etc denial (this platform grants those as a
+  // deliberate custom-role capability -- see this route's own comment in
+  // server.mjs -- never bundled into SUPER_ADMIN for free) must never
+  // render as if chat were simply empty. That silently told a denied
+  // admin "no messages" instead of "you cannot see this yet".
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+
   function flashNotice(msg: string) {
     setNotice(msg);
     setTimeout(() => setNotice(null), 4000);
@@ -69,8 +76,9 @@ export default function AdminChatPage() {
       setLoading(true);
       const res = await get<{ messages: LiveMessage[] }>("/v1/admin/chat/global/messages?limit=50");
       setMessages(res.messages || []);
-    } catch {
-      // ignore
+      setPermissionError(null);
+    } catch (e) {
+      setPermissionError(adminErrorMessage(e, "Failed to load chat messages."));
     } finally {
       setLoading(false);
     }
@@ -191,6 +199,21 @@ export default function AdminChatPage() {
         { label: "Open Reports", value: String(reports.filter(r => r.status === "OPEN").length), trend: "Needs review" },
       ]}
     >
+      {permissionError && (
+        <div style={{
+          padding: "12px 16px",
+          background: "rgba(239, 68, 68, 0.15)",
+          border: "1px solid #ef4444",
+          borderRadius: "8px",
+          marginBottom: "16px",
+          color: "#f87171",
+          fontSize: "14px",
+          fontWeight: 600,
+        }}>
+          ⚠ {permissionError}
+        </div>
+      )}
+
       {notice && (
         <div style={{
           padding: "12px 16px",
