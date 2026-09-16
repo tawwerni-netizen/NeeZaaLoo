@@ -80,6 +80,12 @@ export interface WalletDictionary {
   connectingOxaPay: string;
   copy: string;
   copied: string;
+  // Shown ABOVE the address, not below it: the two mistakes that lose a
+  // deposit for good are sending a different coin, and sending over a
+  // different chain. Both are made before the transfer, so the warning has
+  // to be read before the address is copied.
+  sendWarningTitle: string;
+  sendWarningBody: (net: string) => string;
   safeDepositTitle: string;
   safeDepositBody: (net: string) => string;
 
@@ -194,6 +200,9 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     connectingOxaPay: "جاري الاتصال ببوابة OxaPay...",
     copy: "نسخ",
     copied: "تم النسخ!",
+    sendWarningTitle: "تنبيه مهم قبل التحويل",
+    sendWarningBody: (net: string) =>
+      `أرسل عملة USDT فقط، وعبر شبكة ${net} وحدها. إرسال أي عملة أخرى، أو استخدام شبكة مختلفة، يعني فقدان المبلغ نهائياً — ولا يمكن استرجاعه.`,
     safeDepositTitle: "إرشادات الإيداع الآمن:",
     safeDepositBody: (net: string) =>
       `هذا العنوان مخصص لحسابك وثابت لا يتغير. يمكنك التحويل إليه في أي وقت من أي محفظة أو منصة (Binance, TrustWallet, OKX وغيرها) عبر شبكة (${net}). الحد الأدنى للإيداع هو 5.00 USDT. سيتم قيد الرصيد تلقائياً في حسابك فور تأكيد المعاملة في دفتر البلوكتشين.`,
@@ -308,6 +317,9 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     connectingOxaPay: "Connecting to OxaPay gateway...",
     copy: "Copy",
     copied: "Copied!",
+    sendWarningTitle: "Before you send",
+    sendWarningBody: (net: string) =>
+      `Send USDT only, and only over the ${net} network. Sending any other coin, or using a different network, loses the funds permanently — they cannot be recovered.`,
     safeDepositTitle: "Safe Deposit Guidelines:",
     safeDepositBody: (net: string) =>
       `This address is dedicated to your account and permanent. You can transfer to it anytime from any wallet or exchange (Binance, TrustWallet, OKX, etc.) via (${net}). Minimum deposit is 5.00 USDT. Funds will be credited automatically once confirmed on the blockchain.`,
@@ -422,6 +434,9 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     connectingOxaPay: "Conectando con la pasarela OxaPay...",
     copy: "Copiar",
     copied: "¡Copiado!",
+    sendWarningTitle: "Antes de enviar",
+    sendWarningBody: (net: string) =>
+      `Envía únicamente USDT y solo a través de la red ${net}. Enviar otra moneda, o usar una red distinta, hace que los fondos se pierdan de forma permanente: no se pueden recuperar.`,
     safeDepositTitle: "Instrucciones de Depósito Seguro:",
     safeDepositBody: (net: string) =>
       `Esta dirección está dedicada a tu cuenta y es permanente. Puedes transferir fondos en cualquier momento desde cualquier billetera o exchange (Binance, TrustWallet, OKX, etc.) mediante (${net}). El depósito mínimo es de 5.00 USDT. Se acreditará automáticamente en tu saldo una vez confirmado en la blockchain.`,
@@ -536,6 +551,9 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     connectingOxaPay: "Connexion à la passerelle OxaPay...",
     copy: "Copier",
     copied: "Copié !",
+    sendWarningTitle: "Avant d'envoyer",
+    sendWarningBody: (net: string) =>
+      `N'envoyez que de l'USDT, et uniquement via le réseau ${net}. Envoyer une autre crypto, ou utiliser un réseau différent, entraîne la perte définitive des fonds : ils sont irrécupérables.`,
     safeDepositTitle: "Consignes de Dépôt Sécurisé :",
     safeDepositBody: (net: string) =>
       `Cette adresse est dédiée à votre compte et permanente. Vous pouvez y transférer des fonds à tout moment depuis n'importe quel portefeuille ou exchange (Binance, TrustWallet, OKX, etc.) via (${net}). Le dépôt minimum est de 5.00 USDT. Votre solde sera crédité automatiquement dès confirmation sur la blockchain.`,
@@ -650,6 +668,9 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     connectingOxaPay: "OxaPay गेटवे से कनेक्ट हो रहा है...",
     copy: "कॉपी करें",
     copied: "कॉपी हो गया!",
+    sendWarningTitle: "भेजने से पहले",
+    sendWarningBody: (net: string) =>
+      `केवल USDT भेजें, और केवल ${net} नेटवर्क से। कोई दूसरी करेंसी भेजने पर, या अलग नेटवर्क इस्तेमाल करने पर, राशि हमेशा के लिए चली जाएगी — उसे वापस नहीं पाया जा सकता।`,
     safeDepositTitle: "सुरक्षित जमा निर्देश:",
     safeDepositBody: (net: string) =>
       `यह पता आपके खाते के लिए समर्पित और स्थायी है। आप किसी भी वॉलेट या एक्सचेंज (Binance, TrustWallet, OKX, आदि) से (${net}) के माध्यम से कभी भी ट्रांसफर कर सकते हैं। न्यूनतम जमा 5.00 USDT है। ब्लॉकचेन पर पुष्टि होते ही राशि स्वचालित रूप से आपके खाते में आ जाएगी।`,
@@ -764,6 +785,9 @@ export const WALLET_TRANSLATIONS: Record<SupportedLocale, WalletDictionary> = {
     connectingOxaPay: "正在连接 OxaPay 网关...",
     copy: "复制",
     copied: "已复制！",
+    sendWarningTitle: "转账前请确认",
+    sendWarningBody: (net: string) =>
+      `请仅发送 USDT，且仅使用 ${net} 网络。发送其他币种或使用其他网络，将导致资金永久丢失，无法找回。`,
     safeDepositTitle: "安全充值须知：",
     safeDepositBody: (net: string) =>
       `此地址为您账户专属的永久地址，永不变更。您可随时从任何钱包或交易所（Binance、TrustWallet、OKX 等）通过 (${net}) 网络转入。最低充值 5.00 USDT。链上确认后资金将自动计入您的账户。`,

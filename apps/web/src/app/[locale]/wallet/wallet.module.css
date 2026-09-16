@@ -1221,3 +1221,52 @@
     justify-content: space-between;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Pre-transfer warning.
+
+   Amber, not red: red is this UI's failure colour, and nothing has failed
+   yet -- this is a caution to read before acting. It sits directly above
+   the address because both mistakes it prevents (wrong coin, wrong chain)
+   happen before the transfer, and neither is reversible afterwards.
+   --------------------------------------------------------------------------- */
+.sendWarning {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.sendWarningIcon {
+  font-size: 18px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.sendWarningTitle {
+  display: block;
+  color: #fbbf24;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.sendWarningBody {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+@media (max-width: 480px) {
+  .sendWarning {
+    padding: 12px 13px;
+  }
+  .sendWarningBody {
+    font-size: 12.5px;
+  }
+}

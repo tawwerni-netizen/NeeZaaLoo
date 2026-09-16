@@ -756,6 +756,18 @@ function WalletContent() {
             </div>
           </div>
 
+          {/* Above the address on purpose: the two mistakes that lose a
+              deposit for good -- wrong coin, wrong chain -- are both made
+              before the transfer, so this has to be read before the address
+              is copied, not after. */}
+          <div className={styles.sendWarning} role="alert">
+            <span className={styles.sendWarningIcon} aria-hidden="true">⚠️</span>
+            <div>
+              <strong className={styles.sendWarningTitle}>{tW.sendWarningTitle}</strong>
+              <p className={styles.sendWarningBody}>{tW.sendWarningBody(selectedNetwork)}</p>
+            </div>
+          </div>
+
           {/* QR & Address Display Box */}
           <div className={styles.qrDisplayCard}>
             {depositLoading ? (
