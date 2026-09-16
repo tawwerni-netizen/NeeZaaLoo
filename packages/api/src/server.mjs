@@ -1303,7 +1303,7 @@ function buildRoutes() {
             await db.query(
               `INSERT INTO deposit (id, player_id, asset, network, provider, provider_ref, address, status, expires_at)
                VALUES ($1, $2, $3, $4, $5, $6, $7, 'AWAITING_PAYMENT', now() + interval '365 days')`,
-              [id, params.id, asset, network, paymentProvider.id, intent.providerRef, intent.address]
+              [id, params.id, asset, storedNetwork, paymentProvider.id, intent.providerRef, intent.address]
             );
             return {
               status: 201,
@@ -1312,7 +1312,7 @@ function buildRoutes() {
                 deposit: {
                   id,
                   address: intent.address,
-                  qrCodeUrl: intent.qrCodeUrl || null,
+                  qrCodeUrl: null,
                   asset,
                   network,
                   expiresAt: intent.expiresAt || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
@@ -1330,7 +1330,7 @@ function buildRoutes() {
         await db.query(
           `INSERT INTO deposit (id, player_id, asset, network, provider, provider_ref, address, status, expires_at)
            VALUES ($1, $2, $3, $4, 'internal', $1, $5, 'AWAITING_PAYMENT', now() + interval '24 hours')`,
-          [id, params.id, asset, network, fallbackAddress]
+          [id, params.id, asset, storedNetwork, fallbackAddress]
         );
         return {
           status: 201,
