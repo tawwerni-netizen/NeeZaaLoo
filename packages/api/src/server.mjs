@@ -2521,6 +2521,32 @@ function buildRoutes() {
         return { body: { tournaments: r.rows } };
       } },
 
+    // Real, all-time tournament totals for the trust-building banner on
+    // the tournaments page -- a specific number ("$25,000 in prizes",
+    // "340+ registered") is a factual claim, so it has to come from an
+    // actual query, including a real, honest zero on a fresh deployment.
+    // Registered before the :id route below: this router matches by exact
+    // segment count and literal text first (see router.mjs), so a literal
+    // "stats" segment here must be declared before ":id" would otherwise
+    // swallow it.
+    { method: "GET", path: "/v1/tournaments/stats", action: "tournament.read", anonymous: true,
+      handler: async ({ db }) => {
+        const prizes = await db.query(
+          `SELECT t.asset, COALESCE(SUM(ts.prize_minor), 0)::text AS minor
+             FROM tournament_settlement ts JOIN tournament t ON t.id = ts.tournament_id
+            GROUP BY t.asset`
+        );
+        const registrants = await db.query(
+          `SELECT count(DISTINCT player_id)::int AS c FROM tournament_registration`
+        );
+        return {
+          body: {
+            totalPrizesByAsset: Object.fromEntries(prizes.rows.map((r) => [r.asset, r.minor])),
+            totalRegistrants: registrants.rows[0]?.c ?? 0,
+          },
+        };
+      } },
+
     { method: "GET", path: "/v1/tournaments/:id", action: "tournament.read", anonymous: true,
       handler: async ({ params, db, actor }) => {
         const r = await db.query(

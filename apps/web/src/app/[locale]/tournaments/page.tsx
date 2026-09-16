@@ -407,6 +407,10 @@ function TournamentsList() {
   const [selectedGame, setSelectedGame] = useState<string | null>(initialGame);
   const [statusFilter, setStatusFilter] = useState<FilterType>("ALL");
   const [nowMs, setNowMs] = useState<number | null>(null);
+  // A real zero from the first render onward -- never the fabricated
+  // placeholder text this banner used to hardcode, not even for a moment
+  // while the real figure loads.
+  const [siteStats, setSiteStats] = useState<{ totalPrizesUsd: number; totalRegistrants: number }>({ totalPrizesUsd: 0, totalRegistrants: 0 });
 
   const texts = PAGE_TEXTS[locale as SupportedLocale] ?? PAGE_TEXTS.en;
   const gamesList = useMemo(() => listGames(), []);
@@ -419,6 +423,17 @@ function TournamentsList() {
 
   useEffect(() => {
     let cancelled = false;
+    // Every coin the platform pays tournament prizes in is a $1-pegged
+    // stablecoin, so summing them is a real total -- always the real
+    // figure, including a real zero before the first tournament settles.
+    void get<{ totalPrizesByAsset?: Record<string, string>; totalRegistrants?: number }>("/v1/tournaments/stats")
+      .then((r) => {
+        if (cancelled) return;
+        const totalPrizesUsd = Object.values(r.totalPrizesByAsset ?? {})
+          .reduce((sum, minor) => sum + Number(minor || "0") / 1_000_000, 0);
+        setSiteStats({ totalPrizesUsd, totalRegistrants: r.totalRegistrants ?? 0 });
+      })
+      .catch(() => { if (!cancelled) setSiteStats({ totalPrizesUsd: 0, totalRegistrants: 0 }); });
     void get<{ tournaments: TournamentRow[] }>(`/v1/tournaments?status=${BROWSE_STATUSES}`)
       .then((r) => {
         if (!cancelled) setTournaments(r.tournaments ?? []);
@@ -501,7 +516,9 @@ function TournamentsList() {
             <div className={styles.metricCard}>
               <div className={styles.metricIconWrap}>🏆</div>
               <div className={styles.metricContent}>
-                <span className={`${styles.metricValue} nz-num`}>{texts.metric1Val}</span>
+                <span className={`${styles.metricValue} nz-num`}>
+                  {`+$${Math.floor(siteStats.totalPrizesUsd).toLocaleString("en-US")} USDT`}
+                </span>
                 <span className={styles.metricTitle}>{texts.metric1Title}</span>
                 <span className={styles.metricSubtitle}>{texts.metric1Sub}</span>
               </div>
@@ -510,7 +527,9 @@ function TournamentsList() {
             <div className={styles.metricCard}>
               <div className={styles.metricIconWrap}>👥</div>
               <div className={styles.metricContent}>
-                <span className={`${styles.metricValue} nz-num`}>{texts.metric2Val}</span>
+                <span className={`${styles.metricValue} nz-num`}>
+                  {siteStats.totalRegistrants > 0 ? `${siteStats.totalRegistrants}+` : "0"}
+                </span>
                 <span className={styles.metricTitle}>{texts.metric2Title}</span>
                 <span className={styles.metricSubtitle}>{texts.metric2Sub}</span>
               </div>
