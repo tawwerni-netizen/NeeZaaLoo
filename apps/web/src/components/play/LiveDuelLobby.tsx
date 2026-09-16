@@ -383,8 +383,8 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
           </h2>
           <p className={styles.lobbySubtitle}>
             {isRtl
-              ? "نافس أبطالاً حقيقيين في ألعاب مهارية خالصة 100% بدون أي عنصر حظ — ضاعف رهانك بذكائك واكسب جوائز USDT كاش تُحوّل لمحفظتك فوراً."
-              : "Direct member-to-member skill duels in real-time. Double your stake with pure skill and withdraw instant cash prizes with zero hold times."}
+              ? "نافس أبطالاً حقيقيين في ألعاب مهارية خالصة 100% بدون أي عنصر حظ — العب واكسب بذكائك جوائز USDT كاش تُحوّل لمحفظتك فوراً."
+              : "Direct member-to-member skill duels in real-time. Play and win with pure skill and withdraw instant cash prizes with zero hold times."}
           </p>
         </div>
 
@@ -414,7 +414,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
           <div className={styles.quickStakeTitle}>
             <span>⚡</span>
             <span>
-              {isRtl ? "باقات النزال السريع (اختر قيمة النزال واكسب الجائزة فوراً):" : "Instant Quick-Stakes (Pick stake & win prize immediately):"}
+              {isRtl ? "باقات التحدي السريع (العب واكسب الجائزة فوراً):" : "Instant Challenge Tiers (Play & win prize immediately):"}
             </span>
           </div>
           <span className={styles.quickStakeSub}>
@@ -591,10 +591,10 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
           <span className={styles.pillarIcon}>💎</span>
           <div className={styles.pillarTextWrap}>
             <strong className={styles.pillarTitle}>
-              {isRtl ? "ضاعف رهانك بمهارتك" : "Double Your Stake With Skill"}
+              {isRtl ? "العب واكسب بمهارتك" : "Play & Win With Pure Skill"}
             </strong>
             <span className={styles.pillarDesc}>
-              {isRtl ? "الفائز يحصل على مجموع الرهانين بنسبة 100% مع عمولة منصة رمزية 5% فقط." : "Winner takes the combined pot directly with an ultra-low 5% platform fee."}
+              {isRtl ? "الفائز يحصل على مجموع جوائز التحدي بنسبة 100% مع عمولة منصة رمزية 5% فقط." : "Winner takes the full challenge prize pool directly with an ultra-low 5% platform fee."}
             </span>
           </div>
         </div>
@@ -686,8 +686,8 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             </h3>
             <p className={styles.emptySubtitle}>
               {isRtl
-                ? "لا توجد مبارزة مفتوحة في هذا الفلتر حالياً. أطلق أول تحدٍّ بمبلغ 5$ أو 10$ واكسب ضعف رهانك فور فوزك — سيصلك منافسك خلال ثوانٍ!"
-                : "No duels open in this filter right now. Launch the first match for $5 or $10 and win double your stake — opponents will join in seconds!"}
+                ? "لا توجد مبارزة مفتوحة في هذا الفلتر حالياً. أطلق أول تحدٍّ بمبلغ 5$ أو 10$ واكسب الجائزة الكبرى فور فوزك — سيصلك منافسك خلال ثوانٍ!"
+                : "No duels open in this filter right now. Launch the first match for $5 or $10 and win the grand prize — opponents will join in seconds!"}
             </p>
             <Button
               variant="primary"

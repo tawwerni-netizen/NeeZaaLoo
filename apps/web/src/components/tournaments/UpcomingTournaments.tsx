@@ -350,7 +350,7 @@ export function UpcomingTournaments({
               <div className={styles.bannerContentCard}>
                 <span className={styles.bannerTag}>⚡ Daily Blitz Stage</span>
                 <h3 className={styles.bannerTitle}>Real-Time Competitive Brackets</h3>
-                <p className={styles.bannerDesc}>Compete against verified players in high-stakes knockout brackets with live streaming.</p>
+                <p className={styles.bannerDesc}>Compete against verified players in high-prestige knockout brackets with live streaming.</p>
               </div>
             </div>
           </div>

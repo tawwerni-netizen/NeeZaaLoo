@@ -905,7 +905,7 @@ export default function AdminPlayersPage() {
                     <div style={{ background: "#181b24", border: "1px solid #252b37", borderRadius: "10px", padding: "14px 16px" }}>
                       <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, display: "flex", justifyContent: "space-between" }}>
                         <span>⚔️ إجمالي ما لُعب به</span>
-                        <span style={{ fontSize: "10px", color: "#64748b" }}>TURNOVER / WAGERED</span>
+                        <span style={{ fontSize: "10px", color: "#64748b" }}>TURNOVER / PLAYED VOLUME</span>
                       </div>
                       <div style={{ fontSize: "22px", fontWeight: 800, color: "#a855f7", marginTop: "6px" }} className="nz-num">
                         {formatUsdt(inspectData.amlSummary.totalPlayedMinor)} <span style={{ fontSize: "13px", fontWeight: 500 }}>USDT</span>

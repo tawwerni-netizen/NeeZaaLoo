@@ -86,7 +86,7 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
     id: "all_stars",
     image: "/images/tournaments/tournament-speed-battle.jpg",
     superAr: "ميدان كبار المتنافسين",
-    superEn: "HIGH STAKES ARENA",
+    superEn: "GRAND CHAMPIONS ARENA",
     titleAr: "أرينا أساطير نيزالو الكبرى",
     titleEn: "Nizalo Legends All-Stars Arena",
     metaAr: "نخبة لاعبي المنصة • فئات الألماس والماسترز • إمكانية المشاهدة الحية",

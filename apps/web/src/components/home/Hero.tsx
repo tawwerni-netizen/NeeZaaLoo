@@ -385,8 +385,8 @@ export function Hero() {
           </motion.div>
 
           <motion.h1 {...stage(1, reduceMotion)} className={styles.headline}>
-            <span>{isRtl ? "ضاعف رهانك بمهارتك." : t("home.hero.headline_line1")}</span>{" "}
-            <span className={styles.headlineAccent}>{isRtl ? "اكسب كاش فورياً." : t("home.hero.headline_line2")}</span>
+            <span>{isRtl ? "العب واكسب بمهارتك." : "Play & Win With Skill."}</span>{" "}
+            <span className={styles.headlineAccent}>{isRtl ? "اربح كاش فورياً." : "Instant Cash Rewards."}</span>
           </motion.h1>
 
           <motion.p {...stage(2, reduceMotion)} className={styles.subhead}>
@@ -417,8 +417,8 @@ export function Hero() {
                 <span>⚡</span>
                 <span>
                   {isRtl
-                    ? "باقات النزال السريع (اختر قيمة النزال واكسب الجائزة فوراً):"
-                    : "Instant Quick-Stakes (Pick stake & win prize immediately):"}
+                    ? "باقات التحدي السريع (العب واكسب الجائزة فوراً):"
+                    : "Instant Challenge Tiers (Play & win prize immediately):"}
                 </span>
               </div>
               <span className={styles.quickStakeSub}>
@@ -685,12 +685,12 @@ export function Hero() {
             <span className={styles.pillarIcon}>💎</span>
             <div className={styles.pillarTextWrap}>
               <strong className={styles.pillarTitle}>
-                {isRtl ? "ضاعف رهانك بمهارتك" : "Double Your Stake With Skill"}
+                {isRtl ? "العب واكسب بمهارتك" : "Play & Win With Pure Skill"}
               </strong>
               <span className={styles.pillarDesc}>
                 {isRtl
-                  ? "الفائز يحصل على مجموع الرهانين بنسبة 100% مع عمولة منصة رمزية 5% فقط."
-                  : "Winner takes the combined pot directly with an ultra-low 5% platform fee."}
+                  ? "الفائز يحصل على مجموع جوائز التحدي بنسبة 100% مع عمولة منصة رمزية 5% فقط."
+                  : "Winner takes the full challenge prize pool directly with an ultra-low 5% platform fee."}
               </span>
             </div>
           </div>
