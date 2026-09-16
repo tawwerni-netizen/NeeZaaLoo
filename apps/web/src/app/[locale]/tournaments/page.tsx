@@ -512,44 +512,52 @@ function TournamentsList() {
           </div>
 
           {/* 4 Luxury Tournament Metric Highlight Cards */}
-          <section className={styles.metricsGrid}>
+          <section className={styles.metricsGrid} aria-label="Tournament Highlights">
             <div className={styles.metricCard}>
               <div className={styles.metricIconWrap}>🏆</div>
               <div className={styles.metricContent}>
-                <span className={`${styles.metricValue} nz-num`}>
-                  {`+$${Math.floor(siteStats.totalPrizesUsd).toLocaleString("en-US")} USDT`}
-                </span>
-                <span className={styles.metricTitle}>{texts.metric1Title}</span>
-                <span className={styles.metricSubtitle}>{texts.metric1Sub}</span>
+                <div className={styles.metricValue}>
+                  <bdi className="nz-num">
+                    {`+$${Math.floor(siteStats.totalPrizesUsd).toLocaleString("en-US")} USDT`}
+                  </bdi>
+                </div>
+                <div className={styles.metricTitle}>{texts.metric1Title}</div>
+                <div className={styles.metricSubtitle}>{texts.metric1Sub}</div>
               </div>
             </div>
 
             <div className={styles.metricCard}>
               <div className={styles.metricIconWrap}>👥</div>
               <div className={styles.metricContent}>
-                <span className={`${styles.metricValue} nz-num`}>
-                  {siteStats.totalRegistrants > 0 ? `${siteStats.totalRegistrants}+` : "0"}
-                </span>
-                <span className={styles.metricTitle}>{texts.metric2Title}</span>
-                <span className={styles.metricSubtitle}>{texts.metric2Sub}</span>
+                <div className={styles.metricValue}>
+                  <bdi className="nz-num">
+                    {siteStats.totalRegistrants > 0 ? `${siteStats.totalRegistrants}+` : "0"}
+                  </bdi>
+                </div>
+                <div className={styles.metricTitle}>{texts.metric2Title}</div>
+                <div className={styles.metricSubtitle}>{texts.metric2Sub}</div>
               </div>
             </div>
 
             <div className={styles.metricCard}>
               <div className={styles.metricIconWrap}>⚡</div>
               <div className={styles.metricContent}>
-                <span className={styles.metricValue}>{texts.metric3Val}</span>
-                <span className={styles.metricTitle}>{texts.metric3Title}</span>
-                <span className={styles.metricSubtitle}>{texts.metric3Sub}</span>
+                <div className={styles.metricValue}>
+                  <bdi>{texts.metric3Val}</bdi>
+                </div>
+                <div className={styles.metricTitle}>{texts.metric3Title}</div>
+                <div className={styles.metricSubtitle}>{texts.metric3Sub}</div>
               </div>
             </div>
 
             <div className={styles.metricCard}>
               <div className={styles.metricIconWrap}>🛡️</div>
               <div className={styles.metricContent}>
-                <span className={styles.metricValue}>{texts.metric4Val}</span>
-                <span className={styles.metricTitle}>{texts.metric4Title}</span>
-                <span className={styles.metricSubtitle}>{texts.metric4Sub}</span>
+                <div className={styles.metricValue}>
+                  <bdi>{texts.metric4Val}</bdi>
+                </div>
+                <div className={styles.metricTitle}>{texts.metric4Title}</div>
+                <div className={styles.metricSubtitle}>{texts.metric4Sub}</div>
               </div>
             </div>
           </section>

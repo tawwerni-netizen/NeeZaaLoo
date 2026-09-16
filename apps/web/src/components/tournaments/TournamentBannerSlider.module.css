@@ -317,17 +317,40 @@
 }
 
 @media (max-width: 640px) {
+  .cyberCornerTL,
+  .cyberCornerBR {
+    display: none;
+  }
   .slidesStack {
     aspect-ratio: 16 / 10;
   }
   .slideBottomBar {
-    padding: 14px 16px 22px;
+    padding: 14px 16px 26px;
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
+  }
+  [dir="rtl"] .slideBottomBar {
+    align-items: flex-start;
+    text-align: right;
+  }
+  [dir="rtl"] .slideSuperRow {
+    justify-content: flex-start;
+  }
+  [dir="rtl"] .slideTitle {
+    text-align: right;
+  }
+  [dir="rtl"] .slideMeta {
+    text-align: right;
   }
   .slideTitle {
     font-size: 17px;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .slideMeta {
+    font-size: 11.5px;
+    line-height: 1.4;
   }
   .badgeTopLeft, .badgeTopRight {
     font-size: 9.5px;
