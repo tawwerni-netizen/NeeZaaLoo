@@ -70,50 +70,44 @@ async function main() {
     }
 
     console.log("");
-    // This reads HISTORY. It can say what the last deposit attempt got; it
-    // cannot say what the next one would get, because a restart since then
-    // changes the answer and leaves no row behind. Saying otherwise is how
-    // a diagnostic starts being trusted past what it actually knows.
-    const newest = recent.rows[0];
-    const ageMinutes = newest ? Math.round((Date.now() - new Date(newest.created_at)) / 60000) : null;
-    const staleAfterMinutes = 30;
 
-    if (t.sandbox_last_7d > 0) {
-      const newestSandbox = recent.rows.find((r) => r.address?.startsWith(SANDBOX_PREFIX));
-      const newestReal = recent.rows.find((r) => r.address && !r.address.startsWith(SANDBOX_PREFIX));
-      const lastWasSandbox = newest?.address?.startsWith(SANDBOX_PREFIX);
+    // What a player is SERVED is not simply the newest row. Deposit
+    // addresses here are permanent and reused, and the reuse query skips
+    // expired/orphaned/quarantined rows and sandbox addresses -- so a dead
+    // sandbox row sitting at the top by creation time says nothing about
+    // what the wallet actually shows. Mirror that same filter, or the
+    // verdict describes a row nobody will ever be given.
+    const servable = await client.query(`
+      SELECT address, provider, status::text, created_at
+        FROM deposit
+       WHERE status NOT IN ('EXPIRED', 'ORPHANED', 'QUARANTINED')
+         AND address NOT LIKE 'Tsbx\\_%'
+       ORDER BY created_at DESC
+       LIMIT 1
+    `);
+    const live = servable.rows[0];
 
-      if (lastWasSandbox && ageMinutes !== null && ageMinutes > staleAfterMinutes) {
-        const hours = (ageMinutes / 60).toFixed(1);
-        console.log(`RESULT: unknown -- the last deposit attempt was ${hours}h ago, and it got a sandbox address.`);
-        console.log("  Nothing has been attempted since, so this says nothing about the process");
-        console.log("  running right now. To settle it, either check GET /v1/health (it reports");
-        console.log('  "payments":"configured" or "unavailable"), or open the wallet and request');
-        console.log("  a deposit address, then run this again.");
-      } else if (lastWasSandbox) {
-        console.log("RESULT: the most recent deposit attempt got a SANDBOX address.");
-        console.log("  The API process cannot see OXAPAY_MERCHANT_API_KEY. Environment variables");
-        console.log("  are read once, at process start, so the app has to be RESTARTED after");
-        console.log("  setting it -- or the value placed in a .env file next to server.js.");
-      } else {
-        console.log("RESULT: the most recent deposit attempt got a REAL address -- the provider is live.");
-      }
-
-      if (newestReal && newestSandbox && new Date(newestReal.created_at) < new Date(newestSandbox.created_at)) {
-        console.log("");
-        console.log("  History note: a REAL address was minted at " +
-          new Date(newestReal.created_at).toISOString().slice(0, 16).replace("T", " ") +
-          ", before the sandbox ones above.");
-        console.log("  So the key did reach the process once and was lost again -- which is what a");
-        console.log("  restart or redeploy that did not carry the variable through looks like.");
-      }
-      if (lastWasSandbox) process.exitCode = 1;
-    } else if (t.sandbox > 0) {
-      console.log("RESULT: no NEW sandbox addresses in the last 7 days -- the real provider is live.");
-      console.log(`  ${t.sandbox} older sandbox row(s) remain in history. They are excluded from reuse,`);
-      console.log("  so no player will be handed one again, but do not pay into them.");
+    if (live) {
+      const when = new Date(live.created_at).toISOString().slice(0, 16).replace("T", " ");
+      console.log("RESULT: the address a player would be served now is REAL.");
+      console.log(`  ${live.address}  (provider: ${live.provider}, minted ${when})`);
+      console.log("  Deposit addresses are permanent and reused, so this is what the wallet shows.");
+    } else if (t.sandbox_last_7d > 0) {
+      console.log("RESULT: no real address is available to serve, and sandbox rows exist.");
+      console.log("  The API process cannot see OXAPAY_MERCHANT_API_KEY. Environment variables");
+      console.log("  are read once, at process start, so the app has to be RESTARTED after");
+      console.log("  setting it -- or the value placed in a .env file next to server.js.");
+      console.log('  Check GET /v1/health: it reports "payments":"configured" or "unavailable".');
+      process.exitCode = 1;
     } else {
-      console.log("RESULT: clean -- no sandbox address has ever been issued.");
+      console.log("RESULT: no deposit address has been issued yet.");
+      console.log('  Check GET /v1/health for whether payments are wired at all.');
+    }
+
+    if (t.sandbox > 0) {
+      console.log("");
+      console.log(`  ${t.sandbox} sandbox row(s) remain in history. They are barred from reuse and`);
+      console.log("  hidden from the wallet, so no player is handed one -- but never pay into them.");
     }
   } finally {
     await client.end();
