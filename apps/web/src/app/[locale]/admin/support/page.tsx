@@ -215,6 +215,7 @@ export default function AdminSupportPage() {
 
   const openCount = tickets.filter((t) => t.status === "OPEN").length;
   const inProgressCount = tickets.filter((t) => t.status === "IN_PROGRESS").length;
+  const resolvedCount = tickets.filter((t) => t.status === "RESOLVED").length;
 
   return (
     <AdminPageLayout
@@ -224,8 +225,14 @@ export default function AdminSupportPage() {
       stats={[
         { label: "Open Tickets", value: `${openCount}`, trend: "High Priority" },
         { label: "In Progress", value: `${inProgressCount}`, trend: "Assigned" },
-        { label: "Average First Response", value: "8 mins", trend: "SLA Compliant" },
-        { label: "Resolution Satisfaction", value: "98.7%", trend: "Customer Rating" },
+        // No first-response-time or satisfaction-rating data exists yet
+        // (support_ticket has no such column, and nothing surveys players
+        // after resolution) -- these used to hardcode "8 mins" / "98.7%"
+        // regardless of whether a single real ticket had ever been
+        // answered. Showing a real, if less impressive, figure until that
+        // tracking exists.
+        { label: "Resolved Tickets", value: `${resolvedCount}`, trend: "All time" },
+        { label: "Total Tickets", value: `${tickets.length}`, trend: "All time" },
       ]}
       actions={
         <div style={{ display: "flex", gap: "8px" }}>

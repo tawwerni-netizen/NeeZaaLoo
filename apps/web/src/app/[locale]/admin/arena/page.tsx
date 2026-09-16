@@ -61,7 +61,7 @@ export default function AdminArenaPage() {
         { label: "Active Live Rooms", value: String(stats?.live_matches ?? duels.length), trend: "Real-time" },
         { label: "Active Contestants", value: String(stats?.active_players ?? duels.length * 2), trend: "In Duels" },
         { label: "Matches (24h)", value: String(stats?.matches_24h ?? 0), trend: "Completed" },
-        { label: "24h Fee Revenue", value: `$${rakeUsd} USDT`, trend: "12% Platform Fee" },
+        { label: "24h Fee Revenue", value: `$${rakeUsd} USDT`, trend: "10% Platform Fee (default)" },
       ]}
     >
       <div className={styles.tableCard}>

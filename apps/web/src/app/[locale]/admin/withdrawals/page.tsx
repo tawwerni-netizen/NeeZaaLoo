@@ -103,7 +103,7 @@ export default function AdminWithdrawalsPage() {
 
   return (
     <AdminPageLayout
-      title="USDT Withdrawals & Treasury Payout Terminal"
+      title="Withdrawals & Treasury Payout Terminal"
       subtitle="Multi-signature approval, destination validation, and anti-fraud automated checks before broadcast."
       breadcrumb={["Home", "Admin", "Withdrawals"]}
       stats={[
@@ -158,7 +158,7 @@ export default function AdminWithdrawalsPage() {
                 <th>Player</th>
                 <th>Destination Address</th>
                 <th>Network</th>
-                <th>Amount (USDT)</th>
+                <th>Amount</th>
                 <th>Status</th>
                 <th>Time</th>
                 <th className={styles.alignRight}>Actions</th>
@@ -192,7 +192,12 @@ export default function AdminWithdrawalsPage() {
                         <span className={`${styles.badge} ${styles.badgeNeutral}`}>{w.network || "TRC20"}</span>
                       </td>
                       <td className="nz-num" style={{ fontWeight: 700 }}>
-                        ${amount}
+                        {/* The coin is shown explicitly -- this queue is not
+                            USDT-only (withdrawal.asset can be USDC or DAI,
+                            e.g. a legacy balance routed here by support),
+                            and an admin approving a payout needs to know
+                            exactly which coin they are about to send. */}
+                        ${amount} {w.asset || "USDT"}
                       </td>
                       <td>
                         <span
