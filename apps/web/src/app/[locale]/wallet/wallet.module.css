@@ -105,6 +105,11 @@
 }
 
 .peggedBadge {
+  /* Latin-and-digits technical text: forced LTR so the RTL bidi
+     algorithm cannot reorder it (the pegged badge was rendering with its
+     leading amount pushed to the end on the Arabic wallet). */
+  direction: ltr;
+  unicode-bidi: isolate;
   background: rgba(38, 161, 123, 0.15);
   border: 1px solid rgba(38, 161, 123, 0.3);
   color: #34d399;
@@ -734,6 +739,11 @@
 }
 
 .networkNameTitle {
+  /* Latin-and-digits technical text: forced LTR so the RTL bidi
+     algorithm cannot reorder it (the pegged badge was rendering with its
+     leading amount pushed to the end on the Arabic wallet). */
+  direction: ltr;
+  unicode-bidi: isolate;
   font-size: 16px;
   font-weight: 800;
   color: #fff;
@@ -860,6 +870,11 @@
 }
 
 .addressString {
+  /* Latin-and-digits technical text: forced LTR so the RTL bidi
+     algorithm cannot reorder it (the pegged badge was rendering with its
+     leading amount pushed to the end on the Arabic wallet). */
+  direction: ltr;
+  unicode-bidi: isolate;
   font-family: var(--nz-font-num);
   font-size: 14px;
   color: #38bdf8;

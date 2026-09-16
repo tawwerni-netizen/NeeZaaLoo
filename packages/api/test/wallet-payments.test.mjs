@@ -151,7 +151,10 @@ describe("Wallet & OxaPay Payments API", () => {
     assert.equal(res.body.deposit.address, "TRealOxapayDepositAddressTRC20Official");
     assert.equal(res.body.deposit.network, "TRC20");
     assert.equal(res.body.deposit.asset, "USDT");
-    assert.ok(res.body.deposit.qrCodeUrl);
+    // No QR URL is handed out at all: the client draws the code from the
+    // address itself, so no outside host sees a player's deposit address or
+    // gets to decide what their scanner reads. The address IS the payload.
+    assert.equal(res.body.deposit.qrCodeUrl, null);
 
     // Verify row in deposit table
     const depCheck = await db.query("SELECT * FROM deposit WHERE player_id = 'alice'");

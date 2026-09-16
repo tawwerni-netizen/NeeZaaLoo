@@ -232,21 +232,37 @@ async function main() {
   // `chain` is the real on-chain reader (packages/chain/src/reader.mjs): it honours
   // CHAIN_READER=tron when configured and refuses to start under
   // NODE_ENV=production without it, rather than silently verifying nothing.
-  const provider = process.env.OXAPAY_MERCHANT_API_KEY
+  // In production, an unconfigured provider means NO payments surface at
+  // all -- never the sandbox. The sandbox mints `Tsbx_...` addresses that
+  // look real enough to paste into a wallet, and that fallback shipped once
+  // and was live, handing players fake deposit addresses. Leaving the
+  // service null makes every payments route answer PAYMENTS_UNAVAILABLE
+  // (503), honestly, while games, chat and tournaments keep serving.
+  const oxapayConfigured = Boolean(process.env.OXAPAY_MERCHANT_API_KEY);
+  const isProduction = process.env.NODE_ENV === "production";
+  if (!oxapayConfigured && isProduction) {
+    logger.emit("payments.provider_unconfigured", {
+      severity: "error",
+      detail: "OXAPAY_MERCHANT_API_KEY is not set: deposits and withdrawals are disabled. The sandbox provider is never used in production.",
+    });
+  }
+  const provider = oxapayConfigured
     ? createOxapayProvider({
         merchantApiKey: process.env.OXAPAY_MERCHANT_API_KEY,
         payoutApiKey: process.env.OXAPAY_PAYOUT_API_KEY,
         callbackUrl: process.env.OXAPAY_CALLBACK_URL,
       })
-    : createSandboxProvider();
+    : (isProduction ? null : createSandboxProvider());
   const chain = createChainReader();
-  const paymentSvc = createPaymentService(db, {
-    provider,
-    chain,
-    config: {
-      reviewThresholdMinor: BigInt(process.env.WITHDRAWAL_REVIEW_THRESHOLD_MINOR || "500000000"), // 500 USDT ($499+ manual review)
-    },
-  });
+  const paymentSvc = provider
+    ? createPaymentService(db, {
+        provider,
+        chain,
+        config: {
+          reviewThresholdMinor: BigInt(process.env.WITHDRAWAL_REVIEW_THRESHOLD_MINOR || "500000000"), // 500 USDT ($499+ manual review)
+        },
+      })
+    : null;
   // `gamePlugins` (constructed above for the gateway's own plugin
   // registry) also lets reconciliation's runReplayVerification() and
   // runEvidenceCleanup() independently re-derive a settled cash duel's
@@ -310,6 +326,13 @@ async function main() {
     paymentSvc, paymentProvider: provider,
     rateLimit: { capacity: Number(process.env.RATE_LIMIT_CAPACITY || 100), refillPerSecond: Number(process.env.RATE_LIMIT_REFILL || 20) },
     sensitiveRateLimits: {
+      // Ten password attempts per five minutes per IP. Generous enough that
+      // an operator running a batch of admin actions never notices it, far
+      // too tight to guess a password with.
+      "step-up": {
+        capacity: Number(process.env.STEP_UP_RATE_CAPACITY || 10),
+        refillPerSecond: Number(process.env.STEP_UP_RATE_REFILL_PER_SEC || 10 / 300),
+      },
       "email-code-request": {
         capacity: Number(process.env.EMAIL_CODE_REQUEST_RATE_CAPACITY || 5),
         refillPerSecond: Number(process.env.EMAIL_CODE_REQUEST_RATE_REFILL_PER_SEC || 5 / 300),

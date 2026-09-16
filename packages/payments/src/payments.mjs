@@ -138,6 +138,7 @@ export function createPaymentService(db, {
               max_deposit_minor::text AS max_deposit_minor,
               min_withdrawal_minor::text AS min_withdrawal_minor,
               max_withdrawal_minor::text AS max_withdrawal_minor,
+              auto_approve_threshold_minor::text AS auto_approve_threshold_minor,
               confirmation_depth
          FROM payment_rail WHERE asset = $1 AND network = $2`,
       [asset, network]
@@ -177,12 +178,14 @@ export function createPaymentService(db, {
       );
       if (existing.rows.length) {
         const row = existing.rows[0];
-        const qr = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(row.address)}&size=160x160`;
         return {
           ok: true,
           depositId: row.id,
           address: row.address,
-          qrCodeUrl: qr,
+          // Deliberately no QR URL: the client draws the code itself from
+          // `address`, so no outside host ever sees a player's deposit
+          // address or gets to decide what their scanner reads.
+          qrCodeUrl: null,
           display: `${asset} — ${network} (${network === "TRON" ? "TRC20" : network})`,
           asset,
           network,
@@ -204,7 +207,7 @@ export function createPaymentService(db, {
       );
       return {
         ok: true, depositId: id, address: intent.address,
-        qrCodeUrl: intent.qrCodeUrl ?? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(intent.address)}&size=160x160`,
+        qrCodeUrl: null,
         display: `${asset} — ${network} (${network === "TRON" ? "TRC20" : network})`,
         asset, network,
         isStatic: Boolean(intent.isStatic),
@@ -662,8 +665,16 @@ export function createPaymentService(db, {
         destination: w.destination, network: w.network,
       });
 
+      // The rail's own operator-set threshold wins when configured; the
+      // service default (WITHDRAWAL_REVIEW_THRESHOLD_MINOR) is the fallback
+      // for a rail that has never been tuned from the admin panel.
+      const rail = await railOf(w.asset, w.network);
+      const reviewAt = rail?.auto_approve_threshold_minor
+        ? BigInt(rail.auto_approve_threshold_minor)
+        : cfg.reviewThresholdMinor;
+
       const needsHuman =
-        BigInt(w.amount_minor) >= cfg.reviewThresholdMinor ||
+        BigInt(w.amount_minor) >= reviewAt ||
         scored.score >= 50 ||
         scored.forceReview === true;
 

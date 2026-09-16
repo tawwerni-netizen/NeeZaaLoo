@@ -67,6 +67,10 @@ before(async () => {
   api = createApi({
     db, auth, rails, railHealth,
     rateLimit: { capacity: 5000, refillPerSecond: 5000 },
+    // This suite mints a step-up token for nearly every case; the real
+    // per-IP ceiling on that endpoint is exercised in api.test.mjs's own
+    // step-up rate-limiting suite, not here.
+    sensitiveRateLimits: { "step-up": { capacity: 5000, refillPerSecond: 5000 } },
   });
   await api.listen();
   base = api.url;

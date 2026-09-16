@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Button } from "@/components/Button";
 import { get, post } from "@/lib/api";
+import { adminErrorMessage } from "@/lib/admin-errors";
 import styles from "@/components/admin/AdminPageLayout.module.css";
 
 type WithdrawalItem = {
@@ -81,7 +82,7 @@ export default function AdminWithdrawalsPage() {
       setTimeout(() => setNotice(null), 3500);
       loadWithdrawals();
     } catch (e) {
-      alert("Failed to approve withdrawal");
+      alert(adminErrorMessage(e, "تعذّر اعتماد طلب السحب."));
     }
   }
 
@@ -93,7 +94,7 @@ export default function AdminWithdrawalsPage() {
       setTimeout(() => setNotice(null), 3500);
       loadWithdrawals();
     } catch (e) {
-      alert("Failed to reject withdrawal");
+      alert(adminErrorMessage(e, "تعذّر رفض طلب السحب."));
     }
   }
 

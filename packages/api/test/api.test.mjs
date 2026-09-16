@@ -1872,6 +1872,36 @@ describe("email-code rate limiting: a second, stricter, per-IP budget on top of 
   });
 });
 
+describe("step-up rate limiting: the gate in front of every privileged admin action", () => {
+  test("repeated password guesses against /v1/auth/step-up are throttled", async () => {
+    // Step-up is a password check an ALREADY-authenticated caller can repeat
+    // at will, and it now stands in front of granting roles, seizing
+    // balances and approving payouts. An attacker holding a stolen session
+    // must not be able to sit here guessing.
+    const own = createApi({
+      db, auth,
+      rateLimit: { capacity: 5000, refillPerSecond: 5000 }, // general limiter wide open
+      sensitiveRateLimits: { "step-up": { capacity: 3, refillPerSecond: 0 } },
+    });
+    await own.listen();
+    const login = await auth.login({ identifier: "alice", password: PASSWORD });
+    assert.equal(login.ok, true);
+
+    const results = [];
+    for (let i = 0; i < 6; i++) {
+      const r = await fetch(`${own.url}/v1/auth/step-up`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${login.accessToken}` },
+        body: JSON.stringify({ action: "admin.rbac.manage", password: `guess-${i}` }),
+      });
+      results.push(r.status);
+    }
+    assert.ok(results.includes(429), `expected a 429 in ${results}`);
+    assert.equal(results[0], 401, "a wrong password is refused before the budget runs out");
+    await own.close();
+  });
+});
+
 describe("password-reset rate limiting: a second, stricter, per-IP budget on top of the general limiter", () => {
   test("password-reset/request is throttled independently of the general per-IP budget", async () => {
     const own = createApi({

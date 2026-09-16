@@ -83,7 +83,7 @@ describe("Admin control-toggle and risk-decide gating (route/policy audit fix)",
 
   test("a SUPER_ADMIN with step-up CAN toggle a game's cash mode", async () => {
     const rootToken = await tokenFor("rootAdmin");
-    const step = await stepUp(rootToken, "admin.control.toggle");
+    const step = await stepUp(rootToken, "admin.game.manage");
     const before = await db.query("SELECT cash_enabled FROM game WHERE id = $1", [gameId]);
 
     const r = await req("POST", `/v1/admin/games/${gameId}/toggle-cash`, {

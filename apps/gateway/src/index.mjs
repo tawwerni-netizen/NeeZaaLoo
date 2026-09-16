@@ -139,6 +139,11 @@ async function main() {
     auth, duels, plugins, store, lease, ownerId, fairPlay,
     port: Number(process.env.WS_PORT || 3010),
     host: process.env.HOST || "0.0.0.0",
+    // The same allowlist the REST API uses for CORS: a socket is just as
+    // much a cross-origin surface, and is not covered by CORS at all.
+    allowedOrigins: (process.env.CORS_ORIGINS
+      || "http://localhost:3000,http://127.0.0.1:3000,https://nizalo.com,https://app.nizalo.com,https://www.nizalo.com")
+      .split(",").map((s) => s.trim()).filter(Boolean),
     rateLimit: { capacity: Number(process.env.RATE_LIMIT_CAPACITY || 60), refillPerSecond: Number(process.env.RATE_LIMIT_REFILL || 10) },
     chat: { channels: chatChannels, moderation: chatModeration, blocks: chatBlocks, messages: chatMessages },
     chatBus,

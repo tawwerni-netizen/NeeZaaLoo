@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { RequireAuth } from "@/components/RequireAuth";
+import { QrCode } from "@/components/QrCode";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
 import { get, post, ApiError } from "@/lib/api";
@@ -82,6 +83,8 @@ function WalletContent() {
     qrCodeUrl?: string | null;
     expiresAt?: string;
     isStatic?: boolean;
+    asset?: string;
+    network?: string;
   } | null>(null);
   const [depositLoading, setDepositLoading] = useState(false);
   const [depositError, setDepositError] = useState<string | null>(null);
@@ -195,7 +198,10 @@ function WalletContent() {
     (depositData?.expiresAt && new Date(depositData.expiresAt).getTime() > Date.now() + 30 * 86400000)
   );
 
-  const effectiveQrUrl = depositData?.qrCodeUrl || (depositData?.address ? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(depositData.address)}&size=160x160` : null);
+  // Drawn locally from the address below it -- never fetched from a QR
+  // service, which would both leak every player's address and let whoever
+  // serves that image decide where a scanned payment goes. See QrCode.tsx.
+  const qrValue = depositData?.address ?? null;
 
   // Expiry countdown timer for OxaPay temporary deposit address only
   useEffect(() => {
@@ -757,14 +763,12 @@ function WalletContent() {
                 <span style={{ fontSize: "28px" }}>⏳</span>
                 <span style={{ fontSize: "12px" }}>{tW.qrGenerating}</span>
               </div>
-            ) : effectiveQrUrl ? (
+            ) : qrValue ? (
               <div className={styles.qrFrame}>
-                <img
-                  src={effectiveQrUrl}
-                  alt="USDT Deposit QR"
-                  width={140}
-                  height={140}
-                  style={{ display: "block", borderRadius: "8px" }}
+                <QrCode
+                  value={qrValue}
+                  size={140}
+                  title={`USDT ${depositData?.network ?? ""} deposit address`}
                 />
               </div>
             ) : (

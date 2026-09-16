@@ -88,32 +88,50 @@ async function main() {
     settlement, store, plugins, mm, emit: logger.emit,
   });
 
-  // OxaPay provider when configured, otherwise Sandbox in dev/test.
-  const provider = process.env.OXAPAY_MERCHANT_API_KEY
+  // OxaPay provider when configured, otherwise Sandbox in dev/test ONLY.
+  // In production an unconfigured provider means the payments surface stays
+  // OFF -- never the sandbox, which mints `Tsbx_...` addresses that look
+  // real enough to pay into and that a reconciliation loop would then treat
+  // as genuine. Everything else this worker does (settlement, tournaments,
+  // progression, fair play, referrals) is independent of payments and keeps
+  // running, so a missing key never takes the games down with it.
+  const oxapayConfigured = Boolean(process.env.OXAPAY_MERCHANT_API_KEY);
+  const isProduction = process.env.NODE_ENV === "production";
+  if (!oxapayConfigured && isProduction) {
+    logger.emit("payments.provider_unconfigured", {
+      severity: "error",
+      detail: "OXAPAY_MERCHANT_API_KEY is not set: payment reconciliation is disabled. The sandbox provider is never used in production.",
+    });
+  }
+  const provider = oxapayConfigured
     ? createOxapayProvider({
         merchantApiKey: process.env.OXAPAY_MERCHANT_API_KEY,
         payoutApiKey: process.env.OXAPAY_PAYOUT_API_KEY,
         callbackUrl: process.env.OXAPAY_CALLBACK_URL,
       })
-    : createSandboxProvider();
+    : (isProduction ? null : createSandboxProvider());
   const chain = createChainReader();
-  const paymentSvc = createPaymentService(db, {
-    provider,
-    chain,
-    config: {
-      reviewThresholdMinor: BigInt(process.env.WITHDRAWAL_REVIEW_THRESHOLD_MINOR || "500000000"), // 500 USDT ($499+ manual review)
-    },
-  });
+  const paymentSvc = provider
+    ? createPaymentService(db, {
+        provider,
+        chain,
+        config: {
+          reviewThresholdMinor: BigInt(process.env.WITHDRAWAL_REVIEW_THRESHOLD_MINOR || "500000000"), // 500 USDT ($499+ manual review)
+        },
+      })
+    : null;
   // `plugins` (constructed above) lets reconciliation's runReplayVerification()
   // independently re-derive a settled cash duel's real result and check it
   // against what was actually paid -- see reconcile.mjs's own header on why
   // this closes a real gap (a game plugin decided every payout with nothing
   // ever re-checking its answer).
-  const reconciliation = createReconciliationService(db, { paymentSvc, provider, plugins, emit: logger.emit });
+  const reconciliation = paymentSvc
+    ? createReconciliationService(db, { paymentSvc, provider, plugins, emit: logger.emit })
+    : null;
   const reconciliationIntervalMs = Number(process.env.RECONCILIATION_INTERVAL_MS || 60000);
-  const reconciliationWorker = createTickLoop(() => reconciliation.runAll(), {
-    intervalMs: reconciliationIntervalMs,
-  });
+  const reconciliationWorker = reconciliation
+    ? createTickLoop(() => reconciliation.runAll(), { intervalMs: reconciliationIntervalMs })
+    : null;
 
   // Settlement sweep: settlement.settleDue() (packages/settlement/src/
   // settle.mjs) already existed and was already fully idempotent/
@@ -227,8 +245,11 @@ async function main() {
       { name: "matchmaking_dispatch", worker: dispatchWorker },
       // Reconciliation runs far less often than matchmaking dispatch --
       // minutes, not milliseconds -- so it declares its OWN interval here
-      // rather than inheriting runtime.start()'s shared cadence.
-      { name: "reconciliation", worker: reconciliationWorker, intervalMs: reconciliationIntervalMs },
+      // rather than inheriting runtime.start()'s shared cadence. Absent
+      // entirely when no payment provider is configured (see above).
+      ...(reconciliationWorker
+        ? [{ name: "reconciliation", worker: reconciliationWorker, intervalMs: reconciliationIntervalMs }]
+        : []),
       { name: "settlement_sweep", worker: settlementSweepWorker, intervalMs: settlementSweepIntervalMs },
       { name: "progression_sweep", worker: progressionSweepWorker, intervalMs: progressionSweepIntervalMs },
       { name: "tournament_sweep", worker: tournamentSweepWorker, intervalMs: tournamentSweepIntervalMs },

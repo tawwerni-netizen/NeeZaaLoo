@@ -233,8 +233,24 @@ function payCurrency(asset, network) {
  * different id shapes, different state names -- so any test that drives both
  * this and the NOWPayments adapter through the same code is evidence that the
  * abstraction holds rather than leaking.
+ *
+ * REFUSES TO EXIST UNDER NODE_ENV=production, deliberately, and for the same
+ * reason createMockChainReader does (packages/chain/src/reader.mjs): the
+ * addresses it invents look real enough to paste into a wallet. A production
+ * API that quietly fell back to this -- because an OxaPay key was missing --
+ * would hand every player a `Tsbx_...` deposit address and lose real money
+ * sent to it, with nothing anywhere reporting an error. That exact fallback
+ * shipped once and was live. A process that cannot take deposits must fail
+ * loudly at startup, not serve a convincing fake.
  */
 export function createSandboxProvider({ secret = "sandbox-secret" } = {}) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "createSandboxProvider must never be used with NODE_ENV=production -- " +
+      "it mints fake deposit addresses. Configure OXAPAY_MERCHANT_API_KEY " +
+      "(and OXAPAY_PAYOUT_API_KEY for payouts) so the real provider is used."
+    );
+  }
   const payments = new Map();
   const payouts = new Map();
 

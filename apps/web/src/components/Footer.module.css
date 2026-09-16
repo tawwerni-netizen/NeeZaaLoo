@@ -97,7 +97,7 @@
 .linkList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 2px;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -111,6 +111,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  /* A 13px line of text is a ~20px tap target, which is well under the ~44px
+     a thumb actually needs -- and these links sit in a dense column, so a
+     mis-tap opens the wrong page. The padding buys the height without
+     changing the visual rhythm (the gap above absorbs it). */
+  padding-block: 6px;
+  min-height: 32px;
 }
 
 .linkList a:hover {

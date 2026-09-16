@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { RequireAuth } from "@/components/RequireAuth";
+import { QrCode } from "@/components/QrCode";
 import { useAuth } from "@/lib/auth-context";
 import { get, ApiError } from "@/lib/api";
 import { formatUsd } from "@/lib/money";
@@ -540,13 +541,11 @@ function ReferralContent() {
             <p className={styles.modalDesc}>{t("referralPage.qr_modal_desc")}</p>
 
             <div className={styles.qrImageFrame}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(fullInviteUrl)}&size=240x240&margin=10`}
-                alt="Nizalo Referral QR"
+              <QrCode
+                value={fullInviteUrl}
+                size={220}
                 className={styles.qrImg}
-                width={220}
-                height={220}
+                title="Nizalo Referral QR"
               />
             </div>
 

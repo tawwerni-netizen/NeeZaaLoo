@@ -170,11 +170,8 @@ export function createOxapayProvider({
         throw new Error("OxaPay did not return a deposit address");
       }
 
-      // Always guarantee a valid, scannable QR code
-      if (!qrCode && address) {
-        qrCode = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(address)}&size=160x160`;
-      }
-
+      // No third-party QR fallback: the address itself is what matters, and
+      // the web client draws the code from it locally (see QrCode.tsx).
       return {
         providerRef: String(trackId || idempotencyKey),
         address,

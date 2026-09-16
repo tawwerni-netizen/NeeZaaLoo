@@ -173,13 +173,32 @@ describe("Admin player site-wide banning", () => {
     assert.equal(loginAfterUnban.ok, true);
   });
 
-  test("promoting with specific multi-tier role assigns correct role without step-up", async () => {
+  test("promoting with a specific multi-tier role assigns that role, and needs step-up to do it", async () => {
     const superToken = await tokenFor("adminSuper");
-    const res = await req("POST", "/v1/admin/players/badPlayer/promote", {
+
+    // Granting a role is the action that hands out every other privilege on
+    // the platform, so it re-authenticates. Without the token it is refused.
+    const bare = await req("POST", "/v1/admin/players/badPlayer/promote", {
       token: superToken,
       body: { role: "SUPPORT", reason: "Promoted to Customer Support Team" },
     });
-    assert.equal(res.status, 200);
+    assert.equal(bare.status, 401);
+    assert.equal(bare.body.error.code, "STEP_UP_REQUIRED");
+    assert.equal(bare.body.error.detail, "admin.rbac.manage",
+      "the denial must name the action, or a client cannot mint the right token");
+
+    const step = await req("POST", "/v1/auth/step-up", {
+      token: superToken,
+      body: { action: "admin.rbac.manage", password: PASSWORD },
+    });
+    assert.equal(step.status, 200, `step-up failed: ${JSON.stringify(step.body)}`);
+
+    const res = await req("POST", "/v1/admin/players/badPlayer/promote", {
+      token: superToken,
+      headers: { "x-step-up-token": step.body.stepUpToken },
+      body: { role: "SUPPORT", reason: "Promoted to Customer Support Team" },
+    });
+    assert.equal(res.status, 200, JSON.stringify(res.body));
     assert.equal(res.body.role, "SUPPORT");
 
     const grants = await db.query("SELECT role FROM admin_role_grant WHERE admin_id = 'badPlayer' AND revoked_at IS NULL");
@@ -198,9 +217,24 @@ describe("Admin player site-wide banning", () => {
       [JSON.stringify(legs)]
     );
 
-    // Execute confiscate-and-ban
+    // Emptying a player's entire balance re-authenticates first: a stolen
+    // admin session must not be enough on its own to seize funds.
+    const bare = await req("POST", "/v1/admin/players/badPlayer/confiscate-and-ban", {
+      token: superToken,
+      body: { reason: "Wallhack and aimbot in tournament" },
+    });
+    assert.equal(bare.status, 401);
+    assert.equal(bare.body.error.code, "STEP_UP_REQUIRED");
+
+    const step = await req("POST", "/v1/auth/step-up", {
+      token: superToken,
+      body: { action: "admin.user.confiscate", password: PASSWORD },
+    });
+    assert.equal(step.status, 200, `step-up failed: ${JSON.stringify(step.body)}`);
+
     const r = await req("POST", "/v1/admin/players/badPlayer/confiscate-and-ban", {
       token: superToken,
+      headers: { "x-step-up-token": step.body.stepUpToken },
       body: { reason: "Wallhack and aimbot in tournament" },
     });
     assert.equal(r.status, 200, JSON.stringify(r.body));

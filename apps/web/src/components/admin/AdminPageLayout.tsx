@@ -5,6 +5,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { useAuth } from "@/lib/auth-context";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminTopbar } from "./AdminTopbar";
+import { StepUpProvider } from "./StepUpProvider";
 import styles from "./AdminPageLayout.module.css";
 
 type AdminPageLayoutProps = {
@@ -29,6 +30,7 @@ export function AdminPageLayout({
 
   return (
     <RequireAuth>
+      <StepUpProvider>
       <div className={styles.layout}>
         <AdminSidebar
           adminHandle={player?.handle ?? "admin"}
@@ -73,6 +75,7 @@ export function AdminPageLayout({
           </div>
         </div>
       </div>
+      </StepUpProvider>
     </RequireAuth>
   );
 }

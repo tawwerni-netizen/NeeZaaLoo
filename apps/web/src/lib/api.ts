@@ -153,12 +153,89 @@ async function ensureFreshSession(): Promise<boolean> {
   return refreshInFlight;
 }
 
+/**
+ * Step-up re-authentication, handled once for the whole admin surface.
+ *
+ * Privileged admin actions (granting a role, confiscating a balance,
+ * toggling cash play on a game) are gated by the backend on a step-up
+ * token: a five-minute, single-action token minted from the admin's
+ * password (plus TOTP when enrolled). Without a client that can mint one,
+ * every such button simply fails with a 401 -- which is exactly how the
+ * protection came to be stripped off those actions once before, rather
+ * than the flow being implemented.
+ *
+ * So it lives here instead of in each page: any request refused with
+ * STEP_UP_REQUIRED asks the registered prompt for a password, mints a
+ * token for the action the server named, and retries the original request
+ * once. Tokens are cached in memory per action for their remaining life,
+ * so a run of admin actions costs one prompt, not one per click.
+ */
+type StepUpPrompt = (action: string) => Promise<{ password: string; totpCode?: string | undefined } | null>;
+
+let stepUpPrompt: StepUpPrompt | null = null;
+const stepUpTokens = new Map<string, { token: string; expiresAt: number }>();
+
+/** Registered once by the admin shell (see components/admin/StepUpProvider). */
+export function setStepUpPrompt(prompt: StepUpPrompt | null) {
+  stepUpPrompt = prompt;
+}
+
+export function clearStepUpTokens() {
+  stepUpTokens.clear();
+}
+
+function cachedStepUpToken(action: string): string | null {
+  const hit = stepUpTokens.get(action);
+  if (!hit) return null;
+  if (hit.expiresAt <= Date.now()) {
+    stepUpTokens.delete(action);
+    return null;
+  }
+  return hit.token;
+}
+
+async function mintStepUpToken(action: string): Promise<string | null> {
+  if (!stepUpPrompt) return null;
+  const answer = await stepUpPrompt(action);
+  if (!answer) return null;
+  const res = await rawRequest("POST", "/v1/auth/step-up", {
+    body: { action, password: answer.password, totpCode: answer.totpCode || undefined },
+    noRefresh: true,
+  });
+  if (!res.ok) throw new ApiError(res.status, res.body);
+  const token = (res.body as { stepUpToken?: string } | null)?.stepUpToken;
+  if (!token) return null;
+  // The backend issues these for five minutes; expire ours a little early so
+  // a token never dies mid-flight on a slow request.
+  stepUpTokens.set(action, { token, expiresAt: Date.now() + 4 * 60 * 1000 });
+  return token;
+}
+
+function stepUpActionFrom(body: unknown): string | null {
+  const err = typeof body === "object" && body !== null ? (body as { error?: unknown }).error : null;
+  if (typeof err !== "object" || err === null) return null;
+  const { code, detail } = err as { code?: unknown; detail?: unknown };
+  if (String(code) !== "STEP_UP_REQUIRED") return null;
+  return typeof detail === "string" && detail.length > 0 ? detail : null;
+}
+
 export async function api<T = unknown>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
   let res = await rawRequest(method, path, options);
+
   if (res.status === 401 && !options.noRefresh && getTokens().refreshToken) {
-    const refreshed = await ensureFreshSession();
-    if (refreshed) res = await rawRequest(method, path, options);
+    const stepUpAction = stepUpActionFrom(res.body);
+    if (stepUpAction) {
+      // An expired SESSION and a missing STEP-UP token both surface as 401.
+      // Only the latter names an action, so only the latter is retried this
+      // way -- a session refresh here would prompt for nothing and fail.
+      const token = cachedStepUpToken(stepUpAction) ?? (options.stepUpToken ? null : await mintStepUpToken(stepUpAction));
+      if (token) res = await rawRequest(method, path, { ...options, stepUpToken: token });
+    } else {
+      const refreshed = await ensureFreshSession();
+      if (refreshed) res = await rawRequest(method, path, options);
+    }
   }
+
   if (!res.ok) throw new ApiError(res.status, res.body);
   return res.body as T;
 }

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { get, post } from "@/lib/api";
+import { adminErrorMessage } from "@/lib/admin-errors";
 import styles from "@/components/admin/AdminPageLayout.module.css";
 
 interface PlayerRecord {
@@ -196,7 +197,7 @@ export default function AdminPlayersPage() {
       showNotice("User demoted successfully!");
       loadPlayers();
     } catch (e) {
-      alert("Failed to demote user");
+      alert(adminErrorMessage(e, "تعذّر سحب الصلاحية."));
     }
   }
 

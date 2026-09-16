@@ -41,6 +41,16 @@ import { createInMemoryBus } from "./bus.mjs";
 export function createGateway({
   sessions, duels, plugins, now = () => Date.now(), rateLimit, store = null, auth = null,
   lease = null, ownerId = null, port = 0, host = undefined,
+  // Browser origins allowed to open a socket at all. WebSockets are exempt
+  // from the same-origin policy and carry no CORS preflight, so without
+  // this ANY page on the internet can open a connection to this gateway
+  // and start spending its budget. Identity itself is still proved by the
+  // token inside JOIN (never by an ambient cookie), so this is not what
+  // stops session hijacking -- it is what stops a hostile page getting far
+  // enough to try. Empty/omitted keeps every existing test and any
+  // non-browser client working unchanged: only a request that actually
+  // carries an Origin header is ever judged.
+  allowedOrigins = [],
   // Chat (Slice 9) -- a bundle of the chat package's own services
   // ({ channels, messages, moderation, blocks }). Omit entirely to run this
   // gateway with duel traffic only, exactly the prior behaviour: every
@@ -174,7 +184,27 @@ export function createGateway({
     }
     return sessions.get(token) ?? null;
   }
-  const wss = new WebSocketServer(host ? { port, host } : { port });
+  const originAllowlist = new Set(allowedOrigins.filter(Boolean));
+  /**
+   * Judge only what a browser actually sent. A request with no Origin header
+   * is not a browser (a native app, a server-side client, the test suite),
+   * and those have never been in scope for this check.
+   */
+  function originAllowed(origin) {
+    if (originAllowlist.size === 0) return true;
+    if (!origin) return true;
+    return originAllowlist.has(origin);
+  }
+
+  const wss = new WebSocketServer({
+    ...(host ? { port, host } : { port }),
+    verifyClient: ({ origin }, done) => {
+      if (originAllowed(origin)) return done(true);
+      // 403, not a silent drop: a misconfigured allowlist should be obvious
+      // in a browser console rather than look like an unreachable server.
+      done(false, 403, "origin not allowed");
+    },
+  });
   /** duelId -> Set<connection> */
   const rooms = new Map();
   /** chat channelId -> Set<connection> -- deliberately separate from `rooms`

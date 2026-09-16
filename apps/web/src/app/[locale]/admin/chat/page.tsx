@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import styles from "@/components/admin/AdminPageLayout.module.css";
 import { get, post } from "@/lib/api";
+import { adminErrorMessage } from "@/lib/admin-errors";
 
 type LiveMessage = {
   id: string;
@@ -116,8 +117,8 @@ export default function AdminChatPage() {
       await post(`/v1/admin/chat/messages/${messageId}/delete`, {});
       flashNotice(`Message ${messageId} removed.`);
       loadMessages();
-    } catch {
-      alert("Failed to remove message.");
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر حذف الرسالة."));
     }
   }
 
@@ -137,8 +138,8 @@ export default function AdminChatPage() {
       setMuteReason("");
       if (activeTab === "MUTES") loadMutes();
       if (activeTab === "MESSAGES") loadMessages();
-    } catch {
-      alert("Failed to mute player.");
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر كتم اللاعب."));
     }
   }
 
@@ -148,8 +149,8 @@ export default function AdminChatPage() {
       await post(`/v1/admin/chat/mutes/${muteId}/revoke`, {});
       flashNotice(`Mute for ${handle ? `@${handle}` : muteId} revoked.`);
       loadMutes();
-    } catch {
-      alert("Failed to unmute player.");
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر رفع الكتم."));
     }
   }
 
@@ -163,8 +164,8 @@ export default function AdminChatPage() {
       setBanTarget(null);
       setBanReason("");
       if (activeTab === "MESSAGES") loadMessages();
-    } catch {
-      alert("Failed to ban player. Super Admins cannot be banned.");
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر حظر اللاعب — لا يمكن حظر مدير عام."));
     }
   }
 
@@ -174,8 +175,8 @@ export default function AdminChatPage() {
       await post(`/v1/admin/chat/reports/${reportId}/review`, { status });
       flashNotice(`Report ${reportId} marked as ${status}.`);
       loadReports();
-    } catch {
-      alert("Failed to review report.");
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّرت مراجعة البلاغ."));
     }
   }
 

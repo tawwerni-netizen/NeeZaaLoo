@@ -376,7 +376,15 @@ export function createApi({
     // routes (see `rateLimitKey` on the route definition) -- on top of,
     // never instead of, the general limiter above.
     if (route.rateLimitKey) {
-      const perIpBudget = sensitiveRateLimits[route.rateLimitKey] ?? { capacity: 5, refillRatePerSecond: 5 / 300 };
+      // The 5-per-5-minutes default suits one-shot flows (request a code,
+      // confirm a reset). Step-up is different in kind: one operator can
+      // legitimately need a fresh token for several DIFFERENT actions in a
+      // row, since each token is bound to exactly one. It still needs a
+      // hard ceiling -- it is a password check -- just a workable one.
+      const fallbackBudget = route.rateLimitKey === "step-up"
+        ? { capacity: 15, refillRatePerSecond: 15 / 300 }
+        : { capacity: 5, refillRatePerSecond: 5 / 300 };
+      const perIpBudget = sensitiveRateLimits[route.rateLimitKey] ?? fallbackBudget;
       if (!sensitiveLimiters.has(route.rateLimitKey)) {
         sensitiveLimiters.set(route.rateLimitKey, new Map());
       }
@@ -457,7 +465,14 @@ export function createApi({
         decision.decision === Decision.REQUIRE_STEP_UP ? 401 :
         decision.decision === Decision.REQUIRE_APPROVAL ? 409 :
         decision.reason === "CONTROL_DISABLED" ? 503 : 403;
-      return sendJson(res, status, errorBody(decision.reason, decision.detail));
+      // A step-up denial names the action it wants re-authentication FOR: a
+      // step-up token is bound to exactly one action, so a client that is
+      // only told "step up" cannot mint the right one. This is the action
+      // the route already declared -- never anything the client sent.
+      const detail = decision.decision === Decision.REQUIRE_STEP_UP
+        ? (decision.action ?? route.action)
+        : decision.detail;
+      return sendJson(res, status, errorBody(decision.reason, detail));
     }
 
     const result = await route.handler(ctx);
@@ -866,6 +881,12 @@ function buildRoutes() {
       } },
 
     { method: "POST", path: "/v1/auth/step-up", action: "player.login",
+      // Its own per-IP budget, on top of the general limiter. Step-up is a
+      // password check that an ALREADY-authenticated caller can repeat, and
+      // it is now the gate in front of granting roles, seizing balances and
+      // approving payouts -- so an attacker holding a stolen session must
+      // not be able to sit on this endpoint guessing the password.
+      rateLimitKey: "step-up",
       handler: async ({ body, actor, auth }) => {
         const r = await auth.stepUp({
           playerId: actor.id,
@@ -1201,7 +1222,6 @@ function buildRoutes() {
         );
         if (existingDep.rows.length) {
           const row = existingDep.rows[0];
-          const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(row.address)}&size=160x160`;
           return {
             status: 200,
             body: {
@@ -1209,7 +1229,10 @@ function buildRoutes() {
               deposit: {
                 id: row.id,
                 address: row.address,
-                qrCodeUrl,
+                // The client renders the QR from `address` itself; handing out
+                // a third-party image URL for a payment address is a
+                // redirection risk, not a convenience. See QrCode.tsx.
+                qrCodeUrl: null,
                 asset: row.asset,
                 network,
                 display: `${row.asset} — ${network}`,
@@ -1237,7 +1260,7 @@ function buildRoutes() {
               deposit: {
                 id: res.depositId,
                 address: res.address,
-                qrCodeUrl: res.qrCodeUrl ?? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(res.address)}&size=160x160`,
+                qrCodeUrl: null,
                 asset: res.asset,
                 network,
                 display: res.display,
@@ -4733,28 +4756,6 @@ function buildRoutes() {
       } },
 
     // --- Admin Platform Settings & Economic Parameters ---
-    { method: "GET", path: "/v1/admin/settings", action: "admin.control.read",
-      handler: async ({ db }) => {
-        const [controls, economy] = await Promise.all([
-          db.query("SELECT key, enabled, changed_by, reason, changed_at FROM platform_control ORDER BY key"),
-          db.query("SELECT id, version, tier, rake_bps, effective_from, reason FROM economy_rule ORDER BY version DESC"),
-        ]);
-        return {
-          body: {
-            ok: true,
-            controls: controls.rows,
-            economyRules: economy.rows,
-            config: {
-              platformFeeRate: 0.12,
-              platformCurrency: "USDT",
-              platformNetwork: "TRC20",
-              minDepositUsdt: 5,
-              minWithdrawalUsdt: 10,
-            }
-          }
-        };
-      } },
-
     // --- Admin RBAC & Staff Management ---
     { method: "GET", path: "/v1/admin/rbac", action: "admin.user.read",
       handler: async ({ db }) => {
@@ -4888,6 +4889,26 @@ function buildRoutes() {
           const enable = !body.maintenanceMode;
           await db.query("UPDATE platform_control SET enabled = $1 WHERE key IN ('MATCHMAKING', 'CASH_MATCHES')", [enable]);
         }
+
+        // These two were rendered, edited and submitted by the settings page
+        // but silently dropped here, so an operator could set a withdrawal
+        // minimum or auto-approve limit, see a success message, and change
+        // nothing at all. Both are real per-rail values.
+        const minWithdrawalNum = parseFloat(body.minWithdrawal);
+        if (!isNaN(minWithdrawalNum) && minWithdrawalNum >= 0) {
+          await db.query(
+            "UPDATE payment_rail SET min_withdrawal_minor = $1, updated_at = now() WHERE asset = 'USDT'",
+            [String(Math.round(minWithdrawalNum * 1_000_000))]
+          );
+        }
+        const autoApproveNum = parseFloat(body.autoApproveLimit);
+        if (!isNaN(autoApproveNum) && autoApproveNum >= 0) {
+          await db.query(
+            "UPDATE payment_rail SET auto_approve_threshold_minor = $1, updated_at = now() WHERE asset = 'USDT'",
+            [String(Math.round(autoApproveNum * 1_000_000))]
+          );
+        }
+
         return { body: { ok: true, message: "Settings saved successfully" } };
       } },
 
