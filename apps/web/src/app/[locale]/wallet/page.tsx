@@ -35,7 +35,7 @@ interface AmlSummary {
   playthroughCompleted: boolean;
 }
 
-function isValidAddress(address: string, network: "TRC20" | "BEP20" | "ERC20"): boolean {
+function isValidAddress(address: string, network: "TRC20" | "BEP20"): boolean {
   const trimmed = address.trim();
   if (network === "TRC20") {
     return /^T[1-9A-HJ-NP-za-km-z]{33}$/.test(trimmed);
@@ -70,7 +70,7 @@ function WalletContent() {
   const [txNotice, setTxNotice] = useState<string | null>(null);
 
   // Network selection across deposit and withdraw
-  const [selectedNetwork, setSelectedNetwork] = useState<"TRC20" | "BEP20" | "ERC20">("TRC20");
+  const [selectedNetwork, setSelectedNetwork] = useState<"TRC20" | "BEP20">("TRC20");
 
   // OxaPay Deposit State
   const [depositData, setDepositData] = useState<{
@@ -152,7 +152,7 @@ function WalletContent() {
   }, [player, isAr]);
 
   // Request fresh deposit address from OxaPay
-  const loadDeposit = useCallback(async (net: "TRC20" | "BEP20" | "ERC20") => {
+  const loadDeposit = useCallback(async (net: "TRC20" | "BEP20") => {
     if (!player) return;
     setDepositLoading(true);
     setDepositError(null);
@@ -620,7 +620,6 @@ function WalletContent() {
               {[
                 { net: "TRC20" as const, label: "USDT-TRC20 (Tron)", rec: isAr ? "موصى به · الأسرع" : "Fast & Cheap" },
                 { net: "BEP20" as const, label: "USDT-BEP20 (BNB Chain)", rec: isAr ? "رسوم منخفضة" : "Low Gas" },
-                { net: "ERC20" as const, label: "USDT-ERC20 (Ethereum)", rec: null },
               ].map((item) => (
                 <button
                   key={item.net}
@@ -754,7 +753,6 @@ function WalletContent() {
               {[
                 { net: "TRC20" as const, label: "USDT-TRC20 (Tron)", rec: isAr ? "رسوم 1$" : "$1 Fee" },
                 { net: "BEP20" as const, label: "USDT-BEP20 (BNB Chain)", rec: isAr ? "رسوم 1$" : "$1 Fee" },
-                { net: "ERC20" as const, label: "USDT-ERC20 (Ethereum)", rec: null },
               ].map((item) => (
                 <button
                   key={item.net}
