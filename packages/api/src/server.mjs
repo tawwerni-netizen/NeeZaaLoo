@@ -1183,11 +1183,18 @@ function buildRoutes() {
             [params.id]
           ),
           db.query(
+            // Sandbox-minted addresses are excluded outright. A handful were
+            // issued while the API was falling back to the sandbox provider,
+            // and they sit here in AWAITING_PAYMENT -- which a wallet renders
+            // as "waiting for your payment", next to a copyable address that
+            // leads nowhere. They are already barred from reuse; this stops
+            // the ones already written from being shown as payable at all.
             `SELECT id, asset, network, address, status::text,
                     COALESCE(observed_amount_minor, 0)::text AS amount_minor,
                     observed_tx_hash, created_at, expires_at, credited_at
                FROM deposit
               WHERE player_id = $1
+                AND address NOT LIKE 'Tsbx\\_%'
               ORDER BY created_at DESC
               LIMIT 20`,
             [params.id]
