@@ -71,7 +71,7 @@ export default function AdminDepositsPage() {
 
   return (
     <AdminPageLayout
-      title="USDT Deposits & Blockchain Ingestion"
+      title="Deposits & Blockchain Ingestion"
       subtitle="Monitor incoming USDT deposits across TRC20, ERC20, and BEP20 with automated confirmation depth."
       breadcrumb={["Home", "Admin", "Deposits"]}
       stats={[
@@ -120,7 +120,7 @@ export default function AdminDepositsPage() {
                 <th>Blockchain TxHash</th>
                 <th>Player</th>
                 <th>Network</th>
-                <th>Amount (USDT)</th>
+                <th>Amount</th>
                 <th>Confirmations</th>
                 <th>Status</th>
                 <th>Time</th>
@@ -158,7 +158,7 @@ export default function AdminDepositsPage() {
                         <span className={`${styles.badge} ${styles.badgeNeutral}`}>{d.network || "TRC20"}</span>
                       </td>
                       <td className="nz-num" style={{ color: "#22c55e", fontWeight: 700 }}>
-                        +$${amount}
+                        +${amount} {d.asset || "USDT"}
                       </td>
                       <td className="nz-num">{d.confirmations ?? 0}</td>
                       <td>
