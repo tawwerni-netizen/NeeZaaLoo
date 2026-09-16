@@ -76,7 +76,11 @@ interface PlayerAmlDetail {
 
 function formatUsdt(amountMinor: number | string | null | undefined): string {
   const n = typeof amountMinor === "string" ? Number(amountMinor) : (amountMinor ?? 0);
-  return (n / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Platform minor units are 6 decimal places (asset.minor_units), not 2 --
+  // dividing by 100 here inflated every dollar figure on this page by
+  // 10,000x (a real $250.00 balance rendered as "$2,500,000.00"), including
+  // the confiscate-and-ban button's own displayed seizure amount.
+  return (n / 1_000_000).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export default function AdminPlayersPage() {
