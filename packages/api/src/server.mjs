@@ -4995,13 +4995,14 @@ function buildRoutes() {
         const [ruleRes, controlsRes, railRes] = await Promise.all([
           db.query("SELECT rake_bps FROM economy_rule WHERE tier = 'CASH' AND effective_to IS NULL ORDER BY version DESC LIMIT 1"),
           db.query("SELECT key, enabled FROM platform_control"),
-          db.query("SELECT min_withdrawal_minor, auto_approve_threshold_minor FROM payment_rail WHERE asset = 'USDT' LIMIT 1"),
+          db.query("SELECT min_withdrawal_minor, min_deposit_minor, auto_approve_threshold_minor FROM payment_rail WHERE asset = 'USDT' LIMIT 1"),
         ]);
         const rakeBps = ruleRes.rows[0]?.rake_bps ?? 1200;
         const platformRake = (rakeBps / 100).toFixed(1);
         const controls = Object.fromEntries(controlsRes.rows.map((r) => [r.key, r.enabled]));
         const maintenanceMode = controls.MATCHMAKING === false || controls.CASH_MATCHES === false;
         const minWithdrawal = railRes.rows[0]?.min_withdrawal_minor ? (Number(railRes.rows[0].min_withdrawal_minor) / 1_000_000).toFixed(1) : "10.0";
+        const minDeposit = railRes.rows[0]?.min_deposit_minor ? (Number(railRes.rows[0].min_deposit_minor) / 1_000_000).toFixed(1) : "5.0";
         const autoApproveLimit = railRes.rows[0]?.auto_approve_threshold_minor ? (Number(railRes.rows[0].auto_approve_threshold_minor) / 1_000_000).toFixed(1) : "100.0";
         return {
           body: {
@@ -5010,6 +5011,7 @@ function buildRoutes() {
             rakeBps,
             maintenanceMode,
             minWithdrawal,
+            minDeposit,
             autoApproveLimit,
             controls,
           }
@@ -5037,15 +5039,19 @@ function buildRoutes() {
           await db.query("UPDATE platform_control SET enabled = $1 WHERE key IN ('MATCHMAKING', 'CASH_MATCHES')", [enable]);
         }
 
-        // These two were rendered, edited and submitted by the settings page
-        // but silently dropped here, so an operator could set a withdrawal
-        // minimum or auto-approve limit, see a success message, and change
-        // nothing at all. Both are real per-rail values.
+        // Apply payment limits across all payment rails
         const minWithdrawalNum = parseFloat(body.minWithdrawal);
         if (!isNaN(minWithdrawalNum) && minWithdrawalNum >= 0) {
           await db.query(
-            "UPDATE payment_rail SET min_withdrawal_minor = $1, updated_at = now() WHERE asset = 'USDT'",
+            "UPDATE payment_rail SET min_withdrawal_minor = $1, updated_at = now()",
             [String(Math.round(minWithdrawalNum * 1_000_000))]
+          );
+        }
+        const minDepositNum = parseFloat(body.minDeposit);
+        if (!isNaN(minDepositNum) && minDepositNum >= 0) {
+          await db.query(
+            "UPDATE payment_rail SET min_deposit_minor = $1, updated_at = now()",
+            [String(Math.round(minDepositNum * 1_000_000))]
           );
         }
         const autoApproveNum = parseFloat(body.autoApproveLimit);

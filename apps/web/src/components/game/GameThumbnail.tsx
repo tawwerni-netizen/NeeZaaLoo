@@ -25,6 +25,7 @@ const SUPPORTED_GAMES = new Set([
   "seega",
   "reversi",
   "gomoku",
+  "billiards",
 ]);
 
 export function GameThumbnail({

@@ -71,6 +71,7 @@ const CHECKS = [
   ["0057_multi_asset_cash_play.sql", "column", "matchmaking_ticket.asset"],
   ["0058_platform_fee_12_percent.sql", "row", "economy_rule.standard"],
   ["0059_billiards.sql", "row", "game.billiards"],
+  ["0060_payment_rail_limits_10_usd.sql", "min_withdrawal_10", "payment_rail"],
 ];
 
 async function objectExists(client, kind, name) {
@@ -115,6 +116,10 @@ async function objectExists(client, kind, name) {
       const w = await client.query("SELECT count(*)::int c FROM withdrawal WHERE network = 'TRC20'");
       const d = await client.query("SELECT count(*)::int c FROM deposit WHERE network = 'TRC20'");
       return w.rows[0].c === 0 && d.rows[0].c === 0;
+    }
+    case "min_withdrawal_10": {
+      const r = await client.query("SELECT min_withdrawal_minor FROM payment_rail WHERE id = 'USDT_TRON'");
+      return r.rows.length > 0 && String(r.rows[0].min_withdrawal_minor) === "10000000";
     }
     default:
       return null;

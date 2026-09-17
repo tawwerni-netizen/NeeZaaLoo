@@ -11,6 +11,7 @@ interface SettingsResponse {
   rakeBps: number;
   maintenanceMode: boolean;
   minWithdrawal: string;
+  minDeposit: string;
   autoApproveLimit: string;
 }
 
@@ -18,6 +19,7 @@ export default function AdminSettingsPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [platformRake, setPlatformRake] = useState("12.0");
   const [minWithdrawal, setMinWithdrawal] = useState("10.0");
+  const [minDeposit, setMinDeposit] = useState("5.0");
   const [autoApproveLimit, setAutoApproveLimit] = useState("100.0");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,6 +32,7 @@ export default function AdminSettingsPage() {
         setPlatformRake(res.platformRake || "12.0");
         setMaintenanceMode(Boolean(res.maintenanceMode));
         if (res.minWithdrawal) setMinWithdrawal(res.minWithdrawal);
+        if (res.minDeposit) setMinDeposit(res.minDeposit);
         if (res.autoApproveLimit) setAutoApproveLimit(res.autoApproveLimit);
       }
     } catch (e: any) {
@@ -52,11 +55,12 @@ export default function AdminSettingsPage() {
         platformRake,
         maintenanceMode,
         minWithdrawal,
+        minDeposit,
         autoApproveLimit,
       });
       setNotice({
         type: "success",
-        message: `تم حفظ الإعدادات بنجاح! نسبة الربح للمنصة: ${platformRake}% (${Math.round(parseFloat(platformRake) * 100)} bps).`,
+        message: `تم حفظ الإعدادات بنجاح! نسبة الربح للمنصة: ${platformRake}% (${Math.round(parseFloat(platformRake) * 100)} bps). الحد الأدنى للسحب: $${minWithdrawal}، الإيداع: $${minDeposit}.`,
       });
       await fetchSettings();
     } catch (err) {
@@ -73,12 +77,12 @@ export default function AdminSettingsPage() {
   return (
     <AdminPageLayout
       title="Platform Settings & Rules Configuration"
-      subtitle="Configure global rake percentages, USDT deposit/withdrawal boundaries, and maintenance toggles."
+      subtitle="Configure global rake percentages, deposit/withdrawal boundaries across all currencies, and maintenance toggles."
       breadcrumb={["Home", "Admin", "Settings"]}
       stats={[
-        { label: "Platform Rake", value: `${platformRake}%`, trend: `${100 - parseFloat(platformRake || "0")}% to Prize Pool` },
-        { label: "Min Withdrawal", value: `$${minWithdrawal} USDT`, trend: "Zero fee" },
-        { label: "Auto-Approve Cap", value: `$${autoApproveLimit} USDT`, trend: "Instant payout" },
+        { label: "Platform Rake", value: `${platformRake}%`, trend: `${100 - parseFloat(platformRake || "0")}% to Winner Pool` },
+        { label: "Min Deposit", value: `$${minDeposit} USD`, trend: "All currencies" },
+        { label: "Min Withdrawal", value: `$${minWithdrawal} USD`, trend: "All currencies" },
         { label: "Platform State", value: maintenanceMode ? "MAINTENANCE" : "LIVE ONLINE", trend: "Production" },
       ]}
     >
@@ -141,10 +145,27 @@ export default function AdminSettingsPage() {
 
           <div>
             <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>
-              Minimum USDT Withdrawal Amount ($)
+              Minimum Deposit Amount ($) — الحد الأدنى للإيداع
             </label>
             <p style={{ fontSize: "12px", color: "#94a3b8", margin: "0 0 8px 0" }}>
-              Requests below this amount will be rejected automatically.
+              يطبق كحد أدنى للإيداع المقبول عبر جميع العملات والشبكات ($5 افتراضياً).
+            </p>
+            <input
+              type="number"
+              step="1"
+              min="1"
+              value={minDeposit}
+              onChange={(e) => setMinDeposit(e.target.value)}
+              style={{ width: "100%", background: "#0e1015", border: "1px solid #252b37", color: "#fff", padding: "8px 12px", borderRadius: "6px", fontSize: "13px" }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>
+              Minimum Withdrawal Amount ($) — الحد الأدنى للسحب
+            </label>
+            <p style={{ fontSize: "12px", color: "#94a3b8", margin: "0 0 8px 0" }}>
+              طلبات السحب الأقل من هذا المبلغ ترفض تلقائياً عبر جميع العملات والشبكات ($10 افتراضياً).
             </p>
             <input
               type="number"

@@ -177,6 +177,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const cleanDesc = formatTournamentDescription(tournament, locale);
   const coverImg = getTournamentCover(tournament.game_id);
   const entryFeeUsdt = (Number(tournament.entry_fee_minor || 0) / 1_000_000).toFixed(2);
+  const grossPotUsdt = ((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity).toFixed(2);
   const winnerPoolUsdt = ((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.88).toFixed(2);
   const platformFeeUsdt = ((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.12).toFixed(2);
   const remainingSpots = Math.max(0, tournament.capacity - (tournament.registeredCount || 0));
@@ -229,14 +230,22 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
               {tournament.tier === "CASH" ? (
                 <>
                   <div className={`${styles.metricCard} ${styles.metricGold}`}>
-                    <span className={styles.metricLabel}>💰 {locale === "ar" ? "مجموع جوائز الفائز (88%)" : "Winner Pool (88%)"}</span>
+                    <span className={styles.metricLabel}>💰 {locale === "ar" ? "صافي جائزة الفائز (88%)" : "Net Winner Prize (88%)"}</span>
                     <span className={`${styles.metricVal} nz-num`}><bdi>${winnerPoolUsdt} USDT</bdi></span>
-                    <span className={styles.metricSub}>{locale === "ar" ? "تسوية كاش فورية للمحفظة" : "Instant settlement"}</span>
+                    <span className={styles.metricSub}>
+                      {locale === "ar" 
+                        ? `إجمالي الوعاء: $${grossPotUsdt} USDT` 
+                        : `Gross Pot: $${grossPotUsdt} USDT`}
+                    </span>
                   </div>
                   <div className={styles.metricCard}>
                     <span className={styles.metricLabel}>🎟️ {locale === "ar" ? "رسوم الاشتراك" : "Entry Fee"}</span>
                     <span className={`${styles.metricVal} nz-num`}><bdi>${entryFeeUsdt} USDT</bdi></span>
-                    <span className={styles.metricSub}>{t("tournamentsPage.platform_fee", { amount: platformFeeUsdt, asset: "USDT" })}</span>
+                    <span className={styles.metricSub}>
+                      {locale === "ar" 
+                        ? `عمولة المنصة 12%: $${platformFeeUsdt} USDT` 
+                        : `Platform Fee 12%: $${platformFeeUsdt} USDT`}
+                    </span>
                   </div>
                 </>
               ) : (

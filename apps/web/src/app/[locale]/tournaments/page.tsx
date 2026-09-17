@@ -56,6 +56,7 @@ const GAME_ICONS: Record<string, string> = {
   reversi: "⚪",
   gomoku: "🟢",
   seega: "🎯",
+  billiards: "🎱",
 };
 
 // Complete multilingual localized copy across all 6 supported languages
@@ -84,6 +85,8 @@ const PAGE_TEXTS: Record<SupportedLocale, {
   showingResults: string;
   clearFilters: string;
   prizePoolLabel: string;
+  prizePotPrefix: string;
+  prizeFeePrefix: string;
   honorTrophy: string;
   entryFeeLabel: string;
   freeEntry: string;
@@ -130,7 +133,9 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     allGames: "كل الألعاب",
     showingResults: "عرض {count} بطولة متاحة",
     clearFilters: "إلغاء الفلترة",
-    prizePoolLabel: "مجموع الجوائز الفورية:",
+    prizePoolLabel: "صافي جائزة الفائز (88%):",
+    prizePotPrefix: "إجمالي الوعاء:",
+    prizeFeePrefix: "عمولة المنصة:",
     honorTrophy: "كأس الشرف ونقاط تصنيف ELO",
     entryFeeLabel: "رسوم الاشتراك",
     freeEntry: "دخول مجاني 100%",
@@ -177,7 +182,9 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     allGames: "All Games",
     showingResults: "Showing {count} tournaments",
     clearFilters: "Clear Filters",
-    prizePoolLabel: "Total Prize Pool:",
+    prizePoolLabel: "Net Winner Prize (88%):",
+    prizePotPrefix: "Gross Pot:",
+    prizeFeePrefix: "Platform Fee:",
     honorTrophy: "Honor Trophy & ELO Rank",
     entryFeeLabel: "Entry Fee",
     freeEntry: "100% Free Entry",
@@ -224,7 +231,9 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     allGames: "Todos los Juegos",
     showingResults: "Mostrando {count} torneos",
     clearFilters: "Limpiar Filtros",
-    prizePoolLabel: "Bolsa de Premios Total:",
+    prizePoolLabel: "Premio Neto Ganador (88%):",
+    prizePotPrefix: "Bolsa Total:",
+    prizeFeePrefix: "Comisión:",
     honorTrophy: "Trofeo de Honor y Puntos ELO",
     entryFeeLabel: "Cuota de Entrada",
     freeEntry: "Entrada 100% Gratis",
@@ -271,7 +280,9 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     allGames: "Tous les Jeux",
     showingResults: "Affichage de {count} tournois",
     clearFilters: "Effacer les Filtres",
-    prizePoolLabel: "Cagnotte Totale :",
+    prizePoolLabel: "Prix Net Vainqueur (88%) :",
+    prizePotPrefix: "Cagnotte Totale :",
+    prizeFeePrefix: "Frais Plateforme :",
     honorTrophy: "Trophée d'Honneur & ELO",
     entryFeeLabel: "Frais d'Entrée",
     freeEntry: "100% Gratuit",
@@ -318,7 +329,9 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     allGames: "全部竞技游戏",
     showingResults: "当前展示 {count} 场锦标赛",
     clearFilters: "重置筛选",
-    prizePoolLabel: "保底总奖金池：",
+    prizePoolLabel: "优胜者净得奖金 (88%):",
+    prizePotPrefix: "总奖池:",
+    prizeFeePrefix: "平台服务费:",
     honorTrophy: "巅峰荣誉奖杯与 ELO 天梯分",
     entryFeeLabel: "报名费用",
     freeEntry: "100% 免费参赛",
@@ -365,7 +378,9 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     allGames: "सभी खेल",
     showingResults: "{count} टूर्नामेंट प्रदर्शित",
     clearFilters: "फ़िल्टर साफ़ करें",
-    prizePoolLabel: "कुल पुरस्कार राशि:",
+    prizePoolLabel: "विजेता का शुद्ध पुरस्कार (88%):",
+    prizePotPrefix: "कुल पूल:",
+    prizeFeePrefix: "प्लेटफ़ॉर्म शुल्क:",
     honorTrophy: "सम्मान ट्रॉफी और ELO रैंक",
     entryFeeLabel: "प्रवेश शुल्क",
     freeEntry: "100% मुफ्त प्रवेश",
@@ -695,6 +710,8 @@ function TournamentsList() {
                 const cleanTitle = formatTournamentTitle(row, gameName, locale);
                 const startTarget = row.scheduled_starts_at ?? row.starts_at;
                 const entryFeeUsdt = Number(row.entry_fee_minor || 0) / 1_000_000;
+                const grossPot = (entryFeeUsdt * row.capacity).toFixed(2);
+                const platformFee = (entryFeeUsdt * row.capacity * 0.12).toFixed(2);
                 const prizePool = (entryFeeUsdt * row.capacity * 0.88).toFixed(2);
                 const registeredPct = Math.min(
                   100,
@@ -758,14 +775,28 @@ function TournamentsList() {
 
                       {/* Metallic Gold Prize Pool Box */}
                       <div className={styles.prizeBox}>
-                        <div className={styles.prizeLabel}>
-                          <span>💰</span>
-                          <span>{texts.prizePoolLabel}</span>
+                        <div className={styles.prizeHeaderRow}>
+                          <div className={styles.prizeLabel}>
+                            <span>💰</span>
+                            <span>{texts.prizePoolLabel}</span>
+                          </div>
+                          {Number(prizePool) > 0 && (
+                            <span className={styles.prizePercentBadge}>88%</span>
+                          )}
                         </div>
                         {Number(prizePool) > 0 ? (
-                          <span className={`${styles.prizeAmount} nz-num`}>
-                            <bdi>{`$${prizePool} USDT`}</bdi>
-                          </span>
+                          <>
+                            <div className={styles.prizeMainRow}>
+                              <span className={`${styles.prizeAmount} nz-num`}>
+                                <bdi>{`$${prizePool} USDT`}</bdi>
+                              </span>
+                            </div>
+                            <div className={styles.prizeBreakdown}>
+                              <span>{texts.prizePotPrefix} ${grossPot}</span>
+                              <span className={styles.breakdownDot}>·</span>
+                              <span className={styles.prizeFee}>{texts.prizeFeePrefix} 12% (${platformFee})</span>
+                            </div>
+                          </>
                         ) : (
                           <span className={styles.prizeTrophy}>
                             {texts.honorTrophy}

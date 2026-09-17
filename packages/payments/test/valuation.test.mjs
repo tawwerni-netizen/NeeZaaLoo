@@ -246,7 +246,7 @@ describe("the Admin Payment & Stablecoin Control Center's rail service", () => {
     const { db, rails } = await fresh();
     const res = await rails.updateLimits("USDT_TRON", {
       maxWithdrawalMinor: u(500),
-      minWithdrawalMinor: u(5), // unchanged from the seeded default -- must NOT be logged
+      minWithdrawalMinor: u(10), // unchanged from the seeded default ($10) -- must NOT be logged
     }, { actorType: "ADMIN", actorId: "admin-1", reason: "tightening the payout ceiling" });
     assert.equal(res.ok, true);
     assert.deepEqual(res.changedFields, ["max_withdrawal_minor"]);
