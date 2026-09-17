@@ -3438,6 +3438,66 @@ function buildRoutes() {
         return { body: { ok: true, withdrawal: finalRow.rows[0], processResult: processed } };
       } },
 
+    // Step 1 of the REAL four-eyes ceremony for a withdrawal: an admin
+    // proposes releasing a PENDING_REVIEW withdrawal, freezing its exact
+    // payload into the approval_request (payments.mjs's own
+    // proposeApproval() -- see its header for why). admin.withdrawal.review
+    // is the correct tier here, not .approve: proposing is a review-stage
+    // decision, not the money-moving one. A DIFFERENT admin then decides via
+    // the existing generic POST /v1/admin/approvals/:id/decide (subjectType
+    // approval_request -- already reusable here since SUPER_ADMIN and
+    // FINANCE_ADMIN both hold every capability either step needs), and the
+    // ORIGINAL requester finally executes it below.
+    { method: "POST", path: "/v1/admin/withdrawals/:id/propose-approval", action: "admin.withdrawal.review",
+      subjectType: "withdrawal",
+      handler: async ({ params, body, actor, paymentSvc }) => {
+        if (!paymentSvc) return { status: 503, body: errorBody("PAYMENTS_UNAVAILABLE") };
+        const reason = String(body?.reason ?? "Routine release").slice(0, 500);
+        const result = await paymentSvc.proposeApproval(params.id, { requestedBy: actor.id, reason });
+        if (!result.ok) {
+          const status = result.reason === "NOT_FOUND" ? 404
+            : result.reason === WithdrawalError.WRONG_STATE ? 409 : 400;
+          return { status, body: errorBody(result.reason) };
+        }
+        return { status: 201, body: { ok: true, approvalRequestId: result.approvalRequestId } };
+      } },
+
+    // Step 3: execute an already-decided approval. This IS
+    // admin.withdrawal.approve (fourEyes: true in policy.mjs) -- the
+    // dispatcher (see resolveApproval() above) fetches and validates
+    // body.approvalRequestId before this handler ever runs, so by the time
+    // execution reaches here a second, different admin's real decision has
+    // already been confirmed. Only the original requester may call this
+    // (payments.mjs's own approve() enforces it against approval.requested_by),
+    // matching the tournament-settlement precedent's own step 3.
+    { method: "POST", path: "/v1/admin/withdrawals/:id/approve-reviewed", action: "admin.withdrawal.approve",
+      subjectType: "withdrawal",
+      handler: async ({ params, body, actor, db, paymentSvc }) => {
+        if (!paymentSvc) return { status: 503, body: errorBody("PAYMENTS_UNAVAILABLE") };
+        // body.approvalRequestId is guaranteed present and APPROVED here --
+        // the dispatcher's own fourEyes gate (resolveApproval(), above)
+        // already refused the request with SECOND_ADMIN_REQUIRED otherwise.
+        const result = await paymentSvc.approve(params.id, {
+          approvalRequestId: body.approvalRequestId, adminId: actor.id, stepUpVerified: true,
+        });
+        if (!result.ok) {
+          const status = result.reason === "NOT_FOUND" ? 404
+            : result.reason === WithdrawalError.WRONG_STATE ? 409
+            : result.reason === WithdrawalError.PERMISSION_DENIED ? 403 : 400;
+          return { status, body: errorBody(result.reason) };
+        }
+
+        const processed = await paymentSvc.process(params.id).catch((err) => {
+          console.error("paymentSvc.process error after four-eyes approval:", err);
+          return null;
+        });
+        const finalRow = await db.query(
+          "SELECT id, status::text, provider_ref FROM withdrawal WHERE id = $1",
+          [params.id]
+        );
+        return { body: { ok: true, withdrawal: finalRow.rows[0], processResult: processed } };
+      } },
+
     { method: "POST", path: "/v1/admin/withdrawals/:id/reject", action: "admin.withdrawal.reject",
       subjectType: "withdrawal",
       handler: async ({ params, body, actor, paymentSvc }) => {

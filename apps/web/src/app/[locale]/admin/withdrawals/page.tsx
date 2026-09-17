@@ -75,7 +75,9 @@ export default function AdminWithdrawalsPage() {
   }, [loadWithdrawals]);
 
   async function handleApprove(id: string) {
-    if (!window.confirm(`Approve withdrawal ${id} for broadcast?`)) return;
+    if (!window.confirm(
+      `Solo-approve withdrawal ${id} for broadcast?\n\nThis releases it on YOUR approval alone. If a second admin is available, prefer "Propose (4-Eyes)" instead so a different admin has to sign off before it broadcasts.`
+    )) return;
     try {
       await post(`/v1/admin/withdrawals/${id}/approve`);
       setNotice(`Withdrawal ${id} approved successfully!`);
@@ -83,6 +85,50 @@ export default function AdminWithdrawalsPage() {
       loadWithdrawals();
     } catch (e) {
       alert(adminErrorMessage(e, "تعذّر اعتماد طلب السحب."));
+    }
+  }
+
+  // Step 1 of the real four-eyes ceremony: propose, then hand the returned
+  // id to a genuinely different admin (see "Decide a pending approval"
+  // below) before anyone can execute the release. Preferred over solo
+  // approval whenever a second admin is actually available -- see
+  // packages/api/src/server.mjs's own comment on propose-approval for why
+  // solo exists at all.
+  async function handlePropose(id: string) {
+    const reason = window.prompt(`Reason for proposing release of withdrawal ${id}:`, "Routine release");
+    if (reason === null) return;
+    try {
+      const res = await post<{ approvalRequestId: string }>(
+        `/v1/admin/withdrawals/${id}/propose-approval`,
+        { reason }
+      );
+      window.prompt(
+        `Proposed. Share this approval request ID with a DIFFERENT admin so they can decide it below, then come back and press "Execute (4-Eyes)" with the same ID:`,
+        res.approvalRequestId
+      );
+      loadWithdrawals();
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر اقتراح الاعتماد."));
+    }
+  }
+
+  // Step 3: execute a release a different admin already decided. The
+  // dispatcher itself refuses this (SECOND_ADMIN_REQUIRED) unless
+  // approvalRequestId resolves to an APPROVED request decided by someone
+  // other than the caller -- see packages/authz/src/policy.mjs's fourEyes
+  // check, which is the actual enforcement, not this form.
+  async function handleExecuteReviewed(id: string) {
+    const approvalRequestId = window.prompt(
+      `Approval request ID for withdrawal ${id} (from "Propose (4-Eyes)", decided by a different admin):`
+    );
+    if (!approvalRequestId) return;
+    try {
+      await post(`/v1/admin/withdrawals/${id}/approve-reviewed`, { approvalRequestId });
+      setNotice(`Withdrawal ${id} approved via four-eyes and broadcast!`);
+      setTimeout(() => setNotice(null), 3500);
+      loadWithdrawals();
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر تنفيذ الاعتماد."));
     }
   }
 
@@ -95,6 +141,24 @@ export default function AdminWithdrawalsPage() {
       loadWithdrawals();
     } catch (e) {
       alert(adminErrorMessage(e, "تعذّر رفض طلب السحب."));
+    }
+  }
+
+  // Step 2 of the ceremony: a DIFFERENT admin decides a pending proposal.
+  // Generic across every approval_request type (subjectType approval_request
+  // on the route itself, not withdrawal-specific) -- this is the same
+  // decide action the tournament-settlement flow already uses. Self-approval
+  // is refused server-side (approval_no_self_approval), not by this form.
+  async function handleDecide(approve: boolean) {
+    const id = window.prompt("Approval request ID to decide:");
+    if (!id) return;
+    const note = window.prompt(approve ? "Note (optional):" : "Reason for rejecting:") ?? undefined;
+    try {
+      await post(`/v1/admin/approvals/${id}/decide`, { approve, note });
+      setNotice(`Approval request ${id} ${approve ? "approved" : "rejected"}.`);
+      setTimeout(() => setNotice(null), 3500);
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر تسجيل القرار."));
     }
   }
 
@@ -141,6 +205,25 @@ export default function AdminWithdrawalsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+      </div>
+
+      {/* Step 2 of the four-eyes ceremony: whoever is NOT the proposing
+          admin decides here with the id "Propose (4-Eyes)" handed them.
+          Deliberately not tied to a specific row -- the decider does not
+          need to be looking at the withdrawal queue at all, only the id. */}
+      <div className={styles.tableCard} style={{ marginBottom: "16px" }}>
+        <div className={styles.tableHeader}>
+          <h2 className={styles.tableTitle}>Decide a Pending Approval (4-Eyes)</h2>
+        </div>
+        <div style={{ padding: "12px 16px", display: "flex", gap: "8px", alignItems: "center" }}>
+          <span style={{ fontSize: "13px", color: "var(--nz-text-3)" }}>
+            A different admin must decide the id another admin proposed above -- self-approval is refused.
+          </span>
+          <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
+            <Button variant="primary" onClick={() => handleDecide(true)}>Approve a Proposal</Button>
+            <Button variant="ghost" onClick={() => handleDecide(false)}>Reject a Proposal</Button>
+          </div>
         </div>
       </div>
 
@@ -219,9 +302,15 @@ export default function AdminWithdrawalsPage() {
                       </td>
                       <td className={styles.alignRight}>
                         {canAct ? (
-                          <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
-                            <Button variant="primary" onClick={() => handleApprove(w.id)}>
-                              Approve
+                          <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", flexWrap: "wrap" }}>
+                            <Button variant="primary" onClick={() => handlePropose(w.id)}>
+                              Propose (4-Eyes)
+                            </Button>
+                            <Button variant="ghost" onClick={() => handleExecuteReviewed(w.id)}>
+                              Execute (4-Eyes)
+                            </Button>
+                            <Button variant="ghost" onClick={() => handleApprove(w.id)}>
+                              Solo Approve
                             </Button>
                             <Button variant="ghost" onClick={() => handleReject(w.id)}>
                               Reject

@@ -61,7 +61,7 @@ describe("Wallet & OxaPay Payments API", () => {
   before(async () => {
     db = await PGlite.create();
     await migrate(db);
-    await db.query("INSERT INTO admin_user (id, email, display_name, mfa_enrolled) VALUES ('root', 'root@nizalo.com', 'Root', TRUE), ('bootstrap', 'bootstrap@nizalo.com', 'Bootstrap', TRUE)");
+    await db.query("INSERT INTO admin_user (id, email, display_name, mfa_enrolled) VALUES ('root', 'root@nizalo.com', 'Root', TRUE), ('root2', 'root2@nizalo.com', 'Root2', TRUE), ('bootstrap', 'bootstrap@nizalo.com', 'Bootstrap', TRUE)");
     await db.query("UPDATE platform_control SET enabled=TRUE, changed_by='root', reason='test deposits' WHERE key='DEPOSITS'");
     await db.query("UPDATE platform_control SET enabled=TRUE, changed_by='root', reason='test withdrawals' WHERE key='WITHDRAWALS'");
 
@@ -85,6 +85,15 @@ describe("Wallet & OxaPay Payments API", () => {
     assert.equal(rootReg.ok, true, `admin register should succeed: ${JSON.stringify(rootReg)}`);
     await db.query(
       `INSERT INTO admin_role_grant (admin_id, role, granted_by, reason) VALUES ('root','SUPER_ADMIN','bootstrap','test bootstrap')`
+    );
+
+    // A SECOND SUPER_ADMIN -- 'root2' -- exclusively for the real four-eyes
+    // ceremony test below (propose by one admin, decide by a genuinely
+    // different one, execute by the original requester).
+    const root2Reg = await auth.register({ playerId: "root2", handle: "root_admin_2", password: "correct horse battery staple" });
+    assert.equal(root2Reg.ok, true, `second admin register should succeed: ${JSON.stringify(root2Reg)}`);
+    await db.query(
+      `INSERT INTO admin_role_grant (admin_id, role, granted_by, reason) VALUES ('root2','SUPER_ADMIN','bootstrap','test bootstrap')`
     );
 
     provider = createOxapayProvider({
@@ -311,6 +320,111 @@ describe("Wallet & OxaPay Payments API", () => {
     );
     assert.equal(transition.rows[0].actor_type, "ADMIN");
     assert.equal(transition.rows[0].actor_id, "root");
+  });
+
+  test("the real four-eyes ceremony: propose by one admin, decide by a different one, execute by the requester", async () => {
+    const wdId = await createPendingReviewWithdrawal("seed-alice-withdraw-foureyes", 600);
+
+    const rootLogin = await auth.login({ identifier: "root_admin", password: "correct horse battery staple" });
+    const root2Login = await auth.login({ identifier: "root_admin_2", password: "correct horse battery staple" });
+    assert.equal(rootLogin.ok, true);
+    assert.equal(root2Login.ok, true);
+
+    // Step 1: root proposes. review-tier, no step-up required.
+    const propose = await req("POST", `/v1/admin/withdrawals/${wdId}/propose-approval`, {
+      token: rootLogin.accessToken,
+      body: { reason: "routine release" },
+    });
+    assert.equal(propose.status, 201, JSON.stringify(propose.body));
+    const approvalRequestId = propose.body.approvalRequestId;
+    assert.ok(approvalRequestId);
+
+    // admin.tournament.manage (what the generic decide route runs under)
+    // is itself step-up gated, independent of the withdrawal ceremony.
+    const rootStepUp = await req("POST", "/v1/auth/step-up", {
+      token: rootLogin.accessToken,
+      body: { action: "admin.tournament.manage", password: "correct horse battery staple" },
+    });
+    assert.equal(rootStepUp.status, 200, JSON.stringify(rootStepUp.body));
+    const root2StepUp = await req("POST", "/v1/auth/step-up", {
+      token: root2Login.accessToken,
+      body: { action: "admin.tournament.manage", password: "correct horse battery staple" },
+    });
+    assert.equal(root2StepUp.status, 200, JSON.stringify(root2StepUp.body));
+
+    // root cannot decide its own proposal -- the DB's approval_no_self_approval
+    // CHECK is the real enforcement, exercised here through the generic
+    // approvals/:id/decide route.
+    const selfDecide = await req("POST", `/v1/admin/approvals/${approvalRequestId}/decide`, {
+      token: rootLogin.accessToken,
+      headers: { "x-step-up-token": rootStepUp.body.stepUpToken },
+      body: { approve: true },
+    });
+    assert.equal(selfDecide.status, 403, JSON.stringify(selfDecide.body));
+
+    // Step 2: a genuinely different admin (root2) decides.
+    const decide = await req("POST", `/v1/admin/approvals/${approvalRequestId}/decide`, {
+      token: root2Login.accessToken,
+      headers: { "x-step-up-token": root2StepUp.body.stepUpToken },
+      body: { approve: true },
+    });
+    assert.equal(decide.status, 200, JSON.stringify(decide.body));
+
+    // Step 3: root (the original requester) executes -- the real
+    // admin.withdrawal.approve action, step-up required.
+    const step = await req("POST", "/v1/auth/step-up", {
+      token: rootLogin.accessToken,
+      body: { action: "admin.withdrawal.approve", password: "correct horse battery staple" },
+    });
+    assert.equal(step.status, 200, `admin step-up failed: ${JSON.stringify(step.body)}`);
+
+    const exec = await req("POST", `/v1/admin/withdrawals/${wdId}/approve-reviewed`, {
+      token: rootLogin.accessToken,
+      headers: { "x-step-up-token": step.body.stepUpToken },
+      body: { approvalRequestId },
+    });
+    assert.equal(exec.status, 200, JSON.stringify(exec.body));
+    assert.equal(exec.body.withdrawal.status, "PROCESSING");
+    assert.ok(exec.body.withdrawal.provider_ref);
+  });
+
+  test("approve-reviewed refuses to execute without a decided approval_request", async () => {
+    const wdId = await createPendingReviewWithdrawal("seed-alice-withdraw-foureyes-missing", 600);
+    const rootLogin = await auth.login({ identifier: "root_admin", password: "correct horse battery staple" });
+    const step = await req("POST", "/v1/auth/step-up", {
+      token: rootLogin.accessToken,
+      body: { action: "admin.withdrawal.approve", password: "correct horse battery staple" },
+    });
+    assert.equal(step.status, 200);
+
+    // No approvalRequestId at all -- the dispatcher's own fourEyes gate
+    // (resolveApproval() finds nothing to resolve) refuses before the
+    // handler's own belt-and-braces MISSING_APPROVAL_REQUEST_ID check would.
+    const noId = await req("POST", `/v1/admin/withdrawals/${wdId}/approve-reviewed`, {
+      token: rootLogin.accessToken,
+      headers: { "x-step-up-token": step.body.stepUpToken },
+    });
+    assert.equal(noId.status, 409, JSON.stringify(noId.body));
+    assert.equal(noId.body.error.code, "SECOND_ADMIN_REQUIRED");
+
+    // A proposal that exists but was never decided by anyone.
+    const propose = await req("POST", `/v1/admin/withdrawals/${wdId}/propose-approval`, {
+      token: rootLogin.accessToken,
+    });
+    assert.equal(propose.status, 201);
+    const undecided = await req("POST", `/v1/admin/withdrawals/${wdId}/approve-reviewed`, {
+      token: rootLogin.accessToken,
+      headers: { "x-step-up-token": step.body.stepUpToken },
+      body: { approvalRequestId: propose.body.approvalRequestId },
+    });
+    // Still PENDING (nobody has decided it yet) -- resolveApproval() only
+    // ever resolves an APPROVED row, so this is the same
+    // SECOND_ADMIN_REQUIRED gate as having no id at all.
+    assert.equal(undecided.status, 409, JSON.stringify(undecided.body));
+    assert.equal(undecided.body.error.code, "SECOND_ADMIN_REQUIRED");
+
+    const row = await db.query("SELECT status FROM withdrawal WHERE id=$1", [wdId]);
+    assert.equal(row.rows[0].status, "PENDING_REVIEW", "must never advance on an undecided or missing approval");
   });
 
   test("a non-admin cannot call the solo-approve endpoint at all", async () => {
