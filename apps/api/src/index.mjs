@@ -29,6 +29,7 @@ import { createTournamentService } from "../../../packages/tournament/src/tourna
 import { createGlobalSkillService } from "../../../packages/global-skill/src/service.mjs";
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
 import { createRailService } from "../../../packages/payments/src/valuation.mjs";
+import { createLocalPaymentsService } from "../../../packages/payments/src/local-payments.mjs";
 import { createHealthService } from "../../../packages/payments/src/health.mjs";
 import { createSandboxProvider, createOxapayProvider } from "../../../packages/payments/src/provider.mjs";
 import { createChainReader } from "../../../packages/chain/src/reader.mjs";
@@ -276,6 +277,10 @@ async function main() {
   // through -- no second, independently-configured connection to TRON.
   const rails = createRailService(db);
   const railHealth = createHealthService({ db, chain });
+  // Vodafone Cash / InstaPay (0062) -- unlike `rails`/`railHealth` above,
+  // needs no chain reader: there is nothing on a blockchain to check, so
+  // this is safe to construct unconditionally whenever `db` exists.
+  const localPayments = createLocalPaymentsService(db);
 
   // Customer Support / Ticket System (Slice 8). Staff access is granted
   // entirely through the custom RBAC layer (rbac.mjs) via TICKET_VIEW/
@@ -323,7 +328,7 @@ async function main() {
     googleOAuth, googleFrontendOrigin: process.env.GOOGLE_FRONTEND_ORIGIN || "https://nizalo.com",
     profile, support, ticketNotifications, chat, progression,
     mastery: masteryService, streaks: streakService, dailyChallenges, recommendations, frames: frameService,
-    rails, railHealth, referrals, consent,
+    rails, railHealth, localPayments, referrals, consent,
     paymentSvc, paymentProvider: provider,
     rateLimit: { capacity: Number(process.env.RATE_LIMIT_CAPACITY || 100), refillPerSecond: Number(process.env.RATE_LIMIT_REFILL || 20) },
     sensitiveRateLimits: {

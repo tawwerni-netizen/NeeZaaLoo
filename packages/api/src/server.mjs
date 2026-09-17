@@ -200,6 +200,9 @@ export function createApi({
   // every /v1/admin/payments/* route below answers SERVICE_UNAVAILABLE
   // rather than crashing.
   rails = null, railHealth = null,
+  // Vodafone Cash / InstaPay (0062) -- createLocalPaymentsService(), null by
+  // default like every other optional service bundle here.
+  localPayments = null,
   paymentSvc = null, paymentProvider = null,
   // Where the browser is sent after the Google OAuth callback finishes --
   // a fixed, server-configured ORIGIN, never anything the request itself
@@ -426,7 +429,7 @@ export function createApi({
       emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
       googleOAuth, googleFrontendOrigin, profile, support, ticketNotifications, chat, progression, now,
       mastery, streaks, dailyChallenges, recommendations, frames,
-      rails, railHealth, referral, referrals, consent: consentService, controls, directChat,
+      rails, railHealth, localPayments, referral, referrals, consent: consentService, controls, directChat,
       paymentSvc, paymentProvider,
     };
 
@@ -1504,7 +1507,16 @@ function buildRoutes() {
         if (!paymentSvc) {
           return { status: 503, body: errorBody("PAYMENTS_UNAVAILABLE", "Withdrawals are temporarily unavailable.") };
         }
-        if (!paymentSvc.isRailVerifiable(asset, storedNetwork)) {
+        // Vodafone Cash / InstaPay (0062) have no blockchain to verify
+        // against -- isRailVerifiable() only ever answers for chain.
+        // supportedRails, so it would refuse both of these outright. Their
+        // whole withdrawal path is the operator manually sending the money
+        // and attesting to it (complete_manual_withdrawal(), reached below
+        // via /v1/admin/payments/local/withdrawals/:id/complete), so the
+        // chain-coverage question this check exists for does not apply to
+        // them -- every other network still goes through it unchanged.
+        const isLocalNetwork = storedNetwork === "VODAFONE_CASH" || storedNetwork === "INSTAPAY";
+        if (!isLocalNetwork && !paymentSvc.isRailVerifiable(asset, storedNetwork)) {
           return {
             status: 422,
             body: errorBody("UNSUPPORTED_RAIL", `${asset} withdrawals on ${network} are not available yet.`),
@@ -1519,6 +1531,10 @@ function buildRoutes() {
           BSC: 250_000n,
           ERC20: 3_500_000n, // 3.50 USD
           ETH: 3_500_000n,
+          // No network fee: the operator pays out in cash by hand, not a
+          // metered blockchain transfer.
+          VODAFONE_CASH: 0n,
+          INSTAPAY: 0n,
         };
         const feeMinor = NETWORK_FEES_MINOR[storedNetwork] ?? NETWORK_FEES_MINOR[network] ?? 1_000_000n;
 
@@ -1617,7 +1633,12 @@ function buildRoutes() {
           try {
             await db.query(`UPDATE withdrawal SET status='VALIDATING'::withdrawal_status WHERE id=$1`, [id]);
             const assessed = await paymentSvc.assess(id);
-            if (assessed.ok && assessed.status === "APPROVED") {
+            // assess()'s risk-tiering is rail-agnostic and safe to run here
+            // regardless of network. process(), however, broadcasts through
+            // the crypto payout provider -- never call it for a local rail,
+            // which has none. An APPROVED local withdrawal is left exactly
+            // where the admin's manual completion route expects to find it.
+            if (assessed.ok && assessed.status === "APPROVED" && !isLocalNetwork) {
               await paymentSvc.process(id);
             }
           } catch (err) {
@@ -1637,6 +1658,186 @@ function buildRoutes() {
           [id]
         );
         return { status: 201, body: { ok: true, withdrawal: finalRow.rows[0] ?? created } };
+      } },
+
+    // --- Local EGP rails: Vodafone Cash / InstaPay (0062) ---------------------
+    //
+    // Deposits do not reuse /v1/players/:id/deposits: that route issues a
+    // dedicated on-chain address, which has no equivalent here -- a player
+    // sends to one of the operator's own shared numbers instead, and what
+    // gets created is an intent (localPayments.createDepositIntent()), not
+    // an address. Withdrawals DO reuse the existing withdrawal machinery
+    // above wholesale (see isLocalNetwork there); the only new withdrawal
+    // route here is the admin's manual completion step.
+
+    { method: "GET", path: "/v1/payments/local-rails", action: "player.login", anonymous: true,
+      handler: async ({ localPayments }) => {
+        if (!localPayments) return { body: { ok: true, numbers: [], rate: null } };
+        const r = await localPayments.listActiveRails();
+        return { body: { ok: true, ...r } };
+      } },
+
+    { method: "POST", path: "/v1/players/:id/local-deposits", action: "wallet.deposit",
+      owner: ({ params }) => params.id,
+      handler: async ({ params, body, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const rawAmount = body?.amountEgpMinor ??
+          (body?.amountEgp != null ? Math.round(Number(body.amountEgp) * 100) : null);
+        const r = await localPayments.createDepositIntent({
+          playerId: params.id,
+          network: body?.network,
+          receivingNumberId: body?.receivingNumberId,
+          senderName: body?.senderName,
+          senderPhone: body?.senderPhone,
+          amountEgpMinor: rawAmount,
+        });
+        if (!r.ok) return { status: 400, body: errorBody(r.reason) };
+        return { status: 201, body: { ok: true, intent: r.intent } };
+      } },
+
+    { method: "GET", path: "/v1/players/:id/local-deposits", action: "wallet.read",
+      owner: ({ params }) => params.id,
+      handler: async ({ params, localPayments }) => {
+        if (!localPayments) return { body: { ok: true, intents: [] } };
+        return { body: { ok: true, intents: await localPayments.listPlayerIntents(params.id) } };
+      } },
+
+    // --- Local EGP rails: admin ------------------------------------------------
+
+    { method: "GET", path: "/v1/admin/payments/local/numbers", action: "admin.local_rail.read",
+      handler: async ({ localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        return { body: { numbers: await localPayments.listNumbers(), rate: await localPayments.getEgpRate() } };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/local/numbers", action: "admin.local_rail.manage",
+      handler: async ({ body, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        if (typeof body?.network !== "string" || typeof body?.phoneNumber !== "string") {
+          return { status: 400, body: errorBody("BAD_REQUEST") };
+        }
+        const r = await localPayments.createNumber({
+          id: body.id, network: body.network, phoneNumber: body.phoneNumber, label: body.label,
+        });
+        return r.ok
+          ? { status: 201, body: { ok: true, number: r.number }, audit: { subjectId: r.number.id } }
+          : { status: 400, body: errorBody(r.reason) };
+      } },
+
+    // A number is never deleted (its id may already be referenced by a past
+    // deposit intent) -- only enabled/disabled, exactly like a payment_rail
+    // itself. This is the "if a wallet fills up, swap the number" control
+    // the operator asked for: takes effect the instant the next player asks
+    // /v1/payments/local-rails for the active list, no deploy required.
+    { method: "POST", path: "/v1/admin/payments/local/numbers/:id/status", action: "admin.local_rail.manage",
+      subjectType: "local_payment_number",
+      handler: async ({ params, body, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        if (typeof body?.enabled !== "boolean") return { status: 400, body: errorBody("BAD_REQUEST") };
+        const r = await localPayments.setNumberEnabled(params.id, body.enabled);
+        return r.ok
+          ? { body: { ok: true, number: r.number }, audit: { field: "enabled", to: body.enabled } }
+          : { status: r.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(r.reason) };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/local/rate", action: "admin.local_rail.manage",
+      handler: async ({ body, actor, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        if (typeof body?.reason !== "string") return { status: 400, body: errorBody("BAD_REQUEST") };
+        const r = await localPayments.setEgpRate({
+          egpPerUsd: body?.egpPerUsd, adminId: actor.id, reason: body.reason,
+        });
+        return r.ok
+          ? { body: { ok: true, rate: r.rate }, audit: { field: "egp_rate", to: r.rate?.usdRateX1e8 } }
+          : { status: 400, body: errorBody(r.reason) };
+      } },
+
+    { method: "GET", path: "/v1/admin/payments/local/deposits", action: "admin.local_deposit.read",
+      handler: async ({ query, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const status = query.get("status") || undefined;
+        return { body: { intents: await localPayments.adminListIntents({ status }) } };
+      } },
+
+    // The manual stand-in for the not-yet-built Android app: the admin
+    // personally saw a transfer land on their phone and logs it here. Same
+    // capability tier as admin.adjustment.create -- this posts a real
+    // ledger credit on the admin's own word, with no chain to check it
+    // against, so it is treated exactly like any other manual balance
+    // adjustment. See policy.mjs's own comment on why.
+    { method: "POST", path: "/v1/admin/payments/local/deposits/:id/credit", action: "admin.local_deposit.credit",
+      subjectType: "local_deposit_intent",
+      handler: async ({ params, body, actor, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const rawAmount = body?.amountEgpMinor ??
+          (body?.amountEgp != null ? Math.round(Number(body.amountEgp) * 100) : null);
+        const r = await localPayments.observeAndCredit({
+          intentId: params.id, adminId: actor.id,
+          rawSenderName: body?.senderName, rawSenderPhone: body?.senderPhone,
+          amountEgpMinor: rawAmount, rawMessage: body?.note, observedAt: body?.observedAt,
+        });
+        return r.ok
+          ? { body: { ok: true, intent: r.intent }, audit: { subjectId: params.id } }
+          : { status: r.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(r.reason, r.detail) };
+      } },
+
+    // The solo-operator escape hatch for the action above -- see
+    // admin.withdrawal.approve_solo's own precedent in policy.mjs.
+    { method: "POST", path: "/v1/admin/payments/local/deposits/:id/credit-solo", action: "admin.local_deposit.credit_solo",
+      subjectType: "local_deposit_intent",
+      handler: async ({ params, body, actor, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const rawAmount = body?.amountEgpMinor ??
+          (body?.amountEgp != null ? Math.round(Number(body.amountEgp) * 100) : null);
+        const r = await localPayments.observeAndCredit({
+          intentId: params.id, adminId: actor.id,
+          rawSenderName: body?.senderName, rawSenderPhone: body?.senderPhone,
+          amountEgpMinor: rawAmount, rawMessage: body?.note, observedAt: body?.observedAt,
+        });
+        return r.ok
+          ? { body: { ok: true, intent: r.intent }, audit: { subjectId: params.id } }
+          : { status: r.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(r.reason, r.detail) };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/local/deposits/:id/reject", action: "admin.local_deposit.reject",
+      subjectType: "local_deposit_intent",
+      handler: async ({ params, body, actor, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        if (typeof body?.reason !== "string") return { status: 400, body: errorBody("BAD_REQUEST") };
+        const r = await localPayments.rejectIntent({ intentId: params.id, adminId: actor.id, reason: body.reason });
+        return r.ok
+          ? { body: { ok: true, intent: r.intent }, audit: { subjectId: params.id } }
+          : { status: r.reason === "WRONG_STATE" ? 409 : 400, body: errorBody(r.reason) };
+      } },
+
+    { method: "GET", path: "/v1/admin/payments/local/withdrawals", action: "admin.local_deposit.read",
+      handler: async ({ localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        return { body: { withdrawals: await localPayments.adminListPendingWithdrawals() } };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/local/withdrawals/:id/complete", action: "admin.local_withdrawal.complete",
+      subjectType: "withdrawal",
+      handler: async ({ params, body, actor, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const r = await localPayments.completeWithdrawal({
+          withdrawalId: params.id, adminId: actor.id, reference: body?.reference,
+        });
+        return r.ok
+          ? { body: { ok: true, withdrawal: r.withdrawal }, audit: { subjectId: params.id } }
+          : { status: r.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(r.reason, r.detail) };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/local/withdrawals/:id/complete-solo", action: "admin.local_withdrawal.complete_solo",
+      subjectType: "withdrawal",
+      handler: async ({ params, body, actor, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const r = await localPayments.completeWithdrawal({
+          withdrawalId: params.id, adminId: actor.id, reference: body?.reference,
+        });
+        return r.ok
+          ? { body: { ok: true, withdrawal: r.withdrawal }, audit: { subjectId: params.id } }
+          : { status: r.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(r.reason, r.detail) };
       } },
 
     // --- Play ----------------------------------------------------------------

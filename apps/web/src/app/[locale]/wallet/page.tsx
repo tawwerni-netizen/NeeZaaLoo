@@ -12,6 +12,7 @@ import { fromMinorUnits } from "@/lib/money";
 import { triggerBalanceRefresh } from "@/lib/use-wallet-balance";
 import type { SupportedLocale } from "@/lib/i18n/locale";
 import { WALLET_TRANSLATIONS } from "./translations";
+import { LocalDepositSection, LocalWithdrawSection } from "@/components/wallet/LocalPaymentSection";
 import styles from "./wallet.module.css";
 
 type SupportedAsset = "USDT";
@@ -72,6 +73,11 @@ function WalletContent() {
 
   // Tab navigation: "deposit" | "withdraw" | "history"
   const [activeTab, setActiveTab] = useState<"deposit" | "withdraw" | "history">("deposit");
+
+  // Payment method: the existing crypto flow below, or the local EGP rails
+  // (Vodafone Cash / InstaPay, 0062) -- a completely separate flow with its
+  // own component, never threaded through the crypto network/address logic.
+  const [paymentMethod, setPaymentMethod] = useState<"crypto" | "local">("crypto");
 
   // Selected stablecoin
   const [selectedAsset, setSelectedAsset] = useState<SupportedAsset>("USDT");
@@ -740,10 +746,40 @@ function WalletContent() {
         </button>
       </nav>
 
+      {/* Payment method: crypto (below, unchanged) vs. local EGP rails */}
+      {(activeTab === "deposit" || activeTab === "withdraw") && (
+        <div className={styles.hubNav} style={{ marginBottom: 16 }}>
+          <button
+            type="button"
+            className={`${styles.hubTab} ${paymentMethod === "crypto" ? styles.hubTabActive : ""}`}
+            onClick={() => setPaymentMethod("crypto")}
+          >
+            <span className={styles.tabIcon}>🪙</span>
+            <span>{isAr ? "USDT (عملات رقمية)" : "USDT (Crypto)"}</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.hubTab} ${paymentMethod === "local" ? styles.hubTabActive : ""}`}
+            onClick={() => setPaymentMethod("local")}
+          >
+            <span className={styles.tabIcon}>📱</span>
+            <span>{isAr ? "فودافون كاش / إنستاباي" : "Vodafone Cash / InstaPay"}</span>
+          </button>
+        </div>
+      )}
+
+      {activeTab === "deposit" && paymentMethod === "local" && player && (
+        <LocalDepositSection isAr={isAr} playerId={player.id} onCredited={() => { void reload(); triggerBalanceRefresh(); }} />
+      )}
+
+      {activeTab === "withdraw" && paymentMethod === "local" && player && (
+        <LocalWithdrawSection isAr={isAr} playerId={player.id} onSubmitted={() => void reload()} />
+      )}
+
       {/* ========================================================================= */}
       {/* TAB 1: DEPOSIT HUB (USDT, USDC, DAI)                                      */}
       {/* ========================================================================= */}
-      {activeTab === "deposit" && (
+      {activeTab === "deposit" && paymentMethod === "crypto" && (
         <div className={styles.actionCard}>
           {/* ========================================================================= */}
           {/* STEP 1: STABLECOIN & NETWORK SELECTION                                    */}
@@ -1295,7 +1331,7 @@ function WalletContent() {
       {/* ========================================================================= */}
       {/* TAB 2: WITHDRAWAL HUB (USDT, USDC, DAI)                                   */}
       {/* ========================================================================= */}
-      {activeTab === "withdraw" && (
+      {activeTab === "withdraw" && paymentMethod === "crypto" && (
         <div className={styles.actionCard}>
           {/* Real Balance Overview + Stablecoin Breakdown */}
           <div className={styles.withdrawOverview}>

@@ -131,6 +131,32 @@ export const ACTIONS = {
   // as releasing a specific payout.
   "admin.rail.manage": { capability: "rail.manage", stepUp: true },
 
+  // --- Local EGP rails (Vodafone Cash / InstaPay, 0062) -----------------------
+  // Setting the EGP/USD rate and editing which phone numbers accept deposits
+  // are the same tier as admin.rail.manage above: reversible, audited, and
+  // they only ever gate FUTURE deposits/conversions, never moving money
+  // themselves. Viewing the deposit queue or rejecting a bogus intent is
+  // investigative, not financial -- the same withdrawal.review tier used
+  // for triaging a payout queue before anything is released. Crediting a
+  // deposit (observeAndCredit) is different in kind from those: there is no
+  // chain to verify it against, so it is an admin's own attestation that
+  // real money arrived, posted straight to the ledger -- exactly the shape
+  // admin.adjustment.create already exists for (a human manually crediting a
+  // balance), so it is gated the same way: step-up, four-eyes, with the same
+  // solo escape hatch admin.withdrawal.approve_solo established for an
+  // operator with no second admin to pair with. Completing a local
+  // withdrawal is the outbound mirror -- a real debit out of custody on the
+  // admin's own word that they sent the cash -- so it gets the identical
+  // tier as admin.withdrawal.approve/approve_solo.
+  "admin.local_rail.read":    { capability: "rail.read" },
+  "admin.local_rail.manage":  { capability: "rail.manage", stepUp: true },
+  "admin.local_deposit.read": { capability: "wallet.read" },
+  "admin.local_deposit.reject": { capability: "withdrawal.review" },
+  "admin.local_deposit.credit": { capability: "adjustment.create", stepUp: true, fourEyes: true },
+  "admin.local_deposit.credit_solo": { capability: "adjustment.create", stepUp: true },
+  "admin.local_withdrawal.complete": { capability: "withdrawal.approve", stepUp: true, fourEyes: true },
+  "admin.local_withdrawal.complete_solo": { capability: "withdrawal.approve", stepUp: true },
+
   // --- Trust & safety --------------------------------------------------------
   "admin.risk.decide":       { capability: "risk.decide", stepUp: true },
   "admin.fairplay.decide":   { capability: "fairplay.decide", stepUp: true },

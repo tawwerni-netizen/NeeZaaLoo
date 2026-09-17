@@ -26,6 +26,7 @@ const GROUPS: NavGroup[] = [
       { label: "Finance Control", icon: "finance", href: "/admin/payments" },
       { label: "Deposits", icon: "deposits", href: "/admin/deposits" },
       { label: "Withdrawals", icon: "withdrawals", href: "/admin/withdrawals" },
+      { label: "Vodafone Cash / InstaPay", icon: "deposits", href: "/admin/local-payments" },
     ],
   },
   {
