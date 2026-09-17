@@ -187,6 +187,19 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
       return { ok: true, number: r.rows[0] };
     },
 
+    async deleteNumber(id) {
+      try {
+        const r = await db.query(`DELETE FROM local_payment_number WHERE id = $1 RETURNING id`, [id]);
+        if (!r.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
+        return { ok: true };
+      } catch (e) {
+        if (/violates foreign key constraint/.test(e.message)) {
+          return { ok: false, reason: "IN_USE" };
+        }
+        throw e;
+      }
+    },
+
     // =========================================================================
     // Admin: EGP/USD rate
     // =========================================================================
@@ -358,6 +371,20 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
       `, [id, enabled === true]);
       if (!r.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
       return { ok: true, device: r.rows[0] };
+    },
+
+    async deleteDevice(id) {
+      if (id === MANUAL_DEVICE_ID) return { ok: false, reason: LocalPaymentError.WRONG_STATE };
+      try {
+        const r = await db.query(`DELETE FROM payment_receiver_device WHERE id = $1 RETURNING id`, [id]);
+        if (!r.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
+        return { ok: true };
+      } catch (e) {
+        if (/violates foreign key constraint/.test(e.message)) {
+          return { ok: false, reason: "IN_USE" };
+        }
+        throw e;
+      }
     },
 
     // =========================================================================

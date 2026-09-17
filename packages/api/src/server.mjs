@@ -5424,6 +5424,22 @@ function buildRoutes() {
         return { body: r };
       } },
 
+    { method: "DELETE", path: "/v1/admin/payments/local/devices/:id", action: "admin.local_rail.manage",
+      handler: async ({ params, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const r = await localPayments.deleteDevice(params.id);
+        if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 404 : (r.reason === "IN_USE" ? 409 : 400), body: errorBody(r.reason) };
+        return { body: r };
+      } },
+
+    { method: "DELETE", path: "/v1/admin/payments/local/numbers/:id", action: "admin.local_rail.manage",
+      handler: async ({ params, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const r = await localPayments.deleteNumber(params.id);
+        if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 404 : (r.reason === "IN_USE" ? 409 : 400), body: errorBody(r.reason) };
+        return { body: r };
+      } },
+
     { method: "GET", path: "/v1/admin/payments/local/transfers/unmatched", action: "admin.local_deposit.read",
       handler: async ({ query, localPayments }) => {
         if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };

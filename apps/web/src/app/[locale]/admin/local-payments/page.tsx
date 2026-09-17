@@ -122,6 +122,20 @@ export default function AdminLocalPaymentsPage() {
     }
   }
 
+  async function handleDeleteNumber(n: LocalNumber) {
+    if (!window.confirm(`Are you sure you want to completely delete ${n.phoneNumber}?`)) return;
+    try {
+      const res = await fetch(`/v1/admin/payments/local/numbers/${n.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw data.error;
+      flash(`${n.phoneNumber} deleted.`);
+      void load();
+    } catch (e: any) {
+      if (e?.code === 'IN_USE') alert("Cannot delete this number because it has recorded transactions. Please just Disable it instead.");
+      else alert(adminErrorMessage(e, "تعذّر حذف الرقم."));
+    }
+  }
+
   async function handleCredit(intent: LocalDepositIntent) {
     const amountStr = window.prompt(
       `EGP amount seen on your phone for ${intent.senderName} (${intent.senderPhone})\nDeclared: ${egp(intent.amountEgpMinor)} EGP`,
@@ -175,6 +189,20 @@ export default function AdminLocalPaymentsPage() {
       void load();
     } catch (e) {
       alert(adminErrorMessage(e, "تعذّر تغيير حالة الجهاز."));
+    }
+  }
+
+  async function handleDeleteDevice(d: LocalDevice) {
+    if (!window.confirm(`Are you sure you want to completely delete ${d.label}?`)) return;
+    try {
+      const res = await fetch(`/v1/admin/payments/local/devices/${d.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw data.error;
+      flash(`Device ${d.label} deleted.`);
+      void load();
+    } catch (e: any) {
+      if (e?.code === 'IN_USE') alert("Cannot delete this device because it has recorded transactions. Please just Disable it instead.");
+      else alert(adminErrorMessage(e, "تعذّر حذف الجهاز."));
     }
   }
 
@@ -274,9 +302,12 @@ export default function AdminLocalPaymentsPage() {
                     </span>
                   </td>
                   <td className={styles.alignRight}>
-                    <Button variant="ghost" onClick={() => void handleToggleNumber(n)}>
-                      {n.enabled ? "Disable" : "Enable"}
-                    </Button>
+                    <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+                      <Button variant="ghost" onClick={() => void handleToggleNumber(n)}>
+                        {n.enabled ? "Disable" : "Enable"}
+                      </Button>
+                      <Button variant="ghost" onClick={() => void handleDeleteNumber(n)}>Delete</Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -327,9 +358,12 @@ export default function AdminLocalPaymentsPage() {
                   </td>
                   <td>{d.lastSeenAt ? new Date(d.lastSeenAt).toLocaleString() : "Never"}</td>
                   <td className={styles.alignRight}>
-                    <Button variant="ghost" onClick={() => void handleToggleDevice(d)}>
-                      {d.enabled ? "Disable" : "Enable"}
-                    </Button>
+                    <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+                      <Button variant="ghost" onClick={() => void handleToggleDevice(d)}>
+                        {d.enabled ? "Disable" : "Enable"}
+                      </Button>
+                      <Button variant="ghost" onClick={() => void handleDeleteDevice(d)}>Delete</Button>
+                    </div>
                   </td>
                 </tr>
               ))}
