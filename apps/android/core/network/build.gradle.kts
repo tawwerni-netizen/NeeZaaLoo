@@ -25,7 +25,7 @@ dependencies {
     api(project(":core:common"))
     api(project(":core:security"))
     
-    implementation(libs.retrofit.core)
+    api(libs.retrofit.core)
     implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)

@@ -19,30 +19,42 @@ data class ApiError(
 
 @Serializable
 data class LoginRequest(
-    val email: String? = null,
-    val username: String? = null,
+    val identifier: String,
+    val password: String,
+    val totpCode: String? = null,
+    val deviceFingerprint: String? = null
+)
+
+@Serializable
+data class RegisterRequest(
+    val handle: String,
+    val email: String,
+    val password: String,
+    val referralCode: String? = null,
+    val termsAccepted: Boolean,
+    val locale: String = "en",
+    val policyVersion: String = "1.0.0"
+)
+
+@Serializable
+data class AuthResponse(
+    val playerId: String,
+    val accessToken: String? = null,
+    val refreshToken: String? = null,
+    val expiresInSeconds: Long? = null
+)
+
+@Serializable
+data class StepUpRequest(
+    val action: String,
     val password: String,
     val totpCode: String? = null
 )
 
 @Serializable
-data class RegisterRequest(
-    val username: String,
-    val email: String,
-    val password: String,
-    val referralCode: String? = null,
-    val agreedTermsVersion: String,
-    val locale: String
-)
-
-@Serializable
-data class AuthResponse(
-    val accessToken: String,
-    val refreshToken: String,
-    val player: Player,
-    val requires2fa: Boolean = false,
-    val requiresPolicyReacceptance: Boolean = false,
-    val outdatedPolicy: LegalPolicy? = null
+data class StepUpResponse(
+    val stepUpToken: String,
+    val expiresInSeconds: Long? = null
 )
 
 @Serializable

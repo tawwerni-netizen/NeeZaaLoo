@@ -214,6 +214,7 @@ fun WithdrawalsTab() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("nizalo_prefs", Context.MODE_PRIVATE) }
     val apiKey = prefs.getString("device_api_key", "") ?: ""
+    val serverUrl = prefs.getString("server_url", "https://nizalo.com") ?: "https://nizalo.com"
     val scope = rememberCoroutineScope()
     
     var withdrawals by remember { mutableStateOf<List<PendingWithdrawalsResponse.Withdrawal>>(emptyList()) }
@@ -226,7 +227,7 @@ fun WithdrawalsTab() {
             errorMsg = ""
             scope.launch {
                 try {
-                    val response = RetrofitClient.api.getPendingWithdrawals(apiKey)
+                    val response = RetrofitClient.getApi(serverUrl).getPendingWithdrawals(apiKey)
                     if (response.isSuccessful && response.body()?.ok == true) {
                         withdrawals = response.body()?.withdrawals ?: emptyList()
                     } else {
@@ -306,10 +307,25 @@ fun SettingsTab() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("nizalo_prefs", Context.MODE_PRIVATE) }
     
+    var serverUrl by remember { mutableStateOf(prefs.getString("server_url", "https://nizalo.com") ?: "https://nizalo.com") }
     var apiKey by remember { mutableStateOf(prefs.getString("device_api_key", "") ?: "") }
     var receivingNumberId by remember { mutableStateOf(prefs.getString("receiving_number_id", "") ?: "") }
 
     Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+        OutlinedTextField(
+            value = serverUrl,
+            onValueChange = { serverUrl = it },
+            label = { Text("رابط الموقع (مثال: https://nizalo.com)") },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PrimaryGreen,
+                focusedLabelColor = PrimaryGreen,
+                unfocusedBorderColor = TextGray
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = apiKey,
             onValueChange = { apiKey = it },
@@ -341,6 +357,7 @@ fun SettingsTab() {
         Button(
             onClick = {
                 prefs.edit()
+                    .putString("server_url", serverUrl.trim())
                     .putString("device_api_key", apiKey.trim())
                     .putString("receiving_number_id", receivingNumberId.trim())
                     .apply()

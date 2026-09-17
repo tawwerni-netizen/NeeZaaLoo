@@ -4,13 +4,21 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class WalletBalance(
-    val availableUsdt: Double = 0.0,
-    val lockedInDuelsUsdt: Double = 0.0,
-    val lockedInTournamentsUsdt: Double = 0.0,
-    val totalPendingDepositUsdt: Double = 0.0,
-    val totalPendingWithdrawalUsdt: Double = 0.0,
-    val totalBalanceUsdt: Double = 0.0
-)
+    val asset: String = "USDT",
+    val totalDepositedMinor: String = "0",
+    val totalPlayedMinor: String = "0",
+    val totalWonMinor: String = "0",
+    val availableMinor: String = "0",
+    val lockedMinor: String = "0",
+    val unplayedDepositMinor: String = "0",
+    val withdrawableMinor: String = "0",
+    val playthroughRequired: Boolean = false,
+    val playthroughCompleted: Boolean = true
+) {
+    val availableUsdt: Double get() = availableMinor.toLongOrNull()?.div(1_000_000.0) ?: 0.0
+    val lockedUsdt: Double get() = lockedMinor.toLongOrNull()?.div(1_000_000.0) ?: 0.0
+    val withdrawableUsdt: Double get() = withdrawableMinor.toLongOrNull()?.div(1_000_000.0) ?: 0.0
+}
 
 @Serializable
 enum class CryptoNetwork(val networkName: String, val feeUsdt: Double, val minDepositUsdt: Double) {

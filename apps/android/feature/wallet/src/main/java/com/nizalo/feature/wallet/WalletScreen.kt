@@ -57,8 +57,8 @@ fun WalletScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Locked in Duels: $${String.format("%.2f", balance?.lockedInDuelsUsdt ?: 0.0)}", color = TextSecondary, fontSize = 12.sp)
-                Text("Pending: $${String.format("%.2f", balance?.totalPendingDepositUsdt ?: 0.0)}", color = AzureBlue, fontSize = 12.sp)
+                Text("Locked: $${String.format("%.2f", balance?.lockedUsdt ?: 0.0)}", color = TextSecondary, fontSize = 12.sp)
+                Text("Withdrawable: $${String.format("%.2f", balance?.withdrawableUsdt ?: 0.0)}", color = EmeraldGreen, fontSize = 12.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))

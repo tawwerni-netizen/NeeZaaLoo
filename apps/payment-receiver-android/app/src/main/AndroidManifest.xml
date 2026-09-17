@@ -11,7 +11,8 @@
 
     <application
         android:allowBackup="false"
-        android:label="Payment Receiver"
+        android:label="مستقبل Nizalo"
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
         android:supportsRtl="true"
         tools:targetApi="31">
 

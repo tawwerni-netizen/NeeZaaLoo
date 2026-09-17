@@ -45,11 +45,12 @@ class ObserverForegroundService : Service() {
         serviceScope.launch {
             while (isActive) {
                 try {
-                    val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                    val prefs = getSharedPreferences("nizalo_prefs", Context.MODE_PRIVATE)
                     val apiKey = prefs.getString("device_api_key", null)
+                    val serverUrl = prefs.getString("server_url", "https://nizalo.com") ?: "https://nizalo.com"
                     
                     if (apiKey != null) {
-                        val response = RetrofitClient.api.getPendingWithdrawals(apiKey)
+                        val response = RetrofitClient.getApi(serverUrl).getPendingWithdrawals(apiKey)
                         if (response.isSuccessful) {
                             val withdrawals = response.body()?.withdrawals ?: emptyList()
                             val currentIds = withdrawals.map { it.id }.toSet()

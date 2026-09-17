@@ -19,6 +19,7 @@ class TransferSyncWorker(
     override suspend fun doWork(): Result {
         val prefs = applicationContext.getSharedPreferences("nizalo_prefs", Context.MODE_PRIVATE)
         val apiKey = prefs.getString("device_api_key", null)
+        val serverUrl = prefs.getString("server_url", "https://nizalo.com") ?: "https://nizalo.com"
         
         if (apiKey.isNullOrEmpty()) {
             return Result.failure()
@@ -47,7 +48,7 @@ class TransferSyncWorker(
             )
 
             try {
-                val res = RetrofitClient.api.reportTransfer(apiKey, req)
+                val res = RetrofitClient.getApi(serverUrl).reportTransfer(apiKey, req)
                 if (res.isSuccessful && res.body()?.ok == true) {
                     dao.update(transfer.copy(status = "SYNCED", errorMessage = null))
                 } else {

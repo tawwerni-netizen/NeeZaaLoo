@@ -9,13 +9,16 @@ interface NizaloApiService {
 
     // Auth
     @POST("v1/auth/login")
-    suspend fun login(@Body request: LoginRequest): Response<ApiResponse<AuthResponse>>
+    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
     @POST("v1/auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<ApiResponse<AuthResponse>>
+    suspend fun register(@Body request: RegisterRequest): Response<AuthResponse> // We will assume AuthResponse can parse { playerId } by making token nullable
 
     @POST("v1/auth/refresh")
-    suspend fun refreshToken(@Body request: RefreshTokenRequest): Response<ApiResponse<AuthResponse>>
+    suspend fun refreshToken(@Body request: RefreshTokenRequest): Response<AuthResponse>
+
+    @POST("v1/auth/step-up")
+    suspend fun stepUp(@Body request: StepUpRequest): Response<StepUpResponse>
 
     @POST("v1/auth/logout")
     suspend fun logout(): Response<ApiResponse<Unit>>
@@ -61,17 +64,17 @@ interface NizaloApiService {
     suspend fun getLeaderboard(@Query("gameId") gameId: String? = null): Response<ApiResponse<List<LeaderboardEntry>>>
 
     // Wallet
-    @GET("v1/wallet/balance")
-    suspend fun getWalletBalance(): Response<ApiResponse<WalletBalance>>
+    @GET("v1/players/{id}/wallet")
+    suspend fun getWalletBalance(@Path("id") playerId: String): Response<WalletBalance>
 
-    @POST("v1/wallet/deposit")
-    suspend fun createDepositIntent(@Body request: CreateDepositIntentRequest): Response<ApiResponse<DepositIntent>>
+    @POST("v1/players/{id}/deposits")
+    suspend fun createDepositIntent(@Path("id") playerId: String, @Body request: CreateDepositIntentRequest): Response<DepositIntent>
 
-    @POST("v1/wallet/withdraw")
-    suspend fun createWithdrawal(@Body request: CreateWithdrawalRequest): Response<ApiResponse<WithdrawalRequest>>
+    @POST("v1/players/{id}/withdrawals")
+    suspend fun createWithdrawal(@Path("id") playerId: String, @Body request: CreateWithdrawalRequest): Response<WithdrawalRequest>
 
-    @GET("v1/wallet/transactions")
-    suspend fun getTransactions(): Response<ApiResponse<List<WalletTransaction>>>
+    @GET("v1/players/{id}/transactions")
+    suspend fun getTransactions(@Path("id") playerId: String): Response<List<WalletTransaction>>
 
     // Legal & Policies
     @GET("v1/legal/policies")

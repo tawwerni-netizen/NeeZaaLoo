@@ -15,20 +15,51 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nizalo.core.designsystem.*
+import androidx.compose.runtime.collectAsState
 import com.nizalo.core.model.LegalPolicy
 
 @Composable
-fun LoginScreen(
+fun LoginRoute(
+    viewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit,
-    onRequiresPolicyReacceptance: (LegalPolicy) -> Unit
+    onNavigateToRegister: () -> Unit
+) {
+    val authState by viewModel.loginState.collectAsState()
+
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Success) {
+            onLoginSuccess()
+        }
+    }
+
+    LoginScreen(
+        authState = authState,
+        onLoginClick = { identifier, password, totp ->
+            viewModel.login(identifier, password, totp)
+        },
+        onNavigateToRegister = onNavigateToRegister
+    )
+}
+
+@Composable
+fun LoginScreen(
+    authState: AuthState,
+    onLoginClick: (String, String, String?) -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
     var usernameOrEmail by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var totpCode by remember { mutableStateOf("") }
     var showTotpField by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Error) {
+            errorMessage = authState.message
+        }
+    }
+
+    val isLoading = authState is AuthState.Loading
 
     Column(
         modifier = Modifier
@@ -91,9 +122,7 @@ fun LoginScreen(
                         errorMessage = "Please enter username and password"
                         return@NizaloPrimaryButton
                     }
-                    isLoading = true
-                    // Simulate network authentication callback
-                    onLoginSuccess()
+                    onLoginClick(usernameOrEmail, password, totpCode.takeIf { it.isNotBlank() })
                 },
                 enabled = !isLoading
             )
@@ -114,8 +143,34 @@ fun LoginScreen(
 }
 
 @Composable
-fun RegisterScreen(
+fun RegisterRoute(
+    viewModel: AuthViewModel,
     onRegisterSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onViewPolicy: (String) -> Unit
+) {
+    val authState by viewModel.registerState.collectAsState()
+
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Success) {
+            onRegisterSuccess()
+        }
+    }
+
+    RegisterScreen(
+        authState = authState,
+        onRegisterClick = { handle, email, password, referralCode ->
+            viewModel.register(handle, email, password, referralCode)
+        },
+        onNavigateToLogin = onNavigateToLogin,
+        onViewPolicy = onViewPolicy
+    )
+}
+
+@Composable
+fun RegisterScreen(
+    authState: AuthState,
+    onRegisterClick: (String, String, String, String?) -> Unit,
     onNavigateToLogin: () -> Unit,
     onViewPolicy: (String) -> Unit
 ) {
@@ -128,7 +183,14 @@ fun RegisterScreen(
     var agreedToTerms by remember { mutableStateOf(false) }
     
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Error) {
+            errorMessage = authState.message
+        }
+    }
+
+    val isLoading = authState is AuthState.Loading
 
     Column(
         modifier = Modifier
@@ -225,8 +287,7 @@ fun RegisterScreen(
                         errorMessage = "You must agree to the Terms & Conditions to proceed."
                         return@NizaloPrimaryButton
                     }
-                    isLoading = true
-                    onRegisterSuccess()
+                    onRegisterClick(username, email, password, referralCode.takeIf { it.isNotBlank() })
                 },
                 enabled = !isLoading && agreedToTerms
             )
