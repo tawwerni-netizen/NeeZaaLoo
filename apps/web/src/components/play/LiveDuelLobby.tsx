@@ -46,11 +46,11 @@ const AVAILABLE_GAMES = [
 ];
 
 export const QUICK_STAKES = [
-  { stake: 2, prize: 3.80, tagAr: "بداية سريعة 🚀", tagEn: "Fast Start 🚀" },
-  { stake: 5, prize: 9.50, tagAr: "نزال الأبطال 🔥 الأكثر طلباً", tagEn: "Popular 🔥 Most Wanted", popular: true },
-  { stake: 10, prize: 19.00, tagAr: "تحدي المحترفين ⚡", tagEn: "Pro Duel ⚡" },
-  { stake: 25, prize: 47.50, tagAr: "نزال النخبة 💎", tagEn: "Elite 💎" },
-  { stake: 50, prize: 95.00, tagAr: "كبار المتحدين 👑", tagEn: "High-Roller 👑" },
+  { stake: 2, prize: 3.52, tagAr: "بداية سريعة 🚀", tagEn: "Fast Start 🚀" },
+  { stake: 5, prize: 8.80, tagAr: "نزال الأبطال 🔥 الأكثر طلباً", tagEn: "Popular 🔥 Most Wanted", popular: true },
+  { stake: 10, prize: 17.60, tagAr: "تحدي المحترفين ⚡", tagEn: "Pro Duel ⚡" },
+  { stake: 25, prize: 44.00, tagAr: "نزال النخبة 💎", tagEn: "Elite 💎" },
+  { stake: 50, prize: 88.00, tagAr: "كبار المتحدين 👑", tagEn: "High-Roller 👑" },
 ];
 
 export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
@@ -609,7 +609,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
               {isRtl ? "العب واكسب بمهارتك" : "Play & Win With Pure Skill"}
             </strong>
             <span className={styles.pillarDesc}>
-              {isRtl ? "الفائز يحصل على مجموع جوائز التحدي بنسبة 100% مع عمولة منصة رمزية 5% فقط." : "Winner takes the full challenge prize pool directly with an ultra-low 5% platform fee."}
+              {isRtl ? "الفائز يحصل على مجموع جوائز التحدي مع رسوم تنظيم منصة 12% فقط." : "Winner takes the challenge prize pool directly with a 12% platform fee."}
             </span>
           </div>
         </div>
@@ -742,7 +742,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              {isRtl ? "⚔️ أطلق أول تحدٍّ نقدي واكسب 9.50$ USDT" : "⚔️ Launch $5 Cash Duel & Win $9.50 USDT"}
+              {isRtl ? "⚔️ أطلق أول تحدٍّ نقدي واكسب 8.80$ USDT" : "⚔️ Launch $5 Cash Duel & Win $8.80 USDT"}
             </Button>
           </div>
         ) : (
@@ -752,10 +752,8 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             const minutes = Math.floor(remainingSeconds / 60);
             const seconds = remainingSeconds % 60;
             const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-            // 2x stake, minus the platform's default 10% rake (economy_rule's own
-            // seeded default -- see db/migrations/0004 and 0035). Not the exact
-            // rake for every game/tier, but never an overpromise the way 1.9x was.
-            const expectedPrize = (duel.stakeUSDT * 1.8).toFixed(2);
+            // 2x stake, minus the platform's default 12% rake (88% winner payout).
+            const expectedPrize = (duel.stakeUSDT * 1.76).toFixed(2);
             const isTargeted = targetChallengeId === duel.id;
 
             return (

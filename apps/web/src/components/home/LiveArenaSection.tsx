@@ -66,8 +66,8 @@ export function LiveArenaSection() {
               </h3>
               <p className={styles.emptySub}>
                 {isRtl
-                  ? "لا توجد مباريات جارية في هذه اللحظة. أطلق أول نزال بمبلغ 5$ واكسب 9.50$ فوراً!"
-                  : "No live duels active right now. Launch a challenge with $5 and win $9.50 instantly!"}
+                  ? "لا توجد مباريات جارية في هذه اللحظة. أطلق أول نزال بمبلغ 5$ واكسب 8.80$ فوراً!"
+                  : "No live duels active right now. Launch a challenge with $5 and win $8.80 instantly!"}
               </p>
             </div>
             <LocaleLink href="/play" className={styles.emptyCta}>

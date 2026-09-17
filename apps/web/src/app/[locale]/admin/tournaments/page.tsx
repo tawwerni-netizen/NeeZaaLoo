@@ -133,12 +133,12 @@ export default function AdminTournamentsPage() {
 
   const totalPrizeUsd = stats?.total_prize_pool_minor
     ? (Number(stats.total_prize_pool_minor) / 1_000_000).toFixed(2)
-    : tournaments.reduce((acc, t) => acc + (Number(t.entry_fee_minor || '0') / 1_000_000) * t.capacity * 0.90, 0).toFixed(2);
+    : tournaments.reduce((acc, t) => acc + (Number(t.entry_fee_minor || '0') / 1_000_000) * t.capacity * 0.88, 0).toFixed(2);
 
   return (
     <AdminPageLayout
       title="Tournaments & Brackets Control"
-      subtitle="Automated 16-player continuous brackets, Swiss rounds, and transparent 90% prize pool settlements."
+      subtitle="Automated 16-player continuous brackets, Swiss rounds, and transparent 88% prize pool settlements."
       breadcrumb={['Home', 'Admin', 'Tournaments']}
       stats={[
         {
@@ -450,8 +450,8 @@ export default function AdminTournamentsPage() {
               ) : (
                 tournaments.map((t) => {
                   const entryUsd = Number(t.entry_fee_minor || '0') / 1_000_000;
-                  const prizeUsd = (entryUsd * t.capacity * 0.90).toFixed(2);
-                  const rakeUsd = (entryUsd * t.capacity * 0.10).toFixed(2);
+                  const prizeUsd = (entryUsd * t.capacity * 0.88).toFixed(2);
+                  const rakeUsd = (entryUsd * t.capacity * 0.12).toFixed(2);
                   const isLive = t.status === 'LIVE' || t.status === 'FINALS';
                   const isOpen = t.status === 'REGISTRATION';
 

@@ -167,14 +167,14 @@ describe("settling a decided duel", () => {
 
     const res = await svc.settle("d1");
     assert.equal(res.reason, "SETTLED");
-    assert.equal(res.rakeMinor, u(2), "10% of a 20 pot");
+    assert.equal(res.rakeMinor, "2400000", "12% of a 20 pot");
     assert.equal(res.rule.id, "standard");
 
-    assert.equal(await natural(db, "user:alice:available"), u(108), "90 + 18");
+    assert.equal(await natural(db, "user:alice:available"), "107600000", "90 + 17.6");
     assert.equal(await natural(db, "user:alice:locked"), "0");
     assert.equal(await natural(db, "user:bob:available"), u(90), "loser keeps the rest");
     assert.equal(await natural(db, "user:bob:locked"), "0");
-    assert.equal(await natural(db, "platform:rake"), u(2));
+    assert.equal(await natural(db, "platform:rake"), "2400000");
 
     const drift = await db.query(
       "SELECT count(*)::int c FROM ledger_balance_verification WHERE drift <> 0"
@@ -195,9 +195,9 @@ describe("settling a decided duel", () => {
          FROM duel WHERE id='d1'`
     );
     assert.equal(d.rows[0].status, "SETTLED");
-    assert.equal(d.rows[0].r, u(2));
+    assert.equal(d.rows[0].r, "2400000");
     assert.equal(d.rows[0].economy_rule_id, "standard");
-    assert.equal(d.rows[0].economy_rule_version, 1);
+    assert.equal(d.rows[0].economy_rule_version, 2);
     assert.equal(d.rows[0].has_tx, true);
   });
 
@@ -213,7 +213,7 @@ describe("settling a decided duel", () => {
     assert.equal(a.reason, "SETTLED");
     assert.equal(b.reason, "ALREADY_SETTLED");
     assert.equal(c.reason, "ALREADY_SETTLED");
-    assert.equal(await natural(db, "user:alice:available"), u(108), "paid once");
+    assert.equal(await natural(db, "user:alice:available"), "107600000", "paid once");
 
     const n = await db.query(
       "SELECT count(*)::int c FROM ledger_transaction WHERE kind='DUEL_SETTLE'"
@@ -263,7 +263,7 @@ describe("settlement refuses what it should", () => {
     // Cleared by a reviewer, it settles normally.
     await svc.hold("d1", false);
     assert.equal((await svc.settle("d1")).reason, "SETTLED");
-    assert.equal(await natural(db, "user:alice:available"), u(108));
+    assert.equal(await natural(db, "user:alice:available"), "107600000");
   });
 
   test("stakes that were never locked cannot be paid out", async () => {
@@ -492,6 +492,6 @@ describe("the settlement worker", () => {
     await svc.settleDue();
     const second = await svc.settleDue();
     assert.equal(second.length, 0, "nothing is due any more");
-    assert.equal(await natural(db, "user:alice:available"), u(108));
+    assert.equal(await natural(db, "user:alice:available"), "107600000");
   });
 });

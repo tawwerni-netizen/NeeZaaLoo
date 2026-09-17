@@ -177,8 +177,8 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const cleanDesc = formatTournamentDescription(tournament, locale);
   const coverImg = getTournamentCover(tournament.game_id);
   const entryFeeUsdt = (Number(tournament.entry_fee_minor || 0) / 1_000_000).toFixed(2);
-  const winnerPoolUsdt = ((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.90).toFixed(2);
-  const platformFeeUsdt = ((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.10).toFixed(2);
+  const winnerPoolUsdt = ((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.88).toFixed(2);
+  const platformFeeUsdt = ((Number(tournament.entry_fee_minor || 0) / 1_000_000) * tournament.capacity * 0.12).toFixed(2);
   const remainingSpots = Math.max(0, tournament.capacity - (tournament.registeredCount || 0));
   const registeredPct = Math.min(100, Math.round(((tournament.registeredCount || 0) / (tournament.capacity || 1)) * 100));
 
@@ -229,7 +229,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
               {tournament.tier === "CASH" ? (
                 <>
                   <div className={`${styles.metricCard} ${styles.metricGold}`}>
-                    <span className={styles.metricLabel}>💰 {locale === "ar" ? "مجموع جوائز الفائز (90%)" : "Winner Pool (90%)"}</span>
+                    <span className={styles.metricLabel}>💰 {locale === "ar" ? "مجموع جوائز الفائز (88%)" : "Winner Pool (88%)"}</span>
                     <span className={`${styles.metricVal} nz-num`}><bdi>${winnerPoolUsdt} USDT</bdi></span>
                     <span className={styles.metricSub}>{locale === "ar" ? "تسوية كاش فورية للمحفظة" : "Instant settlement"}</span>
                   </div>

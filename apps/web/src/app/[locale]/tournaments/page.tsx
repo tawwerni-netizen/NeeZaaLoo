@@ -695,7 +695,7 @@ function TournamentsList() {
                 const cleanTitle = formatTournamentTitle(row, gameName, locale);
                 const startTarget = row.scheduled_starts_at ?? row.starts_at;
                 const entryFeeUsdt = Number(row.entry_fee_minor || 0) / 1_000_000;
-                const prizePool = (entryFeeUsdt * row.capacity * 0.90).toFixed(2);
+                const prizePool = (entryFeeUsdt * row.capacity * 0.88).toFixed(2);
                 const registeredPct = Math.min(
                   100,
                   Math.round(((row.registered_count || 0) / (row.capacity || 1)) * 100)

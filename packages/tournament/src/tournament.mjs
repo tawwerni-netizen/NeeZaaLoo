@@ -673,7 +673,7 @@ export function createTournamentService(db, { now = () => Date.now(), emailServi
             `SELECT * FROM economy_resolve($1,'CASH'::entry_tier, now(), $2)`,
             [tour.game_id, tournamentId]
           );
-          priced = rule.rows[0] ?? { rake_bps: 1000, min_rake_minor: "0", max_rake_minor: null };
+          priced = rule.rows[0] ?? { rake_bps: 1200, min_rake_minor: "0", max_rake_minor: null };
         }
         const { rakeMinor } = computeRake(pot, {
           rakeBps: priced.rake_bps,

@@ -8,14 +8,11 @@
  * Economics:
  *   - Capacity: 16 players
  *   - Format: Single Elimination
- *   - Platform Fee: 10% rake (matches economy_rule's own seeded default --
- *     see db/migrations/0004 and 0035, and tournament.mjs's own no-rule
- *     fallback, which agrees). rakeUsd/winnerUsd below are DESCRIPTIVE
- *     only (they feed this file's own tournament title/description text);
+ *   - Platform Fee: 12% rake (matches economy_rule's own default; rakeUsd/winnerUsd
+ *     below are DESCRIPTIVE only and feed this file's tournament title/description text;
  *     the real prize is always computed at settlement from the tournament's
- *     own priced_rake_bps via computeRake() in tournament.mjs, never from
- *     this table. Keep them in sync with that default regardless.
- *   - Winner Prize: 90% of total pot
+ *     own priced_rake_bps via computeRake() in tournament.mjs).
+ *   - Winner Prize: 88% of total pot
  *
  * Lifecycle:
  *   - Ensures an open tournament in status 'REGISTRATION' is ALWAYS available for each tier.
@@ -27,14 +24,14 @@
 
 export const TOURNAMENT_TIERS = [
   { feeUsd: 0, minor: 0n, pot: 0, rakeUsd: "0.00", winnerUsd: "0.00", isFree: true },
-  { feeUsd: 10, minor: 10_000_000n, pot: 160, rakeUsd: "16.00", winnerUsd: "144.00" },
-  { feeUsd: 20, minor: 20_000_000n, pot: 320, rakeUsd: "32.00", winnerUsd: "288.00" },
-  { feeUsd: 50, minor: 50_000_000n, pot: 800, rakeUsd: "80.00", winnerUsd: "720.00" },
-  { feeUsd: 100, minor: 100_000_000n, pot: 1600, rakeUsd: "160.00", winnerUsd: "1,440.00" },
-  { feeUsd: 200, minor: 200_000_000n, pot: 3200, rakeUsd: "320.00", winnerUsd: "2,880.00" },
-  { feeUsd: 500, minor: 500_000_000n, pot: 8000, rakeUsd: "800.00", winnerUsd: "7,200.00" },
-  { feeUsd: 1000, minor: 1000_000_000n, pot: 16000, rakeUsd: "1,600.00", winnerUsd: "14,400.00" },
-  { feeUsd: 2000, minor: 2000_000_000n, pot: 32000, rakeUsd: "3,200.00", winnerUsd: "28,800.00" },
+  { feeUsd: 10, minor: 10_000_000n, pot: 160, rakeUsd: "19.20", winnerUsd: "140.80" },
+  { feeUsd: 20, minor: 20_000_000n, pot: 320, rakeUsd: "38.40", winnerUsd: "281.60" },
+  { feeUsd: 50, minor: 50_000_000n, pot: 800, rakeUsd: "96.00", winnerUsd: "704.00" },
+  { feeUsd: 100, minor: 100_000_000n, pot: 1600, rakeUsd: "192.00", winnerUsd: "1,408.00" },
+  { feeUsd: 200, minor: 200_000_000n, pot: 3200, rakeUsd: "384.00", winnerUsd: "2,816.00" },
+  { feeUsd: 500, minor: 500_000_000n, pot: 8000, rakeUsd: "960.00", winnerUsd: "7,040.00" },
+  { feeUsd: 1000, minor: 1000_000_000n, pot: 16000, rakeUsd: "1,920.00", winnerUsd: "14,080.00" },
+  { feeUsd: 2000, minor: 2000_000_000n, pot: 32000, rakeUsd: "3,840.00", winnerUsd: "28,160.00" },
 ];
 
 export const GAME_TIME_CONTROLS = {
@@ -60,7 +57,7 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
       : `${gameName} 16 Championship [$${tier.feeUsd} USDT]`;
     const description = isFree
       ? `16-Player Single Elimination. Free entry to prove skill, climb ratings, and win ranking points.`
-      : `16-Player Single Elimination. Winner takes 90% ($${tier.winnerUsd} USDT). 10% Platform Fee.`;
+      : `16-Player Single Elimination. Winner takes 88% ($${tier.winnerUsd} USDT). 12% Platform Fee.`;
 
     const created = await tournamentService.create({
       gameId,

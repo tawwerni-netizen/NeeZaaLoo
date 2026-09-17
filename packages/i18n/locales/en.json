@@ -438,7 +438,7 @@
       "competitive_description": "Play for a real stake, released only once the match is won.",
       "entry_fee": "Match Stake",
       "platform_fee": "Platform & Organizing Fee",
-      "fixed_badge": "10% FIXED",
+      "fixed_badge": "12% FIXED",
       "net_prize_contrib": "Prize Pool Contribution",
       "winner_payout": "Winner's Total Prize"
     }
@@ -596,8 +596,8 @@
     "login_to_register": "Log in to Join",
     "entry_free": "Free Entry",
     "entry_fee": "Entry: {amount} {asset}",
-    "winner_pool": "Winner Pool (90%): {amount} {asset}",
-    "platform_fee": "Platform Fee (10%): {amount} {asset}",
+    "winner_pool": "Winner Pool (88%): {amount} {asset}",
+    "platform_fee": "Platform Fee (12%): {amount} {asset}",
     "prove_skill": "🏆 Prove Skill & Climb Rankings",
     "wallet_balance_label": "Wallet Balance:",
     "entry_requires": "(Entry requires {amount} {asset})",

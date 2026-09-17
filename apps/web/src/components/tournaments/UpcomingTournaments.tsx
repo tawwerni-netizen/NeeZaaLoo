@@ -108,14 +108,14 @@ export function formatTournamentDescription(
       return `بطولة ${formatAr} تضم ${cap} لاعباً. اشتراك مجاني لإثبات المهارة، صعود سلم التصنيف، وكسب نقاط الصدارة.`;
     }
     const entryFeeUsdt = Number(row.entry_fee_minor || 0) / 1_000_000;
-    const winnerUsd = (entryFeeUsdt * cap * 0.90).toFixed(2);
-    return `بطولة ${formatAr} تضم ${cap} لاعباً بنظام الجوائز الكبرى. يحصل الفائز بالمركز الأول على 90% ($${winnerUsd} USDT). رسوم تنظيم المنصة 10%.`;
+    const winnerUsd = (entryFeeUsdt * cap * 0.88).toFixed(2);
+    return `بطولة ${formatAr} تضم ${cap} لاعباً بنظام الجوائز الكبرى. يحصل الفائز بالمركز الأول على 88% ($${winnerUsd} USDT). رسوم تنظيم المنصة 12%.`;
   }
   return (
     row.description ||
     (row.tier === "FREE"
       ? `${row.capacity ?? 16}-Player ${row.format === "SWISS" ? "Swiss System" : "Single Elimination"}. Free entry to prove skill and climb rankings.`
-      : `${row.capacity ?? 16}-Player ${row.format === "SWISS" ? "Swiss System" : "Single Elimination"}. Winner takes 90%. 10% Platform Fee.`)
+      : `${row.capacity ?? 16}-Player ${row.format === "SWISS" ? "Swiss System" : "Single Elimination"}. Winner takes 88%. 12% Platform Fee.`)
   );
 }
 
@@ -205,11 +205,8 @@ export function UpcomingTournaments({
               const cleanTitle = formatTournamentTitle(row, gameName, locale);
               const countdownTarget = row.scheduled_starts_at ?? row.starts_at ?? row.registration_closes_at;
               const entryFeeUsdt = Number(row.entry_fee_minor || 0) / 1_000_000;
-              // 90% distributable, matching the platform's configured default rake
-              // (economy_rule's own seeded default is 1000 bps = 10%; see
-              // db/migrations/0004 and 0035, and tournament.mjs's own no-rule
-              // fallback, which agrees).
-              const prizePoolNum = entryFeeUsdt * row.capacity * 0.90;
+              // 88% distributable, matching the platform's 12% fee.
+              const prizePoolNum = entryFeeUsdt * row.capacity * 0.88;
               const coverImg = getTournamentCover(row.game_id);
 
               return (
@@ -453,11 +450,8 @@ export function UpcomingTournaments({
               const cleanTitle = formatTournamentTitle(row, gameName, locale);
               const countdownTarget = row.scheduled_starts_at ?? row.starts_at ?? row.registration_closes_at;
               const entryFeeUsdt = Number(row.entry_fee_minor || 0) / 1_000_000;
-              // 90% distributable, matching the platform's configured default rake
-              // (economy_rule's own seeded default is 1000 bps = 10%; see
-              // db/migrations/0004 and 0035, and tournament.mjs's own no-rule
-              // fallback, which agrees).
-              const prizePoolNum = entryFeeUsdt * row.capacity * 0.90;
+              // 88% distributable, matching the platform's 12% fee.
+              const prizePoolNum = entryFeeUsdt * row.capacity * 0.88;
               const prizePoolStr = prizePoolNum.toFixed(2);
               const registeredPct = Math.min(100, Math.round(((row.registered_count || 0) / (row.capacity || 1)) * 100));
               const remainingSpots = Math.max(0, row.capacity - (row.registered_count || 0));

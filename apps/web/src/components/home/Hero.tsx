@@ -13,11 +13,11 @@ import styles from "./Hero.module.css";
 const FEATURED_COUNT = 6;
 
 const QUICK_STAKES = [
-  { stake: 2, prize: 3.8, tagAr: "🚀 بداية سريعة", tagEn: "🚀 Quick Start", popular: false },
-  { stake: 5, prize: 9.5, tagAr: "🔥 نزال الأبطال", tagEn: "🔥 Champions", popular: true },
-  { stake: 10, prize: 19.0, tagAr: "⚡ تحدي المحترفين", tagEn: "⚡ Pro Match", popular: false },
-  { stake: 25, prize: 47.5, tagAr: "💎 نزال النخبة", tagEn: "💎 Elite Duel", popular: false },
-  { stake: 50, prize: 95.0, tagAr: "👑 كبار المتحدين", tagEn: "👑 High Roller", popular: false },
+  { stake: 2, prize: 3.52, tagAr: "🚀 بداية سريعة", tagEn: "🚀 Quick Start", popular: false },
+  { stake: 5, prize: 8.8, tagAr: "🔥 نزال الأبطال", tagEn: "🔥 Champions", popular: true },
+  { stake: 10, prize: 17.6, tagAr: "⚡ تحدي المحترفين", tagEn: "⚡ Pro Match", popular: false },
+  { stake: 25, prize: 44.0, tagAr: "💎 نزال النخبة", tagEn: "💎 Elite Duel", popular: false },
+  { stake: 50, prize: 88.0, tagAr: "👑 كبار المتحدين", tagEn: "👑 High Roller", popular: false },
 ];
 
 type ShowcaseSlide = {
@@ -580,8 +580,8 @@ export function Hero() {
               </strong>
               <span className={styles.pillarDesc}>
                 {isRtl
-                  ? "الفائز يحصل على مجموع جوائز التحدي بنسبة 100% مع عمولة منصة رمزية 5% فقط."
-                  : "Winner takes the full challenge prize pool directly with an ultra-low 5% platform fee."}
+                  ? "الفائز يحصل على مجموع جوائز التحدي مع رسوم تنظيم منصة 12% فقط."
+                  : "Winner takes the challenge prize pool directly with a 12% platform fee."}
               </span>
             </div>
           </div>

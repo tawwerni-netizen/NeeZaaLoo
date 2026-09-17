@@ -466,10 +466,11 @@ describe("prize settlement", () => {
 
     const result = await trn.settlePrizes(c.tournamentId);
     assert.equal(result.ok, true);
-    // Pot = 40 USDT, 10% standard rake = 4, distributable = 36.
-    // Rank 1: 70% of 36 = 25.2 -> floor 25.2*1e6 = 25200000 (exact since bps*distributable divisible)
-    assert.equal(result.distributed, u(36));
-    assert.equal(result.rake, u(4));
+    // Pot = 40 USDT, 12% standard rake = 4.8 USDT (4800000), distributable = 35.2 USDT (35200000).
+    // Rank 1: 70% of 35.2 = 24.64 USDT (24640000)
+    // Rank 2: 30% of 35.2 = 10.56 USDT (10560000)
+    assert.equal(result.distributed, "35200000");
+    assert.equal(result.rake, "4800000");
 
     const again = await trn.settlePrizes(c.tournamentId);
     assert.equal(again.reason, TournamentError.ALREADY_SETTLED);
@@ -479,7 +480,7 @@ describe("prize settlement", () => {
       [c.tournamentId]
     );
     const totalPaid = rows.rows.reduce((a, r) => a + BigInt(r.p), 0n);
-    assert.equal(totalPaid.toString(), u(36));
+    assert.equal(totalPaid.toString(), "35200000");
 
     const solvency = await db.query(
       "SELECT custody_held::text h, user_liabilities::text o FROM ledger_solvency WHERE asset='USDT'"

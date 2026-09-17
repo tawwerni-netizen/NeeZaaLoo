@@ -347,7 +347,7 @@ function WalletContent() {
   const rawDepositAmount = customAmount ? parseFloat(customAmount) : (selectedPreset ?? 25);
   const activeDepositAmount = !isNaN(rawDepositAmount) && rawDepositAmount > 0 ? rawDepositAmount : 25;
   const duelsFunded = Math.max(1, Math.floor(activeDepositAmount / 5));
-  const potentialWinEstimate = (activeDepositAmount * 1.8).toFixed(2);
+  const potentialWinEstimate = (activeDepositAmount * 1.76).toFixed(2);
 
   // Withdrawal network fees mapping
   const WITHDRAW_FEES: Record<NetworkCode, number> = {
