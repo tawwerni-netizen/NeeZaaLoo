@@ -17,7 +17,7 @@
  * credit_local_deposit() call the app will use later -- the deposit side of
  * this feature does not change shape when the app ships, only who calls it.
  */
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 
 export const LocalPaymentError = {
   NOT_FOUND: "NOT_FOUND",
@@ -317,6 +317,187 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
         if (/is only for local rails|cannot complete|requires a reference|requires the admin/.test(e.message)) {
           return { ok: false, reason: LocalPaymentError.WRONG_STATE, detail: e.message };
         }
+        throw e;
+      }
+    },
+
+    // =========================================================================
+    // Admin: Device Management
+    // =========================================================================
+
+    async listDevices() {
+      const r = await db.query(`
+        SELECT id, label, enabled, created_by AS "createdBy", created_at AS "createdAt", last_seen_at AS "lastSeenAt"
+        FROM payment_receiver_device
+        WHERE id != $1
+        ORDER BY created_at DESC
+      `, [MANUAL_DEVICE_ID]);
+      return r.rows;
+    },
+
+    async issueDeviceKey({ label, adminId }) {
+      if (!label || !String(label).trim()) return { ok: false, reason: LocalPaymentError.REASON_REQUIRED };
+      
+      const id = `prd_${randomUUID()}`;
+      const apiKey = `prk_${randomUUID().replace(/-/g, '')}${randomUUID().replace(/-/g, '')}`;
+      const hash = createHash('sha256').update(apiKey).digest('hex');
+      
+      await db.query(`
+        INSERT INTO payment_receiver_device (id, label, api_key_hash, created_by)
+        VALUES ($1, $2, $3, $4)
+      `, [id, String(label).trim(), hash, adminId]);
+      
+      return { ok: true, device: { id, label: String(label).trim(), apiKey } };
+    },
+
+    async setDeviceEnabled(id, enabled) {
+      if (id === MANUAL_DEVICE_ID) return { ok: false, reason: LocalPaymentError.WRONG_STATE };
+      const r = await db.query(`
+        UPDATE payment_receiver_device SET enabled = $2 WHERE id = $1
+        RETURNING id, label, enabled, created_by AS "createdBy", created_at AS "createdAt", last_seen_at AS "lastSeenAt"
+      `, [id, enabled === true]);
+      if (!r.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
+      return { ok: true, device: r.rows[0] };
+    },
+
+    // =========================================================================
+    // Device: Transfer Reporting
+    // =========================================================================
+
+    async reportDeviceTransfer({
+      deviceId, network, receivingNumberId, rawSenderName, rawSenderPhone, amountEgpMinor, rawMessage, observedAt
+    }) {
+      const net = String(network ?? "").trim().toUpperCase();
+      if (!LOCAL_NETWORKS.has(net)) return { ok: false, reason: LocalPaymentError.INVALID_NETWORK };
+
+      let amount;
+      try { amount = BigInt(amountEgpMinor); } catch { return { ok: false, reason: LocalPaymentError.INVALID_AMOUNT }; }
+      if (amount <= 0n) return { ok: false, reason: LocalPaymentError.INVALID_AMOUNT };
+
+      
+      const possibleNumbers = String(receivingNumberId).split(',').map(s => s.trim()).filter(Boolean);
+      const primaryNumber = possibleNumbers[0];
+
+      const numRes = await db.query(
+        "SELECT id FROM local_payment_number WHERE id = $1 AND network = $2",
+        [primaryNumber, net]
+      );
+      if (!numRes.rows.length) return { ok: false, reason: LocalPaymentError.INVALID_RECEIVING_NUMBER };
+
+      const transferId = `lto_${randomUUID()}`;
+      const observed = observedAt ? new Date(observedAt) : new Date();
+
+      try {
+        await db.query(`
+          INSERT INTO local_transfer_observed
+            (id, network, received_number_id, raw_sender_name, raw_sender_phone, amount_egp_minor,
+             raw_message, device_id, observed_at, status)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'UNMATCHED')
+        `, [
+          transferId, net, primaryNumber, 
+          rawSenderName ? String(rawSenderName) : null,
+          rawSenderPhone ? String(rawSenderPhone) : null,
+          amount.toString(), String(rawMessage), deviceId, observed
+        ]);
+      } catch (e) {
+        if (/local_transfer_dedupe/.test(e.message)) {
+          return { ok: true, status: "IGNORED", reason: "DUPLICATE" };
+        }
+        throw e;
+      }
+
+      await db.query(`UPDATE payment_receiver_device SET last_seen_at = now() WHERE id = $1`, [deviceId]);
+      
+      const intentRes = await db.query(`
+        SELECT id, receiving_number_id FROM local_deposit_intent
+        WHERE network = $1 
+          AND receiving_number_id = ANY($2::text[])
+          AND declared_amount_egp_minor = $3
+          AND status = 'PENDING'
+          AND expires_at >= $4
+          AND declared_sender_phone = $5
+      `, [net, possibleNumbers, amount.toString(), observed, String(rawSenderPhone || "")]);
+      
+      if (intentRes.rows.length === 1) {
+         try {
+           // If we matched an intent for a DIFFERENT receiving number in the possible list, fix the FK
+           if (intentRes.rows[0].receiving_number_id !== primaryNumber) {
+             await db.query(`UPDATE local_transfer_observed SET received_number_id = $1 WHERE id = $2`, [intentRes.rows[0].receiving_number_id, transferId]);
+           }
+
+           const credited = await db.query(`SELECT * FROM credit_local_deposit($1,$2)`, [intentRes.rows[0].id, transferId]);
+           return { ok: true, status: "MATCHED", intentId: intentRes.rows[0].id, transferId };
+         } catch (e) {
+           if (/no EGP\/USD rate/.test(e.message)) {
+             return { ok: true, status: "UNMATCHED", transferId };
+           }
+           throw e;
+         }
+      }
+
+      return { ok: true, status: "UNMATCHED", transferId };
+    },
+
+    async deviceListPendingWithdrawals({ apiKey }) {
+      const devRes = await db.query(
+        "SELECT id FROM payment_receiver_device WHERE api_key_hash = encode(sha256($1::bytea), 'hex') AND enabled = true",
+        [apiKey]
+      );
+      if (!devRes.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
+
+      // Update last seen to keep device health accurate
+      await db.query(`UPDATE payment_receiver_device SET last_seen_at = now() WHERE id = $1`, [devRes.rows[0].id]);
+
+      const r = await db.query(
+        `SELECT id, player_id AS "playerId", asset, network, destination,
+                amount_minor::text AS "amountMinor", fee_minor::text AS "feeMinor",
+                status, requested_at AS "requestedAt"
+           FROM withdrawal
+          WHERE network IN ('VODAFONE_CASH','INSTAPAY') AND status IN ('APPROVED','PROCESSING')
+          ORDER BY requested_at ASC`
+      );
+      return { ok: true, withdrawals: r.rows };
+    },
+
+    // =========================================================================
+    // Admin: Transfer Review (Unmatched)
+    // =========================================================================
+
+
+    async listUnmatchedTransfers({ limit = 100 } = {}) {
+      const r = await db.query(`
+        SELECT id, network, received_number_id AS "receivedNumberId",
+               raw_sender_name AS "rawSenderName", raw_sender_phone AS "rawSenderPhone",
+               amount_egp_minor::text AS "amountEgpMinor", raw_message AS "rawMessage",
+               device_id AS "deviceId", observed_at AS "observedAt", reported_at AS "reportedAt"
+        FROM local_transfer_observed
+        WHERE status = 'UNMATCHED'
+        ORDER BY reported_at DESC LIMIT $1
+      `, [limit]);
+      return r.rows;
+    },
+
+    async matchTransferToIntent({ intentId, transferId, adminId }) {
+      const intentRes = await db.query(`SELECT status FROM local_deposit_intent WHERE id = $1`, [intentId]);
+      if (!intentRes.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
+      if (!['PENDING', 'MATCHED'].includes(intentRes.rows[0].status)) return { ok: false, reason: LocalPaymentError.WRONG_STATE };
+      
+      const transferRes = await db.query(`SELECT status FROM local_transfer_observed WHERE id = $1`, [transferId]);
+      if (!transferRes.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
+      if (transferRes.rows[0].status !== 'UNMATCHED') return { ok: false, reason: LocalPaymentError.WRONG_STATE };
+
+      try {
+        const credited = await db.query(`SELECT * FROM credit_local_deposit($1,$2)`, [intentId, transferId]);
+        
+        await db.query(`
+          UPDATE local_deposit_intent 
+          SET reviewed_by = $1, review_reason = 'Manual match by admin', reviewed_at = now()
+          WHERE id = $2
+        `, [adminId, intentId]);
+
+        return { ok: true, intent: credited.rows[0] };
+      } catch (e) {
+        if (/no EGP\/USD rate/.test(e.message)) return { ok: false, reason: LocalPaymentError.NO_RATE_SET };
         throw e;
       }
     },

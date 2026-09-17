@@ -15,7 +15,7 @@
  * sees the request, and the handler cannot re-open that decision.
  */
 import { createServer } from "node:http";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { authorize, Decision, ACTIONS, capabilitiesFor, undeclaredActions } from "../../authz/src/policy.mjs";
 import {
   compileRoutes, matchRoute, readJsonBody, sendJson, sendText, errorBody,
@@ -5396,6 +5396,90 @@ function buildRoutes() {
         return { body: res };
       } },
 
+    // =========================================================================
+    // Local Payment Rails (Admin & Device)
+    // =========================================================================
+
+    { method: "GET", path: "/v1/admin/payments/local/devices", action: "admin.local_rail.manage",
+      handler: async ({ localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const devices = await localPayments.listDevices();
+        return { body: { ok: true, devices } };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/local/devices", action: "admin.local_rail.manage",
+      handler: async ({ body, actor, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const r = await localPayments.issueDeviceKey({ label: body?.label, adminId: actor.id });
+        if (!r.ok) return { status: 400, body: errorBody(r.reason) };
+        return { body: r };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/local/devices/:id/status", action: "admin.local_rail.manage",
+      handler: async ({ params, body, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const enabled = body?.enabled === true;
+        const r = await localPayments.setDeviceEnabled(params.id, enabled);
+        if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(r.reason) };
+        return { body: r };
+      } },
+
+    { method: "GET", path: "/v1/admin/payments/local/transfers/unmatched", action: "admin.local_deposit.read",
+      handler: async ({ query, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const limit = parseInt(query.get("limit") || "100", 10);
+        const transfers = await localPayments.listUnmatchedTransfers({ limit });
+        return { body: { ok: true, transfers } };
+      } },
+
+    { method: "POST", path: "/v1/admin/payments/local/deposits/:intentId/match/:transferId", action: "admin.local_deposit.credit_solo",
+      handler: async ({ params, actor, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const r = await localPayments.matchTransferToIntent({ 
+          intentId: params.intentId, 
+          transferId: params.transferId, 
+          adminId: actor.id 
+        });
+        if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(r.reason) };
+        return { body: r };
+      } },
+
+    { method: "GET", path: "/v1/payment-receiver/withdrawals", action: "payment.local_transfer.report", anonymous: true,
+      handler: async ({ headers, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const apiKey = headers["x-device-api-key"];
+        if (!apiKey) return { status: 401, body: errorBody("UNAUTHENTICATED") };
+        const r = await localPayments.deviceListPendingWithdrawals({ apiKey });
+        if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 401 : 400, body: errorBody(r.reason) };
+        return { body: r };
+      } },
+
+    { method: "POST", path: "/v1/payment-receiver/transfers", action: "payment.local_transfer.report", anonymous: true,
+      handler: async ({ body, headers, localPayments, db }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        
+        const apiKey = headers["x-device-api-key"];
+        if (!apiKey) return { status: 401, body: errorBody("UNAUTHENTICATED") };
+
+        const hash = createHash("sha256").update(apiKey).digest("hex");
+        const deviceRes = await db.query(`SELECT id FROM payment_receiver_device WHERE api_key_hash = $1 AND enabled = TRUE`, [hash]);
+        if (!deviceRes.rows.length) return { status: 401, body: errorBody("UNAUTHENTICATED") };
+        
+        const deviceId = deviceRes.rows[0].id;
+        const r = await localPayments.reportDeviceTransfer({
+          deviceId,
+          network: body?.network,
+          receivingNumberId: body?.receivingNumberId,
+          rawSenderName: body?.rawSenderName,
+          rawSenderPhone: body?.rawSenderPhone,
+          amountEgpMinor: body?.amountEgpMinor,
+          rawMessage: body?.rawMessage,
+          observedAt: body?.observedAt,
+        });
+
+        if (!r.ok) return { status: 400, body: errorBody(r.reason) };
+        return { body: r };
+      } },
   ];
 }
 

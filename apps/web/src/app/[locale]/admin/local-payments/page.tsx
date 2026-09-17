@@ -25,6 +25,8 @@ type LocalDepositIntent = {
   senderName: string; senderPhone: string; amountEgpMinor: string; status: string;
   creditedAmountUsdtMinor: string | null; createdAt: string; expiresAt: string;
 };
+type LocalDevice = { id: string; label: string; enabled: boolean; createdBy: string; createdAt: string; lastSeenAt: string | null };
+type UnmatchedTransfer = { id: string; network: string; receivedNumberId: string; rawSenderName: string | null; rawSenderPhone: string | null; amountEgpMinor: string; rawMessage: string; observedAt: string };
 type LocalWithdrawal = {
   id: string; playerId: string; network: string; destination: string;
   amountMinor: string; feeMinor: string; status: string; requestedAt: string;
@@ -38,6 +40,9 @@ export default function AdminLocalPaymentsPage() {
   const [rate, setRate] = useState<LocalRate>(null);
   const [deposits, setDeposits] = useState<LocalDepositIntent[]>([]);
   const [withdrawals, setWithdrawals] = useState<LocalWithdrawal[]>([]);
+  const [devices, setDevices] = useState<LocalDevice[]>([]);
+  const [unmatched, setUnmatched] = useState<UnmatchedTransfer[]>([]);
+  const [newDeviceLabel, setNewDeviceLabel] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -50,15 +55,19 @@ export default function AdminLocalPaymentsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [n, d, w] = await Promise.all([
+      const [n, d, w, devs, unm] = await Promise.all([
         get<{ numbers: LocalNumber[]; rate: LocalRate }>("/v1/admin/payments/local/numbers"),
         get<{ intents: LocalDepositIntent[] }>("/v1/admin/payments/local/deposits?status=PENDING"),
         get<{ withdrawals: LocalWithdrawal[] }>("/v1/admin/payments/local/withdrawals"),
+        get<{ devices: LocalDevice[] }>("/v1/admin/payments/local/devices"),
+        get<{ transfers: UnmatchedTransfer[] }>("/v1/admin/payments/local/transfers/unmatched"),
       ]);
       setNumbers(n.numbers ?? []);
       setRate(n.rate ?? null);
       setDeposits(d.intents ?? []);
       setWithdrawals(w.withdrawals ?? []);
+      setDevices(devs.devices ?? []);
+      setUnmatched(unm.transfers ?? []);
       setLoadError(null);
     } catch (e) {
       setLoadError(adminErrorMessage(e, "تعذّر تحميل بيانات فودافون كاش / إنستاباي."));
@@ -143,6 +152,41 @@ export default function AdminLocalPaymentsPage() {
       void load();
     } catch (e) {
       alert(adminErrorMessage(e, "تعذّر رفض طلب الإيداع."));
+    }
+  }
+
+  async function handleAddDevice() {
+    if (!newDeviceLabel.trim()) { alert("Enter a device label."); return; }
+    try {
+      const res = await post<{ ok: boolean, device: { id: string, label: string, apiKey: string } }>("/v1/admin/payments/local/devices", { label: newDeviceLabel.trim() });
+      setNewDeviceLabel("");
+      flash("Device added.");
+      window.prompt("Device API Key (Copy this now, it won't be shown again):", res.device.apiKey);
+      void load();
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر إضافة الجهاز."));
+    }
+  }
+
+  async function handleToggleDevice(d: LocalDevice) {
+    try {
+      await post(`/v1/admin/payments/local/devices/${d.id}/status`, { enabled: !d.enabled });
+      flash(`Device ${d.label} ${d.enabled ? "disabled" : "enabled"}.`);
+      void load();
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر تغيير حالة الجهاز."));
+    }
+  }
+
+  async function handleMatchTransfer(transfer: UnmatchedTransfer) {
+    const intentId = window.prompt("Enter the Pending Intent ID to match with this transfer:", "");
+    if (!intentId) return;
+    try {
+      await post(`/v1/admin/payments/local/deposits/${intentId.trim()}/match/${transfer.id}`, {});
+      flash(`Matched intent ${intentId} with transfer ${transfer.id}.`);
+      void load();
+    } catch (e) {
+      alert(adminErrorMessage(e, "تعذّر تأكيد الإيداع."));
     }
   }
 
@@ -256,6 +300,82 @@ export default function AdminLocalPaymentsPage() {
             style={{ padding: "6px 10px", borderRadius: "6px", background: "var(--nz-bg-2, #0e121a)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
           />
           <Button variant="secondary" onClick={() => void handleAddNumber()}>Add Number</Button>
+        </div>
+      </div>
+
+      {/* Devices */}
+      <div className={styles.tableCard} style={{ marginBottom: "16px" }}>
+        <div className={styles.tableHeader}>
+          <h2 className={styles.tableTitle}>Devices ({devices.length})</h2>
+        </div>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ID</th><th>Label</th><th>Status</th><th>Last Seen</th><th className={styles.alignRight}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {devices.map((d) => (
+                <tr key={d.id}>
+                  <td>{d.id}</td>
+                  <td><strong>{d.label}</strong></td>
+                  <td>
+                    <span className={`${styles.badge} ${d.enabled ? styles.badgeSuccess : styles.badgeDanger}`}>
+                      {d.enabled ? "ENABLED" : "DISABLED"}
+                    </span>
+                  </td>
+                  <td>{d.lastSeenAt ? new Date(d.lastSeenAt).toLocaleString() : "Never"}</td>
+                  <td className={styles.alignRight}>
+                    <Button variant="ghost" onClick={() => void handleToggleDevice(d)}>
+                      {d.enabled ? "Disable" : "Enable"}
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ padding: "12px 16px", display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <input
+            value={newDeviceLabel} onChange={(e) => setNewDeviceLabel(e.target.value)} placeholder="Device Label (e.g. Operator Phone)"
+            style={{ padding: "6px 10px", borderRadius: "6px", background: "var(--nz-bg-2, #0e121a)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
+          />
+          <Button variant="secondary" onClick={() => void handleAddDevice()}>Add Device</Button>
+        </div>
+      </div>
+
+      {/* Unmatched Transfers */}
+      <div className={styles.tableCard} style={{ marginBottom: "16px" }}>
+        <div className={styles.tableHeader}>
+          <h2 className={styles.tableTitle}>Unmatched Transfers ({unmatched.length})</h2>
+        </div>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Transfer ID</th><th>Sender</th><th>Amount</th><th>Network</th><th>Observed</th><th className={styles.alignRight}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {unmatched.length === 0 ? (
+                <tr><td colSpan={6} className={styles.emptyState}>{loading ? "Loading..." : "No unmatched transfers"}</td></tr>
+              ) : (
+                unmatched.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.id}</td>
+                    <td>{u.rawSenderName || "--"}<br /><span style={{ color: "var(--nz-text-3)", fontSize: "12px" }}>{u.rawSenderPhone || "--"}</span></td>
+                    <td className="nz-num">{egp(u.amountEgpMinor)} EGP</td>
+                    <td><span className={`${styles.badge} ${styles.badgeNeutral}`}>{u.network}</span></td>
+                    <td className="nz-num">{new Date(u.observedAt).toLocaleString()}</td>
+                    <td className={styles.alignRight}>
+                      <Button variant="primary" onClick={() => void handleMatchTransfer(u)}>Match Intent</Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

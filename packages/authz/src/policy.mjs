@@ -83,6 +83,7 @@ export const ACTIONS = {
   "legal.policies.read":         { capability: null },
   "support.config.read":         { capability: null },
   "payment.webhook":             { capability: null },
+  "payment.local_transfer.report": { capability: null },
 
   // --- Read surfaces ---------------------------------------------------------
   "admin.user.read":         { capability: "user.read" },
