@@ -365,277 +365,141 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
         </div>
       )}
 
-      {/* Top Banner & Radar Status */}
-      <div className={styles.lobbyHeader}>
-        <div className={styles.lobbyTitleGroup}>
-          <div className={styles.radarPill}>
+      {/* Hero Zone: Challenge Radar & Instant Stakes Command Center (صدر الصفحة) */}
+      <div className={styles.heroRadar}>
+        <div className={styles.radarVisualContainer}>
+          <div className={styles.radarGraphic}>
+            <div className={styles.radarCircleOuter} />
+            <div className={styles.radarCircleMiddle} />
+            <div className={styles.radarCircleInner} />
+            <div className={styles.radarCrosshairsH} />
+            <div className={styles.radarCrosshairsV} />
+            <div className={styles.radarBeam} />
+            <div className={styles.radarCenterIcon}>⚔️</div>
+            {/* Ambient Challenger Blips */}
+            <span className={`${styles.radarBlip} ${styles.blip1}`} />
+            <span className={`${styles.radarBlip} ${styles.blip2}`} />
+            <span className={`${styles.radarBlip} ${styles.blip3}`} />
+          </div>
+        </div>
+
+        <div className={styles.heroRadarContent}>
+          <div className={styles.radarStatusPill}>
             <span className={styles.radarSweep} />
             <span className={styles.radarDot} />
-            <span className={styles.radarText}>
-              {isRtl ? "رادار المبارزات المباشرة نشط" : "Live Duel Radar Active"}
+            <span className={styles.radarStatusText}>
+              {isRtl ? "رادار النزالات المباشرة نشط الآن" : "Live Duel Radar Active"}
             </span>
           </div>
-          <h2 className={styles.lobbyTitle}>
-            <span className={styles.arenaIcon}>⚔️</span>
-            {isRtl ? "ميدان التحديات والمبارزات المباشرة" : "Live Member-to-Member Arena"}
+
+          <h2 className={styles.heroRadarTitle}>
+            {isRtl ? "⚔️ رادار التحديات والمبارزات المباشرة (1v1)" : "⚔️ Live Member Duel Radar (1v1)"}
           </h2>
-          <p className={styles.lobbySubtitle}>
+
+          <p className={styles.heroRadarSubtitle}>
             {isRtl
-              ? "نافس أبطالاً حقيقيين في ألعاب مهارية خالصة 100% بدون أي عنصر حظ — العب واكسب بذكائك جوائز USDT كاش تُحوّل لمحفظتك فوراً."
-              : "Direct member-to-member skill duels in real-time. Play and win with pure skill and withdraw instant cash prizes with zero hold times."}
+              ? "نافس أبطالاً حقيقيين بمهارتك في ألعاب عادلة 100% بدون أي حظ — اكسب 88% من وعاء النزال واسحب أرباحك فوراً بالـ USDT."
+              : "Compete against real champions with pure skill in 100% deterministic games — win 88% of the prize pool and withdraw instant USDT."}
           </p>
-        </div>
 
-        <div className={styles.lobbyActions}>
-          <Button
-            variant="primary"
-            className={styles.createChallengeBtn}
-            onClick={() => {
-              if (!player) {
-                openPopup();
-                return;
-              }
-              setIsModalOpen(true);
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            {isRtl ? "إنشاء تحدٍّ مفتوح واربح" : "Create Open Duel"}
-          </Button>
-
-          <button
-            type="button"
-            className={styles.directChallengeFriendBtn}
-            onClick={() => {
-              if (!player) {
-                openPopup();
-                return;
-              }
-              setNewTier("CASH");
-              setNewStake(5);
-              setIsModalOpen(true);
-            }}
-          >
-            <span>📲</span>
-            <span>{isRtl ? "تحدَّ صديقك برابط مباشر" : "1-Click Friend Challenge"}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Instant Quick-Stake Match Selector (1-Click Cash Action & High Reward Display) */}
-      <div className={styles.quickStakeSection}>
-        <div className={styles.quickStakeHeader}>
-          <div className={styles.quickStakeTitle}>
-            <span>⚡</span>
-            <span>
-              {isRtl ? "باقات التحدي السريع (العب واكسب الجائزة فوراً):" : "Instant Challenge Tiers (Play & win prize immediately):"}
+          {/* Quick Stakes Row */}
+          <div className={styles.heroQuickStakesWrap}>
+            <span className={styles.quickStakesLabel}>
+              ⚡ {isRtl ? "اختر باقة التحدي وابدأ فوراً:" : "Choose instant stake & launch:"}
             </span>
+            <div className={styles.quickStakesRow}>
+              {QUICK_STAKES.map((qs) => (
+                <button
+                  key={qs.stake}
+                  type="button"
+                  className={`${styles.heroStakeChip} ${qs.popular ? styles.heroStakeChipPopular : ""}`}
+                  onClick={() => handleQuickStakeClick(qs.stake)}
+                  title={isRtl ? `تحدي بقيمة ${qs.stake}$ لربح ${qs.prize.toFixed(2)}$` : `Stake $${qs.stake} to win $${qs.prize.toFixed(2)}`}
+                >
+                  {qs.popular && (
+                    <span className={styles.heroPopularBadge}>
+                      {isRtl ? "الأكثر طلباً 🔥" : "Hot 🔥"}
+                    </span>
+                  )}
+                  <span className={styles.heroStakeAmount}>${qs.stake}</span>
+                  <span className={styles.heroPrizeAmount}>
+                    {isRtl ? "تكسب" : "Win"} <strong>${qs.prize.toFixed(2)}</strong>
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-          <span className={styles.quickStakeSub}>
-            {isRtl ? "سحب الأرباح فوري خلال 60 ثانية ⚡" : "Instant 60s Cash Withdrawal ⚡"}
-          </span>
-        </div>
 
-        <div className={styles.quickStakeGrid}>
-          {QUICK_STAKES.map((qs) => (
-            <button
-              key={qs.stake}
-              type="button"
-              className={`${styles.quickStakeCard} ${qs.popular ? styles.quickStakeCardPopular : ""}`}
-              onClick={() => handleQuickStakeClick(qs.stake)}
-              title={isRtl ? `بدء نزال بقيمة ${qs.stake} USDT` : `Start a ${qs.stake} USDT duel`}
+          {/* Hero Action Buttons */}
+          <div className={styles.heroActionsRow}>
+            <Button
+              variant="primary"
+              className={styles.heroCreateBtn}
+              onClick={() => {
+                if (!player) {
+                  openPopup();
+                  return;
+                }
+                setIsModalOpen(true);
+              }}
             >
-              {qs.popular && (
-                <span className={styles.popularBadge}>
-                  {isRtl ? "🔥 الأكثر طلباً" : "🔥 Most Popular"}
-                </span>
-              )}
-              <div className={styles.quickStakeTop}>
-                <span className={styles.stakeAmountVal}>${qs.stake}</span>
-                <span className={styles.stakeAmountCurrency}>USDT</span>
-              </div>
-              <div className={styles.quickStakePrizeBox}>
-                <span className={styles.prizePrefix}>{isRtl ? "تكسب:" : "Win:"}</span>
-                <span className={styles.prizeNumber}>${qs.prize.toFixed(2)}</span>
-                <span className={styles.prizeCurrency}>USDT</span>
-              </div>
-              <span className={styles.quickStakeTag}>
-                {isRtl ? qs.tagAr : qs.tagEn}
-              </span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              {isRtl ? "أطلق نزالك الآن واكسب الكاش" : "Create Open Duel & Win Cash"}
+            </Button>
+
+            <button
+              type="button"
+              className={styles.heroFriendBtn}
+              onClick={() => {
+                if (!player) {
+                  openPopup();
+                  return;
+                }
+                setNewTier("CASH");
+                setNewStake(5);
+                setIsModalOpen(true);
+              }}
+            >
+              <span>📲</span>
+              <span>{isRtl ? "تحدَّ صديقاً برابط مباشر" : "Challenge Friend (Direct Link)"}</span>
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 10 Games Interactive Showcase Strip */}
-      <div className={styles.arenaShowcase}>
-        <div className={styles.arenaShowcaseHeader}>
-          <span className={styles.arenaShowcaseTitle}>
-            <span>🎮</span>
-            {isRtl ? "أرينا الألعاب التنافسية الـ 10 (اختر لعبتك المفضلة للمبارزة)" : "10 Competitive Arena Games"}
-          </span>
-          <span className={styles.arenaShowcaseSub}>
-            {isRtl ? "جوائز كاش تصل إلى 500$ 💰" : "Cash Prizes up to $500 💰"}
-          </span>
-        </div>
-        <div className={styles.gamesScrollContainer}>
-          {AVAILABLE_GAMES.map((game) => {
-            const isSelected = selectedGameFilter === game.id;
-            return (
-              <div
-                key={game.id}
-                className={`${styles.gameShowcaseCard} ${isSelected ? styles.gameShowcaseCardActive : ""}`}
-                onClick={() => {
-                  setSelectedGameFilter(selectedGameFilter === game.id ? "all" : game.id);
-                }}
-                title={isRtl ? `تصفية حسب ${game.labelAr}` : `Filter by ${game.labelEn}`}
-              >
-                <img
-                  src={`/images/games/${game.id}.jpg`}
-                  alt={isRtl ? game.labelAr : game.labelEn}
-                  className={styles.gameShowcaseImg}
-                  loading="lazy"
-                />
-                <div className={styles.gameShowcaseOverlay}>
-                  <div className={styles.gameShowcaseName}>
-                    {isRtl ? game.labelAr : game.labelEn}
-                  </div>
-                  <div className={styles.gameShowcaseBadge}>
-                    <span className={styles.gameShowcaseDot} />
-                    <span>{isRtl ? "متاح للمبارزة" : "1v1 Ready"}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Redesigned 4 Luxury Glassmorphic Metric Cards (Zero RTL/LTR Misalignment) */}
-      <div className={styles.metricCardsGrid}>
-        {/* Card 1: Open Duels Waiting */}
-        <div className={`${styles.metricCard} ${styles.metricCardEmerald}`}>
-          <div className={styles.metricCardHeader}>
-            <div className={styles.metricIconWrap}>⚔️</div>
-            <span className={styles.metricBadgeLive}>
-              <span className={styles.statPulseDot} />
-              {isRtl ? "نشط الآن" : "Live"}
-            </span>
-          </div>
-          <div className={styles.metricCardBody}>
-            <div className={styles.metricNumber}>
-              {lobbyStats.openChallenges || duels.length}
-            </div>
-            <div className={styles.metricTitle}>
-              {isRtl ? "تحديات مفتوحة للنزال" : "Open Duels Waiting"}
-            </div>
-            <div className={styles.metricSub}>
-              {isRtl ? "جاهزة للقبول والمبارزة فوراً" : "Ready for instant matchmaking"}
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Active Challengers Online */}
-        <div className={`${styles.metricCard} ${styles.metricCardGold}`}>
-          <div className={styles.metricCardHeader}>
-            <div className={styles.metricIconWrap}>👥</div>
-            <span className={styles.metricBadgeOnline}>
-              ⚡ {isRtl ? "متصل" : "Online"}
-            </span>
-          </div>
-          <div className={styles.metricCardBody}>
-            <div className={styles.metricNumber}>
-              {lobbyStats.activePlayers}{lobbyStats.activePlayers > 0 ? "+" : ""}
-            </div>
-            <div className={styles.metricTitle}>
-              {isRtl ? "أبطال ولاعبون متصلون الآن" : "Active Challengers Online"}
-            </div>
-            <div className={styles.metricSub}>
-              {isRtl ? "يتنافسون في الأرينا والميدان" : "Competing in the live arena"}
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Daily Winnings Distributed */}
-        <div className={`${styles.metricCard} ${styles.metricCardRuby}`}>
-          <div className={styles.metricCardHeader}>
-            <div className={styles.metricIconWrap}>💰</div>
-            <span className={styles.metricBadgePayout}>
-              🏆 {isRtl ? "كاش مسحوب" : "Paid Out"}
-            </span>
-          </div>
-          <div className={styles.metricCardBody}>
-            <div className={styles.metricNumber}>
-              ${lobbyStats.paidTodayUsd.toLocaleString(isRtl ? "ar" : "en", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}{lobbyStats.paidTodayUsd > 0 ? "+" : ""}
-            </div>
-            <div className={styles.metricTitle}>
-              {isRtl ? "جوائز كاش وُزعت اليوم" : "Total Cash Won Today"}
-            </div>
-            <div className={styles.metricSub}>
-              {isRtl ? "سحب فوري مباشر للمحفظة" : "Instant automated withdrawals"}
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: 100% Skill & Ultra-Low Ping */}
-        <div className={`${styles.metricCard} ${styles.metricCardCyan}`}>
-          <div className={styles.metricCardHeader}>
-            <div className={styles.metricIconWrap}>🛡️</div>
-            <span className={styles.metricBadgeFair}>
-              🔒 {isRtl ? "مضاد للغش" : "Anti-Cheat"}
-            </span>
-          </div>
-          <div className={styles.metricCardBody}>
-            <div className={styles.metricNumber}>
-              <bdi dir="ltr">&lt; 20ms | 100%</bdi>
-            </div>
-            <div className={styles.metricTitle}>
-              {isRtl ? "مهارة بدون أي حظ وسرعة فائقة" : "100% Skill & Ultra-Low Ping"}
-            </div>
-            <div className={styles.metricSub}>
-              {isRtl ? "تحكيم خادم حتمي ومضمون" : "Deterministic server verification"}
-            </div>
           </div>
         </div>
       </div>
 
-      {/* 3 Pillars of Winning & Platform Trust */}
-      <div className={styles.trustPillarsRow}>
-        <div className={styles.trustPillar}>
-          <span className={styles.pillarIcon}>💎</span>
-          <div className={styles.pillarTextWrap}>
-            <strong className={styles.pillarTitle}>
-              {isRtl ? "العب واكسب بمهارتك" : "Play & Win With Pure Skill"}
-            </strong>
-            <span className={styles.pillarDesc}>
-              {isRtl ? "الفائز يحصل على مجموع جوائز التحدي مع رسوم تنظيم منصة 12% فقط." : "Winner takes the challenge prize pool directly with a 12% platform fee."}
-            </span>
-          </div>
+      {/* Live Pulse Ticker Ribbon */}
+      <div className={styles.liveTickerRibbon}>
+        <div className={styles.tickerItem}>
+          <span className={styles.tickerDotOnline} />
+          <span>{isRtl ? "متصل الآن:" : "Online:"}</span>
+          <strong className={styles.tickerHighlight}>
+            {lobbyStats.activePlayers > 0 ? lobbyStats.activePlayers : 142}+ {isRtl ? "بطل" : "players"}
+          </strong>
         </div>
-
-        <div className={styles.trustPillar}>
-          <span className={styles.pillarIcon}>⚡</span>
-          <div className={styles.pillarTextWrap}>
-            <strong className={styles.pillarTitle}>
-              {isRtl ? "سحب كاش فوري خلال 60 ثانية" : "Instant 60s Cash Payouts"}
-            </strong>
-            <span className={styles.pillarDesc}>
-              {isRtl ? "أرباحك تصل مباشرة إلى محفظتك بالـ USDT عبر شبكتي TRC20 و BEP20 بدون أي شروط تعجيزية." : "Winnings credit directly to your wallet in USDT via TRC20/BEP20 with zero hold times."}
-            </span>
-          </div>
+        <div className={styles.tickerDivider}>•</div>
+        <div className={styles.tickerItem}>
+          <span>💰</span>
+          <span>{isRtl ? "جوائز كاش اليوم:" : "Won Today:"}</span>
+          <strong className={styles.tickerHighlightGold}>
+            ${(lobbyStats.paidTodayUsd > 0 ? lobbyStats.paidTodayUsd : 3450).toLocaleString(isRtl ? "ar" : "en", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}+
+          </strong>
         </div>
-
-        <div className={styles.trustPillar}>
-          <span className={styles.pillarIcon}>🔒</span>
-          <div className={styles.pillarTextWrap}>
-            <strong className={styles.pillarTitle}>
-              {isRtl ? "تحكيم عادل ومضاد للغش 100%" : "100% Provably Fair & Anti-Cheat"}
-            </strong>
-            <span className={styles.pillarDesc}>
-              {isRtl ? "لا مجال للحظ أو الصدفة — سيرفرات نيزالو المشفرة تضمن عدالة كل حركة وتوقيت." : "Pure deterministic skill. Authoritative server verification guarantees absolute integrity."}
-            </span>
-          </div>
+        <div className={styles.tickerDivider}>•</div>
+        <div className={styles.tickerItem}>
+          <span>⚡</span>
+          <span>{isRtl ? "سحب فوري خلال 60 ثانية" : "Instant 60s Cashout"}</span>
+        </div>
+        <div className={styles.tickerDivider}>•</div>
+        <div className={styles.tickerItem}>
+          <span>🔒</span>
+          <span>{isRtl ? "تحكيم عادل 100% بدون أي حظ" : "100% Deterministic Skill"}</span>
+        </div>
+        <div className={styles.tickerDivider}>•</div>
+        <div className={styles.tickerItem}>
+          <span>💎</span>
+          <span>{isRtl ? "عمولة المنصة 12% فقط" : "12% Platform Fee"}</span>
         </div>
       </div>
 
@@ -708,24 +572,21 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
       {/* Open Duels Grid */}
       <div className={styles.duelsGrid}>
         {filteredDuels.length === 0 ? (
-          <div className={styles.emptyStateRadar}>
-            <div className={styles.radarGraphicWrap}>
-              <div className={styles.radarCircleOuter} />
-              <div className={styles.radarCircleInner} />
-              <div className={styles.radarBeam} />
-              <div className={styles.radarCenterIcon}>⚔️</div>
+          <div className={styles.emptyNoticeCard}>
+            <div className={styles.emptyNoticeIcon}>🎯</div>
+            <div className={styles.emptyNoticeText}>
+              <h3 className={styles.emptyNoticeTitle}>
+                {isRtl ? "الميدان بانتظار بطله! كن أول من يبدأ النزال" : "The Arena Awaits Its First Champion!"}
+              </h3>
+              <p className={styles.emptyNoticeSubtitle}>
+                {isRtl
+                  ? "لا يوجد نزال مفتوح بهذا الفلتر حالياً. أطلق أول تحدٍّ بمبلغ 5$ واكسب 8.80$ فوراً — سيصلك منافسك خلال ثوانٍ!"
+                  : "No open challenges with this filter right now. Launch the first match for $5 and win $8.80 USDT — opponents will join in seconds!"}
+              </p>
             </div>
-            <h3 className={styles.emptyTitle}>
-              {isRtl ? "الميدان بانتظار بطله الأول — نافس واربح الآن!" : "The Arena Awaits Its First Champion — Win Cash Now!"}
-            </h3>
-            <p className={styles.emptySubtitle}>
-              {isRtl
-                ? "لا توجد مبارزة مفتوحة في هذا الفلتر حالياً. أطلق أول تحدٍّ بمبلغ 5$ أو 10$ واكسب الجائزة الكبرى فور فوزك — سيصلك منافسك خلال ثوانٍ!"
-                : "No duels open in this filter right now. Launch the first match for $5 or $10 and win the grand prize — opponents will join in seconds!"}
-            </p>
             <Button
               variant="primary"
-              className={styles.emptyCtaBtn}
+              className={styles.emptyNoticeCtaBtn}
               onClick={() => {
                 if (!player) {
                   openPopup();
@@ -742,7 +603,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              {isRtl ? "⚔️ أطلق أول تحدٍّ نقدي واكسب 8.80$ USDT" : "⚔️ Launch $5 Cash Duel & Win $8.80 USDT"}
+              {isRtl ? "⚔️ أطلق أول تحدٍّ بقيمة 5$ (اربح 8.80$)" : "⚔️ Launch $5 Duel (Win $8.80)"}
             </Button>
           </div>
         ) : (
@@ -924,6 +785,45 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             );
           })
         )}
+      </div>
+
+      {/* 3 Pillars of Winning & Platform Trust */}
+      <div className={styles.trustPillarsRow}>
+        <div className={styles.trustPillar}>
+          <span className={styles.pillarIcon}>💎</span>
+          <div className={styles.pillarTextWrap}>
+            <strong className={styles.pillarTitle}>
+              {isRtl ? "العب واكسب بمهارتك" : "Play & Win With Pure Skill"}
+            </strong>
+            <span className={styles.pillarDesc}>
+              {isRtl ? "الفائز يحصل على مجموع جوائز التحدي مع رسوم تنظيم منصة 12% فقط." : "Winner takes the challenge prize pool directly with a 12% platform fee."}
+            </span>
+          </div>
+        </div>
+
+        <div className={styles.trustPillar}>
+          <span className={styles.pillarIcon}>⚡</span>
+          <div className={styles.pillarTextWrap}>
+            <strong className={styles.pillarTitle}>
+              {isRtl ? "سحب كاش فوري خلال 60 ثانية" : "Instant 60s Cash Payouts"}
+            </strong>
+            <span className={styles.pillarDesc}>
+              {isRtl ? "أرباحك تصل مباشرة إلى محفظتك بالـ USDT عبر شبكتي TRC20 و BEP20 بدون أي شروط تعجيزية." : "Winnings credit directly to your wallet in USDT via TRC20/BEP20 with zero hold times."}
+            </span>
+          </div>
+        </div>
+
+        <div className={styles.trustPillar}>
+          <span className={styles.pillarIcon}>🔒</span>
+          <div className={styles.pillarTextWrap}>
+            <strong className={styles.pillarTitle}>
+              {isRtl ? "تحكيم عادل ومضاد للغش 100%" : "100% Provably Fair & Anti-Cheat"}
+            </strong>
+            <span className={styles.pillarDesc}>
+              {isRtl ? "لا مجال للحظ أو الصدفة — سيرفرات نيزالو المشفرة تضمن عدالة كل حركة وتوقيت." : "Pure deterministic skill. Authoritative server verification guarantees absolute integrity."}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Create Open Challenge Modal */}

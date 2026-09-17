@@ -34,34 +34,143 @@
   50% { transform: scale(1.35); opacity: 0.6; }
 }
 
-/* Header */
-.lobbyHeader {
+/* ==========================================================================
+   Hero Zone: Challenge Radar & Instant Stakes Command Center (صدر الصفحة)
+   ========================================================================== */
+.heroRadar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: var(--nz-space-4);
-  margin-bottom: var(--nz-space-4);
-  flex-wrap: wrap;
+  gap: var(--nz-space-6);
+  margin-bottom: var(--nz-space-5);
+  padding: var(--nz-space-5);
+  background: radial-gradient(circle at 15% 50%, rgba(201, 169, 110, 0.12) 0%, rgba(10, 14, 22, 0.85) 100%);
+  border: 1px solid rgba(201, 169, 110, 0.3);
+  border-radius: var(--nz-radius-xl, 16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   position: relative;
+  overflow: hidden;
+}
+
+.radarVisualContainer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.radarGraphic {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(201, 169, 110, 0.04) 55%, transparent 70%);
+}
+
+.radarCircleOuter {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201, 169, 110, 0.35);
+  box-shadow: 0 0 24px rgba(201, 169, 110, 0.15);
+}
+
+.radarCircleMiddle {
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  border: 1px dashed rgba(16, 185, 129, 0.4);
+}
+
+.radarCircleInner {
+  position: absolute;
+  inset: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 169, 110, 0.25);
+}
+
+.radarCrosshairsH {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(201, 169, 110, 0.2);
+  pointer-events: none;
+}
+
+.radarCrosshairsV {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(201, 169, 110, 0.2);
+  pointer-events: none;
+}
+
+.radarBeam {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(16, 185, 129, 0.45) 360deg);
+  animation: spinRadar 2.6s linear infinite;
+}
+
+@keyframes spinRadar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radarCenterIcon {
+  position: relative;
+  z-index: 2;
+  font-size: 30px;
+  filter: drop-shadow(0 0 10px rgba(201, 169, 110, 0.8));
+}
+
+.radarBlip {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: blipGlow 2.2s infinite ease-in-out;
   z-index: 2;
 }
 
-.lobbyTitleGroup {
-  flex: 1;
-  min-width: 280px;
+.blip1 { top: 26px; right: 32px; animation-delay: 0.2s; }
+.blip2 { bottom: 30px; left: 28px; animation-delay: 1.1s; }
+.blip3 { top: 68px; left: 18px; animation-delay: 1.8s; }
+
+@keyframes blipGlow {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.6); opacity: 1; box-shadow: 0 0 12px #10b981; }
 }
 
-.radarPill {
+.heroRadarContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radarStatusPill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   background: rgba(16, 185, 129, 0.12);
   border: 1px solid rgba(16, 185, 129, 0.4);
-  padding: 4px 12px;
+  padding: 3px 12px;
   border-radius: var(--nz-radius-pill);
-  margin-bottom: var(--nz-space-2);
   position: relative;
   overflow: hidden;
+  width: fit-content;
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
 }
 
@@ -91,48 +200,132 @@
   100% { transform: translateX(100%); }
 }
 
-.radarText {
+.radarStatusText {
   font-size: 11.5px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #10b981;
 }
 
-.lobbyTitle {
+.heroRadarTitle {
   font-size: var(--nz-text-2xl, 24px);
-  font-weight: 800;
+  font-weight: 900;
   color: var(--nz-text);
-  margin: 0 0 6px;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 10px;
+  letter-spacing: -0.01em;
 }
 
-.arenaIcon {
-  color: var(--nz-accent, #c9a96e);
-}
-
-.lobbySubtitle {
-  font-size: var(--nz-text-sm, 13px);
+.heroRadarSubtitle {
+  font-size: var(--nz-text-sm, 13.5px);
   color: var(--nz-text-2);
   line-height: 1.55;
   margin: 0;
   max-width: 720px;
 }
 
-.lobbyActions {
+.heroQuickStakesWrap {
   display: flex;
-  align-items: center;
-  gap: var(--nz-space-3);
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
 }
 
-.createChallengeBtn {
+.quickStakesLabel {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--nz-accent, #c9a96e);
+}
+
+.quickStakesRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.heroStakeChip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: rgba(10, 14, 22, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--nz-radius-md, 8px);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  color: inherit;
+}
+
+.heroStakeChip:hover {
+  transform: translateY(-2px);
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.2);
+}
+
+.heroStakeChipPopular {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.14) 0%, rgba(10, 14, 22, 0.8) 100%);
+}
+
+.heroStakeChipPopular:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+}
+
+.heroPopularBadge {
+  position: absolute;
+  top: -8px;
+  right: 6px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 0.5px 6px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+}
+
+.heroStakeAmount {
+  font-family: var(--nz-font-num);
+  font-size: 14.5px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.heroPrizeAmount {
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  gap: 3px;
+  align-items: baseline;
+}
+
+.heroPrizeAmount strong {
+  font-family: var(--nz-font-num);
+  color: #4ade80;
+  font-weight: 800;
+}
+
+.heroActionsRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.heroCreateBtn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  padding: 10px 20px;
+  padding: 10px 22px;
   background: linear-gradient(135deg, #c9a96e 0%, #a48246 100%);
   color: #0b0e14;
   border-radius: var(--nz-radius-md);
@@ -140,12 +333,12 @@
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.createChallengeBtn:hover {
+.heroCreateBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(201, 169, 110, 0.5), 0 0 12px rgba(201, 169, 110, 0.3);
+  box-shadow: 0 6px 24px rgba(201, 169, 110, 0.5);
 }
 
-.directChallengeFriendBtn {
+.heroFriendBtn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -160,12 +353,69 @@
   font-size: var(--nz-text-sm, 14px);
 }
 
-.directChallengeFriendBtn:hover {
+.heroFriendBtn:hover {
   background: rgba(37, 211, 102, 0.22);
   border-color: #25d366;
   color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+}
+
+/* ==========================================================================
+   Live Pulse Ticker Ribbon (شريط النبض الحي)
+   ========================================================================== */
+.liveTickerRibbon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 9px 18px;
+  background: rgba(14, 19, 29, 0.85);
+  border: 1px solid rgba(201, 169, 110, 0.22);
+  border-radius: var(--nz-radius-pill, 999px);
+  margin-bottom: var(--nz-space-5);
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.liveTickerRibbon::-webkit-scrollbar {
+  display: none;
+}
+
+.tickerItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--nz-text-2);
+}
+
+.tickerDotOnline {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  animation: pulseDot 1.8s infinite ease-in-out;
+}
+
+.tickerHighlight {
+  color: #10b981;
+  font-weight: 800;
+  font-family: var(--nz-font-num);
+}
+
+.tickerHighlightGold {
+  color: var(--nz-accent, #c9a96e);
+  font-weight: 800;
+  font-family: var(--nz-font-num);
+}
+
+.tickerDivider {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 11px;
 }
 
 /* ==========================================================================
@@ -718,90 +968,53 @@
 }
 
 /* ==========================================================================
-   Gamified High-Tech Empty State (Radar Arena)
+   Compact Motivating Empty Notice Card (بديل الرادار الفارغ القديم)
    ========================================================================== */
-.emptyStateRadar {
+.emptyNoticeCard {
   grid-column: 1 / -1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: var(--nz-space-10) var(--nz-space-6);
-  background: radial-gradient(circle at 50% 50%, rgba(201, 169, 110, 0.05) 0%, var(--nz-surface-2) 70%);
-  border-radius: var(--nz-radius-xl);
-  border: 1px dashed rgba(201, 169, 110, 0.3);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.radarGraphicWrap {
-  width: 120px;
-  height: 120px;
-  position: relative;
-  margin-bottom: var(--nz-space-4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.radarCircleOuter {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(201, 169, 110, 0.25);
-  box-shadow: 0 0 20px rgba(201, 169, 110, 0.08);
-}
-
-.radarCircleInner {
-  position: absolute;
-  inset: 22px;
-  border-radius: 50%;
+  justify-content: space-between;
+  gap: var(--nz-space-4);
+  padding: var(--nz-space-5) var(--nz-space-6);
+  background: linear-gradient(135deg, rgba(201, 169, 110, 0.08) 0%, rgba(14, 19, 29, 0.85) 100%);
   border: 1px dashed rgba(201, 169, 110, 0.35);
+  border-radius: var(--nz-radius-lg, 12px);
+  flex-wrap: wrap;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-.radarBeam {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(201, 169, 110, 0.4) 360deg);
-  animation: spinRadar 3s linear infinite;
-}
-
-@keyframes spinRadar {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.radarCenterIcon {
-  position: relative;
-  z-index: 2;
-  font-size: 32px;
-  color: var(--nz-accent, #c9a96e);
+.emptyNoticeIcon {
+  font-size: 34px;
   filter: drop-shadow(0 0 10px rgba(201, 169, 110, 0.5));
 }
 
-.emptyTitle {
-  font-size: var(--nz-text-lg, 18px);
+.emptyNoticeText {
+  flex: 1;
+  min-width: 240px;
+}
+
+.emptyNoticeTitle {
+  font-size: var(--nz-text-base, 15px);
   font-weight: 800;
   color: var(--nz-text);
-  margin: 0 0 var(--nz-space-2);
+  margin: 0 0 4px;
 }
 
-.emptySubtitle {
-  font-size: var(--nz-text-sm, 13px);
+.emptyNoticeSubtitle {
+  font-size: var(--nz-text-xs, 12.5px);
   color: var(--nz-text-2);
-  margin: 0 0 var(--nz-space-5);
-  max-width: 480px;
-  line-height: 1.5;
+  margin: 0;
+  line-height: 1.45;
 }
 
-.emptyCtaBtn {
+.emptyNoticeCtaBtn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  padding: 10px 24px;
+  padding: 10px 20px;
+  white-space: nowrap;
 }
 
 /* ==========================================================================
@@ -1574,6 +1787,65 @@
   transform: translateY(-1px);
 }
 
+@media (max-width: 768px) {
+  .heroRadar {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--nz-space-4);
+    padding: var(--nz-space-4);
+  }
+  .heroRadarContent {
+    align-items: center;
+    width: 100%;
+  }
+  .radarStatusPill {
+    margin: 0 auto;
+  }
+  .heroRadarTitle {
+    justify-content: center;
+    font-size: 19px;
+    text-align: center;
+  }
+  .heroRadarSubtitle {
+    text-align: center;
+    font-size: 13px;
+  }
+  .heroQuickStakesWrap {
+    align-items: center;
+    width: 100%;
+  }
+  .quickStakesRow {
+    justify-content: center;
+    width: 100%;
+  }
+  .heroActionsRow {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+  .heroCreateBtn, .heroFriendBtn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .liveTickerRibbon {
+    justify-content: flex-start;
+    padding: 8px 14px;
+    border-radius: var(--nz-radius-lg, 12px);
+    font-size: 11.5px;
+  }
+  .emptyNoticeCard {
+    flex-direction: column;
+    text-align: center;
+    gap: 14px;
+    padding: var(--nz-space-4);
+  }
+  .emptyNoticeCtaBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 640px) {
   .lobbySection {
     padding: var(--nz-space-4);
@@ -1583,19 +1855,6 @@
   }
   .duelsGrid {
     grid-template-columns: 1fr;
-  }
-  .lobbyTitle {
-    font-size: 20px;
-  }
-  .lobbyActions {
-    flex-direction: column;
-    width: 100%;
-    gap: 8px;
-  }
-  .createChallengeBtn, .directChallengeFriendBtn {
-    width: 100%;
-    justify-content: center;
-    min-height: 42px;
   }
   .userShareRow {
     grid-template-columns: 1fr;
