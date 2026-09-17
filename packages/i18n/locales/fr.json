@@ -65,7 +65,7 @@
       }
     },
     "games": {
-      "heading": "10 jeux, une base équitable",
+      "heading": "11 jeux, une base équitable",
       "duration_label": "Durée",
       "mode_label": "Mode",
       "play_cta": "Jouer à {name}",
@@ -122,6 +122,11 @@
         "description": "Cinq pierres alignées — droite, diagonale, n'importe où sur le plateau — avant votre adversaire.",
         "duration": "10–20 min",
         "mode": "1 contre 1 · Classé ou libre"
+      },
+      "billiards": {
+        "description": "Billard americain (8-ball) professionnel avec une vraie physique geree par le serveur. Tirez depuis la bille blanche pour viser et doser la puissance, puis rentrez vos billes avant votre adversaire.",
+        "duration": "10-20 minutes",
+        "mode": "1 contre 1 - Classe ou gratuit"
       }
     },
     "how": {
@@ -182,7 +187,7 @@
     },
     "learn": {
       "heading": "Apprendre",
-      "body": "Règles, notation, et comment l'équité côté serveur fonctionne vraiment — pour chacun des dix jeux.",
+      "body": "Règles, notation, et comment l'équité côté serveur fonctionne vraiment — pour chacun des onze jeux.",
       "cta": "Lire les guides →"
     },
     "download": {
@@ -213,7 +218,8 @@
       "backgammon": "Backgammon",
       "seega": "Seega",
       "reversi": "Reversi",
-      "gomoku": "Gomoku"
+      "gomoku": "Gomoku",
+      "billiards": "Billard"
     },
     "unknown_game": "Jeu inconnu."
   },
@@ -1000,7 +1006,7 @@
   },
   "gamesPage": {
     "heading": "Jeux",
-    "subhead": "Dix jeux à autorité serveur. Choisis-en un pour voir comment il se joue, ou lance-toi directement.",
+    "subhead": "Onze jeux à autorité serveur. Choisis-en un pour voir comment il se joue, ou lance-toi directement.",
     "filter_all": "Tous",
     "filter_turnbased": "Au tour par tour",
     "filter_shared_clock": "Horloge partagée",

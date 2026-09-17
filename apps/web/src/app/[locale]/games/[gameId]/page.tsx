@@ -14,6 +14,12 @@ import { getGame, listGames } from "@/lib/games";
 import { getGameContent, type GameLocalizedContent } from "@/lib/games/game-content";
 import styles from "./game-details.module.css";
 
+// Last-resort fallback for a game with no real photography yet (e.g. a
+// brand-new game shipped before its JPG assets exist) -- a small inline
+// placeholder beats a broken-image icon on the rules tab's hero banner.
+const IMG_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230D111A'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23FFD700' stroke-opacity='0.45' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23FFD700' fill-opacity='0.7'/%3E%3C/svg%3E";
+
 type TabKey =
   | "overview"
   | "rules"
@@ -310,6 +316,11 @@ export default function GameDetailsPage({
                     src={`/images/games/${plugin.id.replace(/_/g, "-")}-versus.jpg`}
                     alt={`${gameName} Rules & Tactics`}
                     className={styles.rulesHeroImage}
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      img.onerror = null;
+                      img.src = IMG_PLACEHOLDER;
+                    }}
                   />
                   <div className={styles.rulesHeroOverlay}>
                     <span className={styles.rulesBadge}>

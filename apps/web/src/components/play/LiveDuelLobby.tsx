@@ -34,6 +34,7 @@ const INITIAL_OPEN_DUELS: OpenDuel[] = [];
 
 const AVAILABLE_GAMES = [
   { id: "chess", labelEn: "Chess", labelAr: "شطرنج" },
+  { id: "billiards", labelEn: "Billiards", labelAr: "بلياردو" },
   { id: "backgammon", labelEn: "Backgammon", labelAr: "طاولة زهر" },
   { id: "dominoes", labelEn: "Dominoes", labelAr: "دومينو" },
   { id: "connect-four", labelEn: "Connect Four", labelAr: "أربعة على التوالي" },
@@ -52,6 +53,12 @@ export const QUICK_STAKES = [
   { stake: 25, prize: 44.00, tagAr: "نزال النخبة 💎", tagEn: "Elite 💎" },
   { stake: 50, prize: 88.00, tagAr: "كبار المتحدين 👑", tagEn: "High-Roller 👑" },
 ];
+
+// Last-resort fallback when a game has no real photography yet (e.g. a
+// brand-new game shipped before its badge/hero JPGs exist) -- a small
+// inline placeholder beats a broken-image icon in the open-duel list.
+const BADGE_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230D111A'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23FFD700' stroke-opacity='0.45' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23FFD700' fill-opacity='0.7'/%3E%3C/svg%3E";
 
 const formatUsdt = (num: number) =>
   num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -511,7 +518,7 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             className={`${styles.filterChip} ${selectedGameFilter === "all" ? styles.filterChipActive : ""}`}
             onClick={() => setSelectedGameFilter("all")}
           >
-            {isRtl ? "جميع الألعاب (10)" : "All Games (10)"}
+            {isRtl ? `جميع الألعاب (${AVAILABLE_GAMES.length})` : `All Games (${AVAILABLE_GAMES.length})`}
           </button>
           {AVAILABLE_GAMES.map((g) => (
             <button
@@ -655,7 +662,14 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                       alt={duel.gameName}
                       className={styles.duelGameThumb}
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = `/images/games/${duel.gameId}.jpg`;
+                        const img = e.target as HTMLImageElement;
+                        if (!img.dataset.fallbackStage) {
+                          img.dataset.fallbackStage = "plain";
+                          img.src = `/images/games/${duel.gameId}.jpg`;
+                        } else {
+                          img.onerror = null;
+                          img.src = BADGE_PLACEHOLDER;
+                        }
                       }}
                     />
                     <span className={styles.duelGameName}>{duel.gameName}</span>
@@ -840,6 +854,11 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                 src={`/images/games/${newGameId}.jpg`}
                 alt={newGameId}
                 className={styles.modalGameBannerImg}
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.onerror = null;
+                  img.src = BADGE_PLACEHOLDER;
+                }}
               />
               <div className={styles.modalGameBannerOverlay}>
                 <span className={styles.modalGameBannerTitle}>

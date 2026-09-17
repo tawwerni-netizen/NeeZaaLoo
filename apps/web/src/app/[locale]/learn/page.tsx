@@ -7,6 +7,12 @@ import { useI18n } from "@/lib/i18n/context";
 import { listGames } from "@/lib/games";
 import styles from "./learn.module.css";
 
+// Last-resort fallback for a game with no real photography yet (e.g. a
+// brand-new game shipped before its JPG assets exist) -- a small inline
+// placeholder beats a broken-image icon in the catalog grid.
+const IMG_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230D111A'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23FFD700' stroke-opacity='0.45' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23FFD700' fill-opacity='0.7'/%3E%3C/svg%3E";
+
 export default function LearnPage() {
   const { t, dir } = useI18n();
   const isRtl = dir === "rtl";
@@ -172,6 +178,11 @@ export default function LearnPage() {
                         src={`/images/games/${normId}.jpg`}
                         alt={name}
                         className={styles.cardThumbnailImg}
+                        onError={(e) => {
+                          const img = e.target as HTMLImageElement;
+                          img.onerror = null;
+                          img.src = IMG_PLACEHOLDER;
+                        }}
                       />
                       <span className={styles.ruleBadge}>
                         {isRtl ? "أسرار الاحتراف ⚡" : "PRO STRATEGY ⚡"}

@@ -84,6 +84,12 @@ export const ErrorCode = {
   // token bucket refills; a genuinely flaky connection simply waits a
   // moment and rejoins.
   RECONNECT_LIMITED: "RECONNECT_LIMITED",
+  // A plugin or dispatch path threw while handling this message. Distinct
+  // from every code above, which are ordinary, expected rejections -- this
+  // one means something unexpected happened server-side. The connection
+  // stays open and other duels are unaffected; see gateway.mjs's own
+  // socket.on("message") handler for why this exists as a catch-all.
+  INTERNAL_ERROR: "INTERNAL_ERROR",
 };
 
 /**

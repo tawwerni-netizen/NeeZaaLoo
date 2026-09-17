@@ -92,6 +92,15 @@ const PROFILES = {
     STANDARD: { initialMs: 300_000, incrementMs: 5_000 },  // 5+5
     EXTENDED: { initialMs: 600_000, incrementMs: 8_000 },  // 10+8
   },
+  // Billiards: each turn is an aim-and-shoot decision, not a discrete
+  // board move -- closer in pace to Backgammon's own physical-turn feel
+  // than to a quick tap like XO's.
+  billiards: {
+    turnModel: TurnModel.ALTERNATING,
+    BLITZ:    { initialMs: 180_000, incrementMs: 5_000 },  // 3+5
+    STANDARD: { initialMs: 300_000, incrementMs: 8_000 },  // 5+8
+    EXTENDED: { initialMs: 600_000, incrementMs: 12_000 }, // 10+12
+  },
 };
 
 export const DEFAULT_TIME_PROFILE = "STANDARD";

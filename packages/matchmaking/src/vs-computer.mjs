@@ -36,7 +36,7 @@ export const Difficulty = Object.freeze({
 // ever moves in, silently expiring on time instead of erroring loudly.
 const AI_SUPPORTED_GAMES = new Set([
   "chess", "checkers", "connect-four", "xo", "speed-math", "dominoes", "backgammon",
-  "seega", "reversi", "gomoku",
+  "seega", "reversi", "gomoku", "billiards",
 ]);
 
 /**

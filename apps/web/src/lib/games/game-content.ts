@@ -364,6 +364,177 @@ export const GAMES_CONTENT: Record<string, GameContentRegistryItem> = {
     }
   },
 
+  billiards: {
+    id: "billiards",
+    slug: "billiards",
+    turnModel: "ALTERNATING",
+    defaultDuration: "10m - 20m",
+    locales: {
+      ar: {
+        title: "البلياردو الاحترافي (8-Ball)",
+        tagline: "فيزياء حقيقية يحسمها الخادم، طلقة بطلقة",
+        coreCta: "اثبت مهارتك. العب. اكسب.",
+        legalPrizeNotice: "اكسب الجوائز عبر منافسات المهارة المؤهلة",
+        overview: ["بلياردو ثماني الكرة الكلاسيكي على محاكاة فيزيائية حقيقية يديرها الخادم بالكامل -- كل تصادم واصطدام بالقُصبان ودخول جيب محسوب رياضياً، لا تخمين ولا حظ."],
+        rules: {
+          objective: "أدخل كل كراتك (المصمتة أو المخططة) في الجيوب، ثم أدخل الكرة الثامنة لتفوز.",
+          setup: "١٥ كرة مرصوفة على شكل مثلث والكرة الثامنة في مركز الصف الثالث، والكرة البيضاء عند نقطة الرأس.",
+          mechanics: [
+            "اسحب من الكرة البيضاء لتحديد زاوية الضربة وقوتها، ثم أفلت لتنفيذ الضربة.",
+            "أول كرة تُدخلها بعد الانفتاح تُحدد مجموعتك (مصمتة أو مخططة) لبقية النزال.",
+            "الإخلال بالقواعد (عدم لمس كرة، عدم الوصول لقصبة، إدخال الكرة البيضاء) يمنح الخصم دوراً إضافياً."
+          ],
+          victoryConditions: ["إفراغ مجموعتك بالكامل ثم إدخال الكرة الثامنة في أي جيب دون خطأ."]
+        },
+        beginner: {
+          coreTips: ["صوّب بثبات قبل سحب القوة.", "قوة أقل تعني تحكماً أكبر بموضع الكرة البيضاء التالي."],
+          commonMistakes: ["ضرب الكرة الثامنة قبل إفراغ مجموعتك بالكامل يخسرك النزال فوراً."]
+        },
+        strategy: {
+          openingPrinciples: ["اختر الكرة الأقرب لخط مستقيم مع الجيب لأول ضربة بعد الانفتاح."],
+          tacticalPatterns: ["اترك الكرة البيضاء في موضع يفتح لك الضربة التالية بسهولة."],
+          midgameCoordination: ["راقب مجموعة خصمك لتفادي منحه فرصة انفراد بالطاولة."]
+        },
+        advancedStrategy: {
+          deepCalculation: ["احسب زاوية ارتداد الكرة الهدف عن الجيب بدقة قبل كل ضربة."],
+          clockManagement: ["لا تستهلك وقتك في ضربات معقدة حين تتوفر ضربة آمنة وواضحة."],
+          endgameTechnique: ["خطط لموضع الكرة البيضاء النهائي قبل ضرب الكرة الثامنة، لا بعدها."]
+        },
+        faq: [
+          { question: "هل يقرر الخادم نتيجة كل ضربة؟", answer: "نعم، محاكاة فيزيائية حقيقية تُحسب بالكامل على الخادم من زاوية وقوة ضربتك فقط -- جهازك لا يقرر شيئاً أبداً." },
+          { question: "ماذا يحدث لو أدخلت الكرة البيضاء؟", answer: "خطأ (سكراتش): تُعاد الكرة البيضاء لموضع آمن ويحصل خصمك على دوره." }
+        ],
+        tournament: { format: "خروج المغلوب، مواجهات فردية.", tieBreakers: "نزال إعادة فوري.", prizeDistribution: "تحويل فوري لمحفظتك." },
+        livePlay: { matchmaking: "توفيق فوري حسب المستوى.", latencyProtection: "محاكاة الخادم وحده تحسم كل ضربة.", fairPlayEngine: "رصد انتظام توقيت الضربات لكشف الأتمتة." }
+      },
+      en: {
+        title: "Professional Billiards (8-Ball)",
+        tagline: "Real Server-Run Physics, One Shot at a Time",
+        coreCta: "PROVE. PLAY. WIN.",
+        legalPrizeNotice: "earn prizes through eligible skill competitions",
+        overview: ["Classic 8-ball pool on a genuine physics simulation the server runs end to end -- every collision, rail bounce, and pocket capture is calculated, never guessed."],
+        rules: {
+          objective: "Pot every ball in your group (solids or stripes), then legally pot the 8-ball to win.",
+          setup: "15 balls racked in a triangle, the 8-ball dead centre of the third row, cue ball at the head spot.",
+          mechanics: [
+            "Drag back from the cue ball to set angle and power, then release to strike.",
+            "The first ball you legally pot after the break assigns your group for the rest of the game.",
+            "A foul (no contact, no rail after contact, scratching the cue ball) hands the opponent ball-in-hand."
+          ],
+          victoryConditions: ["Clear your entire group, then legally pot the 8-ball into any pocket."]
+        },
+        beginner: {
+          coreTips: ["Aim first, then pull back for power -- don't rush the drag.", "Lower power gives you more control over where the cue ball ends up next."],
+          commonMistakes: ["Potting the 8-ball before your group is fully cleared is an instant loss."]
+        },
+        strategy: {
+          openingPrinciples: ["Target the ball with the straightest line to a pocket right after the break."],
+          tacticalPatterns: ["Leave the cue ball in a position that sets up your next shot, not just this one."],
+          midgameCoordination: ["Track your opponent's remaining group to avoid handing them a clean run."]
+        },
+        advancedStrategy: {
+          deepCalculation: ["Work out the exact cut angle to the pocket before every shot, not after."],
+          clockManagement: ["Don't burn clock on a hard cut when a safe, simple shot is available."],
+          endgameTechnique: ["Plan the cue ball's final resting spot before you strike the 8-ball, not after."]
+        },
+        faq: [
+          { question: "Does the server decide every shot's outcome?", answer: "Yes -- a real physics simulation runs entirely server-side from just your angle and power. Your device never decides anything." },
+          { question: "What happens if I scratch the cue ball?", answer: "That's a foul: the cue ball respots to a safe spot and your opponent gets the next shot." }
+        ],
+        tournament: { format: "Single elimination, 1v1 brackets.", tieBreakers: "Instant rematch frame.", prizeDistribution: "Instant wallet transfer." },
+        livePlay: { matchmaking: "Instant skill-based pairing.", latencyProtection: "The server's own simulation is the only thing that ever decides a shot.", fairPlayEngine: "Shot-timing uniformity monitoring flags automation." }
+      },
+      es: {
+        title: "Billar Profesional (8-Ball)",
+        tagline: "Fisica Real Calculada por el Servidor, Tiro a Tiro",
+        coreCta: "PROVE. PLAY. WIN.",
+        legalPrizeNotice: "earn prizes through eligible skill competitions",
+        overview: ["Billar americano clasico sobre una simulacion fisica real que corre enteramente en el servidor -- cada colision, rebote y embocada se calcula, nunca se adivina."],
+        rules: {
+          objective: "Embocar todas las bolas de tu grupo (lisas o rayadas) y luego la bola 8 para ganar.",
+          setup: "15 bolas en triangulo, la bola 8 en el centro de la tercera fila, la blanca en el punto de cabeza.",
+          mechanics: ["Arrastra desde la bola blanca para fijar angulo y potencia, y suelta para tirar.", "La primera bola que emboques legalmente tras la salida define tu grupo.", "Una falta (sin contacto, sin banda tras el contacto, o meter la blanca) da bola en mano al rival."],
+          victoryConditions: ["Vaciar tu grupo por completo y luego embocar la bola 8 en cualquier tronera."]
+        },
+        beginner: { coreTips: ["Apunta primero, luego ajusta la potencia con calma."], commonMistakes: ["Embocar la bola 8 antes de limpiar tu grupo pierde la partida al instante."] },
+        strategy: { openingPrinciples: ["Ataca la bola con la linea mas directa a una tronera tras la salida."], tacticalPatterns: ["Deja la bola blanca lista para tu siguiente tiro, no solo para este."], midgameCoordination: ["Vigila el grupo restante de tu rival."] },
+        advancedStrategy: { deepCalculation: ["Calcula el angulo de corte exacto antes de cada tiro."], clockManagement: ["No gastes tiempo en un corte dificil si hay un tiro simple disponible."], endgameTechnique: ["Planea la posicion final de la blanca antes de tirar la bola 8."] },
+        faq: [
+          { question: "El servidor decide el resultado de cada tiro?", answer: "Si -- una simulacion fisica real corre enteramente en el servidor a partir solo de tu angulo y potencia." },
+          { question: "Que pasa si meto la bola blanca?", answer: "Es falta: la blanca se reposiciona a un lugar seguro y tu rival tira a continuacion." }
+        ],
+        tournament: { format: "Eliminacion directa, 1 contra 1.", tieBreakers: "Revancha inmediata.", prizeDistribution: "Transferencia instantanea a tu billetera." },
+        livePlay: { matchmaking: "Emparejamiento instantaneo por nivel.", latencyProtection: "Solo la simulacion del servidor decide cada tiro.", fairPlayEngine: "Deteccion de automatizacion por uniformidad de tiempos." }
+      },
+      fr: {
+        title: "Billard Professionnel (8-Ball)",
+        tagline: "Vraie Physique Geree par le Serveur, Coup par Coup",
+        coreCta: "PROVE. PLAY. WIN.",
+        legalPrizeNotice: "earn prizes through eligible skill competitions",
+        overview: ["Billard americain classique sur une simulation physique reelle geree entierement par le serveur -- chaque collision, rebond et empochage est calcule, jamais devine."],
+        rules: {
+          objective: "Empochez toutes les billes de votre groupe (pleines ou rayees), puis la bille 8 pour gagner.",
+          setup: "15 billes en triangle, la bille 8 au centre de la troisieme rangee, la blanche au point de tete.",
+          mechanics: ["Tirez depuis la bille blanche pour regler angle et puissance, puis relachez pour frapper.", "La premiere bille empochee legalement apres la casse definit votre groupe.", "Une faute (aucun contact, aucune bande apres contact, bille blanche empochee) donne la main a l'adversaire."],
+          victoryConditions: ["Videz entierement votre groupe, puis empochez legalement la bille 8."]
+        },
+        beginner: { coreTips: ["Visez d'abord, ajustez la puissance ensuite, sans precipitation."], commonMistakes: ["Empocher la bille 8 avant d'avoir vide son groupe fait perdre la partie immediatement."] },
+        strategy: { openingPrinciples: ["Visez la bille alignee le plus directement avec une poche apres la casse."], tacticalPatterns: ["Laissez la blanche prete pour le coup suivant, pas seulement celui-ci."], midgameCoordination: ["Surveillez le groupe restant de l'adversaire."] },
+        advancedStrategy: { deepCalculation: ["Calculez l'angle de coupe exact avant chaque coup."], clockManagement: ["Ne gaspillez pas de temps sur un coup difficile si un coup simple existe."], endgameTechnique: ["Planifiez la position finale de la blanche avant de jouer la bille 8."] },
+        faq: [
+          { question: "Le serveur decide-t-il du resultat de chaque coup ?", answer: "Oui -- une vraie simulation physique tourne entierement cote serveur, a partir seulement de votre angle et de votre puissance." },
+          { question: "Que se passe-t-il si j'empoche la bille blanche ?", answer: "C'est une faute : la blanche est replacee a un endroit sur, et votre adversaire joue le coup suivant." }
+        ],
+        tournament: { format: "Elimination directe, duels 1 contre 1.", tieBreakers: "Revanche immediate.", prizeDistribution: "Virement instantane vers votre portefeuille." },
+        livePlay: { matchmaking: "Appariement instantane par niveau.", latencyProtection: "Seule la simulation du serveur decide d'un coup.", fairPlayEngine: "Detection d'automatisation par uniformite des temps de tir." }
+      },
+      hi: {
+        title: "पेशेवर बिलियर्ड्स (8-बॉल)",
+        tagline: "सर्वर द्वारा संचालित वास्तविक फिज़िक्स, एक शॉट एक समय",
+        coreCta: "PROVE. PLAY. WIN.",
+        legalPrizeNotice: "earn prizes through eligible skill competitions",
+        overview: ["क्लासिक 8-बॉल पूल, पूरी तरह सर्वर पर चलने वाली वास्तविक फिज़िक्स सिमुलेशन पर आधारित -- हर टक्कर, रेल उछाल और पॉकेट कैप्चर की गणना की जाती है, कभी अंदाज़ा नहीं लगाया जाता।"],
+        rules: {
+          objective: "अपने समूह (सॉलिड या स्ट्राइप) की सभी गेंदें पॉकेट करें, फिर जीतने के लिए 8-बॉल को वैध तरीके से पॉकेट करें।",
+          setup: "15 गेंदें त्रिकोण में रैक की जाती हैं, 8-बॉल तीसरी पंक्ति के बीच में, क्यू बॉल हेड स्पॉट पर।",
+          mechanics: ["दिशा और ताकत तय करने के लिए क्यू बॉल से पीछे खींचें, फिर छोड़कर मारें।", "ब्रेक के बाद आपकी पहली वैध पॉकेट की गई गेंद आपका समूह तय करती है।", "फाउल (कोई संपर्क नहीं, संपर्क के बाद कोई रेल नहीं, क्यू बॉल पॉकेट होना) प्रतिद्वंद्वी को बॉल-इन-हैंड देता है।"],
+          victoryConditions: ["अपना पूरा समूह खाली करें, फिर 8-बॉल को किसी भी पॉकेट में वैध रूप से डालें।"]
+        },
+        beginner: { coreTips: ["पहले निशाना साधें, फिर आराम से ताकत तय करें।"], commonMistakes: ["समूह खाली करने से पहले 8-बॉल पॉकेट करने पर तुरंत हार होती है।"] },
+        strategy: { openingPrinciples: ["ब्रेक के बाद पॉकेट की सबसे सीधी लाइन वाली गेंद चुनें।"], tacticalPatterns: ["क्यू बॉल को अगले शॉट के लिए भी तैयार छोड़ें।"], midgameCoordination: ["प्रतिद्वंद्वी के बचे हुए समूह पर नज़र रखें।"] },
+        advancedStrategy: { deepCalculation: ["हर शॉट से पहले सटीक कट एंगल की गणना करें।"], clockManagement: ["आसान शॉट मौजूद हो तो कठिन कट पर समय बर्बाद न करें।"], endgameTechnique: ["8-बॉल मारने से पहले क्यू बॉल की अंतिम स्थिति की योजना बनाएं।"] },
+        faq: [
+          { question: "क्या सर्वर हर शॉट का परिणाम तय करता है?", answer: "हाँ -- केवल आपकी दिशा और ताकत से, एक वास्तविक फिज़िक्स सिमुलेशन पूरी तरह सर्वर पर चलती है।" },
+          { question: "अगर क्यू बॉल पॉकेट हो जाए तो क्या होगा?", answer: "यह फाउल है: क्यू बॉल सुरक्षित स्थान पर वापस रखी जाती है और अगली बारी प्रतिद्वंद्वी की होती है।" }
+        ],
+        tournament: { format: "नॉकआउट, 1 बनाम 1।", tieBreakers: "तुरंत रीमैच।", prizeDistribution: "आपके वॉलेट में तुरंत ट्रांसफर।" },
+        livePlay: { matchmaking: "स्तर के अनुसार तुरंत मिलान।", latencyProtection: "केवल सर्वर की सिमुलेशन हर शॉट तय करती है।", fairPlayEngine: "शॉट-समय की एकरूपता से ऑटोमेशन का पता लगाना।" }
+      },
+      zh: {
+        title: "专业台球 (8球)",
+        tagline: "服务器运行的真实物理引擎，一杆接一杆",
+        coreCta: "PROVE. PLAY. WIN.",
+        legalPrizeNotice: "earn prizes through eligible skill competitions",
+        overview: ["经典八球台球，完全由服务器端运行真实物理模拟——每一次碰撞、库边反弹和进袋都经过精确计算，绝不靠猜测。"],
+        rules: {
+          objective: "清空己方所有球（全色球或花色球），然后合法打进8号球获胜。",
+          setup: "15颗球呈三角形摆放，8号球位于第三排正中，主球置于开球点。",
+          mechanics: ["从主球向后拖动以设定角度和力度，松开即出杆。", "开球后第一颗合法进袋的球决定你的球组。", "犯规（未击中任何球、击中后无球触库、主球进袋）将主动权交给对手。"],
+          victoryConditions: ["清空己方全部球组，再合法将8号球打入任意袋口。"]
+        },
+        beginner: { coreTips: ["先瞄准，再从容调整力度。"], commonMistakes: ["在清空己方球组前打进8号球会立即输掉整局。"] },
+        strategy: { openingPrinciples: ["开球后优先选择与袋口成直线的球。"], tacticalPatterns: ["为下一杆预留主球走位，而不仅是这一杆。"], midgameCoordination: ["留意对手剩余的球组。"] },
+        advancedStrategy: { deepCalculation: ["每杆之前精确计算切球角度。"], clockManagement: ["有简单球时不要在难度极高的切角上浪费时间。"], endgameTechnique: ["击打8号球前先规划主球最终走位。"] },
+        faq: [
+          { question: "服务器决定每一杆的结果吗？", answer: "是的——真实物理模拟完全在服务器端运行，仅依据你提供的角度和力度。" },
+          { question: "如果主球进袋会怎样？", answer: "这是犯规：主球会被放回安全位置，对手获得下一杆。" }
+        ],
+        tournament: { format: "单败淘汰，1对1对局。", tieBreakers: "即时重赛。", prizeDistribution: "即时转入钱包。" },
+        livePlay: { matchmaking: "按水平即时匹配。", latencyProtection: "只有服务器自身的模拟决定每一杆结果。", fairPlayEngine: "通过击球时间一致性监测自动化行为。" }
+      }
+    }
+  },
+
   checkers: {
     id: "checkers",
     slug: "checkers",

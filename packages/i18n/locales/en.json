@@ -83,7 +83,7 @@
       "view_all": "Open Live Arena →"
     },
     "games": {
-      "heading": "10 games, one fair foundation",
+      "heading": "11 games, one fair foundation",
       "duration_label": "Duration",
       "mode_label": "Mode",
       "play_cta": "Play {name}",
@@ -140,6 +140,11 @@
         "description": "Five stones in a row — straight, diagonal, anywhere on the board — before your opponent does.",
         "duration": "10–20 min",
         "mode": "1v1 · Ranked or free"
+      },
+      "billiards": {
+        "description": "Professional 8-ball billiards with real server-run physics. Drag back from the cue ball to aim and set your power, then pot your group before your opponent.",
+        "duration": "10-20 minutes",
+        "mode": "1v1 - Ranked or Free"
       }
     },
     "how": {
@@ -194,7 +199,7 @@
     },
     "learn": {
       "heading": "Learn",
-      "body": "Rules, scoring, and how server-side fairness actually works — for every one of the ten games.",
+      "body": "Rules, scoring, and how server-side fairness actually works — for every one of the eleven games.",
       "cta": "Read the guides →"
     },
     "download": {
@@ -225,7 +230,8 @@
       "backgammon": "Backgammon",
       "seega": "Seega",
       "reversi": "Reversi",
-      "gomoku": "Gomoku"
+      "gomoku": "Gomoku",
+      "billiards": "Billiards"
     },
     "unknown_game": "Unknown game."
   },
@@ -1000,7 +1006,7 @@
   },
   "gamesPage": {
     "heading": "Games",
-    "subhead": "Ten server-authoritative games. Pick one to see how it plays, or jump straight in.",
+    "subhead": "Eleven server-authoritative games. Pick one to see how it plays, or jump straight in.",
     "filter_all": "All",
     "filter_turnbased": "Turn-based",
     "filter_shared_clock": "Shared clock",

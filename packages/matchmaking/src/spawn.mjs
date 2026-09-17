@@ -67,4 +67,13 @@ export const DEFAULT_SPAWNERS = {
   // Gomoku always starts from the same empty board -- no per-duel
   // randomness, exactly like XO's own entry above.
   gomoku: () => ({ initialState: {}, seed: null }),
+
+  // Billiards' rack is NOT fixed -- the seed decides which solid/stripe
+  // lands in which triangle slot (the 8-ball itself is always dead
+  // centre of the third row, by rule) -- a per-duel seed, exactly like
+  // Dominoes' hand deal and Backgammon's dice above.
+  billiards: () => {
+    const seed = randomUUID();
+    return { initialState: { seed }, seed };
+  },
 };

@@ -826,7 +826,25 @@ export function createGateway({
 
     socket.on("message", async (raw) => {
       const t = now();
+      try {
+        return await handleFrame(raw, t);
+      } catch (err) {
+        // A plugin or dispatch path threw. Every other branch of this
+        // handler answers with a normal REJECTED/ERROR frame instead of
+        // throwing (see e.g. runIntent's own ok:false path) -- reaching
+        // here means something unexpected happened. Matches the same
+        // catch-and-log discipline scheduleBotMoveIfNeeded already uses
+        // around adapter.chooseAction/runIntent, so one plugin's bug
+        // degrades to a rejected message for this connection instead of
+        // an unhandled rejection that would kill the whole gateway
+        // process -- every other live duel included.
+        // eslint-disable-next-line no-console
+        console.error(`[GATEWAY] message handler error (player ${conn.playerId ?? "unauthenticated"}):`, err);
+        return fail(conn, ErrorCode.INTERNAL_ERROR);
+      }
+    });
 
+    async function handleFrame(raw, t) {
       // Rate limiting runs before parsing: a flood must be cheap to refuse.
       if (!takeToken(conn.limiter, t)) return fail(conn, ErrorCode.RATE_LIMITED);
 
@@ -1051,7 +1069,7 @@ export function createGateway({
         default:
           return fail(conn, ErrorCode.UNKNOWN_TYPE);
       }
-    });
+    }
 
     socket.on("close", () => {
       // Leaving the room does NOT pause the duel or the clock. A disconnect is

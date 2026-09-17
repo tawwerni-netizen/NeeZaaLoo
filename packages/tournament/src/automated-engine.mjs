@@ -45,6 +45,7 @@ export const GAME_TIME_CONTROLS = {
   seega: { initialSeconds: 180, incrementSeconds: 2 },
   reversi: { initialSeconds: 180, incrementSeconds: 2 },
   gomoku: { initialSeconds: 180, incrementSeconds: 2 },
+  billiards: { initialSeconds: 300, incrementSeconds: 8 },
 };
 
 export function createAutomatedTournamentEngine(db, tournamentService) {

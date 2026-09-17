@@ -31,6 +31,12 @@ import { useAuthPopup } from "@/lib/auth-popup-context";
 import { useI18n } from "@/lib/i18n/context";
 import styles from "./playGame.module.css";
 
+// Last-resort fallback for a game with no real photography yet (e.g. a
+// brand-new game shipped before its JPG assets exist) -- a small inline
+// placeholder beats a broken-image icon on the pre-match screen.
+const IMG_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230D111A'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23FFD700' stroke-opacity='0.45' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23FFD700' fill-opacity='0.7'/%3E%3C/svg%3E";
+
 type Step =
   | { name: "mode" }
   | { name: "difficulty" }
@@ -175,7 +181,14 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
                 alt={gameName}
                 className={styles.gameThumb}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = `/images/games/${plugin.id}.jpg`;
+                  const img = e.target as HTMLImageElement;
+                  if (!img.dataset.fallbackStage) {
+                    img.dataset.fallbackStage = "plain";
+                    img.src = `/images/games/${plugin.id}.jpg`;
+                  } else {
+                    img.onerror = null;
+                    img.src = IMG_PLACEHOLDER;
+                  }
                 }}
               />
               <span className={styles.gameTitle}>{gameName}</span>

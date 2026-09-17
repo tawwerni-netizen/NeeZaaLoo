@@ -5412,3 +5412,10 @@ VALUES
    now(), 'founder', 'finance-admin',
    'Platform economics: 12% standard rake across all cash duels and tournaments.');
 
+
+-- =============================================================================
+-- 0059_billiards.sql
+-- =============================================================================
+
+INSERT INTO game (id, display_name, plugin_version, is_live, cash_enabled) VALUES
+  ('billiards', 'Billiards', 1, TRUE, FALSE);

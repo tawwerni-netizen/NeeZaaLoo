@@ -69,6 +69,8 @@ const CHECKS = [
   ["0055_multi_stablecoin_usdc_dai.sql", "row", "payment_rail.USDC_TRON"],
   ["0056_normalize_tron_network_label.sql", "notrc20", "withdrawal"],
   ["0057_multi_asset_cash_play.sql", "column", "matchmaking_ticket.asset"],
+  ["0058_platform_fee_12_percent.sql", "row", "economy_rule.standard"],
+  ["0059_billiards.sql", "row", "game.billiards"],
 ];
 
 async function objectExists(client, kind, name) {

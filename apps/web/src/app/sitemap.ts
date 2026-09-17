@@ -16,6 +16,7 @@ const STATIC_ROUTES = [
 
 const GAME_SLUGS = [
   "chess",
+  "billiards",
   "checkers",
   "dominoes",
   "backgammon",
@@ -53,7 +54,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
   }
 
-  // 2. 10 Games Hub Pages across all locales
+  // 2. Game Hub Pages across all locales
   for (const gameSlug of GAME_SLUGS) {
     for (const locale of LOCALES) {
       const alternates: Record<string, string> = {

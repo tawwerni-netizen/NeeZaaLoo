@@ -65,7 +65,7 @@
       }
     },
     "games": {
-      "heading": "10 juegos, una base justa",
+      "heading": "11 juegos, una base justa",
       "duration_label": "Duración",
       "mode_label": "Modo",
       "play_cta": "Jugar {name}",
@@ -122,6 +122,11 @@
         "description": "Cinco fichas en línea — recta, diagonal, en cualquier parte del tablero — antes que tu rival.",
         "duration": "10–20 min",
         "mode": "1v1 · Clasificatoria o libre"
+      },
+      "billiards": {
+        "description": "Billar profesional de bola 8 con fisica real gestionada por el servidor. Arrastra desde la bola blanca para apuntar y ajustar la potencia, y emboca tu grupo antes que tu rival.",
+        "duration": "10-20 minutos",
+        "mode": "1 contra 1 - Clasificado o gratis"
       }
     },
     "how": {
@@ -182,7 +187,7 @@
     },
     "learn": {
       "heading": "Aprende",
-      "body": "Reglas, puntuación, y cómo funciona realmente la equidad del lado del servidor — para cada uno de los diez juegos.",
+      "body": "Reglas, puntuación, y cómo funciona realmente la equidad del lado del servidor — para cada uno de los once juegos.",
       "cta": "Leer las guías →"
     },
     "download": {
@@ -213,7 +218,8 @@
       "backgammon": "Backgammón",
       "seega": "Seega",
       "reversi": "Reversi",
-      "gomoku": "Gomoku"
+      "gomoku": "Gomoku",
+      "billiards": "Billar"
     },
     "unknown_game": "Juego desconocido."
   },
@@ -1000,7 +1006,7 @@
   },
   "gamesPage": {
     "heading": "Juegos",
-    "subhead": "Diez juegos con autoridad del servidor. Elige uno para ver cómo se juega, o empieza directamente.",
+    "subhead": "Once juegos con autoridad del servidor. Elige uno para ver cómo se juega, o empieza directamente.",
     "filter_all": "Todos",
     "filter_turnbased": "Por turnos",
     "filter_shared_clock": "Reloj compartido",

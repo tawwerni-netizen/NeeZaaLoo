@@ -35,7 +35,9 @@ import { createChessAiAdapter } from "../../../packages/game-chess/src/ai.mjs";
 import { SpeedMathPlugin } from "../../../packages/game-speed-math/src/plugin.mjs";
 import { createSpeedMathAiAdapter } from "../../../packages/game-speed-math/src/ai.mjs";
 import { CheckersPlugin } from "../../../packages/game-checkers/src/plugin.mjs";
+import { BilliardsPlugin } from "../../../packages/game-billiards/src/plugin.mjs";
 import { createCheckersAiAdapter } from "../../../packages/game-checkers/src/ai.mjs";
+import { createBilliardsAiAdapter } from "../../../packages/game-billiards/src/ai.mjs";
 import { ConnectFourPlugin } from "../../../packages/game-connect-four/src/plugin.mjs";
 import { createConnectFourAiAdapter } from "../../../packages/game-connect-four/src/ai.mjs";
 import { XOPlugin } from "../../../packages/game-xo/src/plugin.mjs";
@@ -82,7 +84,7 @@ async function main() {
   const lease = createLeaseManager(db, { leaseMs: Number(process.env.LEASE_MS || 15000) });
   const plugins = new Map([
     ["chess", ChessPlugin], ["speed-math", SpeedMathPlugin],
-    ["checkers", CheckersPlugin], ["connect-four", ConnectFourPlugin],
+    ["checkers", CheckersPlugin], ["billiards", BilliardsPlugin], ["connect-four", ConnectFourPlugin],
     ["xo", XOPlugin], ["dominoes", DominoesPlugin], ["backgammon", BackgammonPlugin],
     ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin],
   ]);
@@ -172,6 +174,7 @@ async function main() {
     aiAdapters: new Map([
       ["chess", createChessAiAdapter()],
       ["checkers", createCheckersAiAdapter()],
+      ["billiards", createBilliardsAiAdapter()],
       ["connect-four", createConnectFourAiAdapter()],
       ["xo", createXoAiAdapter()],
       ["speed-math", createSpeedMathAiAdapter()],

@@ -1,0 +1,115 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+  width: 100%;
+}
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nz-space-2);
+}
+
+.turnPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--nz-radius-pill, 999px);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--nz-text-3);
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+}
+
+.turnPillActive {
+  color: #0b0e14;
+  background: linear-gradient(135deg, #22d3ee, #06b6d4);
+  border-color: transparent;
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.45);
+}
+
+.groupPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--nz-radius-pill, 999px);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--nz-text-2);
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+}
+
+.groupSolids { border-color: rgba(232, 185, 35, 0.5); color: #f2c94c; }
+.groupStripes { border-color: rgba(31, 95, 214, 0.5); color: #6fa3ff; }
+
+.foulPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--nz-radius-pill, 999px);
+  font-size: 12px;
+  font-weight: 800;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  text-transform: capitalize;
+}
+
+.table {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 216 / 116;
+  touch-action: none;
+  cursor: crosshair;
+  border-radius: var(--nz-radius-lg, 14px);
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 28px rgba(34, 211, 238, 0.12));
+}
+
+.ball {
+  transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.ball circle,
+.ball text,
+.ball rect {
+  pointer-events: none;
+}
+
+.powerMeter {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  height: 10px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  overflow: hidden;
+}
+
+.powerFill {
+  height: 100%;
+  background: linear-gradient(90deg, #22d3ee, #f97316);
+  transition: width 0.05s linear;
+}
+
+.powerLabel {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: -18px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--nz-text-3);
+}
+
+.hint {
+  font-size: 12.5px;
+  color: var(--nz-text-3);
+  text-align: center;
+  margin: 0;
+}

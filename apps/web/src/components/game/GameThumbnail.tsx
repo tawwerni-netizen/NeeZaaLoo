@@ -110,6 +110,49 @@ export function GameThumbnail({
           </svg>
         );
 
+      case "billiards":
+        return (
+          <svg viewBox="0 0 400 225" className={styles.bgArt} preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <radialGradient id="billiardsGlow" cx="62%" cy="45%" r="55%">
+                <stop offset="0%" stopColor="#2dd4bf" stopOpacity="0.22" />
+                <stop offset="70%" stopColor="#0e3a2f" stopOpacity="0.12" />
+                <stop offset="100%" stopColor="#080A10" stopOpacity="0" />
+              </radialGradient>
+              <linearGradient id="billiardsFelt" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#123d33" />
+                <stop offset="100%" stopColor="#081f19" />
+              </linearGradient>
+            </defs>
+            <rect width="400" height="225" fill="#080A10" />
+            <circle cx="248" cy="100" r="150" fill="url(#billiardsGlow)" />
+
+            <rect x="40" y="28" width="320" height="169" rx="10" fill="#141a26" stroke="#2dd4bf" strokeOpacity="0.35" strokeWidth="2" />
+            <rect x="52" y="40" width="296" height="145" rx="4" fill="url(#billiardsFelt)" stroke="#2dd4bf" strokeOpacity="0.5" strokeWidth="1" />
+
+            {[[52, 40], [200, 40], [348, 40], [52, 185], [200, 185], [348, 185]].map(([px, py], i) => (
+              <circle key={i} cx={px} cy={py} r="8" fill="#05100c" stroke="#f97316" strokeOpacity="0.55" strokeWidth="1" />
+            ))}
+
+            <line x1="70" y1="200" x2="150" y2="140" stroke="#e2e8f0" strokeWidth="3" strokeLinecap="round" opacity="0.55" />
+            <line x1="150" y1="140" x2="168" y2="127" stroke="#c08a4e" strokeWidth="5" strokeLinecap="round" opacity="0.7" />
+
+            <g className={styles.emblemGlow}>
+              <circle cx="168" cy="127" r="8.5" fill="#f4f4f2" stroke="#0B0D10" strokeWidth="1" />
+              <circle cx="168" cy="127" r="2.6" fill="#22d3ee" opacity="0.85" />
+
+              <circle cx="230" cy="112" r="8.5" fill="#FFD700" stroke="#0B0D10" strokeWidth="1" />
+              <circle cx="247" cy="112" r="8.5" fill="#d62828" stroke="#0B0D10" strokeWidth="1" />
+              <circle cx="238.5" cy="127" r="8.5" fill="#1f5fd6" stroke="#0B0D10" strokeWidth="1" />
+              <circle cx="256" cy="127" r="8.5" fill="#111318" stroke="#FFD700" strokeWidth="1.2" />
+              <circle cx="247" cy="142" r="8.5" fill="#5b2a86" stroke="#0B0D10" strokeWidth="1" />
+              <circle cx="264.5" cy="142" r="8.5" fill="#e8790a" stroke="#0B0D10" strokeWidth="1" />
+              <circle cx="273" cy="112" r="8.5" fill="#1f8c3b" stroke="#0B0D10" strokeWidth="1" />
+              <circle cx="256" cy="112" r="8.5" fill="#f4f4f2" stroke="#e8b923" strokeWidth="2.2" />
+            </g>
+          </svg>
+        );
+
       case "checkers":
         return (
           <svg viewBox="0 0 400 225" className={styles.bgArt} preserveAspectRatio="xMidYMid slice">
