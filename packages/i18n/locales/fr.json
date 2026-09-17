@@ -35,8 +35,8 @@
       "eyebrow": "Seule la compétence décide.",
       "headline_line1": "PROUVE. JOUE.",
       "headline_line2": "GAGNE.",
-      "subhead": "Dix jeux à autorité serveur. De vrais adversaires, appariés équitablement. Gagnez des prix dans des compétitions de compétence éligibles, là où c'est autorisé.",
-      "cta_primary": "Jouer maintenant",
+      "subhead": "Affrontez de vrais joueurs en duels 1v1 de pure compétence, sans hasard. Gagnez des prix en cash USDT avec des retraits instantanés en moins de 60 secondes.",
+      "cta_primary": "Entrer dans l'Arène et Gagner",
       "cta_secondary": "Voir en direct",
       "featured_heading": "En vedette aujourd'hui"
     },
@@ -120,8 +120,8 @@
           "body": "Votre classement et votre score de compétence mondiale évoluent à chaque partie."
         },
         "win": {
-          "title": "Gagnez",
-          "body": "Montez en rang, qualifiez-vous pour des tournois et, là où c’est autorisé, jouez pour de vrais prix."
+          "title": "Gagnez et Retirez",
+          "body": "Grimpez dans le classement, qualifiez-vous pour les tournois et remportez de vrais prix en USDT avec des retraits instantanés en 60 secondes."
         }
       }
     },
@@ -340,7 +340,7 @@
       "style_label": "Style",
       "mode_label": "Mode",
       "eligibility_label": "Éligibilité",
-      "cta": "Trouver un adversaire →",
+      "cta": "Commencer le Duel",
       "eligibility_free": "Gratuit",
       "difficulty_deep": "Réfléchi",
       "difficulty_fast": "Rapide"

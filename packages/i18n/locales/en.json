@@ -47,8 +47,8 @@
       "eyebrow": "Skill decides. Nothing else.",
       "headline_line1": "PROVE. PLAY.",
       "headline_line2": "WIN.",
-      "subhead": "Ten server-authoritative games. Real opponents, matched fairly. Earn prizes through eligible skill competitions, where permitted.",
-      "cta_primary": "Play now",
+      "subhead": "Compete against real players in 1v1 skill games with zero luck. Win instant USDT cash prizes delivered directly to your wallet within 60 seconds.",
+      "cta_primary": "Enter Arena & Win Cash",
       "cta_secondary": "Watch live",
       "featured_heading": "Featured today"
     },
@@ -138,8 +138,8 @@
           "body": "Your rating and Global Skill Score move with every game you play."
         },
         "win": {
-          "title": "Win",
-          "body": "Rank up, qualify for tournaments, and where permitted — compete for real prizes."
+          "title": "Win & Cash Out",
+          "body": "Climb the ranks, qualify for championships, and win real USDT prizes with instant 60-second automated withdrawals."
         }
       }
     },
@@ -352,7 +352,7 @@
       "style_label": "Style",
       "mode_label": "Mode",
       "eligibility_label": "Eligibility",
-      "cta": "Find an opponent →",
+      "cta": "Start Duel",
       "eligibility_free": "Free",
       "difficulty_deep": "Deep",
       "difficulty_fast": "Fast"

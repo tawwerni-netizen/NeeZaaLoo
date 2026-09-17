@@ -35,8 +35,8 @@
       "eyebrow": "唯技能定胜负",
       "headline_line1": "证明。较量。",
       "headline_line2": "制胜。",
-      "subhead": "十款服务器裁决的对战游戏。真实对手,公平匹配。在符合条件的技能竞赛中赢取奖金——须视当地规定而定。",
-      "cta_primary": "立即开始",
+      "subhead": "在纯技巧、零运气的1v1竞技游戏中挑战真实玩家。赢取USDT现金大奖，60秒内极速提现直达钱包。",
+      "cta_primary": "进入竞技场赢取现金",
       "cta_secondary": "观看直播",
       "featured_heading": "今日精选"
     },
@@ -120,8 +120,8 @@
           "body": "你的评分与全球技能分随每场对局而变化。"
         },
         "win": {
-          "title": "获胜",
-          "body": "提升排名,获得锦标赛资格,在允许的地区还可角逐真实奖金。"
+          "title": "获胜极速提现",
+          "body": "提升天梯排名，晋级大师锦标赛，赢取真实USDT现金大奖，60秒内极速提现至个人钱包。"
         }
       }
     },
@@ -340,7 +340,7 @@
       "style_label": "风格",
       "mode_label": "模式",
       "eligibility_label": "参与资格",
-      "cta": "寻找对手 →",
+      "cta": "开始对决",
       "eligibility_free": "免费",
       "difficulty_deep": "深度",
       "difficulty_fast": "快节奏"

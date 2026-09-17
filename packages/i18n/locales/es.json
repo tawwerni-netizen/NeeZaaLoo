@@ -35,8 +35,8 @@
       "eyebrow": "La habilidad decide. Nada más.",
       "headline_line1": "DEMUESTRA. JUEGA.",
       "headline_line2": "GANA.",
-      "subhead": "Diez juegos con autoridad del servidor. Rivales reales, emparejados con justicia. Gana premios en competiciones de habilidad elegibles, donde esté permitido.",
-      "cta_primary": "Jugar ahora",
+      "subhead": "Compite contra jugadores reales en duelos 1v1 de pura habilidad sin azar. Gana premios en efectivo USDT con retiros instantáneos en menos de 60 segundos.",
+      "cta_primary": "Entrar a la Arena y Ganar",
       "cta_secondary": "Ver en vivo",
       "featured_heading": "Destacados hoy"
     },
@@ -120,8 +120,8 @@
           "body": "Tu clasificación y tu puntuación de habilidad global cambian con cada partida."
         },
         "win": {
-          "title": "Gana",
-          "body": "Sube de rango, clasifica para torneos y, donde esté permitido, compite por premios reales."
+          "title": "Gana y Retira",
+          "body": "Sube en el ranking, clasifícate para torneos y gana premios reales en USDT con retiros instantáneos en 60 segundos."
         }
       }
     },
@@ -340,7 +340,7 @@
       "style_label": "Estilo",
       "mode_label": "Modo",
       "eligibility_label": "Elegibilidad",
-      "cta": "Buscar rival →",
+      "cta": "Comenzar Duelo",
       "eligibility_free": "Gratis",
       "difficulty_deep": "Profundo",
       "difficulty_fast": "Rápido"

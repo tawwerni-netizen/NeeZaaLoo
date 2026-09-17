@@ -61,7 +61,6 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   const router = useRouter();
 
   const [duels, setDuels] = useState<OpenDuel[]>(INITIAL_OPEN_DUELS);
-  const [lobbyStats, setLobbyStats] = useState({ activeMatches: 0, activePlayers: 0, openChallenges: 0, paidTodayUsd: 0 });
 
   const loadOpenChallenges = async () => {
     try {
@@ -93,27 +92,6 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
     } catch (err) {
       console.error("Error loading open challenges:", err);
     }
-
-    try {
-      const statsRes = await get<{
-        activeMatches: number; activePlayers: number; openChallenges: number;
-        paidTodayByAsset?: Record<string, string>;
-      }>("/v1/lobby/stats");
-      if (statsRes) {
-        // Every coin the platform pays out is a $1-pegged stablecoin, so
-        // summing them is a real total, not an approximation -- but it is
-        // ALWAYS the real figure, including a real zero on a day nothing
-        // has been withdrawn yet (e.g. cash play not yet enabled).
-        const paidTodayUsd = Object.values(statsRes.paidTodayByAsset ?? {})
-          .reduce((sum, minor) => sum + Number(minor || "0") / 1_000_000, 0);
-        setLobbyStats({
-          activeMatches: statsRes.activeMatches || 0,
-          activePlayers: statsRes.activePlayers || 0,
-          openChallenges: statsRes.openChallenges || 0,
-          paidTodayUsd,
-        });
-      }
-    } catch {}
   };
 
   useEffect(() => {
@@ -171,8 +149,22 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
       if (cId) {
         setTargetChallengeId(cId);
       }
+      const stakeParam = sp.get("stake");
+      const tierParam = sp.get("tier");
+      if (stakeParam) {
+        const num = Number(stakeParam);
+        if (!isNaN(num) && num > 0) {
+          setNewStake(num);
+          if (tierParam === "CASH" || tierParam === "FREE") {
+            setNewTier(tierParam as "CASH" | "FREE");
+          }
+          if (player) {
+            setIsModalOpen(true);
+          }
+        }
+      }
     }
-  }, []);
+  }, [player]);
 
   useEffect(() => {
     if (targetChallengeId && duels.length > 0) {
@@ -469,37 +461,42 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
         </div>
       </div>
 
-      {/* Live Pulse Ticker Ribbon */}
+      {/* Live Pulse Ticker Ribbon (100% Honest Guarantees - Zero Cold-Start Vanity Counters) */}
       <div className={styles.liveTickerRibbon}>
         <div className={styles.tickerItem}>
           <span className={styles.tickerDotOnline} />
-          <span>{isRtl ? "متصل الآن:" : "Online:"}</span>
+          <span>{isRtl ? "سيرفرات النزال:" : "Arena Servers:"}</span>
           <strong className={styles.tickerHighlight}>
-            {lobbyStats.activePlayers > 0 ? lobbyStats.activePlayers : 142}+ {isRtl ? "بطل" : "players"}
-          </strong>
-        </div>
-        <div className={styles.tickerDivider}>•</div>
-        <div className={styles.tickerItem}>
-          <span>💰</span>
-          <span>{isRtl ? "جوائز كاش اليوم:" : "Won Today:"}</span>
-          <strong className={styles.tickerHighlightGold}>
-            ${(lobbyStats.paidTodayUsd > 0 ? lobbyStats.paidTodayUsd : 3450).toLocaleString(isRtl ? "ar" : "en", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}+
+            {isRtl ? "متصلة وجاهزة 24/7" : "100% Online & Ready 24/7"}
           </strong>
         </div>
         <div className={styles.tickerDivider}>•</div>
         <div className={styles.tickerItem}>
           <span>⚡</span>
-          <span>{isRtl ? "سحب فوري خلال 60 ثانية" : "Instant 60s Cashout"}</span>
-        </div>
-        <div className={styles.tickerDivider}>•</div>
-        <div className={styles.tickerItem}>
-          <span>🔒</span>
-          <span>{isRtl ? "تحكيم عادل 100% بدون أي حظ" : "100% Deterministic Skill"}</span>
+          <span>{isRtl ? "سحب فوري:" : "Instant Cashout:"}</span>
+          <strong className={styles.tickerHighlightGold}>
+            {isRtl ? "تحويل آلي خلال 60ث بالـ USDT" : "< 60s Automated USDT"}
+          </strong>
         </div>
         <div className={styles.tickerDivider}>•</div>
         <div className={styles.tickerItem}>
           <span>💎</span>
-          <span>{isRtl ? "عمولة المنصة 12% فقط" : "12% Platform Fee"}</span>
+          <span>{isRtl ? "أرباح الفائز:" : "Winner Payout:"}</span>
+          <strong className={styles.tickerHighlightGold}>
+            {isRtl ? "88% من وعاء التحدي (عمولة 12% فقط)" : "88% Net Pool (12% Fee)"}
+          </strong>
+        </div>
+        <div className={styles.tickerDivider}>•</div>
+        <div className={styles.tickerItem}>
+          <span>🔒</span>
+          <span>{isRtl ? "تحكيم عادل 100%:" : "Provably Fair:"}</span>
+          <strong>{isRtl ? "مهارة بدون أي صدفة أو حظ" : "100% Deterministic Skill"}</strong>
+        </div>
+        <div className={styles.tickerDivider}>•</div>
+        <div className={styles.tickerItem}>
+          <span>🤖</span>
+          <span>{isRtl ? "نزال فوري:" : "Instant Play:"}</span>
+          <strong>{isRtl ? "تحدي الحاسوب متاح 24/7 دون انتظار" : "Play AI Anytime 24/7"}</strong>
         </div>
       </div>
 

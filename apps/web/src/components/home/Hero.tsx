@@ -216,22 +216,6 @@ export function Hero() {
   const [isPaused, setIsPaused] = useState(false);
   const [loadedIndices, setLoadedIndices] = useState<number[]>([0]);
 
-  const [lobbyStats, setLobbyStats] = useState({ openChallenges: 0, activePlayers: 0, activeMatches: 0 });
-
-  useEffect(() => {
-    void get<{ openChallenges: number; activePlayers: number; activeMatches: number }>("/v1/lobby/stats")
-      .then((res) => {
-        if (res) {
-          setLobbyStats({
-            openChallenges: res.openChallenges || 0,
-            activePlayers: res.activePlayers || 0,
-            activeMatches: res.activeMatches || 0,
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
-
   const nextSlide = useCallback(() => {
     setCurrentIdx((prev) => (prev + 1) % SHOWCASE_SLIDES.length);
   }, []);
@@ -482,68 +466,68 @@ export function Hero() {
           </div>
         </motion.div>
 
-        {/* Redesigned 4 Luxury Glassmorphic Metric Cards (Centrally Aligned - Zero Drift) */}
+        {/* Redesigned 4 Luxury Glassmorphic Guarantee Cards (100% Truthful - Zero Cold-Start Flaws) */}
         <div className={styles.metricCardsGrid}>
-          {/* Card 1: Open Duels Waiting */}
+          {/* Card 1: Instant Matchmaking & AI Ready */}
           <div className={`${styles.metricCard} ${styles.metricCardEmerald}`}>
             <div className={styles.metricCardHeader}>
-              <div className={styles.metricIconWrap}>⚔️</div>
+              <div className={styles.metricIconWrap}>🤖</div>
               <span className={styles.metricBadgeLive}>
                 <span className={styles.statPulseDot} />
-                {isRtl ? "نشط الآن" : "Live"}
+                {isRtl ? "متاح 24/7" : "Active 24/7"}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                {lobbyStats.openChallenges || 48}
+                {isRtl ? "فوري 24/7" : "Instant 24/7"}
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "مباريات ونزالات حية جاهزة" : "Live Duels Ready"}
+                {isRtl ? "نزالات فورية وتحدي الحاسوب" : "Instant AI & Member Duels"}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "جاهزة للقبول والمبارزة فوراً" : "Ready for instant matchmaking"}
+                {isRtl ? "العب فوراً ضد الذكاء الاصطناعي أو نافس صديقاً برابط مباشر" : "Play AI or challenge friends with zero wait time"}
               </div>
             </div>
           </div>
 
-          {/* Card 2: Active Challengers Online */}
+          {/* Card 2: Instant Automated Cash Payouts */}
           <div className={`${styles.metricCard} ${styles.metricCardGold}`}>
             <div className={styles.metricCardHeader}>
-              <div className={styles.metricIconWrap}>👥</div>
+              <div className={styles.metricIconWrap}>⚡</div>
               <span className={styles.metricBadgeOnline}>
-                ⚡ {isRtl ? "متصل" : "Online"}
+                ⚡ {isRtl ? "سحب فوري" : "Instant Cashout"}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                {lobbyStats.activePlayers || 184}+
+                &lt; 60s
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "أبطال متصلون بالميدان الآن" : "Challengers Online Now"}
+                {isRtl ? "سحب كاش فوري وتلقائي" : "Instant Automated Cashout"}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "يتنافسون في الأرينا والميدان" : "Competing in the live arena"}
+                {isRtl ? "تحويل مباشر لمحفظتك بالـ USDT عبر TRC20 و BEP20" : "Direct to your USDT wallet with zero wait time"}
               </div>
             </div>
           </div>
 
-          {/* Card 3: Total Cash Won Today */}
+          {/* Card 3: 88% Winner Payout Rate */}
           <div className={`${styles.metricCard} ${styles.metricCardRuby}`}>
             <div className={styles.metricCardHeader}>
-              <div className={styles.metricIconWrap}>💰</div>
+              <div className={styles.metricIconWrap}>🏆</div>
               <span className={styles.metricBadgePayout}>
-                🏆 {isRtl ? "كاش مسحوب" : "Paid Out"}
+                💎 {isRtl ? "عمولة 12% فقط" : "12% Platform Fee"}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                $14,850+
+                88%
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "جوائز كاش تم توزيعها اليوم" : "Total Cash Won Today"}
+                {isRtl ? "حصة الفائز من وعاء النزال" : "Winner's Share of Prize Pool"}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "سحب فوري مباشر للمحافظ" : "Instant automated withdrawals"}
+                {isRtl ? "أعلى نسبة توزيع أرباح للاعبين المهرة بالكامل" : "Highest skill gaming payout rate in the region"}
               </div>
             </div>
           </div>
@@ -553,18 +537,18 @@ export function Hero() {
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>🛡️</div>
               <span className={styles.metricBadgeFair}>
-                🔒 {isRtl ? "مضاد للغش" : "Anti-Cheat"}
+                🔒 {isRtl ? "تحكيم حتمي 100%" : "100% Provably Fair"}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                <bdi dir="ltr">&lt; 20ms | 100%</bdi>
+                <bdi dir="ltr">100% Skill</bdi>
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "مهارة 100% بدون أي حظ" : "100% Pure Skill, 0% Luck"}
+                {isRtl ? "مهارة بدون أي صدفة أو حظ" : "Zero Luck, Zero RNG, Anti-Cheat"}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "نظام حتمي واستجابة فائقة السرعة" : "Deterministic server verification"}
+                {isRtl ? "خوادم مشفرة وقواعد حتمية تضمن تكافؤ الفرص" : "Deterministic server verification guarantees integrity"}
               </div>
             </div>
           </div>
