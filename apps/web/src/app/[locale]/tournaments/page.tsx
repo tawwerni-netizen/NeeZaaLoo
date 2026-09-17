@@ -1,13 +1,8 @@
 "use client";
 
-// This page fetches its own tournament rows client-side (see the useEffect
-// below) -- the server-rendered shell never had live data to begin with, so
-// ISR's long-lived cache (Next defaults an otherwise-static route to it)
-// bought no real freshness, only a real cost: a code or asset change here
-// (e.g. a swapped cover image) could sit behind a stale cached page for a
-// long time after deploy. Forcing dynamic rendering trades a small amount
-// of server work per request for every change here showing up immediately.
-export const dynamic = "force-dynamic";
+// See this route's own layout.tsx for the real fix: route segment config
+// is silently ignored when exported from a "use client" page itself in
+// this Next.js/Turbopack setup (verified against a real build).
 
 /**
  * Psychological & Esports Redesign of Nizalo Tournaments Hub (/tournaments).

@@ -1,11 +1,8 @@
 "use client";
 
-// See apps/web/src/app/[locale]/games/page.tsx's own comment: kept
-// statically cached, but bounded to a short window so a content or asset
-// change (this page renders per-game thumbnails) shows up promptly rather
-// than sitting behind Next's default long-lived ISR cache for what would
-// otherwise look like a purely static route.
-export const revalidate = 60;
+// See this route's own layout.tsx: route segment config has to live there,
+// not here -- it is silently ignored when exported from a "use client"
+// page itself in this Next.js/Turbopack setup.
 
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";

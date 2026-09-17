@@ -1,11 +1,9 @@
 "use client";
 
-// Kept statically cached (this page is deliberately crawlable -- see its
-// own header below), but with a short bound instead of Next's default
-// long-lived ISR cache for an otherwise-static route: a content or asset
-// change here (game copy, cover art) should show up within a minute, not
-// sit behind a cache that may outlive several deploys.
-export const revalidate = 60;
+// dynamic/revalidate route segment config does not take effect when
+// exported from a "use client" page itself in this Next.js/Turbopack
+// setup (verified: silently ignored, and `revalidate` outright breaks the
+// build -- see this route's own layout.tsx for where the real fix lives).
 
 /**
  * The public, crawlable games catalog -- distinct from /play (which
