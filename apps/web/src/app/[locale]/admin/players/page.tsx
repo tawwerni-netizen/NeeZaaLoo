@@ -4,7 +4,46 @@ import React, { useState, useEffect, useCallback } from "react";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { get, post } from "@/lib/api";
 import { adminErrorMessage } from "@/lib/admin-errors";
+import { useI18n } from "@/lib/i18n/context";
 import styles from "@/components/admin/AdminPageLayout.module.css";
+
+const ROLE_OPTIONS = [
+  {
+    role: "SUPPORT",
+    titleAr: "🎧 خدمة العملاء والدعم الفني (Customer Support)",
+    titleEn: "🎧 Customer Support Lead",
+    descAr: "إدارة والرد على تذاكر واستفسارات اللاعبين، حل النزاعات، والتعامل مع المحادثات المباشرة.",
+    descEn: "Manage support tickets, handle player disputes, and interact via live chat.",
+  },
+  {
+    role: "FINANCE_ADMIN",
+    titleAr: "💼 الإدارة المالية والحسابات (Finance & Accounts)",
+    titleEn: "💼 Finance & Accounts Admin",
+    descAr: "مراجعة واعتماد طلبات السحب والإيداع، والتحقق من قيود مكافحة غسيل الأموال (AML).",
+    descEn: "Review and approve deposits, withdrawals, and monitor AML playthrough requirements.",
+  },
+  {
+    role: "ANTI_CHEAT_MODERATOR",
+    titleAr: "🛡️ مكافحة الغش والرقابة (Fair Play & Anti-Cheat)",
+    titleEn: "🛡️ Anti-Cheat & Fair Play Moderator",
+    descAr: "مراقبة النزاهة وكشف الغشاشين، حظر الحسابات المتلاعبة، ومصادرة الأرصدة، وكتم الشات.",
+    descEn: "Investigate fair play violations, ban cheating accounts, confiscate illicit funds, and mute chat.",
+  },
+  {
+    role: "ADMIN",
+    titleAr: "⚙️ مدير تشغيلي عام (Operational Admin)",
+    titleEn: "⚙️ Operational Admin",
+    descAr: "إدارة شاملة لكتالوج الألعاب، البطولات، المستخدمين، وتذاكر الدعم وعمليات المنصة.",
+    descEn: "Manage games catalog, tournaments, user accounts, and platform operations.",
+  },
+  {
+    role: "SUPER_ADMIN",
+    titleAr: "👑 مدير تنفيذي كامل الصلاحيات (Super Admin)",
+    titleEn: "👑 Super Admin (Full Privileges)",
+    descAr: "صلاحيات سيادية كاملة على إعدادات المنصة الاقتصادية، توزيع الرتب الإدارية، وسياسات النظام.",
+    descEn: "Full sovereign control over system settings, administrative roles, and platform policies.",
+  },
+];
 
 interface PlayerRecord {
   id: string;
@@ -84,6 +123,10 @@ function formatUsdt(amountMinor: number | string | null | undefined): string {
 }
 
 export default function AdminPlayersPage() {
+  const { locale, dir } = useI18n();
+  const isAr = locale.startsWith("ar");
+  const isRtl = dir === "rtl";
+
   const [players, setPlayers] = useState<PlayerRecord[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -122,7 +165,7 @@ export default function AdminPlayersPage() {
       const data = await get<PlayerAmlDetail>(`/v1/admin/players/${p.id}`);
       setInspectData(data);
     } catch (e: any) {
-      alert(e?.message || "Failed to load player financial details");
+      alert(e?.message || (isAr ? "فشل تحميل التفاصيل المالية للاعب" : "Failed to load player financial details"));
     } finally {
       setInspectLoading(false);
     }
@@ -161,12 +204,20 @@ export default function AdminPlayersPage() {
         role: promoteRole,
         reason: promoteReason.trim() || `Promoted to ${promoteRole} via Admin Panel`,
       });
-      showNotice(`✓ تم ترقية @${promoteTarget.handle} إلى (${promoteRole}) بنجاح!`);
+      showNotice(
+        isAr
+          ? `✓ تم تعيين رتبة (${promoteRole}) للاعب @${promoteTarget.handle} بنجاح!`
+          : `✓ Successfully assigned (${promoteRole}) role to @${promoteTarget.handle}!`
+      );
       setPromoteTarget(null);
       setPromoteReason("");
       loadPlayers();
     } catch (e: any) {
-      alert(e?.message || "فشلت عملية ترقية المستخدم");
+      if (e?.code === "STEP_UP_REQUIRED") {
+        // Step-up prompt was cancelled, exit cleanly
+        return;
+      }
+      alert(adminErrorMessage(e, isAr ? "فشلت عملية ترقية المستخدم" : "Failed to update player role"));
     } finally {
       setIsPromoting(false);
     }
@@ -180,7 +231,11 @@ export default function AdminPlayersPage() {
         `/v1/admin/players/${confiscateTarget.id}/confiscate-and-ban`,
         { reason: confiscateReason.trim() || "Cheating and fair play violation - balance confiscated" }
       );
-      showNotice(`🚨 تم حظر الغشاش @${confiscateTarget.handle} ومصادرة ${res.confiscatedUsdt ?? "0.00"} USDT فوراً لخزينة المنصة!`);
+      showNotice(
+        isAr
+          ? `🚨 تم حظر الغشاش @${confiscateTarget.handle} ومصادرة ${res.confiscatedUsdt ?? "0.00"} USDT فوراً لخزينة المنصة!`
+          : `🚨 Cheater @${confiscateTarget.handle} banned and ${res.confiscatedUsdt ?? "0.00"} USDT confiscated to treasury!`
+      );
       setConfiscateTarget(null);
       setConfiscateReason("Cheating / Fair Play Violation - balance confiscated");
       if (inspectTarget?.id === confiscateTarget.id) {
@@ -188,20 +243,22 @@ export default function AdminPlayersPage() {
       }
       loadPlayers();
     } catch (e: any) {
-      alert(e?.message || "فشلت عملية المصادرة والحظر");
+      if (e?.code === "STEP_UP_REQUIRED") return;
+      alert(adminErrorMessage(e, isAr ? "فشلت عملية المصادرة والحظر" : "Failed to confiscate balance and ban player"));
     } finally {
       setIsConfiscating(false);
     }
   }
 
   async function demoteUser(id: string) {
-    if (!window.confirm("Are you sure you want to demote this user from Admin?")) return;
+    if (!window.confirm(isAr ? "هل أنت متأكد من سحب الصلاحيات الإدارية من هذا المستخدم؟" : "Are you sure you want to revoke admin privileges from this user?")) return;
     try {
       await post(`/v1/admin/players/${id}/demote`);
-      showNotice("User demoted successfully!");
+      showNotice(isAr ? "تم سحب الصلاحيات بنجاح!" : "User demoted successfully!");
       loadPlayers();
-    } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر سحب الصلاحية."));
+    } catch (e: any) {
+      if (e?.code === "STEP_UP_REQUIRED") return;
+      alert(adminErrorMessage(e, isAr ? "تعذّر سحب الصلاحية." : "Failed to revoke admin privileges."));
     }
   }
 
@@ -436,11 +493,11 @@ export default function AdminPlayersPage() {
                                 setPromoteRole("SUPPORT");
                                 setPromoteReason("");
                               }}
-                              title="ترقية لدرجة إدارية محددة"
+                              title={isAr ? "ترقية لدرجة إدارية محددة" : "Promote to staff role"}
                             >
-                              🎖️ ترقية إدارية
+                              🎖️ {isAr ? "ترقية إدارية" : "Promote"}
                             </button>
-                          ) : !isSuperAdmin ? (
+                          ) : (
                             <>
                               <button
                                 type="button"
@@ -451,20 +508,20 @@ export default function AdminPlayersPage() {
                                   setPromoteRole(p.roles?.[0] || "ADMIN");
                                   setPromoteReason("");
                                 }}
-                                title="تعديل الرتبة الإدارية"
+                                title={isAr ? "تعديل الرتبة الإدارية" : "Edit staff role"}
                               >
-                                ✏️ تعديل الرتبة
+                                ✏️ {isAr ? "تعديل الرتبة" : "Edit Role"}
                               </button>
                               <button
                                 type="button"
                                 className={styles.actionBtn}
                                 onClick={() => demoteUser(p.id)}
-                                title="إلغاء الصلاحيات الإدارية"
+                                title={isAr ? "إلغاء الصلاحيات الإدارية" : "Demote / Revoke admin access"}
                               >
-                                Demote
+                                {isAr ? "سحب الصلاحية" : "Demote"}
                               </button>
                             </>
-                          ) : null}
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -481,7 +538,7 @@ export default function AdminPlayersPage() {
         <div style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 10000, padding: "16px",
+          zIndex: 2000, padding: "16px",
         }}>
           <div style={{
             background: "#161922", border: "1px solid #ef4444", borderRadius: "12px",
@@ -534,7 +591,7 @@ export default function AdminPlayersPage() {
         <div style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 10000, padding: "16px",
+          zIndex: 2000, padding: "16px",
         }}>
           <div style={{
             background: "#161922", border: "1px solid #252b37", borderRadius: "12px",
@@ -605,52 +662,33 @@ export default function AdminPlayersPage() {
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)",
           backdropFilter: "blur(4px)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 10000, padding: "16px",
+          zIndex: 2000, padding: "16px",
         }}>
-          <div style={{
-            background: "#161922", border: "1px solid #3b82f6", borderRadius: "14px",
-            maxWidth: "520px", width: "100%", padding: "24px", color: "#fff",
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
-          }}>
+          <div
+            dir={isRtl ? "rtl" : "ltr"}
+            style={{
+              background: "#161922", border: "1px solid #3b82f6", borderRadius: "14px",
+              maxWidth: "520px", width: "100%", padding: "24px", color: "#fff",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+            }}
+          >
             <h3 style={{ margin: "0 0 6px 0", color: "#60a5fa", fontSize: "18px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>🎖️</span> تعيين الصلاحيات والترقية الإدارية (Staff Role)
+              <span>🎖️</span> {isAr ? "تعيين الصلاحيات والترقية الإدارية (Staff Role)" : "Assign Role & Staff Promotion"}
             </h3>
             <p style={{ fontSize: "13px", color: "#94a3b8", margin: "0 0 16px 0" }}>
-              تحديد الدرجة والمسؤولية الإدارية للاعب: <strong style={{ color: "#fff" }}>@{promoteTarget.handle}</strong>
+              {isAr ? (
+                <>تحديد الدرجة والمسؤولية الإدارية للاعب: <strong style={{ color: "#fff" }}>@{promoteTarget.handle}</strong></>
+              ) : (
+                <>Configure administrative role and responsibilities for: <strong style={{ color: "#fff" }}>@{promoteTarget.handle}</strong></>
+              )}
             </p>
 
             <div style={{ marginBottom: "16px" }}>
               <label style={{ display: "block", fontSize: "13px", color: "#cbd5e1", marginBottom: "8px", fontWeight: 600 }}>
-                اختر الدرجة الإدارية (Role):
+                {isAr ? "اختر الدرجة الإدارية (Role):" : "Select Administrative Role:"}
               </label>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {[
-                  {
-                    role: "SUPPORT",
-                    title: "🎧 خدمة العملاء والدعم الفني (Customer Support)",
-                    desc: "إدارة والرد على تذاكر واستفسارات اللاعبين، حل النزاعات، والتعامل مع المحادثات المباشرة."
-                  },
-                  {
-                    role: "FINANCE_ADMIN",
-                    title: "💼 الإدارة المالية والحسابات (Finance & Accounts)",
-                    desc: "مراجعة واعتماد طلبات السحب والإيداع، والتحقق من قيود مكافحة غسيل الأموال (AML)."
-                  },
-                  {
-                    role: "ANTI_CHEAT_MODERATOR",
-                    title: "🛡️ مكافحة الغش والرقابة (Fair Play & Anti-Cheat)",
-                    desc: "مراقبة النزاهة وكشف الغشاشين، حظر الحسابات المتلاعبة، ومصادرة الأرصدة، وكتم الشات."
-                  },
-                  {
-                    role: "ADMIN",
-                    title: "⚙️ مدير تشغيلي عام (Operational Admin)",
-                    desc: "إدارة شاملة لكتالوج الألعاب، البطولات، المستخدمين، وتذاكر الدعم وعمليات المنصة."
-                  },
-                  {
-                    role: "SUPER_ADMIN",
-                    title: "👑 مدير تنفيذي كامل الصلاحيات (Super Admin)",
-                    desc: "صلاحيات سيادية كاملة على إعدادات المنصة الاقتصادية، توزيع الرتب الإدارية، وسياسات النظام."
-                  },
-                ].map((item) => {
+                {ROLE_OPTIONS.map((item) => {
                   const isSelected = promoteRole === item.role;
                   return (
                     <div
@@ -667,7 +705,7 @@ export default function AdminPlayersPage() {
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <strong style={{ fontSize: "13px", color: isSelected ? "#60a5fa" : "#e2e8f0" }}>
-                          {item.title}
+                          {isAr ? item.titleAr : item.titleEn}
                         </strong>
                         <input
                           type="radio"
@@ -678,7 +716,7 @@ export default function AdminPlayersPage() {
                         />
                       </div>
                       <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px", lineHeight: 1.4 }}>
-                        {item.desc}
+                        {isAr ? item.descAr : item.descEn}
                       </div>
                     </div>
                   );
@@ -688,11 +726,11 @@ export default function AdminPlayersPage() {
 
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "12px", color: "#94a3b8", marginBottom: "6px" }}>
-                سبب الترقية / التكليف الإداري (اختياري):
+                {isAr ? "سبب الترقية / التكليف الإداري (اختياري):" : "Reason for assignment / promotion (optional):"}
               </label>
               <input
                 type="text"
-                placeholder="مثال: تكليف بمسؤولية الدعم الفني، ترقية من مجلس الإدارة..."
+                placeholder={isAr ? "مثال: تكليف بمسؤولية الدعم الفني، ترقية من مجلس الإدارة..." : "e.g. Assigned to customer support, promoted by executive board..."}
                 value={promoteReason}
                 onChange={(e) => setPromoteReason(e.target.value)}
                 style={{
@@ -709,7 +747,7 @@ export default function AdminPlayersPage() {
                 onClick={() => setPromoteTarget(null)}
                 disabled={isPromoting}
               >
-                إلغاء
+                {isAr ? "إلغاء" : "Cancel"}
               </button>
               <button
                 type="button"
@@ -718,7 +756,9 @@ export default function AdminPlayersPage() {
                 onClick={handlePromotePlayer}
                 disabled={isPromoting}
               >
-                {isPromoting ? "جاري الحفظ..." : "تأكيد التعيين والترقية"}
+                {isPromoting
+                  ? (isAr ? "جاري الحفظ..." : "Saving...")
+                  : (isAr ? "تأكيد التعيين والترقية" : "Confirm Assignment & Promotion")}
               </button>
             </div>
           </div>
@@ -731,7 +771,7 @@ export default function AdminPlayersPage() {
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)",
           backdropFilter: "blur(6px)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 10001, padding: "16px",
+          zIndex: 2001, padding: "16px",
         }}>
           <div style={{
             background: "#161922", border: "2px solid #ef4444", borderRadius: "14px",
@@ -805,7 +845,7 @@ export default function AdminPlayersPage() {
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)",
           backdropFilter: "blur(4px)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 10000, padding: "16px",
+          zIndex: 2000, padding: "16px",
         }}>
           <div style={{
             background: "#12141c", border: "1px solid #252b37", borderRadius: "14px",

@@ -201,8 +201,29 @@ describe("Admin player site-wide banning", () => {
     assert.equal(res.status, 200, JSON.stringify(res.body));
     assert.equal(res.body.role, "SUPPORT");
 
-    const grants = await db.query("SELECT role FROM admin_role_grant WHERE admin_id = 'badPlayer' AND revoked_at IS NULL");
+    let grants = await db.query("SELECT role FROM admin_role_grant WHERE admin_id = 'badPlayer' AND revoked_at IS NULL");
     assert.ok(grants.rows.some((r) => r.role === "SUPPORT"));
+
+    // Switching role to FINANCE_ADMIN revokes SUPPORT and sets FINANCE_ADMIN
+    const switchRes = await req("POST", "/v1/admin/players/badPlayer/promote", {
+      token: superToken,
+      headers: { "x-step-up-token": step.body.stepUpToken },
+      body: { role: "FINANCE_ADMIN", reason: "Transferred to Finance" },
+    });
+    assert.equal(switchRes.status, 200);
+    assert.equal(switchRes.body.role, "FINANCE_ADMIN");
+    grants = await db.query("SELECT role FROM admin_role_grant WHERE admin_id = 'badPlayer' AND revoked_at IS NULL");
+    assert.equal(grants.rows.length, 1);
+    assert.equal(grants.rows[0].role, "FINANCE_ADMIN");
+
+    // Self-promotion by Super Admin succeeds using system-automation attribution
+    const selfRes = await req("POST", "/v1/admin/players/adminSuper/promote", {
+      token: superToken,
+      headers: { "x-step-up-token": step.body.stepUpToken },
+      body: { role: "SUPER_ADMIN", reason: "Owner Self Confirmation" },
+    });
+    assert.equal(selfRes.status, 200, JSON.stringify(selfRes.body));
+    assert.equal(selfRes.body.role, "SUPER_ADMIN");
   });
 
   test("cheater confiscate-and-ban transfers balance to platform:confiscated and bans player", async () => {

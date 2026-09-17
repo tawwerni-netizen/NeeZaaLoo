@@ -11,6 +11,9 @@ import { ApiError } from "./api";
  */
 const CODE_MESSAGES: Record<string, string> = {
   STEP_UP_REQUIRED: "هذا الإجراء يحتاج تأكيد كلمة المرور. أعد المحاولة وأكّد هويتك.",
+  BAD_CREDENTIALS: "كلمة المرور غير صحيحة. يرجى إعادة المحاولة.",
+  INVALID_CREDENTIALS: "بيانات التحقق غير صحيحة. يرجى إعادة المحاولة.",
+  CANNOT_PROMOTE_SELF: "لا يمكن تعديل رتبة هذا الحساب من نفس المستخدم.",
   SECOND_ADMIN_REQUIRED: "هذا الإجراء يتطلب موافقة مدير ثانٍ قبل التنفيذ.",
   MISSING_CAPABILITY: "حسابك لا يملك الصلاحية اللازمة لهذا الإجراء.",
   MFA_REQUIRED: "يجب تفعيل المصادقة الثنائية على حسابك الإداري أولاً.",

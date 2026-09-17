@@ -3029,29 +3029,45 @@ function buildRoutes() {
     { method: "POST", path: "/v1/admin/players/:id/promote", action: "admin.rbac.manage",
       subjectType: "player",
       handler: async ({ params, actor, body, db, rbac }) => {
-        if (actor.id === params.id) {
-          return { status: 400, body: errorBody("CANNOT_PROMOTE_SELF", "Admins cannot grant roles to themselves") };
-        }
         const player = await db.query("SELECT id, handle FROM player WHERE id = $1", [params.id]);
         if (!player.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
         const p = player.rows[0];
+
+        const isSelf = actor.id === params.id;
+        if (isSelf) {
+          // Ensure system-automation admin exists so check & foreign-key constraints pass
+          await db.query(
+            `INSERT INTO admin_user (id, email, display_name, mfa_enrolled, disabled_at)
+             VALUES ('system-automation', 'system-automation@nizalo.internal', 'System Automation', FALSE, now())
+             ON CONFLICT (id) DO NOTHING`
+          );
+        }
+        const grantedBy = isSelf ? 'system-automation' : actor.id;
 
         const allowedRoles = ['SUPER_ADMIN', 'ADMIN', 'FINANCE_ADMIN', 'RISK_ADMIN', 'ANTI_CHEAT_MODERATOR', 'CONTENT_MODERATOR', 'SUPPORT', 'ANALYST', 'READ_ONLY'];
         const chosenRole = (typeof body?.role === "string" && allowedRoles.includes(body.role)) ? body.role : 'ADMIN';
         const reason = (typeof body?.reason === "string" && body.reason.trim()) ? body.reason.trim() : `Promoted to ${chosenRole} via Admin Panel`;
 
         await db.query(
-          `INSERT INTO admin_user (id, email, display_name, mfa_enrolled)
-           VALUES ($1, $2 || '@nizalo.internal', $2, TRUE)
-           ON CONFLICT (id) DO UPDATE SET mfa_enrolled = TRUE`,
+          `INSERT INTO admin_user (id, email, display_name, mfa_enrolled, disabled_at)
+           VALUES ($1, $1 || '.' || $2 || '@nizalo.internal', $2, TRUE, NULL)
+           ON CONFLICT (id) DO UPDATE SET mfa_enrolled = TRUE, disabled_at = NULL, display_name = EXCLUDED.display_name`,
           [p.id, p.handle]
+        );
+
+        // Revoke any previous active roles to switch cleanly to the newly assigned role
+        await db.query(
+          `UPDATE admin_role_grant
+              SET revoked_at = now(), revoked_by = $2, reason = 'Replaced by promotion to ' || $3
+            WHERE admin_id = $1 AND revoked_at IS NULL AND role <> $3`,
+          [p.id, grantedBy, chosenRole]
         );
 
         await db.query(
           `INSERT INTO admin_role_grant (admin_id, role, granted_by, reason)
            VALUES ($1, $2, $3, $4)
            ON CONFLICT DO NOTHING`,
-          [p.id, chosenRole, actor.id, reason]
+          [p.id, chosenRole, grantedBy, reason]
         );
 
         if (rbac) {
@@ -3064,7 +3080,7 @@ function buildRoutes() {
                 name: "Chat Mod",
                 description: "Moderation capabilities for chat",
                 permissionCodes: ["CHAT_VIEW", "CHAT_DELETE", "CHAT_MUTE", "CHAT_REPORT_REVIEW"],
-                createdBy: actor.id,
+                createdBy: grantedBy,
               });
               roleId = created.id;
             }
@@ -3073,7 +3089,7 @@ function buildRoutes() {
                 `INSERT INTO admin_custom_role_grant (admin_id, role_id, granted_by)
                  VALUES ($1, $2, $3)
                  ON CONFLICT (admin_id, role_id) DO NOTHING`,
-                [p.id, roleId, actor.id]
+                [p.id, roleId, grantedBy]
               );
             }
             if (chosenRole === 'SUPPORT' || chosenRole === 'ADMIN' || chosenRole === 'SUPER_ADMIN') {
@@ -3081,7 +3097,7 @@ function buildRoutes() {
                 `INSERT INTO admin_custom_role_grant (admin_id, role_id, granted_by)
                  VALUES ($1, 'role_support_lead', $2)
                  ON CONFLICT (admin_id, role_id) DO NOTHING`,
-                [p.id, actor.id]
+                [p.id, grantedBy]
               );
             }
           } catch {

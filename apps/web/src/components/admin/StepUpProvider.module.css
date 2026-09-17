@@ -1,26 +1,25 @@
 .scrim {
   position: fixed;
   inset: 0;
-  background: rgba(5, 7, 10, 0.72);
-  backdrop-filter: blur(3px);
+  background: rgba(5, 7, 10, 0.85);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  z-index: 1000;
+  z-index: 100000;
 }
 
 .dialog {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: var(--nz-surface-1, #121620);
-  border: 1px solid var(--nz-line, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--nz-line, rgba(255, 255, 255, 0.12));
   border-radius: 14px;
   padding: 24px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
   color: var(--nz-text, #f1f5f9);
-  direction: rtl;
-  text-align: right;
+  text-align: start;
 }
 
 .title {

@@ -14,6 +14,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { setStepUpPrompt } from "@/lib/api";
+import { useI18n } from "@/lib/i18n/context";
 import styles from "./StepUpProvider.module.css";
 
 type Pending = {
@@ -22,28 +23,32 @@ type Pending = {
 };
 
 /** Human wording for the actions an operator actually sees a prompt for. */
-const ACTION_LABELS: Record<string, string> = {
-  "admin.rbac.manage": "تعديل الأدوار والصلاحيات",
-  "admin.role.grant": "منح دور إداري",
-  "admin.user.confiscate": "حظر اللاعب ومصادرة رصيده",
-  "admin.game.manage": "تغيير حالة لعبة على المنصة",
-  "admin.control.toggle": "تغيير إعداد تشغيلي",
-  "admin.control.global": "تغيير إعداد عام للمنصة",
-  "admin.tournament.manage": "إدارة بطولة",
-  "admin.tournament.settle": "تسوية جوائز بطولة",
-  "admin.withdrawal.approve_solo": "اعتماد طلب سحب",
-  "admin.withdrawal.reject": "رفض طلب سحب",
-  "admin.fairplay.decide": "إصدار قرار في قضية لعب نزيه",
-  "admin.risk.decide": "إغلاق تنبيه مخاطر",
-  "admin.rail.manage": "تعديل بوابة دفع",
-  "admin.reconciliation.decide": "إغلاق حالة تسوية محاسبية",
-  "admin.settings.manage": "حفظ إعدادات المنصة",
-  "admin.policy.manage": "تعديل سياسة قانونية",
-  "admin.referral.decide": "قرار في مكافأة إحالة",
-  "admin.support.config.update": "تعديل إعدادات الدعم",
+const ACTION_LABELS: Record<string, { ar: string; en: string }> = {
+  "admin.rbac.manage": { ar: "تعديل الأدوار والرتب الإدارية", en: "Manage Roles & Staff Permissions" },
+  "admin.role.grant": { ar: "منح دور إداري", en: "Grant Admin Role" },
+  "admin.user.confiscate": { ar: "حظر اللاعب ومصادرة رصيده", en: "Ban Player & Confiscate Balance" },
+  "admin.game.manage": { ar: "تغيير حالة لعبة على المنصة", en: "Manage Game Status" },
+  "admin.control.toggle": { ar: "تغيير إعداد تشغيلي", en: "Toggle System Control" },
+  "admin.control.global": { ar: "تغيير إعداد عام للمنصة", en: "Toggle Global Setting" },
+  "admin.tournament.manage": { ar: "إدارة بطولة", en: "Manage Tournament" },
+  "admin.tournament.settle": { ar: "تسوية جوائز بطولة", en: "Settle Tournament Prizes" },
+  "admin.withdrawal.approve_solo": { ar: "اعتماد طلب سحب", en: "Approve Withdrawal" },
+  "admin.withdrawal.reject": { ar: "رفض طلب سحب", en: "Reject Withdrawal" },
+  "admin.fairplay.decide": { ar: "إصدار قرار في قضية لعب نزيه", en: "Decide Fair-Play Case" },
+  "admin.risk.decide": { ar: "إغلاق تنبيه مخاطر", en: "Close Risk Alert" },
+  "admin.rail.manage": { ar: "تعديل بوابة دفع", en: "Manage Payment Rail" },
+  "admin.reconciliation.decide": { ar: "إغلاق حالة تسوية محاسبية", en: "Settle Reconciliation" },
+  "admin.settings.manage": { ar: "حفظ إعدادات المنصة", en: "Save Platform Settings" },
+  "admin.policy.manage": { ar: "تعديل سياسة قانونية", en: "Manage Legal Policy" },
+  "admin.referral.decide": { ar: "قرار في مكافأة إحالة", en: "Decide Referral Reward" },
+  "admin.support.config.update": { ar: "تعديل إعدادات الدعم", en: "Update Support Settings" },
 };
 
 export function StepUpProvider({ children }: { children: React.ReactNode }) {
+  const { locale, dir } = useI18n();
+  const isAr = locale.startsWith("ar");
+  const isRtl = dir === "rtl";
+
   const [pending, setPending] = useState<Pending | null>(null);
   const [password, setPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
@@ -79,13 +84,13 @@ export function StepUpProvider({ children }: { children: React.ReactNode }) {
     (e: React.FormEvent) => {
       e.preventDefault();
       if (!password) {
-        setError("أدخل كلمة المرور للمتابعة.");
+        setError(isAr ? "أدخل كلمة المرور للمتابعة." : "Please enter your password to continue.");
         return;
       }
       setBusy(true);
       close({ password, totpCode: totpCode.trim() || undefined });
     },
-    [password, totpCode, close]
+    [password, totpCode, close, isAr]
   );
 
   useEffect(() => {
@@ -97,6 +102,9 @@ export function StepUpProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [pending, close]);
 
+  const actionInfo = pending ? ACTION_LABELS[pending.action] : undefined;
+  const actionLabel = actionInfo ? (isAr ? actionInfo.ar : actionInfo.en) : pending?.action;
+
   return (
     <>
       {children}
@@ -104,22 +112,32 @@ export function StepUpProvider({ children }: { children: React.ReactNode }) {
         <div className={styles.scrim} role="presentation" onClick={() => close(null)}>
           <div
             className={styles.dialog}
+            dir={isRtl ? "rtl" : "ltr"}
             role="dialog"
             aria-modal="true"
             aria-labelledby="stepup-title"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="stepup-title" className={styles.title}>
-              تأكيد الهوية مطلوب
+              {isAr ? "🔐 تأكيد الهوية مطلوب" : "🔐 Identity Confirmation Required"}
             </h2>
             <p className={styles.lede}>
-              هذا الإجراء حسّاس: <strong>{ACTION_LABELS[pending.action] ?? pending.action}</strong>.
-              أكّد كلمة المرور للمتابعة — التأكيد صالح لخمس دقائق.
+              {isAr ? (
+                <>
+                  هذا الإجراء حسّاس: <strong>{actionLabel}</strong>.
+                  أكّد كلمة المرور للمتابعة — التأكيد صالح لخمس دقائق.
+                </>
+              ) : (
+                <>
+                  This action is privileged: <strong>{actionLabel}</strong>.
+                  Confirm your password to proceed — confirmation remains active for 5 minutes.
+                </>
+              )}
             </p>
 
             <form onSubmit={onSubmit}>
               <label className={styles.label} htmlFor="stepup-password">
-                كلمة المرور
+                {isAr ? "كلمة المرور" : "Admin Password"}
               </label>
               <input
                 id="stepup-password"
@@ -135,7 +153,15 @@ export function StepUpProvider({ children }: { children: React.ReactNode }) {
               />
 
               <label className={styles.label} htmlFor="stepup-totp">
-                رمز المصادقة الثنائية <span className={styles.optional}>(إن كانت مفعّلة)</span>
+                {isAr ? (
+                  <>
+                    رمز المصادقة الثنائية <span className={styles.optional}>(إن كانت مفعّلة)</span>
+                  </>
+                ) : (
+                  <>
+                    Two-Factor Code <span className={styles.optional}>(if enabled)</span>
+                  </>
+                )}
               </label>
               <input
                 id="stepup-totp"
@@ -152,10 +178,16 @@ export function StepUpProvider({ children }: { children: React.ReactNode }) {
 
               <div className={styles.buttons}>
                 <button type="button" className={styles.cancel} onClick={() => close(null)}>
-                  إلغاء
+                  {isAr ? "إلغاء" : "Cancel"}
                 </button>
                 <button type="submit" className={styles.confirm} disabled={busy}>
-                  {busy ? "جارٍ التأكيد…" : "تأكيد ومتابعة"}
+                  {busy
+                    ? isAr
+                      ? "جارٍ التأكيد…"
+                      : "Verifying…"
+                    : isAr
+                    ? "تأكيد ومتابعة"
+                    : "Confirm & Proceed"}
                 </button>
               </div>
             </form>
