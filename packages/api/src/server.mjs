@@ -5400,7 +5400,7 @@ function buildRoutes() {
     // Local Payment Rails (Admin & Device)
     // =========================================================================
 
-    { method: "GET", path: "/v1/admin/payments/local/devices", action: "admin.local_rail.manage",
+    { method: "GET", path: "/v1/admin/payments/local/devices", action: "admin.local_rail.read",
       handler: async ({ localPayments }) => {
         if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
         const devices = await localPayments.listDevices();
