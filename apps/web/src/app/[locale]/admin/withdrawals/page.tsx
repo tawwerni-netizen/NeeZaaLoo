@@ -47,6 +47,10 @@ export default function AdminWithdrawalsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  // Distinct from an empty withdrawals array: the list call itself failed
+  // (missing capability, expired session, backend unreachable), so "0
+  // withdrawals" below must never be read as "queue is genuinely empty".
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadWithdrawals = useCallback(async () => {
     setLoading(true);
@@ -60,8 +64,9 @@ export default function AdminWithdrawalsPage() {
       );
       if (res.withdrawals) setWithdrawals(res.withdrawals);
       if (res.stats) setStats(res.stats);
+      setLoadError(null);
     } catch (e) {
-      console.error("Failed to load withdrawals:", e);
+      setLoadError(adminErrorMessage(e, "تعذّر تحميل قائمة طلبات السحب."));
     } finally {
       setLoading(false);
     }
@@ -75,9 +80,7 @@ export default function AdminWithdrawalsPage() {
   }, [loadWithdrawals]);
 
   async function handleApprove(id: string) {
-    if (!window.confirm(
-      `Solo-approve withdrawal ${id} for broadcast?\n\nThis releases it on YOUR approval alone. If a second admin is available, prefer "Propose (4-Eyes)" instead so a different admin has to sign off before it broadcasts.`
-    )) return;
+    if (!window.confirm(`Approve withdrawal ${id} for broadcast?`)) return;
     try {
       await post(`/v1/admin/withdrawals/${id}/approve`);
       setNotice(`Withdrawal ${id} approved successfully!`);
@@ -88,12 +91,13 @@ export default function AdminWithdrawalsPage() {
     }
   }
 
-  // Step 1 of the real four-eyes ceremony: propose, then hand the returned
-  // id to a genuinely different admin (see "Decide a pending approval"
-  // below) before anyone can execute the release. Preferred over solo
-  // approval whenever a second admin is actually available -- see
-  // packages/api/src/server.mjs's own comment on propose-approval for why
-  // solo exists at all.
+  // Step 1 of the OPTIONAL four-eyes ceremony: propose, then hand the
+  // returned id to a genuinely different admin (see "Decide a pending
+  // approval" below) before anyone can execute the release. Solo Approve
+  // above is the platform's standard, single-admin path -- this exists as
+  // an available extra-scrutiny option for a specific withdrawal (e.g. an
+  // unusually large one), not a requirement. See packages/api/src/server.mjs's
+  // own comment on propose-approval for the full trade-off.
   async function handlePropose(id: string) {
     const reason = window.prompt(`Reason for proposing release of withdrawal ${id}:`, "Routine release");
     if (reason === null) return;
@@ -197,6 +201,12 @@ export default function AdminWithdrawalsPage() {
         </div>
       )}
 
+      {loadError && (
+        <div style={{ padding: "10px 16px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px", marginBottom: "16px", color: "#fca5a5", fontSize: "13px" }}>
+          ⚠️ {loadError} The list below may be empty or stale, not necessarily a real empty queue.
+        </div>
+      )}
+
       <div className={styles.toolbar}>
         <div className={styles.searchBox}>
           <input
@@ -251,7 +261,7 @@ export default function AdminWithdrawalsPage() {
               {withdrawals.length === 0 ? (
                 <tr>
                   <td colSpan={8} className={styles.emptyState}>
-                    {loading ? "Loading withdrawals..." : "No withdrawals found"}
+                    {loading ? "Loading withdrawals..." : loadError ? `Unable to load — ${loadError}` : "No withdrawals found"}
                   </td>
                 </tr>
               ) : (
@@ -303,17 +313,17 @@ export default function AdminWithdrawalsPage() {
                       <td className={styles.alignRight}>
                         {canAct ? (
                           <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", flexWrap: "wrap" }}>
-                            <Button variant="primary" onClick={() => handlePropose(w.id)}>
+                            <Button variant="primary" onClick={() => handleApprove(w.id)}>
+                              Approve
+                            </Button>
+                            <Button variant="ghost" onClick={() => handleReject(w.id)}>
+                              Reject
+                            </Button>
+                            <Button variant="ghost" onClick={() => handlePropose(w.id)}>
                               Propose (4-Eyes)
                             </Button>
                             <Button variant="ghost" onClick={() => handleExecuteReviewed(w.id)}>
                               Execute (4-Eyes)
-                            </Button>
-                            <Button variant="ghost" onClick={() => handleApprove(w.id)}>
-                              Solo Approve
-                            </Button>
-                            <Button variant="ghost" onClick={() => handleReject(w.id)}>
-                              Reject
                             </Button>
                           </div>
                         ) : (

@@ -15,6 +15,13 @@ import { getGame } from "@/lib/games";
 import type { SupportedLocale } from "@/lib/i18n/locale";
 import styles from "./UpcomingTournaments.module.css";
 
+// Last-resort fallback when even the resolved cover image fails to load --
+// generic and game-agnostic on purpose, since a single OTHER game's photo
+// (the previous fallback here) is a wrong image just as surely as a broken
+// one, only less obviously so.
+const COVER_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225'%3E%3Crect width='400' height='225' fill='%230D111A'/%3E%3Ccircle cx='200' cy='112' r='90' fill='rgba(255,215,0,0.1)'/%3E%3C/svg%3E";
+
 export type TournamentRow = {
   id: string;
   game_id: string;
@@ -60,7 +67,14 @@ export function getTournamentCover(gameId: string): string {
     "speed-math": "/images/tournaments/tournament-speed-math.jpg",
     seega: "/images/tournaments/tournament-seega.jpg",
     reversi: "/images/tournaments/tournament-reversi.jpg",
-    chess: "/images/tournaments/tournament-chess.jpg",
+    // Not tournament-chess.jpg / chess-hero.webp: that generated art has
+    // real chess grandmasters' names on its scoreboard, implying an
+    // endorsement that doesn't exist. Same reasoning for billiards below
+    // (a fabricated "AETHER Esports" sponsor logo baked into the photo).
+    // Both point at hand-authored, brand-safe SVG art instead until a
+    // properly-prompted replacement photo exists.
+    chess: "/images/games/chess-cover-safe.svg",
+    billiards: "/images/games/billiards-cover-safe.svg",
     "connect-four": "/images/tournaments/tournament-connect-four.jpg",
     checkers: "/images/tournaments/tournament-checkers.jpg",
     dominoes: "/images/games/dominoes-hero.webp",
@@ -218,7 +232,7 @@ export function UpcomingTournaments({
                         alt={cleanTitle}
                         className={styles.compactThumbImg}
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "/images/games/chess-hero.webp";
+                          (e.currentTarget as HTMLImageElement).src = COVER_PLACEHOLDER;
                         }}
                       />
                     </div>
@@ -468,7 +482,7 @@ export function UpcomingTournaments({
                       alt={cleanTitle}
                       className={styles.cardHeroImg}
                       onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = "/images/games/chess-hero.webp";
+                        (e.currentTarget as HTMLImageElement).src = COVER_PLACEHOLDER;
                       }}
                     />
                     <div className={styles.cardHeroOverlay} />

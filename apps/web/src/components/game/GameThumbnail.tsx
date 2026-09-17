@@ -14,8 +14,14 @@ interface GameThumbnailProps {
   variant?: "square" | "hero" | "versus" | "badge" | "mobile";
 }
 
+// chess and billiards are deliberately NOT here despite having real photo
+// assets on disk: that generated art has real chess grandmasters' names
+// and a fabricated sponsor logo baked into the pixels respectively (see
+// getTournamentCover()'s own comment in UpcomingTournaments.tsx for the
+// full reasoning). Both fall through to their own hand-authored `case`
+// below instead, same as every other game did before real photography
+// existed for it.
 const SUPPORTED_GAMES = new Set([
-  "chess",
   "checkers",
   "connect-four",
   "xo",
@@ -25,7 +31,6 @@ const SUPPORTED_GAMES = new Set([
   "seega",
   "reversi",
   "gomoku",
-  "billiards",
 ]);
 
 export function GameThumbnail({

@@ -1,5 +1,14 @@
 "use client";
 
+// This page fetches its own tournament rows client-side (see the useEffect
+// below) -- the server-rendered shell never had live data to begin with, so
+// ISR's long-lived cache (Next defaults an otherwise-static route to it)
+// bought no real freshness, only a real cost: a code or asset change here
+// (e.g. a swapped cover image) could sit behind a stale cached page for a
+// long time after deploy. Forcing dynamic rendering trades a small amount
+// of server work per request for every change here showing up immediately.
+export const dynamic = "force-dynamic";
+
 /**
  * Psychological & Esports Redesign of Nizalo Tournaments Hub (/tournaments).
  * Provides a high-conversion, luxury gaming lobby for tournaments with:

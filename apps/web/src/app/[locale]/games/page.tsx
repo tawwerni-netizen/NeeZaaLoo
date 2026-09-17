@@ -1,5 +1,12 @@
 "use client";
 
+// Kept statically cached (this page is deliberately crawlable -- see its
+// own header below), but with a short bound instead of Next's default
+// long-lived ISR cache for an otherwise-static route: a content or asset
+// change here (game copy, cover art) should show up within a minute, not
+// sit behind a cache that may outlive several deploys.
+export const revalidate = 60;
+
 /**
  * The public, crawlable games catalog -- distinct from /play (which
  * requires an account and starts the real mode-select/matchmaking flow).

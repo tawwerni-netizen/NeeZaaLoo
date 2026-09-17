@@ -1,5 +1,12 @@
 "use client";
 
+// See apps/web/src/app/[locale]/games/page.tsx's own comment: kept
+// statically cached, but bounded to a short window so a content or asset
+// change (this page renders per-game thumbnails) shows up promptly rather
+// than sitting behind Next's default long-lived ISR cache for what would
+// otherwise look like a purely static route.
+export const revalidate = 60;
+
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LocaleLink } from "@/components/LocaleLink";

@@ -5,6 +5,9 @@ import { useI18n } from "@/lib/i18n/context";
 import { LocaleLink } from "@/components/LocaleLink";
 import styles from "./TournamentBannerSlider.module.css";
 
+const BANNER_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225'%3E%3Crect width='400' height='225' fill='%230D111A'/%3E%3Ccircle cx='200' cy='112' r='90' fill='rgba(255,215,0,0.1)'/%3E%3C/svg%3E";
+
 type TournSlide = {
   id: string;
   image: string;
@@ -99,7 +102,11 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
   },
   {
     id: "billiards_masters",
-    image: "/images/tournaments/tournament-billiards.jpg",
+    // Not the AI-generated tournament-billiards.jpg: it has a fabricated
+    // "AETHER Esports" sponsor logo baked into the photo. Hand-authored
+    // SVG art instead until a properly-prompted replacement exists (see
+    // getTournamentCover()'s own comment in UpcomingTournaments.tsx).
+    image: "/images/games/billiards-cover-safe.svg",
     superAr: "بطولة الأساتذة الكبرى للبلياردو",
     superEn: "BILLIARDS 8-BALL MASTERS",
     titleAr: "كأس محترفي البلياردو (8-Ball)",
@@ -157,6 +164,11 @@ export function TournamentBannerSlider() {
               alt={isRtl ? slide.titleAr : slide.titleEn}
               className={`${styles.bannerImg} ${idx === currentIdx ? styles.bannerImgActive : ""}`}
               loading={idx === 0 ? "eager" : "lazy"}
+              onError={(e) => {
+                const img = e.currentTarget as HTMLImageElement;
+                img.onerror = null;
+                img.src = BANNER_PLACEHOLDER;
+              }}
             />
           ))}
         </div>

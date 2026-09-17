@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { get } from "@/lib/api";
+import { adminErrorMessage } from "@/lib/admin-errors";
 import styles from "@/components/admin/AdminPageLayout.module.css";
 
 type DepositItem = {
@@ -40,6 +41,9 @@ export default function AdminDepositsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [loading, setLoading] = useState(false);
+  // Distinct from a genuinely empty deposits array -- see the same
+  // distinction on the withdrawals admin page.
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadDeposits = useCallback(async () => {
     setLoading(true);
@@ -53,8 +57,9 @@ export default function AdminDepositsPage() {
       );
       if (res.deposits) setDeposits(res.deposits);
       if (res.stats) setStats(res.stats);
+      setLoadError(null);
     } catch (e) {
-      console.error("Failed to load deposits:", e);
+      setLoadError(adminErrorMessage(e, "تعذّر تحميل قائمة الإيداعات."));
     } finally {
       setLoading(false);
     }
@@ -95,6 +100,12 @@ export default function AdminDepositsPage() {
         </div>
       }
     >
+      {loadError && (
+        <div style={{ padding: "10px 16px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px", marginBottom: "16px", color: "#fca5a5", fontSize: "13px" }}>
+          ⚠️ {loadError} The list below may be empty or stale, not necessarily a real empty ledger.
+        </div>
+      )}
+
       <div className={styles.toolbar}>
         <div className={styles.searchBox}>
           <input
@@ -130,7 +141,7 @@ export default function AdminDepositsPage() {
               {deposits.length === 0 ? (
                 <tr>
                   <td colSpan={8} className={styles.emptyState}>
-                    {loading ? "Loading deposits..." : "No deposits found"}
+                    {loading ? "Loading deposits..." : loadError ? `Unable to load — ${loadError}` : "No deposits found"}
                   </td>
                 </tr>
               ) : (

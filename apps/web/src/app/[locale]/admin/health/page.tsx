@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { get } from "@/lib/api";
+import { adminErrorMessage } from "@/lib/admin-errors";
 import styles from "@/components/admin/AdminPageLayout.module.css";
 
 type HealthCheck = {
@@ -25,6 +26,13 @@ type HealthResponse = {
 
 export default function AdminHealthPage() {
   const [data, setData] = useState<HealthResponse | null>(null);
+  // Distinct from data === null (still loading): the real /v1/admin/health
+  // call itself failed -- a missing capability, an expired session, or the
+  // API genuinely being unreachable. This must NEVER be papered over with
+  // the old hardcoded "all HEALTHY" fallback below: an admin checking this
+  // page during a real outage is exactly the moment a fake all-clear does
+  // the most damage.
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
 
@@ -33,9 +41,10 @@ export default function AdminHealthPage() {
       const res = await get<HealthResponse>("/v1/admin/health");
       if (res && res.checks) {
         setData(res);
+        setFetchError(null);
       }
-    } catch {
-      // Fallback
+    } catch (e) {
+      setFetchError(adminErrorMessage(e, "تعذّر تحميل حالة النظام."));
     }
   }, []);
 
@@ -49,14 +58,19 @@ export default function AdminHealthPage() {
     setScanning(true);
     setScanResult(null);
     try {
-      const [health, risk] = await Promise.all([
-        get<HealthResponse>("/v1/admin/health").catch(() => null),
-        get<{ flags?: any[] }>("/v1/admin/risk").catch(() => null),
+      const [healthRes, riskRes] = await Promise.allSettled([
+        get<HealthResponse>("/v1/admin/health"),
+        get<{ flags?: any[] }>("/v1/admin/risk"),
       ]);
 
+      // A check this scan could not even reach is reported as its own
+      // failure, never silently skipped -- skipping it is exactly what
+      // produced a false "all clear" for a scan that never actually ran.
+      const failures: string[] = [];
       const issues: string[] = [];
-      if (health) {
-        for (const c of health.checks) {
+
+      if (healthRes.status === "fulfilled") {
+        for (const c of healthRes.value.checks) {
           if (c.status !== "HEALTHY") {
             issues.push(`Subsystem Warning: ${c.service} is reporting ${c.status} (${c.details})`);
           }
@@ -64,32 +78,40 @@ export default function AdminHealthPage() {
             issues.push(`High Latency: ${c.service} latency is elevated at ${c.latencyMs}ms`);
           }
         }
-      }
-      if (risk && risk.flags && risk.flags.length > 0) {
-        issues.push(`Risk Alerts: ${risk.flags.length} active risk flags require investigation.`);
+      } else {
+        failures.push(`Could not check subsystem health: ${adminErrorMessage(healthRes.reason)}`);
       }
 
-      if (issues.length === 0) {
-        setScanResult("✅ Complete Diagnostic Scan Passed: All 5 core subsystems, database pools, ledger integrity, and WebSocket gateways are 100% HEALTHY with 0 discrepancies.");
+      if (riskRes.status === "fulfilled") {
+        if (riskRes.value.flags && riskRes.value.flags.length > 0) {
+          issues.push(`Risk Alerts: ${riskRes.value.flags.length} active risk flags require investigation.`);
+        }
+      } else {
+        failures.push(`Could not check risk flags: ${adminErrorMessage(riskRes.reason)}`);
+      }
+
+      if (failures.length > 0) {
+        setScanResult(
+          `❌ Scan incomplete -- ${failures.length} check(s) could not run, so this is NOT a clean bill of health:\n• ` +
+          failures.join("\n• ") +
+          (issues.length > 0 ? `\n\nAlso found:\n• ${issues.join("\n• ")}` : "")
+        );
+      } else if (issues.length === 0) {
+        setScanResult("✅ Complete Diagnostic Scan Passed: all subsystems this scan could reach report HEALTHY with 0 discrepancies.");
       } else {
         setScanResult(`⚠️ Scan Discovered ${issues.length} item(s):\n• ` + issues.join("\n• "));
       }
-    } catch {
-      setScanResult("❌ Diagnostic scan completed with network timeout. Please verify API gateway status.");
+    } catch (e) {
+      setScanResult(`❌ Diagnostic scan failed to run: ${adminErrorMessage(e)}`);
     } finally {
       setScanning(false);
     }
   }
 
-  const checks = data?.checks ?? [
-    { service: "PostgreSQL 17 Database Pool", status: "HEALTHY", latencyMs: 3, details: "Active pool connection established" },
-    { service: "REST API Gateway (Port 4000)", status: "HEALTHY", latencyMs: 0, details: "Node.js cluster operational" },
-    { service: "Realtime WebSocket Hub (Port 3010)", status: "HEALTHY", latencyMs: 1, details: "Duplex state synchronizer running" },
-    { service: "Automated Tournament Worker", status: "HEALTHY", latencyMs: 1, details: "16-Player continuous scheduler ticking" },
-    { service: "Double-Entry Ledger & Solvency", status: "HEALTHY", latencyMs: 3, details: "All balance assertions hold zero discrepancy" },
-  ];
-
-  const avgLatency = Math.round(checks.reduce((acc, c) => acc + c.latencyMs, 0) / checks.length);
+  const checks = data?.checks ?? [];
+  const avgLatency = checks.length
+    ? Math.round(checks.reduce((acc, c) => acc + c.latencyMs, 0) / checks.length)
+    : null;
 
   return (
     <AdminPageLayout
@@ -97,10 +119,10 @@ export default function AdminHealthPage() {
       subtitle="Live status of database connection pools, game engines, blockchain ingestion nodes, and websockets."
       breadcrumb={["Home", "Admin", "System Health"]}
       stats={[
-        { label: "Overall Status", value: data?.status ?? "HEALTHY", trend: "0 Open Outages" },
-        { label: "Average Latency", value: `${avgLatency}ms`, trend: "Real-time" },
-        { label: "Memory (RSS)", value: `${data?.memory?.rssMb ?? 142} MB`, trend: "Stable Node VM" },
-        { label: "Heap Allocated", value: `${data?.memory?.heapUsedMb ?? 88} MB`, trend: "Zero Memory Leaks" },
+        { label: "Overall Status", value: fetchError ? "UNKNOWN" : data?.status ?? "…", trend: fetchError ? "Check failed" : "0 Open Outages" },
+        { label: "Average Latency", value: avgLatency !== null ? `${avgLatency}ms` : "—", trend: "Real-time" },
+        { label: "Memory (RSS)", value: data?.memory ? `${data.memory.rssMb} MB` : "—", trend: "Stable Node VM" },
+        { label: "Heap Allocated", value: data?.memory ? `${data.memory.heapUsedMb} MB` : "—", trend: "Zero Memory Leaks" },
       ]}
       actions={
         <button
@@ -113,6 +135,21 @@ export default function AdminHealthPage() {
         </button>
       }
     >
+      {fetchError && (
+        <div style={{
+          background: "rgba(239, 68, 68, 0.1)",
+          border: "1px solid rgba(239, 68, 68, 0.3)",
+          padding: "16px 20px",
+          borderRadius: "10px",
+          marginBottom: "20px",
+          fontSize: "14px",
+          lineHeight: "1.6",
+          color: "#fca5a5",
+        }}>
+          ⚠️ Unable to load real system health: {fetchError}. The numbers above reflect the last successful check, if any — they are NOT a live confirmation that the system is healthy right now.
+        </div>
+      )}
+
       {scanResult && (
         <div style={{
           background: scanResult.startsWith("✅") ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
@@ -144,18 +181,26 @@ export default function AdminHealthPage() {
               </tr>
             </thead>
             <tbody>
-              {checks.map((s) => (
-                <tr key={s.service}>
-                  <td><strong>{s.service}</strong></td>
-                  <td style={{ color: "#94a3b8", fontSize: "13px" }}>{s.details}</td>
-                  <td className="nz-num">{s.latencyMs}ms</td>
-                  <td>
-                    <span className={`${styles.badge} ${s.status === "HEALTHY" ? styles.badgeSuccess : styles.badgeWarning}`}>
-                      {s.status}
-                    </span>
+              {checks.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className={styles.emptyState}>
+                    {fetchError ? `Unable to load — ${fetchError}` : "Loading..."}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                checks.map((s) => (
+                  <tr key={s.service}>
+                    <td><strong>{s.service}</strong></td>
+                    <td style={{ color: "#94a3b8", fontSize: "13px" }}>{s.details}</td>
+                    <td className="nz-num">{s.latencyMs}ms</td>
+                    <td>
+                      <span className={`${styles.badge} ${s.status === "HEALTHY" ? styles.badgeSuccess : styles.badgeWarning}`}>
+                        {s.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
