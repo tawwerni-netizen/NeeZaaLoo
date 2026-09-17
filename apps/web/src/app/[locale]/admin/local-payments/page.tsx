@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { Button } from "@/components/Button";
-import { get, post } from "@/lib/api";
+import { get, post, del } from "@/lib/api";
 import { adminErrorMessage } from "@/lib/admin-errors";
 import styles from "@/components/admin/AdminPageLayout.module.css";
 
@@ -125,9 +125,7 @@ export default function AdminLocalPaymentsPage() {
   async function handleDeleteNumber(n: LocalNumber) {
     if (!window.confirm(`Are you sure you want to completely delete ${n.phoneNumber}?`)) return;
     try {
-      const res = await fetch(`/v1/admin/payments/local/numbers/${n.id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) throw data.error;
+      await del(`/v1/admin/payments/local/numbers/${n.id}`);
       flash(`${n.phoneNumber} deleted.`);
       void load();
     } catch (e: any) {
@@ -195,9 +193,7 @@ export default function AdminLocalPaymentsPage() {
   async function handleDeleteDevice(d: LocalDevice) {
     if (!window.confirm(`Are you sure you want to completely delete ${d.label}?`)) return;
     try {
-      const res = await fetch(`/v1/admin/payments/local/devices/${d.id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) throw data.error;
+      await del(`/v1/admin/payments/local/devices/${d.id}`);
       flash(`Device ${d.label} deleted.`);
       void load();
     } catch (e: any) {
