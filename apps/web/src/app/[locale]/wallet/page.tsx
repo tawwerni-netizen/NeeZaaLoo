@@ -259,8 +259,11 @@ function WalletContent() {
   useEffect(() => {
     if (activeTab === "deposit") {
       void loadDeposit(selectedAsset, selectedNetwork);
-      // Auto-refresh wallet every 8s to detect credited deposits
-      const poller = setInterval(() => { void reload(); }, 8000);
+      // Auto-refresh wallet every 12s when tab is visible to detect credited deposits
+      const poller = setInterval(() => {
+        if (typeof document !== "undefined" && document.hidden) return;
+        void reload();
+      }, 12000);
       return () => clearInterval(poller);
     }
   }, [activeTab, selectedAsset, selectedNetwork, loadDeposit, reload]);

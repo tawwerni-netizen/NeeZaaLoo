@@ -39,6 +39,28 @@ if (fs.existsSync(envPath)) {
 }
 
 process.env.NODE_ENV = "production";
+// Constrain libuv threadpool across all processes to prevent hitting Hostinger's 120-process ceiling
+process.env.UV_THREADPOOL_SIZE = process.env.UV_THREADPOOL_SIZE || "2";
+
+// Single-master cluster lock: prevents Phusion Passenger or multiple runners from spawning duplicate node processes
+const pidFile = path.join(here, ".server.pid");
+try {
+  if (fs.existsSync(pidFile)) {
+    const existingPid = parseInt(fs.readFileSync(pidFile, "utf8").trim(), 10);
+    if (existingPid && existingPid !== process.pid) {
+      try {
+        process.kill(existingPid, 0); // throws if process is dead
+        console.warn(`[Cluster Lock] Another master server (PID ${existingPid}) is already running. Exiting duplicate process to protect Hostinger process quota.`);
+        process.exit(0);
+      } catch {
+        // Stale pid file, ok to take over
+      }
+    }
+  }
+  fs.writeFileSync(pidFile, String(process.pid), "utf8");
+} catch (e) {
+  console.warn("[Cluster Lock] PID lock warning:", e.message);
+}
 
 // A boot-time report of what this process can actually SEE -- names and
 // presence only, never a value.
@@ -139,21 +161,36 @@ function getEnv(childPort) {
 }
 
 // ---------------------------------------------------------------------------
-// Process Management
+// Process Management (Hardened for Hostinger Cloud / cGroup Process Quotas)
 // ---------------------------------------------------------------------------
 const children = {};
+const crashTrackers = {};
 
 function startProcess(name, script, childPort, customCwd) {
+  let failures = 0;
+  let lastCrash = 0;
+
   function launch() {
     console.log(`[${name}] Spawning on port ${childPort}...`);
     try {
-      const childEnv = name === "Next.js"
+      const baseEnv = name === "Next.js"
         ? Object.assign({}, process.env, {
             PORT: String(childPort),
             HOSTNAME: "127.0.0.1",
             NODE_ENV: "production",
           })
         : getEnv(childPort);
+
+      // Capping threads per node instance prevents hitting Hostinger's 120-process ceiling
+      const nodeOptions = process.env.NODE_OPTIONS
+        ? `${process.env.NODE_OPTIONS} --v8-pool-size=1 --max-old-space-size=384`
+        : "--v8-pool-size=1 --max-old-space-size=384";
+
+      const childEnv = Object.assign({}, baseEnv, {
+        UV_THREADPOOL_SIZE: "2",
+        NODE_OPTIONS: nodeOptions,
+        OBSERVABILITY_PORT: String(childPort + 100),
+      });
 
       const child = spawn(process.execPath, [script], {
         cwd: customCwd || here,
@@ -166,8 +203,17 @@ function startProcess(name, script, childPort, customCwd) {
       });
 
       child.on("exit", (code, signal) => {
-        console.warn(`[${name}] Exited (code=${code}, signal=${signal}). Restarting in 2s...`);
-        setTimeout(launch, 2000);
+        const now = Date.now();
+        if (now - lastCrash > 60000) {
+          failures = 0; // Reset count if stable for > 60s
+        }
+        lastCrash = now;
+        failures++;
+
+        // Exponential backoff to prevent fork storms
+        const delay = failures <= 2 ? 2000 : failures <= 4 ? 5000 : failures <= 6 ? 10000 : 30000;
+        console.warn(`[${name}] Exited (code=${code}, signal=${signal}). Crash count: ${failures}. Restarting in ${delay / 1000}s...`);
+        setTimeout(launch, delay);
       });
 
       children[name] = child;
@@ -188,10 +234,16 @@ function shutdown() {
   Object.keys(children).forEach((k) => {
     try { if (children[k]) children[k].kill(); } catch (e) {}
   });
+  try {
+    if (fs.existsSync(pidFile)) fs.unlinkSync(pidFile);
+  } catch {}
   process.exit(0);
 }
 process.on("SIGINT",  shutdown);
 process.on("SIGTERM", shutdown);
+process.on("exit",    () => {
+  try { if (fs.existsSync(pidFile)) fs.unlinkSync(pidFile); } catch {}
+});
 
 // ---------------------------------------------------------------------------
 // Reverse Proxy Helpers

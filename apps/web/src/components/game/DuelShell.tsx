@@ -106,6 +106,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
     let cancelled = false;
 
     const checkStatus = async () => {
+      if (typeof document !== "undefined" && document.hidden) return;
       try {
         const d = await get<{ status?: string; result?: string | null; termination_reason?: string | null }>(
           `/v1/duels/${encodeURIComponent(duelId)}`
@@ -122,7 +123,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
       }
     };
 
-    timer = setInterval(() => void checkStatus(), 2000);
+    timer = setInterval(() => void checkStatus(), 4000);
     return () => {
       cancelled = true;
       clearInterval(timer);

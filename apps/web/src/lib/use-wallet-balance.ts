@@ -96,10 +96,11 @@ export function useWalletBalance(): WalletBalanceSummary {
     isMountedRef.current = true;
     void fetchBalance();
 
-    // Auto-refresh every 15 seconds to catch incoming deposits or match settlements
+    // Auto-refresh every 20 seconds when tab is visible to catch incoming deposits or settlements
     const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
       void fetchBalance();
-    }, 15000);
+    }, 20000);
 
     // Refresh when user returns to window tab
     const handleFocus = () => {

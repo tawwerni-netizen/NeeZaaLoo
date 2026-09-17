@@ -198,6 +198,22 @@ const SHOWCASE_SLIDES: ShowcaseSlide[] = [
     tagEn: "PLAY SEEGA ↗",
     targetHref: "/play/seega",
   },
+  {
+    id: "billiards",
+    gameId: "billiards",
+    image: "/images/games/billiards-hero.jpg",
+    superAr: "أرينا البلياردو الاحترافي 8-Ball",
+    superEn: "PRO 8-BALL BILLIARDS",
+    titleAr: "بلياردو الثمان كرات: دقة، فيزياء، ومنافسات كاش",
+    titleEn: "8-Ball Pool: Realistic Physics & Cash Duels",
+    metaAr: "محاكاة فيزيائية حقيقية • جوائز كاش فورية • بدون حظ",
+    metaEn: "Rigid-Body Physics • Real Cash Stakes • Pure Skill",
+    badgeAr: "مباشر كاش",
+    badgeEn: "CASH DUELS",
+    tagAr: "العب بلياردو ↗",
+    tagEn: "PLAY BILLIARDS ↗",
+    targetHref: "/play/billiards",
+  },
 ];
 
 const stage = (index: number, reduceMotion: boolean | null) => ({

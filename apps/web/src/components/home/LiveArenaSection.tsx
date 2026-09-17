@@ -31,6 +31,7 @@ export function LiveArenaSection() {
   useEffect(() => {
     let cancelled = false;
     const load = () => {
+      if (typeof document !== "undefined" && document.hidden) return;
       void get<{ matches: LiveMatch[] }>(`/v1/duels/live?limit=${PREVIEW_LIMIT}`)
         .then((r) => { if (!cancelled) setMatches(r.matches); })
         .catch(() => { if (!cancelled) setMatches((prev) => prev ?? []); });

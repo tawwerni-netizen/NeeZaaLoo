@@ -92,7 +92,7 @@ function WatchContent() {
     let cancelled = false;
     loadMatches();
     const interval = setInterval(() => {
-      if (!cancelled) void loadMatches();
+      if (!cancelled && typeof document !== "undefined" && !document.hidden) void loadMatches();
     }, POLL_MS);
     return () => { cancelled = true; clearInterval(interval); };
   }, [selectedGame, searchHandle, includeBots]);

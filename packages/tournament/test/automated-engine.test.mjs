@@ -21,6 +21,8 @@ import { createAutomatedTournamentEngine } from "../src/automated-engine.mjs";
 async function fresh() {
   const db = await PGlite.create();
   await migrate(db);
+  // Reset auto_tournaments_enabled to clean baseline so tests isolate specific game configurations
+  await db.query("UPDATE game SET auto_tournaments_enabled = FALSE");
   const trn = createTournamentService(db);
   const engine = createAutomatedTournamentEngine(db, trn);
   return { db, trn, engine };

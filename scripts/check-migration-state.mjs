@@ -72,6 +72,7 @@ const CHECKS = [
   ["0058_platform_fee_12_percent.sql", "row", "economy_rule.standard"],
   ["0059_billiards.sql", "row", "game.billiards"],
   ["0060_payment_rail_limits_10_usd.sql", "min_withdrawal_10", "payment_rail"],
+  ["0061_enable_billiards_cash_and_tournaments.sql", "billiards_cash_and_tournaments", "game.billiards"],
 ];
 
 async function objectExists(client, kind, name) {
@@ -120,6 +121,10 @@ async function objectExists(client, kind, name) {
     case "min_withdrawal_10": {
       const r = await client.query("SELECT min_withdrawal_minor FROM payment_rail WHERE id = 'USDT_TRON'");
       return r.rows.length > 0 && String(r.rows[0].min_withdrawal_minor) === "10000000";
+    }
+    case "billiards_cash_and_tournaments": {
+      const r = await client.query("SELECT cash_enabled, auto_tournaments_enabled FROM game WHERE id = 'billiards'");
+      return r.rows.length > 0 && r.rows[0].cash_enabled === true && r.rows[0].auto_tournaments_enabled === true;
     }
     default:
       return null;

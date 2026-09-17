@@ -97,6 +97,21 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
     tagEn: "SPECTATE & PLAY ↗",
     href: "/watch",
   },
+  {
+    id: "billiards_masters",
+    image: "/images/tournaments/tournament-billiards.jpg",
+    superAr: "بطولة الأساتذة الكبرى للبلياردو",
+    superEn: "BILLIARDS 8-BALL MASTERS",
+    titleAr: "كأس محترفي البلياردو (8-Ball)",
+    titleEn: "8-Ball Pool Championship Masters",
+    metaAr: "فيزياء واقعية كاملة • جوائز كاش فورية • نظام خروج المغلوب بدون حظ",
+    metaEn: "True Rigid-Body Physics • Real Cash Pots • Provably Fair Knockout",
+    badgeAr: "بطولة مميزة",
+    badgeEn: "FEATURED TOURNAMENT",
+    tagAr: "العب واربح كاش ↗",
+    tagEn: "ENTER & WIN CASH ↗",
+    href: "/tournaments",
+  },
 ];
 
 export function TournamentBannerSlider() {

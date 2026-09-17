@@ -17,7 +17,7 @@ export const billiardsPlugin: GamePlugin = {
   supportsAI: true,
   difficulties: ["EASY", "MEDIUM", "HARD", "EXPERT"],
   supportsDraw: true,
-  cashEnabled: false, // matches game.cash_enabled in db/migrations/0059 -- off until reviewed and flipped on, same as every launch game
+  cashEnabled: true, // enabled via db/migrations/0061
   Board: BilliardsBoard,
 };
 

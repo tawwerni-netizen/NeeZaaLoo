@@ -169,72 +169,77 @@ export function simulateShot(balls, angle, power) {
   const frames = [];
 
   const maxSteps = Math.round(MAX_SIM_SECONDS / DT);
+  const SUBSTEPS = 2;
+  const subDt = DT / SUBSTEPS;
   let step = 0;
   for (; step < maxSteps; step++) {
-    // Integrate + friction.
-    for (const b of state.values()) {
-      if (b.potted) continue;
-      b.x += b.vx * DT;
-      b.y += b.vy * DT;
-      const sp = Math.hypot(b.vx, b.vy);
-      if (sp > 0) {
-        const decay = Math.max(0, sp - FRICTION_DECEL * DT);
-        const scale = sp > 0 ? decay / sp : 0;
-        b.vx *= scale;
-        b.vy *= scale;
-        if (decay < REST_SPEED) { b.vx = 0; b.vy = 0; }
-      }
-    }
-
-    // Rails.
-    for (const b of state.values()) {
-      if (b.potted) continue;
-      let bounced = false;
-      if (b.x - BALL_R < 0) { b.x = BALL_R; b.vx = Math.abs(b.vx) * RAIL_RESTITUTION; bounced = true; }
-      else if (b.x + BALL_R > TABLE_W) { b.x = TABLE_W - BALL_R; b.vx = -Math.abs(b.vx) * RAIL_RESTITUTION; bounced = true; }
-      if (b.y - BALL_R < 0) { b.y = BALL_R; b.vy = Math.abs(b.vy) * RAIL_RESTITUTION; bounced = true; }
-      else if (b.y + BALL_R > TABLE_H) { b.y = TABLE_H - BALL_R; b.vy = -Math.abs(b.vy) * RAIL_RESTITUTION; bounced = true; }
-      if (bounced && contactHappened) anyRailAfterFirstContact = true;
-    }
-
-    // Ball-ball collisions (equal mass -> normal-component velocity swap).
-    const ids = [...state.keys()].filter((id) => !state.get(id).potted);
-    for (let i = 0; i < ids.length; i++) {
-      for (let j = i + 1; j < ids.length; j++) {
-        const a = state.get(ids[i]), c = state.get(ids[j]);
-        const dx = c.x - a.x, dy = c.y - a.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist === 0 || dist >= BALL_R * 2) continue;
-
-        if (!contactHappened && (a.id === CUE || c.id === CUE)) {
-          contactHappened = true;
-          firstContact = a.id === CUE ? c.id : a.id;
-        }
-
-        const nx = dx / dist, ny = dy / dist;
-        const overlap = BALL_R * 2 - dist;
-        a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
-        c.x += nx * overlap / 2; c.y += ny * overlap / 2;
-
-        const relVx = c.vx - a.vx, relVy = c.vy - a.vy;
-        const approach = relVx * nx + relVy * ny;
-        if (approach < 0) {
-          const impulse = -(1 + BALL_RESTITUTION) * approach / 2;
-          a.vx -= impulse * nx; a.vy -= impulse * ny;
-          c.vx += impulse * nx; c.vy += impulse * ny;
+    for (let sub = 0; sub < SUBSTEPS; sub++) {
+      // Integrate + rolling friction.
+      for (const b of state.values()) {
+        if (b.potted) continue;
+        b.x += b.vx * subDt;
+        b.y += b.vy * subDt;
+        const sp = Math.hypot(b.vx, b.vy);
+        if (sp > 0) {
+          const decay = Math.max(0, sp - FRICTION_DECEL * subDt);
+          const scale = sp > 0 ? decay / sp : 0;
+          b.vx *= scale;
+          b.vy *= scale;
+          if (decay < REST_SPEED) { b.vx = 0; b.vy = 0; }
         }
       }
-    }
 
-    // Pockets.
-    for (const b of state.values()) {
-      if (b.potted) continue;
-      for (const pocket of POCKETS) {
-        if (Math.hypot(b.x - pocket.x, b.y - pocket.y) <= POCKET_R) {
-          b.potted = true;
-          b.vx = 0; b.vy = 0;
-          potted.push(b.id);
-          break;
+      // Rails with realistic cushion restitution and damping.
+      for (const b of state.values()) {
+        if (b.potted) continue;
+        let bounced = false;
+        if (b.x - BALL_R < 0) { b.x = BALL_R; b.vx = Math.abs(b.vx) * RAIL_RESTITUTION; bounced = true; }
+        else if (b.x + BALL_R > TABLE_W) { b.x = TABLE_W - BALL_R; b.vx = -Math.abs(b.vx) * RAIL_RESTITUTION; bounced = true; }
+        if (b.y - BALL_R < 0) { b.y = BALL_R; b.vy = Math.abs(b.vy) * RAIL_RESTITUTION; bounced = true; }
+        else if (b.y + BALL_R > TABLE_H) { b.y = TABLE_H - BALL_R; b.vy = -Math.abs(b.vy) * RAIL_RESTITUTION; bounced = true; }
+        if (bounced && contactHappened) anyRailAfterFirstContact = true;
+      }
+
+      // Ball-ball collisions (equal mass -> normal-component velocity swap).
+      const ids = [...state.keys()].filter((id) => !state.get(id).potted);
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          const a = state.get(ids[i]), c = state.get(ids[j]);
+          const dx = c.x - a.x, dy = c.y - a.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist === 0 || dist >= BALL_R * 2) continue;
+
+          if (!contactHappened && (a.id === CUE || c.id === CUE)) {
+            contactHappened = true;
+            firstContact = a.id === CUE ? c.id : a.id;
+          }
+
+          const nx = dx / dist, ny = dy / dist;
+          const overlap = BALL_R * 2 - dist;
+          a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
+          c.x += nx * overlap / 2; c.y += ny * overlap / 2;
+
+          const relVx = c.vx - a.vx, relVy = c.vy - a.vy;
+          const approach = relVx * nx + relVy * ny;
+          if (approach < 0) {
+            const impulse = -(1 + BALL_RESTITUTION) * approach / 2;
+            a.vx -= impulse * nx; a.vy -= impulse * ny;
+            c.vx += impulse * nx; c.vy += impulse * ny;
+          }
+        }
+      }
+
+      // Pockets with radial suction dynamics.
+      for (const b of state.values()) {
+        if (b.potted) continue;
+        for (const pocket of POCKETS) {
+          const pDist = Math.hypot(b.x - pocket.x, b.y - pocket.y);
+          if (pDist <= POCKET_R) {
+            b.potted = true;
+            b.vx = 0; b.vy = 0;
+            potted.push(b.id);
+            break;
+          }
         }
       }
     }
