@@ -42,26 +42,6 @@ process.env.NODE_ENV = "production";
 // Constrain libuv threadpool across all processes to prevent hitting Hostinger's 120-process ceiling
 process.env.UV_THREADPOOL_SIZE = process.env.UV_THREADPOOL_SIZE || "2";
 
-// Single-master cluster lock: prevents Phusion Passenger or multiple runners from spawning duplicate node processes
-const pidFile = path.join(here, ".server.pid");
-try {
-  if (fs.existsSync(pidFile)) {
-    const existingPid = parseInt(fs.readFileSync(pidFile, "utf8").trim(), 10);
-    if (existingPid && existingPid !== process.pid) {
-      try {
-        process.kill(existingPid, 0); // throws if process is dead
-        console.warn(`[Cluster Lock] Another master server (PID ${existingPid}) is already running. Exiting duplicate process to protect Hostinger process quota.`);
-        process.exit(0);
-      } catch {
-        // Stale pid file, ok to take over
-      }
-    }
-  }
-  fs.writeFileSync(pidFile, String(process.pid), "utf8");
-} catch (e) {
-  console.warn("[Cluster Lock] PID lock warning:", e.message);
-}
-
 // A boot-time report of what this process can actually SEE -- names and
 // presence only, never a value.
 //
@@ -234,16 +214,10 @@ function shutdown() {
   Object.keys(children).forEach((k) => {
     try { if (children[k]) children[k].kill(); } catch (e) {}
   });
-  try {
-    if (fs.existsSync(pidFile)) fs.unlinkSync(pidFile);
-  } catch {}
   process.exit(0);
 }
 process.on("SIGINT",  shutdown);
 process.on("SIGTERM", shutdown);
-process.on("exit",    () => {
-  try { if (fs.existsSync(pidFile)) fs.unlinkSync(pidFile); } catch {}
-});
 
 // ---------------------------------------------------------------------------
 // Reverse Proxy Helpers
