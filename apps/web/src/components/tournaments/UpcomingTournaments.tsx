@@ -69,12 +69,9 @@ export function getTournamentCover(gameId: string): string {
     reversi: "/images/tournaments/tournament-reversi.jpg",
     // Not tournament-chess.jpg / chess-hero.webp: that generated art has
     // real chess grandmasters' names on its scoreboard, implying an
-    // endorsement that doesn't exist. Same reasoning for billiards below
-    // (a fabricated "AETHER Esports" sponsor logo baked into the photo).
-    // Both point at hand-authored, brand-safe SVG art instead until a
-    // properly-prompted replacement photo exists.
+    // endorsement that doesn't exist. Hand-authored, brand-safe SVG art
+    // instead until a properly-prompted replacement photo exists.
     chess: "/images/games/chess-cover-safe.svg",
-    billiards: "/images/games/billiards-cover-safe.svg",
     "connect-four": "/images/tournaments/tournament-connect-four.jpg",
     checkers: "/images/tournaments/tournament-checkers.jpg",
     dominoes: "/images/games/dominoes-hero.webp",

@@ -65,7 +65,7 @@
       }
     },
     "games": {
-      "heading": "11 jeux, une base équitable",
+      "heading": "10 jeux, une base équitable",
       "duration_label": "Durée",
       "mode_label": "Mode",
       "play_cta": "Jouer à {name}",
@@ -187,7 +187,7 @@
     },
     "learn": {
       "heading": "Apprendre",
-      "body": "Règles, notation, et comment l'équité côté serveur fonctionne vraiment — pour chacun des onze jeux.",
+      "body": "Règles, notation, et comment l'équité côté serveur fonctionne vraiment — pour chacun des dix jeux.",
       "cta": "Lire les guides →"
     },
     "download": {
@@ -1006,7 +1006,7 @@
   },
   "gamesPage": {
     "heading": "Jeux",
-    "subhead": "Onze jeux à autorité serveur. Choisis-en un pour voir comment il se joue, ou lance-toi directement.",
+    "subhead": "Dix jeux à autorité serveur. Choisis-en un pour voir comment il se joue, ou lance-toi directement.",
     "filter_all": "Tous",
     "filter_turnbased": "Au tour par tour",
     "filter_shared_clock": "Horloge partagée",

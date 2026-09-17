@@ -60,9 +60,9 @@ export const FAQ_DATA: LocalizedFAQ = {
     {
       id: "games-1",
       category: "games",
-      question: "ما هي الألعاب الإحدى عشرة المتاحة على منصة Nizalo؟",
-      answer: "تضم منصة Nizalo حالياً 11 لعبة مهارة واستراتيجية كلاسيكية: الشطرنج، البلياردو، الداما، الدومينو، طاولة الزهر، سيجة، كونكت 4، إكس أو (تيك تاك تو)، الحساب السريع، ريفيرسي (عطيل)، وجوموكو. تتبع جميع الألعاب القواعد الرسمية المعترف بها دولياً مع تحكيم آلي حازم من الخادم.",
-      tags: ["الألعاب", "شطرنج", "بلياردو", "داما", "دومينو", "طاولة الزهر", "سيجة", "كونكت 4", "إكس أو", "حساب سريع", "ريفيرسي", "جوموكو"]
+      question: "ما هي الألعاب العشر المتاحة على منصة Nizalo؟",
+      answer: "تضم منصة Nizalo حالياً 10 ألعاب مهارة واستراتيجية كلاسيكية: الشطرنج، الداما، الدومينو، طاولة الزهر، سيجة، كونكت 4، إكس أو (تيك تاك تو)، الحساب السريع، ريفيرسي (عطيل)، وجوموكو. تتبع جميع الألعاب القواعد الرسمية المعترف بها دولياً مع تحكيم آلي حازم من الخادم.",
+      tags: ["الألعاب", "شطرنج", "داما", "دومينو", "طاولة الزهر", "سيجة", "كونكت 4", "إكس أو", "حساب سريع", "ريفيرسي", "جوموكو"]
     },
     {
       id: "games-2",
@@ -84,7 +84,7 @@ export const FAQ_DATA: LocalizedFAQ = {
       id: "match-2",
       category: "matchmaking",
       question: "ما هو معدل المهارة العالمي (Global Skill Score)؟",
-      answer: "هو مؤشر رقمي مئوي مركب يعكس مستوى مهارة اللاعب الإجمالية عبر جميع الألعاب الإحدى عشرة، ويحسب بدقة بناءً على نسبة الانتصارات، ومعدل دقة التحركات، وعدد المباريات المنجزة.",
+      answer: "هو مؤشر رقمي مئوي مركب يعكس مستوى مهارة اللاعب الإجمالية عبر جميع الألعاب العشر، ويحسب بدقة بناءً على نسبة الانتصارات، ومعدل دقة التحركات، وعدد المباريات المنجزة.",
       tags: ["gss", "المهارة العالمية", "تصنيف", "المتصدرين"]
     },
 
@@ -353,9 +353,9 @@ export const FAQ_DATA: LocalizedFAQ = {
     {
       id: "games-1",
       category: "games",
-      question: "Which 11 games are available on Nizalo?",
-      answer: "Nizalo currently features 11 skill-based strategy games: Chess, Billiards, Checkers, Dominoes, Backgammon, Seega, Connect Four, XO (Tic-Tac-Toe), Speed Math, Reversi (Othello), and Gomoku. All games use standard official rules with server-enforced validation.",
-      tags: ["games", "rules", "chess", "billiards", "checkers", "dominoes", "backgammon", "seega", "connect four", "xo", "speed math", "reversi", "gomoku"]
+      question: "Which 10 games are available on Nizalo?",
+      answer: "Nizalo currently features 10 skill-based strategy games: Chess, Checkers, Dominoes, Backgammon, Seega, Connect Four, XO (Tic-Tac-Toe), Speed Math, Reversi (Othello), and Gomoku. All games use standard official rules with server-enforced validation.",
+      tags: ["games", "rules", "chess", "checkers", "dominoes", "backgammon", "seega", "connect four", "xo", "speed math", "reversi", "gomoku"]
     },
     {
       id: "games-2",
@@ -377,7 +377,7 @@ export const FAQ_DATA: LocalizedFAQ = {
       id: "match-2",
       category: "matchmaking",
       question: "What is the Global Skill Score (GSS)?",
-      answer: "Your Global Skill Score is a real percentile-based aggregate metric calculated from your performance, win rate, accuracy, and duel volume across all 11 games.",
+      answer: "Your Global Skill Score is a real percentile-based aggregate metric calculated from your performance, win rate, accuracy, and duel volume across all 10 games.",
       tags: ["gss", "global skill score", "ranking", "leaderboard"]
     },
 
@@ -671,8 +671,8 @@ export const FAQ_DATA: LocalizedFAQ = {
     {
         "id": "games-1",
         "category": "games",
-        "question": "Nizalo 平台上目前提供哪 11 款经典竞技游戏？",
-        "answer": "Nizalo 目前拥有 11 款服务器主控的纯脑力技能棋盘竞技游戏：国际象棋 (Chess)、台球 (Billiards)、跳棋 (Checkers)、多米诺骨牌 (Dominoes)、双陆棋 (Backgammon)、西加棋 (Seega)、四子棋 (Connect Four)、井字棋 (XO)、速算大师 (Speed Math)、黑白棋/奥赛罗 (Reversi) 以及五子棋 (Gomoku)。所有比赛均由官方服务器权威判决规则与计时。",
+        "question": "Nizalo 平台上目前提供哪 10 款经典竞技游戏？",
+        "answer": "Nizalo 目前拥有 10 款服务器主控的纯脑力技能棋盘竞技游戏：国际象棋 (Chess)、跳棋 (Checkers)、多米诺骨牌 (Dominoes)、双陆棋 (Backgammon)、西加棋 (Seega)、四子棋 (Connect Four)、井字棋 (XO)、速算大师 (Speed Math)、黑白棋/奥赛罗 (Reversi) 以及五子棋 (Gomoku)。所有比赛均由官方服务器权威判决规则与计时。",
         "tags": [
             "游戏列表",
             "游戏规则",
@@ -714,7 +714,7 @@ export const FAQ_DATA: LocalizedFAQ = {
         "id": "match-2",
         "category": "matchmaking",
         "question": "什么是全球综合技能评分 (Global Skill Score / GSS)？",
-        "answer": "GSS 是平台跨越所有 11 款游戏综合计算的百分位加权实力指标，根据玩家在各项目的历史胜率、走棋准确率、对局量及对手实力动态加权生成，是全服大师榜的核心凭证。",
+        "answer": "GSS 是平台跨越所有 10 款游戏综合计算的百分位加权实力指标，根据玩家在各项目的历史胜率、走棋准确率、对局量及对手实力动态加权生成，是全服大师榜的核心凭证。",
         "tags": [
             "gss",
             "综合技能评分",
@@ -1121,8 +1121,8 @@ export const FAQ_DATA: LocalizedFAQ = {
     {
         "id": "games-1",
         "category": "games",
-        "question": "¿Cuáles son los 11 juegos de habilidad disponibles en Nizalo?",
-        "answer": "Nizalo cuenta con 11 juegos estratégicos arbitrados íntegramente por el servidor: Ajedrez (Chess), Billar (Billiards), Damas (Checkers), Dominó (Dominoes), Backgammon, Seega, Conecta 4 (Connect Four), Tres en Raya (XO), Cálculo Rápido (Speed Math), Reversi y Gomoku. Todas las partidas aplican reglas oficiales rigurosas.",
+        "question": "¿Cuáles son los 10 juegos de habilidad disponibles en Nizalo?",
+        "answer": "Nizalo cuenta con 10 juegos estratégicos arbitrados íntegramente por el servidor: Ajedrez (Chess), Damas (Checkers), Dominó (Dominoes), Backgammon, Seega, Conecta 4 (Connect Four), Tres en Raya (XO), Cálculo Rápido (Speed Math), Reversi y Gomoku. Todas las partidas aplican reglas oficiales rigurosas.",
         "tags": [
             "juegos",
             "reglas",
@@ -1166,7 +1166,7 @@ export const FAQ_DATA: LocalizedFAQ = {
         "id": "match-2",
         "category": "matchmaking",
         "question": "¿Qué es la Puntuación Global de Habilidad (Global Skill Score / GSS)?",
-        "answer": "El GSS es una métrica porcentual integral calculada a partir de su porcentaje de victorias, precisión de movimientos y volumen de juego en los 11 juegos, reflejando su nivel maestro global.",
+        "answer": "El GSS es una métrica porcentual integral calculada a partir de su porcentaje de victorias, precisión de movimientos y volumen de juego en los 10 juegos, reflejando su nivel maestro global.",
         "tags": [
             "gss",
             "clasificación global",
@@ -1565,8 +1565,8 @@ export const FAQ_DATA: LocalizedFAQ = {
     {
         "id": "games-1",
         "category": "games",
-        "question": "Quels sont les 11 jeux de compétence proposés sur Nizalo ?",
-        "answer": "Nizalo propose 11 jeux de réflexion et de stratégie régis entièrement par le serveur : Échecs (Chess), Billard (Billiards), Dames (Checkers), Dominos (Dominoes), Backgammon, Seega, Puissance 4 (Connect Four), Morpion (XO), Calcul Rapide (Speed Math), Reversi et Gomoku. Chaque partie applique les règles officielles strictes.",
+        "question": "Quels sont les 10 jeux de compétence proposés sur Nizalo ?",
+        "answer": "Nizalo propose 10 jeux de réflexion et de stratégie régis entièrement par le serveur : Échecs (Chess), Dames (Checkers), Dominos (Dominoes), Backgammon, Seega, Puissance 4 (Connect Four), Morpion (XO), Calcul Rapide (Speed Math), Reversi et Gomoku. Chaque partie applique les règles officielles strictes.",
         "tags": [
             "jeux",
             "règles",
@@ -1609,7 +1609,7 @@ export const FAQ_DATA: LocalizedFAQ = {
         "id": "match-2",
         "category": "matchmaking",
         "question": "Qu'est-ce que le score global de compétence (Global Skill Score / GSS) ?",
-        "answer": "Le GSS est un indicateur composite exprimé en centile, synthétisant vos taux de victoire, votre précision et votre volume de jeu à travers l'ensemble des 11 disciplines de la plateforme.",
+        "answer": "Le GSS est un indicateur composite exprimé en centile, synthétisant vos taux de victoire, votre précision et votre volume de jeu à travers l'ensemble des 10 disciplines de la plateforme.",
         "tags": [
             "gss",
             "score global",
@@ -2002,8 +2002,8 @@ export const FAQ_DATA: LocalizedFAQ = {
     {
         "id": "games-1",
         "category": "games",
-        "question": "Nizalo पर कौन से 11 कौशल-आधारित बोर्ड गेम उपलब्ध हैं?",
-        "answer": "Nizalo पर 11 आधिकारिक, सर्वर-नियंत्रित कौशल खेल शामिल हैं: शतरंज (Chess), बिलियर्ड्स (Billiards), चेकर्स (Checkers), डोमिनोज़ (Dominoes), बैकगैमौन (Backgammon), सीगा (Seega), कनेक्ट फोर (Connect Four), एक्स-ओ / टिक-टैक-टो (XO), स्पीड मैथ (Speed Math), रिवर्सी (Reversi), और गोमोकू (Gomoku)। सभी खेलों के परिणाम सर्वर द्वारा निष्पक्ष रूप से निर्धारित होते हैं।",
+        "question": "Nizalo पर कौन से 10 कौशल-आधारित बोर्ड गेम उपलब्ध हैं?",
+        "answer": "Nizalo पर 10 आधिकारिक, सर्वर-नियंत्रित कौशल खेल शामिल हैं: शतरंज (Chess), चेकर्स (Checkers), डोमिनोज़ (Dominoes), बैकगैमौन (Backgammon), सीगा (Seega), कनेक्ट फोर (Connect Four), एक्स-ओ / टिक-टैक-टो (XO), स्पीड मैथ (Speed Math), रिवर्सी (Reversi), और गोमोकू (Gomoku)। सभी खेलों के परिणाम सर्वर द्वारा निष्पक्ष रूप से निर्धारित होते हैं।",
         "tags": [
             "खेल सूची",
             "नियम",
@@ -2046,7 +2046,7 @@ export const FAQ_DATA: LocalizedFAQ = {
         "id": "match-2",
         "category": "matchmaking",
         "question": "ग्लोबल स्किल स्कोर (GSS) क्या है और यह कैसे काम करता है?",
-        "answer": "GSS सभी 11 खेलों में आपके प्रदर्शन, जीत प्रतिशत और सटीकता के आधार पर तैयार किया गया एक समग्र रेटिंग स्कोर है, जो आपकी संपूर्ण महारत को दर्शाता है।",
+        "answer": "GSS सभी 10 खेलों में आपके प्रदर्शन, जीत प्रतिशत और सटीकता के आधार पर तैयार किया गया एक समग्र रेटिंग स्कोर है, जो आपकी संपूर्ण महारत को दर्शाता है।",
         "tags": [
             "gss",
             "कौशल स्कोर",

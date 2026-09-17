@@ -16,7 +16,6 @@ const STATIC_ROUTES = [
 
 const GAME_SLUGS = [
   "chess",
-  "billiards",
   "checkers",
   "dominoes",
   "backgammon",

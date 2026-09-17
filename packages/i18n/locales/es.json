@@ -65,7 +65,7 @@
       }
     },
     "games": {
-      "heading": "11 juegos, una base justa",
+      "heading": "10 juegos, una base justa",
       "duration_label": "Duración",
       "mode_label": "Modo",
       "play_cta": "Jugar {name}",
@@ -187,7 +187,7 @@
     },
     "learn": {
       "heading": "Aprende",
-      "body": "Reglas, puntuación, y cómo funciona realmente la equidad del lado del servidor — para cada uno de los once juegos.",
+      "body": "Reglas, puntuación, y cómo funciona realmente la equidad del lado del servidor — para cada uno de los diez juegos.",
       "cta": "Leer las guías →"
     },
     "download": {
@@ -1006,7 +1006,7 @@
   },
   "gamesPage": {
     "heading": "Juegos",
-    "subhead": "Once juegos con autoridad del servidor. Elige uno para ver cómo se juega, o empieza directamente.",
+    "subhead": "Diez juegos con autoridad del servidor. Elige uno para ver cómo se juega, o empieza directamente.",
     "filter_all": "Todos",
     "filter_turnbased": "Por turnos",
     "filter_shared_clock": "Reloj compartido",

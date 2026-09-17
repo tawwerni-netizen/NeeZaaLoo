@@ -65,7 +65,7 @@
       }
     },
     "games": {
-      "heading": "十一款游戏,同一套公平机制",
+      "heading": "十款游戏,同一套公平机制",
       "duration_label": "时长",
       "mode_label": "模式",
       "play_cta": "开始{name}",
@@ -187,7 +187,7 @@
     },
     "learn": {
       "heading": "学习",
-      "body": "十一款游戏的规则、计分方式,以及服务器端公平机制的真实运作原理。",
+      "body": "十款游戏的规则、计分方式,以及服务器端公平机制的真实运作原理。",
       "cta": "阅读指南 →"
     },
     "download": {
@@ -1006,7 +1006,7 @@
   },
   "gamesPage": {
     "heading": "游戏",
-    "subhead": "十一款服务器裁决的游戏。选一款看看怎么玩,或者直接开始。",
+    "subhead": "十款服务器裁决的游戏。选一款看看怎么玩,或者直接开始。",
     "filter_all": "全部",
     "filter_turnbased": "回合制",
     "filter_shared_clock": "共享计时",

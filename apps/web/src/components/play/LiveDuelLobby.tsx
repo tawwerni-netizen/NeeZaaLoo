@@ -34,7 +34,6 @@ const INITIAL_OPEN_DUELS: OpenDuel[] = [];
 
 const AVAILABLE_GAMES = [
   { id: "chess", labelEn: "Chess", labelAr: "شطرنج" },
-  { id: "billiards", labelEn: "Billiards", labelAr: "بلياردو" },
   { id: "backgammon", labelEn: "Backgammon", labelAr: "طاولة زهر" },
   { id: "dominoes", labelEn: "Dominoes", labelAr: "دومينو" },
   { id: "connect-four", labelEn: "Connect Four", labelAr: "أربعة على التوالي" },

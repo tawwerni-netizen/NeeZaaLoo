@@ -100,25 +100,6 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
     tagEn: "SPECTATE & PLAY ↗",
     href: "/watch",
   },
-  {
-    id: "billiards_masters",
-    // Not the AI-generated tournament-billiards.jpg: it has a fabricated
-    // "AETHER Esports" sponsor logo baked into the photo. Hand-authored
-    // SVG art instead until a properly-prompted replacement exists (see
-    // getTournamentCover()'s own comment in UpcomingTournaments.tsx).
-    image: "/images/games/billiards-cover-safe.svg",
-    superAr: "بطولة الأساتذة الكبرى للبلياردو",
-    superEn: "BILLIARDS 8-BALL MASTERS",
-    titleAr: "كأس محترفي البلياردو (8-Ball)",
-    titleEn: "8-Ball Pool Championship Masters",
-    metaAr: "فيزياء واقعية كاملة • جوائز كاش فورية • نظام خروج المغلوب بدون حظ",
-    metaEn: "True Rigid-Body Physics • Real Cash Pots • Provably Fair Knockout",
-    badgeAr: "بطولة مميزة",
-    badgeEn: "FEATURED TOURNAMENT",
-    tagAr: "العب واربح كاش ↗",
-    tagEn: "ENTER & WIN CASH ↗",
-    href: "/tournaments",
-  },
 ];
 
 export function TournamentBannerSlider() {
