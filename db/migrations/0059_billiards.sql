@@ -14,4 +14,6 @@
 -- every other game's cash eligibility already goes through.
 
 INSERT INTO game (id, display_name, plugin_version, is_live, cash_enabled) VALUES
-  ('billiards', 'Billiards', 1, TRUE, FALSE);
+  ('billiards', 'Billiards', 1, TRUE, FALSE)
+ON CONFLICT (id) DO UPDATE SET is_live = TRUE;
+

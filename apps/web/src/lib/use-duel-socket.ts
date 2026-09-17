@@ -92,13 +92,14 @@ export function useDuelSocket(duelId: string) {
           setReconnecting(false);
           everConnectedRef.current = true;
         } else if (msg.t === "ERROR") {
-          if (msg.code === "NO_SUCH_DUEL" && joinRetriesRef.current < 6) {
+          if (msg.code === "NO_SUCH_DUEL" && joinRetriesRef.current < 10) {
             joinRetriesRef.current++;
+            const delay = Math.min(250 * joinRetriesRef.current, 1500);
             setTimeout(() => {
               if (socketRef.current?.readyState === WebSocket.OPEN) {
                 socketRef.current.send(JSON.stringify({ t: "JOIN", duelId }));
               }
-            }, 500);
+            }, delay);
           }
         } else if (msg.t === "STATE") {
           setSeat((msg.seat as number | null | undefined) ?? null);

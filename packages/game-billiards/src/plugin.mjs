@@ -95,6 +95,10 @@ export const BilliardsPlugin = {
     next.groups = resolved.groups;
     next.broken = true;
     next.pottedEver = [...next.pottedEver, ...resolved.potted.filter((id) => id !== CUE)];
+    // Prune frames on older shots to keep memory footprint bounded
+    if (next.shots.length > 0) {
+      delete next.shots[next.shots.length - 1].frames;
+    }
     next.shots.push({
       seat: ctx.seat, angle, power, potted: resolved.potted, foul: resolved.foul, foulReason: resolved.foulReason,
       winner: resolved.winner,
@@ -102,6 +106,7 @@ export const BilliardsPlugin = {
         : (resolved.eightPotted && !resolved.foul && !resolved.cueScratched && state.shots.length === 0 ? "EIGHT_BALL_ON_BREAK"
           : resolved.eightPotted && (resolved.foul || resolved.cueScratched) ? "EIGHT_BALL_FOUL"
           : "EIGHT_BALL_CLEARED"),
+      frames: shotResult.frames,
     });
 
     if (resolved.cueScratched) respotCueBall(next.balls);

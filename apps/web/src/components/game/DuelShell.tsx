@@ -108,21 +108,36 @@ export function DuelShell({ duelId }: { duelId: string }) {
     const checkStatus = async () => {
       if (typeof document !== "undefined" && document.hidden) return;
       try {
-        const d = await get<{ status?: string; result?: string | null; termination_reason?: string | null }>(
+        const d = await get<{
+          id?: string;
+          game_id?: string;
+          seat_0?: string;
+          seat_1?: string;
+          status?: string;
+          result?: string | null;
+          termination_reason?: string | null;
+          is_vs_computer?: boolean;
+        }>(
           `/v1/duels/${encodeURIComponent(duelId)}`
         );
-        if (!cancelled && d && (d.status === "COMPLETED" || d.status === "SETTLED")) {
-          setCompletedInfo({
-            completed: true,
-            result: d.result ?? null,
-            reason: d.termination_reason ?? null,
-          });
+        if (!cancelled && d) {
+          if (d.game_id) setGameId((prev) => prev ?? d.game_id!);
+          if (d.seat_0 && d.seat_1) setPlayers((prev) => prev ?? [d.seat_0!, d.seat_1!]);
+          if (d.status === "COMPLETED" || d.status === "SETTLED") {
+            setCompletedInfo({
+              completed: true,
+              result: d.result ?? null,
+              reason: d.termination_reason ?? null,
+            });
+          }
         }
       } catch {
         // Non-fatal poll error
       }
     };
 
+    // Immediate fetch on mount ensures initial duel metadata is populated without waiting for interval or WS handshake
+    void checkStatus();
     timer = setInterval(() => void checkStatus(), 4000);
     return () => {
       cancelled = true;
@@ -273,7 +288,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
             onRematch={() => void handleRematch()}
             rematchBusy={rematchBusy}
           />
-        ) : plugin && view ? (
+        ) : plugin && (view || plugin.id === "billiards") ? (
           <div className={styles.duelArena}>
             {players && opponentSeat !== null && (
               <PlayerStrip
@@ -285,7 +300,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
             )}
 
             <plugin.Board
-              view={view}
+              view={view ?? {}}
               lastMove={lastMove}
               mySeat={mySeat}
               canMove={canMove}

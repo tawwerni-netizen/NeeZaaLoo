@@ -2130,7 +2130,8 @@ function buildRoutes() {
       handler: async ({ params, db }) => {
         const r = await db.query(
           `SELECT id, game_id, seat_0, seat_1, tier, status, result,
-                  termination_reason, game_hash, created_at
+                  termination_reason, game_hash, created_at,
+                  initial_state, seed, time_control, clock_state, is_vs_computer
              FROM duel WHERE id = $1`, [params.id]
         );
         return r.rows.length

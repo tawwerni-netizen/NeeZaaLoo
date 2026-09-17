@@ -12,4 +12,6 @@ INSERT INTO economy_rule
 VALUES
   ('standard', 2, NULL, 'CASH', 1200, 0, NULL,
    now(), 'founder', 'finance-admin',
-   'Platform economics: 12% standard rake across all cash duels and tournaments.');
+   'Platform economics: 12% standard rake across all cash duels and tournaments.')
+ON CONFLICT (id, version) DO NOTHING;
+
