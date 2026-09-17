@@ -85,7 +85,7 @@ export default function AdminLocalPaymentsPage() {
 
   async function handleSetRate() {
     const parsed = parseFloat(newRate);
-    if (isNaN(parsed) || parsed <= 0) { alert("Enter a valid EGP-per-USD rate."); return; }
+    if (isNaN(parsed) || parsed <= 0) { setLoadError("Enter a valid EGP-per-USD rate."); return; }
     const reason = window.prompt("Reason for this rate change (required, kept on the audit record):", "market rate update");
     if (reason === null) return;
     try {
@@ -94,12 +94,12 @@ export default function AdminLocalPaymentsPage() {
       flash(`Rate updated: 1 USD = ${parsed} EGP`);
       void load();
     } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر تحديث سعر الصرف."));
+      setLoadError(adminErrorMessage(e, "تعذّر تحديث سعر الصرف."));
     }
   }
 
   async function handleAddNumber() {
-    if (!newNumberPhone.trim()) { alert("Enter a phone number."); return; }
+    if (!newNumberPhone.trim()) { setLoadError("Enter a phone number."); return; }
     try {
       await post("/v1/admin/payments/local/numbers", {
         network: newNumberNetwork, phoneNumber: newNumberPhone.trim(), label: newNumberLabel.trim() || undefined,
@@ -108,7 +108,7 @@ export default function AdminLocalPaymentsPage() {
       flash("Number added.");
       void load();
     } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر إضافة الرقم."));
+      setLoadError(adminErrorMessage(e, "تعذّر إضافة الرقم."));
     }
   }
 
@@ -118,19 +118,18 @@ export default function AdminLocalPaymentsPage() {
       flash(`${n.phoneNumber} ${n.enabled ? "disabled" : "enabled"}.`);
       void load();
     } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر تغيير حالة الرقم."));
+      setLoadError(adminErrorMessage(e, "تعذّر تغيير حالة الرقم."));
     }
   }
 
   async function handleDeleteNumber(n: LocalNumber) {
-    if (!window.confirm(`Are you sure you want to completely delete ${n.phoneNumber}?`)) return;
     try {
       await del(`/v1/admin/payments/local/numbers/${n.id}`);
       flash(`${n.phoneNumber} deleted.`);
       void load();
     } catch (e: any) {
-      if (e?.code === 'IN_USE') alert("Cannot delete this number because it has recorded transactions. Please just Disable it instead.");
-      else alert(adminErrorMessage(e, "تعذّر حذف الرقم."));
+      if (e?.code === 'IN_USE') setLoadError("Cannot delete this number because it has recorded transactions. Please just Disable it instead.");
+      else setLoadError(adminErrorMessage(e, "تعذّر حذف الرقم."));
     }
   }
 
@@ -141,7 +140,7 @@ export default function AdminLocalPaymentsPage() {
     );
     if (amountStr === null) return;
     const amountEgp = parseFloat(amountStr);
-    if (isNaN(amountEgp) || amountEgp <= 0) { alert("Invalid amount."); return; }
+    if (isNaN(amountEgp) || amountEgp <= 0) { setLoadError("Invalid amount."); return; }
     const note = window.prompt("Optional note (e.g. the SMS text), for your own audit trail:", "") ?? "";
     try {
       await post(`/v1/admin/payments/local/deposits/${intent.id}/credit-solo`, {
@@ -151,7 +150,7 @@ export default function AdminLocalPaymentsPage() {
       flash(`Credited ${intent.id}.`);
       void load();
     } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر تأكيد الإيداع."));
+      setLoadError(adminErrorMessage(e, "تعذّر تأكيد الإيداع."));
     }
   }
 
@@ -163,12 +162,12 @@ export default function AdminLocalPaymentsPage() {
       flash(`Rejected ${intent.id}.`);
       void load();
     } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر رفض طلب الإيداع."));
+      setLoadError(adminErrorMessage(e, "تعذّر رفض طلب الإيداع."));
     }
   }
 
   async function handleAddDevice() {
-    if (!newDeviceLabel.trim()) { alert("Enter a device label."); return; }
+    if (!newDeviceLabel.trim()) { setLoadError("Enter a device label."); return; }
     try {
       const res = await post<{ ok: boolean, device: { id: string, label: string, apiKey: string } }>("/v1/admin/payments/local/devices", { label: newDeviceLabel.trim() });
       setNewDeviceLabel("");
@@ -176,7 +175,7 @@ export default function AdminLocalPaymentsPage() {
       window.prompt("Device API Key (Copy this now, it won't be shown again):", res.device.apiKey);
       void load();
     } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر إضافة الجهاز."));
+      setLoadError(adminErrorMessage(e, "تعذّر إضافة الجهاز."));
     }
   }
 
@@ -186,19 +185,18 @@ export default function AdminLocalPaymentsPage() {
       flash(`Device ${d.label} ${d.enabled ? "disabled" : "enabled"}.`);
       void load();
     } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر تغيير حالة الجهاز."));
+      setLoadError(adminErrorMessage(e, "تعذّر تغيير حالة الجهاز."));
     }
   }
 
   async function handleDeleteDevice(d: LocalDevice) {
-    if (!window.confirm(`Are you sure you want to completely delete ${d.label}?`)) return;
     try {
       await del(`/v1/admin/payments/local/devices/${d.id}`);
       flash(`Device ${d.label} deleted.`);
       void load();
     } catch (e: any) {
-      if (e?.code === 'IN_USE') alert("Cannot delete this device because it has recorded transactions. Please just Disable it instead.");
-      else alert(adminErrorMessage(e, "تعذّر حذف الجهاز."));
+      if (e?.code === 'IN_USE') setLoadError("Cannot delete this device because it has recorded transactions. Please just Disable it instead.");
+      else setLoadError(adminErrorMessage(e, "تعذّر حذف الجهاز."));
     }
   }
 
@@ -210,7 +208,7 @@ export default function AdminLocalPaymentsPage() {
       flash(`Matched intent ${intentId} with transfer ${transfer.id}.`);
       void load();
     } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر تأكيد الإيداع."));
+      setLoadError(adminErrorMessage(e, "تعذّر تأكيد الإيداع."));
     }
   }
 
@@ -220,13 +218,13 @@ export default function AdminLocalPaymentsPage() {
       ""
     );
     if (reference === null) return;
-    if (!reference.trim()) { alert("A reference is required."); return; }
+    if (!reference.trim()) { setLoadError("A reference is required."); return; }
     try {
       await post(`/v1/admin/payments/local/withdrawals/${w.id}/complete-solo`, { reference: reference.trim() });
       flash(`Withdrawal ${w.id} marked complete.`);
       void load();
     } catch (e) {
-      alert(adminErrorMessage(e, "تعذّر إتمام عملية السحب."));
+      setLoadError(adminErrorMessage(e, "تعذّر إتمام عملية السحب."));
     }
   }
 
