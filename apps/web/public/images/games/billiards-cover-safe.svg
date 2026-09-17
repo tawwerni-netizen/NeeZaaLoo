@@ -1,0 +1,42 @@
+<svg viewBox="0 0 400 225" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="billiardsGlow" cx="62%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.22" />
+      <stop offset="70%" stop-color="#0e3a2f" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#080A10" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="billiardsFelt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#123d33" />
+      <stop offset="100%" stop-color="#081f19" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="#080A10" />
+  <circle cx="248" cy="100" r="150" fill="url(#billiardsGlow)" />
+
+  <rect x="40" y="28" width="320" height="169" rx="10" fill="#141a26" stroke="#2dd4bf" stroke-opacity="0.35" stroke-width="2" />
+  <rect x="52" y="40" width="296" height="145" rx="4" fill="url(#billiardsFelt)" stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1" />
+
+  <circle cx="52" cy="40" r="8" fill="#05100c" stroke="#f97316" stroke-opacity="0.55" stroke-width="1" />
+  <circle cx="200" cy="40" r="8" fill="#05100c" stroke="#f97316" stroke-opacity="0.55" stroke-width="1" />
+  <circle cx="348" cy="40" r="8" fill="#05100c" stroke="#f97316" stroke-opacity="0.55" stroke-width="1" />
+  <circle cx="52" cy="185" r="8" fill="#05100c" stroke="#f97316" stroke-opacity="0.55" stroke-width="1" />
+  <circle cx="200" cy="185" r="8" fill="#05100c" stroke="#f97316" stroke-opacity="0.55" stroke-width="1" />
+  <circle cx="348" cy="185" r="8" fill="#05100c" stroke="#f97316" stroke-opacity="0.55" stroke-width="1" />
+
+  <line x1="70" y1="200" x2="150" y2="140" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round" opacity="0.55" />
+  <line x1="150" y1="140" x2="168" y2="127" stroke="#c08a4e" stroke-width="5" stroke-linecap="round" opacity="0.7" />
+
+  <g>
+    <circle cx="168" cy="127" r="8.5" fill="#f4f4f2" stroke="#0B0D10" stroke-width="1" />
+    <circle cx="168" cy="127" r="2.6" fill="#22d3ee" opacity="0.85" />
+
+    <circle cx="230" cy="112" r="8.5" fill="#FFD700" stroke="#0B0D10" stroke-width="1" />
+    <circle cx="247" cy="112" r="8.5" fill="#d62828" stroke="#0B0D10" stroke-width="1" />
+    <circle cx="238.5" cy="127" r="8.5" fill="#1f5fd6" stroke="#0B0D10" stroke-width="1" />
+    <circle cx="256" cy="127" r="8.5" fill="#111318" stroke="#FFD700" stroke-width="1.2" />
+    <circle cx="247" cy="142" r="8.5" fill="#5b2a86" stroke="#0B0D10" stroke-width="1" />
+    <circle cx="264.5" cy="142" r="8.5" fill="#e8790a" stroke="#0B0D10" stroke-width="1" />
+    <circle cx="273" cy="112" r="8.5" fill="#1f8c3b" stroke="#0B0D10" stroke-width="1" />
+    <circle cx="256" cy="112" r="8.5" fill="#f4f4f2" stroke="#e8b923" stroke-width="2.2" />
+  </g>
+</svg>
