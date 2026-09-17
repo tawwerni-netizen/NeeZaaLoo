@@ -137,6 +137,155 @@ function getFallbackRack(): Ball[] {
   return slots;
 }
 
+interface SimFrame {
+  t: number;
+  balls: Array<{ id: number; x: number; y: number; potted?: boolean }>;
+}
+
+interface QueuedShot {
+  shotCount: number;
+  seat?: number;
+  angle: number;
+  power: number;
+  frames: SimFrame[];
+  finalBalls: Ball[];
+}
+
+function simulateShotLocal(
+  balls: Array<{ id: number; x: number; y: number }>,
+  angle: number,
+  power: number
+): SimFrame[] {
+  const state = new Map<number, { id: number; x: number; y: number; vx: number; vy: number; potted: boolean }>();
+  for (const b of balls) {
+    state.set(b.id, { id: b.id, x: b.x, y: b.y, vx: 0, vy: 0, potted: false });
+  }
+
+  const p = Math.max(0, Math.min(1, power));
+  const speed = p * 190;
+  const cue = state.get(0);
+  if (cue) {
+    cue.vx = Math.cos(angle) * speed;
+    cue.vy = Math.sin(angle) * speed;
+  }
+
+  const frames: SimFrame[] = [];
+  const DT = 1 / 120;
+  const maxSteps = Math.round(6 / DT);
+  const SUBSTEPS = 2;
+  const subDt = DT / SUBSTEPS;
+
+  let step = 0;
+  for (; step < maxSteps; step++) {
+    for (let sub = 0; sub < SUBSTEPS; sub++) {
+      for (const b of state.values()) {
+        if (b.potted) continue;
+        b.x += b.vx * subDt;
+        b.y += b.vy * subDt;
+        const sp = Math.hypot(b.vx, b.vy);
+        if (sp > 0) {
+          const decay = Math.max(0, sp - 70 * subDt);
+          const scale = decay / sp;
+          b.vx *= scale;
+          b.vy *= scale;
+          if (decay < 1.2) {
+            b.vx = 0;
+            b.vy = 0;
+          }
+        }
+      }
+
+      for (const b of state.values()) {
+        if (b.potted) continue;
+        if (b.x - BALL_R < 0) {
+          b.x = BALL_R;
+          b.vx = Math.abs(b.vx) * 0.86;
+        } else if (b.x + BALL_R > TABLE_W) {
+          b.x = TABLE_W - BALL_R;
+          b.vx = -Math.abs(b.vx) * 0.86;
+        }
+        if (b.y - BALL_R < 0) {
+          b.y = BALL_R;
+          b.vy = Math.abs(b.vy) * 0.86;
+        } else if (b.y + BALL_R > TABLE_H) {
+          b.y = TABLE_H - BALL_R;
+          b.vy = -Math.abs(b.vy) * 0.86;
+        }
+      }
+
+      const ids = [...state.keys()].filter((id) => !state.get(id)?.potted);
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          const a = state.get(ids[i]!)!;
+          const c = state.get(ids[j]!)!;
+          const dx = c.x - a.x;
+          const dy = c.y - a.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist === 0 || dist >= BALL_R * 2) continue;
+
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const overlap = BALL_R * 2 - dist;
+          a.x -= (nx * overlap) / 2;
+          a.y -= (ny * overlap) / 2;
+          c.x += (nx * overlap) / 2;
+          c.y += (ny * overlap) / 2;
+
+          const relVx = c.vx - a.vx;
+          const relVy = c.vy - a.vy;
+          const approach = relVx * nx + relVy * ny;
+          if (approach < 0) {
+            const impulse = (-(1 + 0.98) * approach) / 2;
+            a.vx -= impulse * nx;
+            a.vy -= impulse * ny;
+            c.vx += impulse * nx;
+            c.vy += impulse * ny;
+          }
+        }
+      }
+
+      for (const b of state.values()) {
+        if (b.potted) continue;
+        for (const pocket of POCKETS) {
+          if (Math.hypot(b.x - pocket.x, b.y - pocket.y) <= POCKET_R) {
+            b.potted = true;
+            b.vx = 0;
+            b.vy = 0;
+            break;
+          }
+        }
+      }
+    }
+
+    if (step % 3 === 0 && frames.length < 300) {
+      frames.push({
+        t: Number((step * DT).toFixed(4)),
+        balls: [...state.values()].map((b) => ({
+          id: b.id,
+          x: Number(b.x.toFixed(3)),
+          y: Number(b.y.toFixed(3)),
+          potted: b.potted,
+        })),
+      });
+    }
+
+    const allRest = [...state.values()].every((b) => b.potted || (b.vx === 0 && b.vy === 0));
+    if (allRest) break;
+  }
+
+  frames.push({
+    t: Number((step * DT).toFixed(4)),
+    balls: [...state.values()].map((b) => ({
+      id: b.id,
+      x: Number(b.x.toFixed(3)),
+      y: Number(b.y.toFixed(3)),
+      potted: b.potted,
+    })),
+  });
+
+  return frames;
+}
+
 export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
   const v = (view ?? {}) as BilliardsView;
   const isInitialRack = !v.balls || v.balls.length === 0;
@@ -147,6 +296,8 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
   });
 
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [animatingSeat, setAnimatingSeat] = useState<number | null>(null);
+  const [opponentAim, setOpponentAim] = useState<{ angle: number; power: number } | null>(null);
   const [cueThrust, setCueThrust] = useState<number>(0);
   const [aimAngle, setAimAngle] = useState<number>(0);
   const [power, setPower] = useState<number>(0.5);
@@ -155,131 +306,201 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
   const [spin, setSpin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const svgRef = useRef<SVGSVGElement>(null);
-  const lastShotCountRef = useRef<number>(v.shotCount ?? 0);
+  const queueRef = useRef<QueuedShot[]>([]);
+  const isPlayingRef = useRef<boolean>(false);
+  const animFrameIdRef = useRef<number | null>(null);
+  const strikeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const processedShotCountRef = useRef<number>(v.shotCount ?? 0);
+  const restingBallsRef = useRef<Ball[]>(displayBalls);
 
-  // Sync displayBalls when resting balls update and animation is idle
+  // Play next shot in animation queue
+  const drainQueue = useCallback(() => {
+    if (isPlayingRef.current) return;
+    const item = queueRef.current.shift();
+    if (!item) {
+      isPlayingRef.current = false;
+      setIsAnimating(false);
+      setAnimatingSeat(null);
+      setOpponentAim(null);
+      if (v.balls && v.balls.length > 0) {
+        restingBallsRef.current = v.balls;
+        setDisplayBalls(v.balls);
+      }
+      return;
+    }
+
+    isPlayingRef.current = true;
+    setIsAnimating(true);
+    setAnimatingSeat(item.seat ?? null);
+
+    const isOpponentShot =
+      item.seat !== undefined &&
+      item.seat !== null &&
+      mySeat !== null &&
+      mySeat !== undefined &&
+      item.seat !== mySeat;
+
+    const startPhysics = () => {
+      setCueThrust(1);
+      billiardsAudio.playCueStrike(item.power);
+
+      strikeTimeoutRef.current = setTimeout(() => {
+        setCueThrust(0);
+        setOpponentAim(null);
+
+        const frames = item.frames;
+        const lastFrame = frames[frames.length - 1];
+        if (!lastFrame || frames.length <= 1) {
+          restingBallsRef.current = item.finalBalls;
+          setDisplayBalls(item.finalBalls);
+          isPlayingRef.current = false;
+          drainQueue();
+          return;
+        }
+
+        const startTime = performance.now();
+        const durationMs = Math.max(800, lastFrame.t * 1000);
+        const triggeredEvents = new Set<string>();
+
+        const tick = (now: number) => {
+          const elapsedMs = now - startTime;
+          const elapsedSec = elapsedMs / 1000;
+
+          if (elapsedMs >= durationMs) {
+            restingBallsRef.current = item.finalBalls;
+            setDisplayBalls(item.finalBalls);
+            isPlayingRef.current = false;
+            drainQueue();
+            return;
+          }
+
+          let i = 0;
+          while (i < frames.length - 1 && (frames[i + 1]?.t ?? Infinity) <= elapsedSec) {
+            i++;
+          }
+          const f0 = frames[i];
+          const f1 = frames[Math.min(i + 1, frames.length - 1)];
+          if (!f0 || !f1) {
+            restingBallsRef.current = item.finalBalls;
+            setDisplayBalls(item.finalBalls);
+            isPlayingRef.current = false;
+            drainQueue();
+            return;
+          }
+
+          const span = f1.t - f0.t;
+          const alpha = span > 0.0001 ? Math.max(0, Math.min(1, (elapsedSec - f0.t) / span)) : 0;
+
+          const nextPositions: Ball[] = [];
+          for (const b0 of f0.balls) {
+            const b1 = f1.balls.find((x) => x.id === b0.id) ?? b0;
+            if (b0.potted && b1.potted) continue;
+
+            if (!b0.potted && b1.potted) {
+              const pKey = `p-${b0.id}`;
+              if (!triggeredEvents.has(pKey)) {
+                triggeredEvents.add(pKey);
+                billiardsAudio.playPocketDrop();
+              }
+              if (alpha > 0.75) continue;
+            }
+
+            const bx = b0.x + (b1.x - b0.x) * alpha;
+            const by = b0.y + (b1.y - b0.y) * alpha;
+            nextPositions.push({ id: b0.id, x: bx, y: by });
+          }
+
+          // Rail bounce & ball clash audio triggers
+          for (let aIdx = 0; aIdx < nextPositions.length; aIdx++) {
+            const a = nextPositions[aIdx];
+            if (!a) continue;
+            if (
+              a.x <= BALL_R + 0.3 ||
+              a.x >= TABLE_W - BALL_R - 0.3 ||
+              a.y <= BALL_R + 0.3 ||
+              a.y >= TABLE_H - BALL_R - 0.3
+            ) {
+              const rKey = `r-${a.id}-${Math.floor(elapsedSec * 10)}`;
+              if (!triggeredEvents.has(rKey)) {
+                triggeredEvents.add(rKey);
+                billiardsAudio.playCushionBounce(0.5);
+              }
+            }
+            for (let bIdx = aIdx + 1; bIdx < nextPositions.length; bIdx++) {
+              const b = nextPositions[bIdx];
+              if (!b) continue;
+              const d = Math.hypot(a.x - b.x, a.y - b.y);
+              if (d <= BALL_R * 2 + 0.4) {
+                const cKey = `c-${Math.min(a.id, b.id)}-${Math.max(a.id, b.id)}-${Math.floor(elapsedSec * 12)}`;
+                if (!triggeredEvents.has(cKey)) {
+                  triggeredEvents.add(cKey);
+                  billiardsAudio.playBallClash(0.7);
+                }
+              }
+            }
+          }
+
+          setDisplayBalls(nextPositions);
+          animFrameIdRef.current = requestAnimationFrame(tick);
+        };
+
+        animFrameIdRef.current = requestAnimationFrame(tick);
+      }, 90);
+    };
+
+    if (isOpponentShot) {
+      // Show opponent / computer aiming cue stick for 500ms before strike
+      setOpponentAim({ angle: item.angle, power: item.power });
+      strikeTimeoutRef.current = setTimeout(() => {
+        startPhysics();
+      }, 500);
+    } else {
+      startPhysics();
+    }
+  }, [mySeat, v.balls]);
+
+  // Enqueue new shots when shotCount increases
   useEffect(() => {
-    if (!isAnimating && v.balls && v.balls.length > 0) {
+    if (v.shotCount !== undefined && v.shotCount > processedShotCountRef.current) {
+      const last = v.lastShot;
+      if (last && typeof last.angle === "number" && typeof last.power === "number") {
+        processedShotCountRef.current = v.shotCount;
+
+        let frames = (last as { frames?: SimFrame[] })?.frames;
+        if (!frames || frames.length <= 1) {
+          frames = simulateShotLocal(restingBallsRef.current, last.angle, last.power);
+        }
+
+        const finalBalls =
+          v.balls && v.balls.length > 0
+            ? v.balls
+            : frames[frames.length - 1]?.balls.filter((b) => !b.potted) ?? restingBallsRef.current;
+
+        queueRef.current.push({
+          shotCount: v.shotCount,
+          seat: last.seat,
+          angle: last.angle,
+          power: last.power,
+          frames,
+          finalBalls,
+        });
+
+        drainQueue();
+      }
+    } else if (!isPlayingRef.current && v.balls && v.balls.length > 0) {
+      restingBallsRef.current = v.balls;
       setDisplayBalls(v.balls);
     }
-  }, [v.balls, isAnimating]);
+  }, [v.shotCount, v.lastShot, v.balls, drainQueue]);
 
-  // 60 FPS Replay Engine: Interpolates shot frames smoothly across screen refresh rate
+  // Clean unmount hook
   useEffect(() => {
-    if (v.shotCount !== undefined && v.shotCount > lastShotCountRef.current) {
-      lastShotCountRef.current = v.shotCount;
-      const last = v.lastShot;
-      const frames = (last as { frames?: Array<{ t: number; balls: Array<{ id: number; x: number; y: number; potted?: boolean }> }> })?.frames;
-
-      if (frames && frames.length > 1) {
-        // Trigger cue stick forward strike animation
-        setCueThrust(1);
-        billiardsAudio.playCueStrike(last?.power ?? 0.6);
-
-        let animFrameId: number;
-        const lastFrame = frames[frames.length - 1];
-        if (!lastFrame) return;
-
-        const strikeTimeout = setTimeout(() => {
-          setCueThrust(0);
-          setIsAnimating(true);
-
-          const startTime = performance.now();
-          const durationMs = lastFrame.t * 1000;
-          const triggeredEvents = new Set<string>();
-
-          const tick = (now: number) => {
-            const elapsedMs = now - startTime;
-            const elapsedSec = elapsedMs / 1000;
-
-            if (elapsedMs >= durationMs) {
-              const finalBalls = v.balls && v.balls.length > 0
-                ? v.balls
-                : lastFrame.balls.filter((b) => !b.potted);
-              setDisplayBalls(finalBalls);
-              setIsAnimating(false);
-              return;
-            }
-
-            // Find current keyframe interval
-            let i = 0;
-            while (i < frames.length - 1 && (frames[i + 1]?.t ?? Infinity) <= elapsedSec) {
-              i++;
-            }
-            const f0 = frames[i];
-            const f1 = frames[Math.min(i + 1, frames.length - 1)];
-            if (!f0 || !f1) {
-              setIsAnimating(false);
-              return;
-            }
-            const span = f1.t - f0.t;
-            const alpha = span > 0.0001 ? Math.max(0, Math.min(1, (elapsedSec - f0.t) / span)) : 0;
-
-            // Interpolate ball positions
-            const nextPositions: Ball[] = [];
-            for (const b0 of f0.balls) {
-              const b1 = f1.balls.find((x) => x.id === b0.id) ?? b0;
-              if (b0.potted && b1.potted) continue;
-
-              // Sound on pocket drop
-              if (!b0.potted && b1.potted) {
-                const pKey = `p-${b0.id}`;
-                if (!triggeredEvents.has(pKey)) {
-                  triggeredEvents.add(pKey);
-                  billiardsAudio.playPocketDrop();
-                }
-                if (alpha > 0.75) continue; // Sunk
-              }
-
-              const bx = b0.x + (b1.x - b0.x) * alpha;
-              const by = b0.y + (b1.y - b0.y) * alpha;
-              nextPositions.push({ id: b0.id, x: bx, y: by });
-            }
-
-            // Detect rail contacts and ball clashes for procedural audio
-            for (let aIdx = 0; aIdx < nextPositions.length; aIdx++) {
-              const a = nextPositions[aIdx];
-              if (!a) continue;
-              // Rail bounce
-              if (a.x <= BALL_R + 0.3 || a.x >= TABLE_W - BALL_R - 0.3 ||
-                  a.y <= BALL_R + 0.3 || a.y >= TABLE_H - BALL_R - 0.3) {
-                const rKey = `r-${a.id}-${Math.floor(elapsedSec * 10)}`;
-                if (!triggeredEvents.has(rKey)) {
-                  triggeredEvents.add(rKey);
-                  billiardsAudio.playCushionBounce(0.5);
-                }
-              }
-              // Ball-to-ball clash
-              for (let bIdx = aIdx + 1; bIdx < nextPositions.length; bIdx++) {
-                const b = nextPositions[bIdx];
-                if (!b) continue;
-                const d = Math.hypot(a.x - b.x, a.y - b.y);
-                if (d <= BALL_R * 2 + 0.4) {
-                  const cKey = `c-${Math.min(a.id, b.id)}-${Math.max(a.id, b.id)}-${Math.floor(elapsedSec * 12)}`;
-                  if (!triggeredEvents.has(cKey)) {
-                    triggeredEvents.add(cKey);
-                    billiardsAudio.playBallClash(0.7);
-                  }
-                }
-              }
-            }
-
-            setDisplayBalls(nextPositions);
-            animFrameId = requestAnimationFrame(tick);
-          };
-
-          animFrameId = requestAnimationFrame(tick);
-        }, 90);
-
-        return () => {
-          clearTimeout(strikeTimeout);
-          cancelAnimationFrame(animFrameId);
-        };
-      } else {
-        setDisplayBalls(v.balls ?? []);
-      }
-    }
-  }, [v.shotCount, v.lastShot, v.balls]);
+    return () => {
+      if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
+      if (strikeTimeoutRef.current) clearTimeout(strikeTimeoutRef.current);
+      isPlayingRef.current = false;
+    };
+  }, []);
 
   const cue = useMemo(() => displayBalls.find((b) => b.id === 0) ?? null, [displayBalls]);
   const effectiveCanMove = canMove && !isAnimating && !isInitialRack;
@@ -354,12 +575,17 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
     });
   };
 
+  // Active aim for rendering cue stick & trajectory guides:
+  // When opponent/computer is aiming, opponentAim provides {angle, power}.
+  // Otherwise, if human has control, uses local aimAngle & power.
+  const activeAim = opponentAim ?? (effectiveCanMove ? { angle: aimAngle, power } : null);
+
   // Trajectory calculation & Ghost Ball Prediction
   const trajectory = useMemo(() => {
-    if (!cue) return null;
+    if (!cue || !activeAim) return null;
 
-    const dx = Math.cos(aimAngle);
-    const dy = Math.sin(aimAngle);
+    const dx = Math.cos(activeAim.angle);
+    const dy = Math.sin(activeAim.angle);
 
     let closestHit: {
       ball: Ball;
@@ -444,15 +670,15 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
       cutLine: null,
       tangentLine: null,
     };
-  }, [cue, aimAngle, displayBalls]);
+  }, [cue, activeAim, displayBalls]);
 
   // Cue stick geometry
   const cueStick = useMemo(() => {
-    if (!cue || !effectiveCanMove) return null;
+    if (!cue || !activeAim) return null;
     const CUE_LENGTH = 90;
-    const pullBack = Math.max(BALL_R + 1, BALL_R + 4 + power * 26 - cueThrust * 20);
-    const dx = Math.cos(aimAngle);
-    const dy = Math.sin(aimAngle);
+    const pullBack = Math.max(BALL_R + 1, BALL_R + 4 + activeAim.power * 26 - cueThrust * 20);
+    const dx = Math.cos(activeAim.angle);
+    const dy = Math.sin(activeAim.angle);
 
     // Tip position (behind cue ball along reverse aim vector)
     const tipX = cue.x - dx * pullBack;
@@ -478,7 +704,7 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
       butt: { x: buttX, y: buttY },
       polygon: `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`,
     };
-  }, [cue, effectiveCanMove, aimAngle, power, cueThrust]);
+  }, [cue, activeAim, cueThrust]);
 
   const toggleSound = () => {
     const next = !soundMuted;
@@ -494,10 +720,16 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
       {/* HUD Header */}
       <div className={styles.hud}>
         <div className={styles.hudGroup}>
-          <span className={`${styles.turnPill} ${isMyTurn && !isAnimating ? styles.turnPillActive : ""}`}>
-            <span style={{ fontSize: "14px" }}>{isAnimating ? "⚡" : isMyTurn ? "🎯" : "⏳"}</span>
-            {isAnimating
-              ? "Balls in Motion..."
+          <span className={`${styles.turnPill} ${isMyTurn && !isAnimating && !opponentAim ? styles.turnPillActive : ""}`}>
+            <span style={{ fontSize: "14px" }}>
+              {opponentAim ? "🤖" : isAnimating ? "⚡" : isMyTurn ? "🎯" : "⏳"}
+            </span>
+            {opponentAim
+              ? "Computer is Aiming..."
+              : isAnimating
+              ? animatingSeat !== null && mySeat !== null && mySeat !== undefined && animatingSeat !== mySeat
+                ? "Computer Shot in Motion..."
+                : "Balls in Motion..."
               : v.ballInHandFor !== null && v.ballInHandFor !== undefined
               ? (isMyTurn ? "Ball in Hand -- Aim Anywhere" : "Opponent Has Ball in Hand")
               : (isMyTurn ? "Your Turn" : "Opponent's Turn")}
@@ -506,6 +738,19 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
           {isAnimating && (
             <span className={styles.animatingPill}>
               ⚡ 60 FPS Physics Simulation
+            </span>
+          )}
+
+          {opponentAim && (
+            <span
+              className={styles.animatingPill}
+              style={{
+                background: "rgba(244, 63, 94, 0.15)",
+                borderColor: "rgba(244, 63, 94, 0.4)",
+                color: "#fb7185",
+              }}
+            >
+              🤖 Computer Aiming
             </span>
           )}
 
@@ -690,7 +935,7 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
             ))}
 
             {/* Trajectory Guide & Ghost Ball */}
-            {effectiveCanMove && trajectory && cue && (
+            {trajectory && cue && (
               <g>
                 {/* Primary Aim Line */}
                 <line
@@ -698,10 +943,10 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
                   y1={cue.y}
                   x2={trajectory.rayEnd.x}
                   y2={trajectory.rayEnd.y}
-                  stroke="#22d3ee"
-                  strokeWidth={0.4}
+                  stroke={opponentAim ? "#f43f5e" : "#22d3ee"}
+                  strokeWidth={opponentAim ? 0.5 : 0.4}
                   strokeDasharray="2 1.5"
-                  opacity={0.9}
+                  opacity={opponentAim ? 0.85 : 0.9}
                 />
 
                 {/* Target Ball Cut Line (Where the hit object ball will go) */}
@@ -711,7 +956,7 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
                     y1={trajectory.cutLine.y1}
                     x2={trajectory.cutLine.x2}
                     y2={trajectory.cutLine.y2}
-                    stroke="#f59e0b"
+                    stroke={opponentAim ? "#fb7185" : "#f59e0b"}
                     strokeWidth={0.55}
                     strokeDasharray="2.5 1.5"
                     opacity={0.95}
@@ -725,7 +970,7 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
                     y1={trajectory.tangentLine.y1}
                     x2={trajectory.tangentLine.x2}
                     y2={trajectory.tangentLine.y2}
-                    stroke="#38bdf8"
+                    stroke={opponentAim ? "#fda4af" : "#38bdf8"}
                     strokeWidth={0.4}
                     strokeDasharray="1.5 1.5"
                     opacity={0.7}
@@ -740,7 +985,7 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
                       cy={trajectory.ghost.y}
                       r={BALL_R}
                       fill="none"
-                      stroke="#22d3ee"
+                      stroke={opponentAim ? "#f43f5e" : "#22d3ee"}
                       strokeWidth={0.6}
                       strokeDasharray="1.8 1"
                     />
@@ -748,7 +993,7 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
                       cx={trajectory.ghost.x}
                       cy={trajectory.ghost.y}
                       r={BALL_R * 0.25}
-                      fill="#22d3ee"
+                      fill={opponentAim ? "#f43f5e" : "#22d3ee"}
                     />
                   </g>
                 )}
@@ -920,8 +1165,10 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
 
         {/* Informative Hint */}
         <p className={styles.hint}>
-          {isAnimating ? (
-            "Balls in motion — resolving collisions and pockets..."
+          {opponentAim ? (
+            "🤖 Opponent / Computer is aiming cue stick and lining up the shot..."
+          ) : isAnimating ? (
+            "⚡ Balls in motion — continuous 60 FPS physics resolving collisions and pockets..."
           ) : isInitialRack ? (
             "Syncing duel table with game gateway..."
           ) : effectiveCanMove ? (
@@ -930,7 +1177,7 @@ export function BilliardsBoard({ view, canMove, mySeat, onMove }: BoardProps) {
               <span className={styles.hintHighlight}>Strike</span>.
             </>
           ) : (
-            "Waiting for opponent's shot..."
+            "⏳ Waiting for opponent / computer to take their turn..."
           )}
         </p>
       </div>
