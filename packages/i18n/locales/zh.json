@@ -38,7 +38,31 @@
       "subhead": "在纯技巧、零运气的1v1竞技游戏中挑战真实玩家。赢取USDT现金大奖，60秒内极速提现直达钱包。",
       "cta_primary": "进入竞技场赢取现金",
       "cta_secondary": "观看直播",
-      "featured_heading": "今日精选"
+      "featured_heading": "今日精选",
+      "guarantees": {
+        "card_ai_badge": "24/7 在线",
+        "card_ai_metric": "即时 24/7",
+        "card_ai_title": "即时 AI 与真人玩家对决",
+        "card_ai_sub": "即刻与 AI 对战或直连挑战好友，零等待时间",
+        "card_payout_badge": "即时提现",
+        "card_payout_metric": "< 60s",
+        "card_payout_title": "全自动秒级现金提款",
+        "card_payout_sub": "通过 TRC20 和 BEP20 直连转入您的 USDT 钱包",
+        "card_rate_badge": "平台仅抽成 12%",
+        "card_rate_metric": "88%",
+        "card_rate_title": "获胜者独揽奖金池份额",
+        "card_rate_sub": "技术型玩家的最高回报率保障",
+        "card_fair_badge": "100% 可验证公平",
+        "card_fair_metric": "100% 纯技术",
+        "card_fair_title": "零运气、零随机数、权威反作弊",
+        "card_fair_sub": "加密服务器与确定性规则确保绝对竞技公平",
+        "pillar_skill_title": "凭真正实力竞技与赢取奖励",
+        "pillar_skill_desc": "胜者独享挑战赛奖金池，平台仅收取 12% 赛事组织费。",
+        "pillar_payout_title": "60 秒内即时现金到账",
+        "pillar_payout_desc": "奖金直接以稳定币 USDT 转入您的钱包，无需漫长等待。",
+        "pillar_fair_title": "100% 公平竞技与反作弊",
+        "pillar_fair_desc": "纯技术对决。权威服务端校验确保每一场比赛的绝对公正。"
+      }
     },
     "games": {
       "heading": "十款游戏,同一套公平机制",

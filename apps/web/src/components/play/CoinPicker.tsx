@@ -6,6 +6,7 @@
  * to USDT exclusively, eliminating coin fragmentation and maximizing liquidity.
  */
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n/context";
 import { get } from "@/lib/api";
 import styles from "./CoinPicker.module.css";
 
@@ -62,6 +63,9 @@ export function CoinPicker({
   balances: CoinBalances | null;
   label?: string;
 }) {
+  const { dir } = useI18n();
+  const isRtl = dir === "rtl";
+
   return (
     <div className={styles.wrap} role="region" aria-label={label}>
       {label && <span className={styles.label}>{label}</span>}
@@ -81,7 +85,7 @@ export function CoinPicker({
             </div>
           </div>
           <div className={styles.balanceWrap}>
-            <span className={styles.balanceLabel}>الرصيد المتاح:</span>
+            <span className={styles.balanceLabel}>{isRtl ? "الرصيد المتاح:" : "Available Balance:"}</span>
             <span className={`${styles.balanceVal} nz-num`}>
               {balances ? `${balances.USDT.toFixed(2)} USDT` : "…"}
             </span>

@@ -474,18 +474,18 @@ export function Hero() {
               <div className={styles.metricIconWrap}>🤖</div>
               <span className={styles.metricBadgeLive}>
                 <span className={styles.statPulseDot} />
-                {isRtl ? "متاح 24/7" : "Active 24/7"}
+                {t("home.hero.guarantees.card_ai_badge") || (isRtl ? "متاح 24/7" : "Active 24/7")}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                {isRtl ? "فوري 24/7" : "Instant 24/7"}
+                {t("home.hero.guarantees.card_ai_metric") || (isRtl ? "فوري 24/7" : "Instant 24/7")}
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "نزالات فورية وتحدي الحاسوب" : "Instant AI & Member Duels"}
+                {t("home.hero.guarantees.card_ai_title") || (isRtl ? "نزالات فورية وتحدي الحاسوب" : "Instant AI & Member Duels")}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "العب فوراً ضد الذكاء الاصطناعي أو نافس صديقاً برابط مباشر" : "Play AI or challenge friends with zero wait time"}
+                {t("home.hero.guarantees.card_ai_sub") || (isRtl ? "العب فوراً ضد الذكاء الاصطناعي أو نافس صديقاً برابط مباشر" : "Play AI or challenge friends with zero wait time")}
               </div>
             </div>
           </div>
@@ -495,18 +495,18 @@ export function Hero() {
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>⚡</div>
               <span className={styles.metricBadgeOnline}>
-                ⚡ {isRtl ? "سحب فوري" : "Instant Cashout"}
+                ⚡ {t("home.hero.guarantees.card_payout_badge") || (isRtl ? "سحب فوري" : "Instant Cashout")}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                &lt; 60s
+                <bdi dir="ltr">&lt; 60s</bdi>
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "سحب كاش فوري وتلقائي" : "Instant Automated Cashout"}
+                {t("home.hero.guarantees.card_payout_title") || (isRtl ? "سحب كاش فوري وتلقائي" : "Instant Automated Cashout")}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "تحويل مباشر لمحفظتك بالـ USDT عبر TRC20 و BEP20" : "Direct to your USDT wallet with zero wait time"}
+                {t("home.hero.guarantees.card_payout_sub") || (isRtl ? "تحويل مباشر لمحفظتك بالـ USDT عبر TRC20 و BEP20" : "Direct to your USDT wallet with zero wait time")}
               </div>
             </div>
           </div>
@@ -516,7 +516,7 @@ export function Hero() {
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>🏆</div>
               <span className={styles.metricBadgePayout}>
-                💎 {isRtl ? "عمولة 12% فقط" : "12% Platform Fee"}
+                💎 {t("home.hero.guarantees.card_rate_badge") || (isRtl ? "عمولة 12% فقط" : "12% Platform Fee")}
               </span>
             </div>
             <div className={styles.metricCardBody}>
@@ -524,10 +524,10 @@ export function Hero() {
                 88%
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "حصة الفائز من وعاء النزال" : "Winner's Share of Prize Pool"}
+                {t("home.hero.guarantees.card_rate_title") || (isRtl ? "حصة الفائز من وعاء النزال" : "Winner's Share of Prize Pool")}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "أعلى نسبة توزيع أرباح للاعبين المهرة بالكامل" : "Highest skill gaming payout rate in the region"}
+                {t("home.hero.guarantees.card_rate_sub") || (isRtl ? "أعلى نسبة توزيع أرباح للاعبين المهرة بالكامل" : "Highest skill gaming payout rate in the region")}
               </div>
             </div>
           </div>
@@ -537,18 +537,18 @@ export function Hero() {
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>🛡️</div>
               <span className={styles.metricBadgeFair}>
-                🔒 {isRtl ? "تحكيم حتمي 100%" : "100% Provably Fair"}
+                🔒 {t("home.hero.guarantees.card_fair_badge") || (isRtl ? "تحكيم حتمي 100%" : "100% Provably Fair")}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                <bdi dir="ltr">100% Skill</bdi>
+                <bdi dir="ltr">{t("home.hero.guarantees.card_fair_metric") || "100% Skill"}</bdi>
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "مهارة بدون أي صدفة أو حظ" : "Zero Luck, Zero RNG, Anti-Cheat"}
+                {t("home.hero.guarantees.card_fair_title") || (isRtl ? "مهارة بدون أي صدفة أو حظ" : "Zero Luck, Zero RNG, Anti-Cheat")}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "خوادم مشفرة وقواعد حتمية تضمن تكافؤ الفرص" : "Deterministic server verification guarantees integrity"}
+                {t("home.hero.guarantees.card_fair_sub") || (isRtl ? "خوادم مشفرة وقواعد حتمية تضمن تكافؤ الفرص" : "Deterministic server verification guarantees integrity")}
               </div>
             </div>
           </div>
@@ -560,12 +560,12 @@ export function Hero() {
             <span className={styles.pillarIcon}>💎</span>
             <div className={styles.pillarTextWrap}>
               <strong className={styles.pillarTitle}>
-                {isRtl ? "العب واكسب بمهارتك" : "Play & Win With Pure Skill"}
+                {t("home.hero.guarantees.pillar_skill_title") || (isRtl ? "العب واكسب بمهارتك" : "Play & Win With Pure Skill")}
               </strong>
               <span className={styles.pillarDesc}>
-                {isRtl
+                {t("home.hero.guarantees.pillar_skill_desc") || (isRtl
                   ? "الفائز يحصل على مجموع جوائز التحدي مع رسوم تنظيم منصة 12% فقط."
-                  : "Winner takes the challenge prize pool directly with a 12% platform fee."}
+                  : "Winner takes the challenge prize pool directly with a 12% platform fee.")}
               </span>
             </div>
           </div>
@@ -574,12 +574,12 @@ export function Hero() {
             <span className={styles.pillarIcon}>⚡</span>
             <div className={styles.pillarTextWrap}>
               <strong className={styles.pillarTitle}>
-                {isRtl ? "سحب كاش فوري خلال 60 ثانية" : "Instant 60s Cash Payouts"}
+                {t("home.hero.guarantees.pillar_payout_title") || (isRtl ? "سحب كاش فوري خلال 60 ثانية" : "Instant 60s Cash Payouts")}
               </strong>
               <span className={styles.pillarDesc}>
-                {isRtl
+                {t("home.hero.guarantees.pillar_payout_desc") || (isRtl
                   ? "الأرباح تصل مباشرة إلى محفظتك بعملة USDT المستقرة بدون شروط تعجيزية."
-                  : "Winnings credit directly to your wallet in USDT with zero hold times."}
+                  : "Winnings credit directly to your wallet in USDT with zero hold times.")}
               </span>
             </div>
           </div>
@@ -588,12 +588,12 @@ export function Hero() {
             <span className={styles.pillarIcon}>🔒</span>
             <div className={styles.pillarTextWrap}>
               <strong className={styles.pillarTitle}>
-                {isRtl ? "تحكيم عادل ومضاد للغش 100%" : "100% Provably Fair & Anti-Cheat"}
+                {t("home.hero.guarantees.pillar_fair_title") || (isRtl ? "تحكيم عادل ومضاد للغش 100%" : "100% Provably Fair & Anti-Cheat")}
               </strong>
               <span className={styles.pillarDesc}>
-                {isRtl
+                {t("home.hero.guarantees.pillar_fair_desc") || (isRtl
                   ? "خوارزميات حتمية مراقبة عبر السيرفر تضمن انتصار الأذكى تكتيكياً بدون أي عنصر حظ."
-                  : "Pure deterministic skill. Authoritative server verification guarantees absolute integrity."}
+                  : "Pure deterministic skill. Authoritative server verification guarantees absolute integrity.")}
               </span>
             </div>
           </div>

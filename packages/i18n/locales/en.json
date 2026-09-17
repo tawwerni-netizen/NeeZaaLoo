@@ -50,7 +50,31 @@
       "subhead": "Compete against real players in 1v1 skill games with zero luck. Win instant USDT cash prizes delivered directly to your wallet within 60 seconds.",
       "cta_primary": "Enter Arena & Win Cash",
       "cta_secondary": "Watch live",
-      "featured_heading": "Featured today"
+      "featured_heading": "Featured today",
+      "guarantees": {
+        "card_ai_badge": "Active 24/7",
+        "card_ai_metric": "Instant 24/7",
+        "card_ai_title": "Instant AI & Member Duels",
+        "card_ai_sub": "Play AI or challenge players with zero wait time",
+        "card_payout_badge": "Instant Cashout",
+        "card_payout_metric": "< 60s",
+        "card_payout_title": "Instant Automated Cashout",
+        "card_payout_sub": "Direct to your USDT wallet with zero wait time",
+        "card_rate_badge": "12% Platform Fee",
+        "card_rate_metric": "88%",
+        "card_rate_title": "Winner's Share of Prize Pool",
+        "card_rate_sub": "Highest skill gaming payout rate in the region",
+        "card_fair_badge": "100% Provably Fair",
+        "card_fair_metric": "100% Skill",
+        "card_fair_title": "Zero Luck, Zero RNG, Anti-Cheat",
+        "card_fair_sub": "Deterministic server verification guarantees integrity",
+        "pillar_skill_title": "Play & Win With Pure Skill",
+        "pillar_skill_desc": "Winner takes the challenge prize pool directly with a 12% platform fee.",
+        "pillar_payout_title": "Instant 60s Cash Payouts",
+        "pillar_payout_desc": "Winnings credit directly to your wallet in USDT with zero hold times.",
+        "pillar_fair_title": "100% Provably Fair & Anti-Cheat",
+        "pillar_fair_desc": "Pure deterministic skill. Authoritative server verification guarantees absolute integrity."
+      }
     },
     "liveArena": {
       "heading": "Live Arena",

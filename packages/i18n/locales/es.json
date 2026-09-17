@@ -38,7 +38,31 @@
       "subhead": "Compite contra jugadores reales en duelos 1v1 de pura habilidad sin azar. Gana premios en efectivo USDT con retiros instantáneos en menos de 60 segundos.",
       "cta_primary": "Entrar a la Arena y Ganar",
       "cta_secondary": "Ver en vivo",
-      "featured_heading": "Destacados hoy"
+      "featured_heading": "Destacados hoy",
+      "guarantees": {
+        "card_ai_badge": "Activo 24/7",
+        "card_ai_metric": "Instantáneo 24/7",
+        "card_ai_title": "Duelos Instantáneos contra IA y Jugadores",
+        "card_ai_sub": "Juega contra la IA o desafía amigos sin tiempo de espera",
+        "card_payout_badge": "Retiro Inmediato",
+        "card_payout_metric": "< 60s",
+        "card_payout_title": "Retiro de Efectivo Automatizado",
+        "card_payout_sub": "Directo a tu billetera USDT por TRC20 y BEP20",
+        "card_rate_badge": "Comisión de solo 12%",
+        "card_rate_metric": "88%",
+        "card_rate_title": "Parte del Pozo para el Ganador",
+        "card_rate_sub": "La tasa de pago más alta para jugadores habilidosos",
+        "card_fair_badge": "100% Justo y Verificable",
+        "card_fair_metric": "100% Habilidad",
+        "card_fair_title": "Cero Azar, Cero Suerte, Anti-Trampas",
+        "card_fair_sub": "Servidores seguros y verificación determinista garantizan igualdad",
+        "pillar_skill_title": "Juega y Gana con Pura Habilidad",
+        "pillar_skill_desc": "El ganador se lleva el pozo de premios con solo 12% de comisión de plataforma.",
+        "pillar_payout_title": "Pagos en Efectivo en Menos de 60s",
+        "pillar_payout_desc": "Las ganancias van directo a tu billetera en USDT sin esperas.",
+        "pillar_fair_title": "100% Juego Limpio y Anti-Trampas",
+        "pillar_fair_desc": "Habilidad pura y determinista. La verificación en el servidor garantiza total integridad."
+      }
     },
     "games": {
       "heading": "10 juegos, una base justa",

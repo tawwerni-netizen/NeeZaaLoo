@@ -53,6 +53,9 @@ export const QUICK_STAKES = [
   { stake: 50, prize: 88.00, tagAr: "كبار المتحدين 👑", tagEn: "High-Roller 👑" },
 ];
 
+const formatUsdt = (num: number) =>
+  num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   const { locale, dir } = useI18n();
   const isRtl = dir === "rtl";
@@ -913,24 +916,73 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                   </div>
 
                   <div className={styles.stakePills}>
-                    {[2, 5, 10, 20, 50, 100, 200, 500].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        className={`${styles.stakePillBtn} ${newStake === amt ? styles.stakePillBtnActive : ""}`}
-                        onClick={() => setNewStake(amt)}
-                      >
-                        {amt} {newAsset}
-                      </button>
-                    ))}
+                    {[2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000].map((amt) => {
+                      const isVip = amt >= 1000;
+                      return (
+                        <button
+                          key={amt}
+                          type="button"
+                          className={`${styles.stakePillBtn} ${newStake === amt ? styles.stakePillBtnActive : ""} ${isVip ? styles.stakePillBtnVip : ""}`}
+                          onClick={() => setNewStake(amt)}
+                        >
+                          {isVip && <span className={styles.vipCrownIcon}>{amt === 2000 ? "💎" : "👑"}</span>}
+                          {amt >= 1000 ? `${amt.toLocaleString()} ` : `${amt} `}{newAsset}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Chic, Tempting, Real-Number Prize & Profit Breakdown HUD */}
+                  <div className={styles.prizeBreakdownBox}>
+                    <div className={styles.prizeBreakdownHeader}>
+                      <div className={styles.prizeBreakdownLabel}>
+                        <span className={styles.prizeTrophyIcon}>🏆</span>
+                        <span>{isRtl ? "الجائزة النقدية للفائز (88% من الوعاء):" : "Winner Cash Prize (88% Pool):"}</span>
+                      </div>
+                      <span className={styles.profitBadge}>
+                        +{formatUsdt(newStake * 0.76)} {newAsset} {isRtl ? "ربح صافٍ (1.76x)" : "Net Profit (1.76x)"}
+                      </span>
+                    </div>
+
+                    <div className={styles.prizeAmountHeroRow}>
+                      <div className={styles.prizeAmountHero}>
+                        <span className={styles.prizeAmountNum}>{formatUsdt(newStake * 1.76)}</span>
+                        <span className={styles.prizeAmountCurrency}>{newAsset}</span>
+                      </div>
+                      <div className={styles.prizeMultiTag}>1.76x MULTIPLIER</div>
+                    </div>
+
+                    <div className={styles.prizeDetailsGrid}>
+                      <div className={styles.prizeDetailItem}>
+                        <span className={styles.prizeDetailLabel}>{isRtl ? "مساهمتك" : "Your Stake"}</span>
+                        <span className={styles.prizeDetailValue}>{formatUsdt(newStake)} {newAsset}</span>
+                      </div>
+                      <div className={styles.prizeDetailItem}>
+                        <span className={styles.prizeDetailLabel}>{isRtl ? "إجمالي الوعاء" : "Total Match Pot"}</span>
+                        <span className={styles.prizeDetailValue}>{formatUsdt(newStake * 2)} {newAsset}</span>
+                      </div>
+                      <div className={styles.prizeDetailItem}>
+                        <span className={styles.prizeDetailLabel}>{isRtl ? "عمولة المنصة" : "Platform Fee"}</span>
+                        <span className={styles.prizeDetailValueFee}>12% ({formatUsdt(newStake * 0.24)} {newAsset})</span>
+                      </div>
+                    </div>
+
+                    <div className={styles.prizeBreakdownFooter}>
+                      <span>⚡</span>
+                      <span>
+                        {isRtl
+                          ? "الأرباح تُحوّل آلياً وفورياً لمحفظتك فور الفوز ويمكن سحبها في أقل من 60 ثانية."
+                          : "Winnings auto-credit directly to your wallet upon victory — cash out in under 60 seconds."}
+                      </span>
+                    </div>
                   </div>
 
                   {(userBalanceUSDT ?? 0) < newStake && (
                     <div className={styles.balanceWarningBanner}>
                       <span>
                         ⚠️ {isRtl
-                          ? `رصيدك الحالي (${(userBalanceUSDT ?? 0).toFixed(2)} ${newAsset}) غير كافٍ لهذا النزال (${newStake}.00 ${newAsset}). يرجى شحن الرصيد أولاً أو اختيار اللعب المجاني.`
-                          : `Your current balance (${(userBalanceUSDT ?? 0).toFixed(2)} ${newAsset}) is insufficient for this stake (${newStake}.00 ${newAsset}). Please deposit first or choose free practice.`}
+                          ? `رصيدك الحالي (${(userBalanceUSDT ?? 0).toFixed(2)} ${newAsset}) غير كافٍ لهذا النزال (${newStake.toLocaleString()}.00 ${newAsset}). يرجى شحن الرصيد أولاً أو اختيار اللعب المجاني.`
+                          : `Your current balance (${(userBalanceUSDT ?? 0).toFixed(2)} ${newAsset}) is insufficient for this stake (${newStake.toLocaleString()}.00 ${newAsset}). Please deposit first or choose free practice.`}
                       </span>
                       <LocaleLink href="/wallet" className={styles.inlineDepositBtn}>
                         💳 {isRtl ? "شحن المحفظة الآن" : `Deposit ${newAsset}`}

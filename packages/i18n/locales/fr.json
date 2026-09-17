@@ -38,7 +38,31 @@
       "subhead": "Affrontez de vrais joueurs en duels 1v1 de pure compétence, sans hasard. Gagnez des prix en cash USDT avec des retraits instantanés en moins de 60 secondes.",
       "cta_primary": "Entrer dans l'Arène et Gagner",
       "cta_secondary": "Voir en direct",
-      "featured_heading": "En vedette aujourd'hui"
+      "featured_heading": "En vedette aujourd'hui",
+      "guarantees": {
+        "card_ai_badge": "Actif 24/7",
+        "card_ai_metric": "Instatané 24/7",
+        "card_ai_title": "Duels Instantanés contre l'IA et Joueurs",
+        "card_ai_sub": "Jouez contre l'IA ou défiez des amis sans temps d'attente",
+        "card_payout_badge": "Retrait Instantané",
+        "card_payout_metric": "< 60s",
+        "card_payout_title": "Retrait Automatisé en Cash",
+        "card_payout_sub": "Directement sur votre portefeuille USDT via TRC20 et BEP20",
+        "card_rate_badge": "Frais de seulement 12%",
+        "card_rate_metric": "88%",
+        "card_rate_title": "Part de la Cagnotte pour le Vainqueur",
+        "card_rate_sub": "Le taux de reversement le plus élevé pour les joueurs talentueux",
+        "card_fair_badge": "100% Prouvablement Équitable",
+        "card_fair_metric": "100% Compétence",
+        "card_fair_title": "Zéro Chance, Zéro Hasard, Anti-Triche",
+        "card_fair_sub": "Serveurs sécurisés et règles déterministes garantissant l'équité",
+        "pillar_skill_title": "Jouez et Gagnez par la Compétence",
+        "pillar_skill_desc": "Le vainqueur remporte la cagnotte du défi avec seulement 12% de frais de plateforme.",
+        "pillar_payout_title": "Paiements Cash Instantanés en 60s",
+        "pillar_payout_desc": "Les gains arrivent directement sur votre portefeuille USDT sans conditions abusives.",
+        "pillar_fair_title": "100% Équitable et Anti-Triche",
+        "pillar_fair_desc": "Compétence déterministe pure. Vérification par serveur autoritaire pour une intégrité totale."
+      }
     },
     "games": {
       "heading": "10 jeux, une base équitable",
