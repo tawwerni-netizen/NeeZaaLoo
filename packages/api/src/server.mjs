@@ -5496,6 +5496,37 @@ function buildRoutes() {
         if (!r.ok) return { status: 400, body: errorBody(r.reason) };
         return { body: r };
       } },
+
+    { method: "POST", path: "/v1/payment-receiver/withdrawals/:id/complete", action: "payment.local_withdrawal.device_complete", anonymous: true,
+      handler: async ({ params, body, headers, localPayments, db }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+
+        const apiKey = headers["x-device-api-key"];
+        if (!apiKey) return { status: 401, body: errorBody("UNAUTHENTICATED") };
+
+        // Same device-auth shape as POST /v1/payment-receiver/transfers above:
+        // the api key resolves to the device row here, in the route, so a bad
+        // key is unambiguously 401 and a missing withdrawal is unambiguously
+        // 404 -- completeWithdrawal()'s own NOT_FOUND only ever means the
+        // latter once a real device id reaches it.
+        const hash = createHash("sha256").update(apiKey).digest("hex");
+        const deviceRes = await db.query(
+          `SELECT id, created_by AS "createdBy" FROM payment_receiver_device WHERE api_key_hash = $1 AND enabled = TRUE`,
+          [hash]
+        );
+        if (!deviceRes.rows.length) return { status: 401, body: errorBody("UNAUTHENTICATED") };
+        await db.query(`UPDATE payment_receiver_device SET last_seen_at = now() WHERE id = $1`, [deviceRes.rows[0].id]);
+
+        // The admin attributed on the ledger posting is whoever issued this
+        // device's key -- the same actor.id complete_manual_withdrawal()
+        // already requires "the admin who actually sent the money", sourced
+        // from device identity since this call carries no admin session.
+        const r = await localPayments.completeWithdrawal({
+          withdrawalId: params.id, adminId: deviceRes.rows[0].createdBy, reference: body?.reference,
+        });
+        if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(r.reason, r.detail) };
+        return { body: { ok: true, withdrawal: r.withdrawal } };
+      } },
   ];
 }
 

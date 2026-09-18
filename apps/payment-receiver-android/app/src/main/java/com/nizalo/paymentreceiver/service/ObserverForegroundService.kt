@@ -2,6 +2,7 @@ package com.nizalo.paymentreceiver.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
+import com.nizalo.paymentreceiver.MainActivity
 import com.nizalo.paymentreceiver.api.RetrofitClient
 
 class ObserverForegroundService : Service() {
@@ -77,14 +79,25 @@ class ObserverForegroundService : Service() {
     }
 
     private fun showWithdrawalAlert(title: String, text: String, id: Int) {
+        val openIntent = Intent(this, MainActivity::class.java).apply {
+            putExtra(MainActivity.EXTRA_OPEN_WITHDRAWALS, true)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, id, openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
             .build()
-            
+
         val manager = getSystemService(NotificationManager::class.java)
         manager?.notify(id, notification)
     }

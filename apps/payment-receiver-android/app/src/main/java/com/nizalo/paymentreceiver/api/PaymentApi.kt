@@ -26,18 +26,32 @@ data class TransferReportResponse(
 )
 
 @Serializable
+data class EgpRate(val egpPerUsd: Double)
+
+@Serializable
 data class PendingWithdrawalsResponse(
     val ok: Boolean,
-    val withdrawals: List<Withdrawal>
+    val withdrawals: List<Withdrawal>,
+    // Null only if no admin has ever set an EGP/USD rate -- see SettingsTab,
+    // which is exactly where that rate gets set for deposits too.
+    val rate: EgpRate? = null
 ) {
     @Serializable
     data class Withdrawal(
         val id: String,
         val network: String,
         val destination: String,
+        // Always USDT minor units (6 decimals) -- withdrawal.asset is never
+        // anything else -- NOT EGP piastres, however this rail pays out.
         val amountMinor: String
     )
 }
+
+@Serializable
+data class CompleteWithdrawalRequest(val reference: String)
+
+@Serializable
+data class CompleteWithdrawalResponse(val ok: Boolean)
 
 interface PaymentApi {
     @POST("v1/payment-receiver/transfers")
@@ -50,4 +64,11 @@ interface PaymentApi {
     suspend fun getPendingWithdrawals(
         @Header("x-device-api-key") apiKey: String
     ): Response<PendingWithdrawalsResponse>
+
+    @POST("v1/payment-receiver/withdrawals/{id}/complete")
+    suspend fun completeWithdrawal(
+        @Header("x-device-api-key") apiKey: String,
+        @retrofit2.http.Path("id") withdrawalId: String,
+        @Body request: CompleteWithdrawalRequest
+    ): Response<CompleteWithdrawalResponse>
 }

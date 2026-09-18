@@ -31,15 +31,20 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.nizalo.paymentreceiver.api.CompleteWithdrawalRequest
 import com.nizalo.paymentreceiver.api.PendingWithdrawalsResponse
 import com.nizalo.paymentreceiver.api.RetrofitClient
 import com.nizalo.paymentreceiver.service.ObserverForegroundService
 import kotlinx.coroutines.launch
 
-val DarkGreenBg = Color(0xFF08140E)
-val CardGreen = Color(0xFF10281C)
-val PrimaryGreen = Color(0xFF4ADE80)
-val TextGray = Color(0xFFA1A1AA)
+// Nizalo's own design tokens (packages/tokens/tokens.css, Calm Luxury Dark
+// theme) -- not a green scheme invented for this app. --nz-bg, --nz-surface-2,
+// --nz-accent ("Duel Orange", the one brand color used everywhere), --nz-text-2.
+val NizaloBg = Color(0xFF0B0E14)
+val NizaloSurface = Color(0xFF181F2C)
+val NizaloAccent = Color(0xFFFF5A2B)
+val NizaloAccentContrast = Color(0xFFFFFFFF)
+val NizaloTextMuted = Color(0xFF94A3B8)
 
 class MainActivity : ComponentActivity() {
 
@@ -53,17 +58,22 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         requestPermissions()
-        
+
+        // A tap on the "New Withdrawal Request" notification (ObserverForegroundService)
+        // carries this extra so the operator lands straight on the withdrawals list
+        // instead of the log tab it opens to by default.
+        val initialTab = if (intent?.getBooleanExtra(EXTRA_OPEN_WITHDRAWALS, false) == true) 1 else 0
+
         setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 MaterialTheme(
                     colorScheme = darkColorScheme(
-                        background = DarkGreenBg,
-                        surface = CardGreen,
-                        primary = PrimaryGreen,
-                        onPrimary = Color.Black,
+                        background = NizaloBg,
+                        surface = NizaloSurface,
+                        primary = NizaloAccent,
+                        onPrimary = NizaloAccentContrast,
                         onBackground = Color.White,
                         onSurface = Color.White
                     )
@@ -73,6 +83,7 @@ class MainActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.background
                     ) {
                         MainScreen(
+                            initialTab = initialTab,
                             onStartService = { startObserverService() },
                             onStopService = { stopObserverService() }
                         )
@@ -80,6 +91,20 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        // singleTask (manifest) means a notification tap while the app is
+        // already running lands here instead of a fresh onCreate; recreate()
+        // is the simplest way to re-read EXTRA_OPEN_WITHDRAWALS and land on
+        // the right tab without hand-rolling Compose navigation state.
+        recreate()
+    }
+
+    companion object {
+        const val EXTRA_OPEN_WITHDRAWALS = "open_withdrawals"
     }
 
     private fun requestPermissions() {
@@ -119,23 +144,23 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(onStartService: () -> Unit, onStopService: () -> Unit) {
-    var selectedTab by remember { mutableStateOf(0) }
+fun MainScreen(initialTab: Int = 0, onStartService: () -> Unit, onStopService: () -> Unit) {
+    var selectedTab by remember { mutableStateOf(initialTab) }
     
     Scaffold(
         bottomBar = {
-            NavigationBar(containerColor = CardGreen) {
+            NavigationBar(containerColor = NizaloSurface) {
                 NavigationBarItem(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Text("📋") },
                     label = { Text("السجل") },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryGreen,
-                        selectedTextColor = PrimaryGreen,
-                        indicatorColor = DarkGreenBg,
-                        unselectedIconColor = TextGray,
-                        unselectedTextColor = TextGray
+                        selectedIconColor = NizaloAccent,
+                        selectedTextColor = NizaloAccent,
+                        indicatorColor = NizaloBg,
+                        unselectedIconColor = NizaloTextMuted,
+                        unselectedTextColor = NizaloTextMuted
                     )
                 )
                 NavigationBarItem(
@@ -144,11 +169,11 @@ fun MainScreen(onStartService: () -> Unit, onStopService: () -> Unit) {
                     icon = { Text("💸") },
                     label = { Text("طلبات السحب") },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryGreen,
-                        selectedTextColor = PrimaryGreen,
-                        indicatorColor = DarkGreenBg,
-                        unselectedIconColor = TextGray,
-                        unselectedTextColor = TextGray
+                        selectedIconColor = NizaloAccent,
+                        selectedTextColor = NizaloAccent,
+                        indicatorColor = NizaloBg,
+                        unselectedIconColor = NizaloTextMuted,
+                        unselectedTextColor = NizaloTextMuted
                     )
                 )
                 NavigationBarItem(
@@ -157,11 +182,11 @@ fun MainScreen(onStartService: () -> Unit, onStopService: () -> Unit) {
                     icon = { Text("⚙️") },
                     label = { Text("الإعدادات") },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryGreen,
-                        selectedTextColor = PrimaryGreen,
-                        indicatorColor = DarkGreenBg,
-                        unselectedIconColor = TextGray,
-                        unselectedTextColor = TextGray
+                        selectedIconColor = NizaloAccent,
+                        selectedTextColor = NizaloAccent,
+                        indicatorColor = NizaloBg,
+                        unselectedIconColor = NizaloTextMuted,
+                        unselectedTextColor = NizaloTextMuted
                     )
                 )
             }
@@ -169,7 +194,7 @@ fun MainScreen(onStartService: () -> Unit, onStopService: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text("مستقبل مدفوعات Nizalo", fontWeight = FontWeight.Bold, color = Color.White) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkGreenBg)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NizaloBg)
             )
         }
     ) { paddingValues ->
@@ -187,15 +212,15 @@ fun MainScreen(onStartService: () -> Unit, onStopService: () -> Unit) {
 fun LogTab(onStartService: () -> Unit, onStopService: () -> Unit) {
     Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = CardGreen),
+            colors = CardDefaults.cardColors(containerColor = NizaloSurface),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("حالة الخدمة", color = TextGray, fontSize = 14.sp)
+                Text("حالة الخدمة", color = NizaloTextMuted, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onStartService, colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen, contentColor = Color.Black), modifier = Modifier.weight(1f)) {
+                    Button(onClick = onStartService, colors = ButtonDefaults.buttonColors(containerColor = NizaloAccent, contentColor = NizaloAccentContrast), modifier = Modifier.weight(1f)) {
                         Text("تشغيل")
                     }
                     Button(onClick = onStopService, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3F3F46), contentColor = Color.White), modifier = Modifier.weight(1f)) {
@@ -205,7 +230,7 @@ fun LogTab(onStartService: () -> Unit, onStopService: () -> Unit) {
             }
         }
         
-        Text("يتم تسجيل الرسائل تلقائياً وإرسالها للمنصة.", color = TextGray, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text("يتم تسجيل الرسائل تلقائياً وإرسالها للمنصة.", color = NizaloTextMuted, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -216,11 +241,14 @@ fun WithdrawalsTab() {
     val apiKey = prefs.getString("device_api_key", "") ?: ""
     val serverUrl = prefs.getString("server_url", "https://nizalo.com") ?: "https://nizalo.com"
     val scope = rememberCoroutineScope()
-    
+
     var withdrawals by remember { mutableStateOf<List<PendingWithdrawalsResponse.Withdrawal>>(emptyList()) }
+    var egpPerUsd by remember { mutableStateOf<Double?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
-    
+    var withdrawalPendingReference by remember { mutableStateOf<PendingWithdrawalsResponse.Withdrawal?>(null) }
+    var completingId by remember { mutableStateOf<String?>(null) }
+
     val fetchWithdrawals = {
         if (apiKey.isNotEmpty()) {
             isLoading = true
@@ -230,6 +258,7 @@ fun WithdrawalsTab() {
                     val response = RetrofitClient.getApi(serverUrl).getPendingWithdrawals(apiKey)
                     if (response.isSuccessful && response.body()?.ok == true) {
                         withdrawals = response.body()?.withdrawals ?: emptyList()
+                        egpPerUsd = response.body()?.rate?.egpPerUsd
                     } else {
                         errorMsg = "فشل في جلب البيانات: ${response.code()}"
                     }
@@ -243,11 +272,39 @@ fun WithdrawalsTab() {
             errorMsg = "برجاء إدخال توكن الاتصال في الإعدادات أولاً."
         }
     }
-    
+
     LaunchedEffect(Unit) {
         fetchWithdrawals()
     }
-    
+
+    withdrawalPendingReference?.let { w ->
+        CompleteWithdrawalDialog(
+            withdrawal = w,
+            isSubmitting = completingId == w.id,
+            onDismiss = { if (completingId == null) withdrawalPendingReference = null },
+            onConfirm = { reference ->
+                completingId = w.id
+                scope.launch {
+                    try {
+                        val res = RetrofitClient.getApi(serverUrl)
+                            .completeWithdrawal(apiKey, w.id, CompleteWithdrawalRequest(reference))
+                        if (res.isSuccessful && res.body()?.ok == true) {
+                            withdrawals = withdrawals.filter { it.id != w.id }
+                            withdrawalPendingReference = null
+                            Toast.makeText(context, "تم تأكيد التحويل وخصم الرصيد", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(context, "فشل التأكيد: ${res.code()} ${res.errorBody()?.string()}", Toast.LENGTH_LONG).show()
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "خطأ في الاتصال: ${e.message}", Toast.LENGTH_LONG).show()
+                    } finally {
+                        completingId = null
+                    }
+                }
+            }
+        )
+    }
+
     Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -255,29 +312,36 @@ fun WithdrawalsTab() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("طلبات السحب المعلقة", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            Button(onClick = { fetchWithdrawals() }, colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen, contentColor = Color.Black)) {
+            Button(onClick = { fetchWithdrawals() }, colors = ButtonDefaults.buttonColors(containerColor = NizaloAccent, contentColor = NizaloAccentContrast)) {
                 Text("تحديث")
             }
         }
-        
+
+        if (egpPerUsd == null && !isLoading && withdrawals.isNotEmpty()) {
+            Text(
+                "⚠ لم يتم ضبط سعر الصرف بعد -- المبالغ أدناه بالدولار فقط.",
+                color = NizaloAccent, fontSize = 13.sp, modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+
         if (isLoading) {
-            CircularProgressIndicator(color = PrimaryGreen, modifier = Modifier.align(Alignment.CenterHorizontally).padding(32.dp))
+            CircularProgressIndicator(color = NizaloAccent, modifier = Modifier.align(Alignment.CenterHorizontally).padding(32.dp))
         } else if (errorMsg.isNotEmpty()) {
             Text(errorMsg, color = Color.Red, modifier = Modifier.padding(16.dp))
         } else if (withdrawals.isEmpty()) {
-            Text("لا توجد طلبات سحب معلقة.", color = TextGray, modifier = Modifier.padding(16.dp))
+            Text("لا توجد طلبات سحب معلقة.", color = NizaloTextMuted, modifier = Modifier.padding(16.dp))
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(withdrawals) { w ->
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = CardGreen),
+                        colors = CardDefaults.cardColors(containerColor = NizaloSurface),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("المبلغ: ${(w.amountMinor.toLong() / 100.0)} ج.م", fontWeight = FontWeight.Bold, color = Color.White)
-                                Text(w.network, color = PrimaryGreen, fontSize = 12.sp)
+                                Text(egpLabel(w.amountMinor, egpPerUsd), fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(w.network, color = NizaloAccent, fontSize = 12.sp)
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -294,12 +358,75 @@ fun WithdrawalsTab() {
                                     Text("نسخ")
                                 }
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = { withdrawalPendingReference = w },
+                                enabled = completingId == null,
+                                colors = ButtonDefaults.buttonColors(containerColor = NizaloAccent, contentColor = NizaloAccentContrast),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(if (completingId == w.id) "جارٍ التأكيد..." else "تم التحويل ✓")
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
+
+/** USDT minor units (6 decimals) -> a display string. EGP when a rate is set, USD otherwise. */
+private fun egpLabel(amountMinor: String, egpPerUsd: Double?): String {
+    val usdt = amountMinor.toLongOrNull()?.div(1_000_000.0) ?: return "المبلغ: $amountMinor"
+    return if (egpPerUsd != null) {
+        "المبلغ: %.2f ج.م (%.2f USDT)".format(usdt * egpPerUsd, usdt)
+    } else {
+        "المبلغ: %.2f USDT".format(usdt)
+    }
+}
+
+@Composable
+fun CompleteWithdrawalDialog(
+    withdrawal: PendingWithdrawalsResponse.Withdrawal,
+    isSubmitting: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (reference: String) -> Unit
+) {
+    var reference by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = NizaloSurface,
+        title = { Text("تأكيد تحويل ${withdrawal.destination}", color = Color.White) },
+        text = {
+            Column {
+                Text(
+                    "اكتب رقم العملية أو أي ملاحظة تساعدك على تتبع هذا التحويل لاحقاً. لا يمكن التراجع بعد التأكيد -- سيتم خصم الرصيد من حساب اللاعب فوراً.",
+                    color = NizaloTextMuted, fontSize = 13.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = reference,
+                    onValueChange = { reference = it },
+                    label = { Text("مرجع التحويل") },
+                    enabled = !isSubmitting,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = NizaloAccent, focusedLabelColor = NizaloAccent, unfocusedBorderColor = NizaloTextMuted
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(reference.trim().ifEmpty { "Manual transfer via Payment Receiver app, ${withdrawal.destination}" }) },
+                enabled = !isSubmitting,
+                colors = ButtonDefaults.buttonColors(containerColor = NizaloAccent, contentColor = NizaloAccentContrast)
+            ) { Text(if (isSubmitting) "..." else "تأكيد الخصم") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isSubmitting) { Text("إلغاء", color = NizaloTextMuted) }
+        }
+    )
 }
 
 @Composable
@@ -318,9 +445,9 @@ fun SettingsTab() {
             label = { Text("رابط الموقع (مثال: https://nizalo.com)") },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryGreen,
-                focusedLabelColor = PrimaryGreen,
-                unfocusedBorderColor = TextGray
+                focusedBorderColor = NizaloAccent,
+                focusedLabelColor = NizaloAccent,
+                unfocusedBorderColor = NizaloTextMuted
             )
         )
         
@@ -332,9 +459,9 @@ fun SettingsTab() {
             label = { Text("توكن الاتصال (API Key)") },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryGreen,
-                focusedLabelColor = PrimaryGreen,
-                unfocusedBorderColor = TextGray
+                focusedBorderColor = NizaloAccent,
+                focusedLabelColor = NizaloAccent,
+                unfocusedBorderColor = NizaloTextMuted
             )
         )
         
@@ -346,9 +473,9 @@ fun SettingsTab() {
             label = { Text("معرفات الاستقبال (مثال: vf_1,insta_1)") },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryGreen,
-                focusedLabelColor = PrimaryGreen,
-                unfocusedBorderColor = TextGray
+                focusedBorderColor = NizaloAccent,
+                focusedLabelColor = NizaloAccent,
+                unfocusedBorderColor = NizaloTextMuted
             )
         )
         
@@ -363,7 +490,7 @@ fun SettingsTab() {
                     .apply()
                 Toast.makeText(context, "تم الحفظ", Toast.LENGTH_SHORT).show()
             },
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen, contentColor = Color.Black),
+            colors = ButtonDefaults.buttonColors(containerColor = NizaloAccent, contentColor = NizaloAccentContrast),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("حفظ الإعدادات")

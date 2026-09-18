@@ -453,15 +453,28 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
 
       await db.query(`UPDATE payment_receiver_device SET last_seen_at = now() WHERE id = $1`, [deviceId]);
       
+      /*
+       * Matched on phone OR name, not phone alone: InstaPay receipts never
+       * carry a sender phone (IPN.senderPhone above is always null), so a
+       * phone-only match silently left every InstaPay deposit UNMATCHED
+       * for manual review no matter how clean the transfer was. Amount +
+       * network + receiving number + a tight expiry window already narrow
+       * this to a small set; requiring exactly one row to match (below)
+       * before auto-crediting is what keeps a same-amount coincidence from
+       * ever being credited to the wrong player.
+       */
       const intentRes = await db.query(`
         SELECT id, receiving_number_id FROM local_deposit_intent
-        WHERE network = $1 
+        WHERE network = $1
           AND receiving_number_id = ANY($2::text[])
           AND declared_amount_egp_minor = $3
           AND status = 'PENDING'
           AND expires_at >= $4
-          AND declared_sender_phone = $5
-      `, [net, possibleNumbers, amount.toString(), observed, String(senderPhone || "")]);
+          AND (
+            ($5 <> '' AND declared_sender_phone = $5)
+            OR ($6 <> '' AND lower(trim(declared_sender_name)) = lower(trim($6)))
+          )
+      `, [net, possibleNumbers, amount.toString(), observed, String(senderPhone || ""), String(senderName || "")]);
       
       if (intentRes.rows.length === 1) {
          try {
@@ -484,9 +497,17 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
     },
 
     async deviceListPendingWithdrawals({ apiKey }) {
+      // Hashed in JS, not with SQL's sha256($1::bytea): a plain JS string
+      // handed to a bytea-typed parameter is not reliably the same bytes as
+      // createHash('sha256').update(apiKey) expects -- Postgres's bytea
+      // 'escape' input format is not a UTF-8 encoding, it is its own literal
+      // syntax, and drivers differ on how a bare string gets there. Hashing
+      // here instead, exactly like the two device routes in server.mjs
+      // already do, compares hex to hex with no cast involved.
+      const hash = createHash("sha256").update(String(apiKey ?? "")).digest("hex");
       const devRes = await db.query(
-        "SELECT id FROM payment_receiver_device WHERE api_key_hash = encode(sha256($1::bytea), 'hex') AND enabled = true",
-        [apiKey]
+        "SELECT id FROM payment_receiver_device WHERE api_key_hash = $1 AND enabled = true",
+        [hash]
       );
       if (!devRes.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
 
@@ -501,7 +522,11 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
           WHERE network IN ('VODAFONE_CASH','INSTAPAY') AND status IN ('APPROVED','PROCESSING')
           ORDER BY requested_at ASC`
       );
-      return { ok: true, withdrawals: r.rows };
+      // withdrawal.amount_minor is always USDT (6 decimals) -- the player's
+      // balance was never anything else -- but the operator is sending cash
+      // EGP by hand. Without the rate here, the app has no way to tell them
+      // how many pounds that USDT amount is actually worth right now.
+      return { ok: true, withdrawals: r.rows, rate: await readEgpRate(db) };
     },
 
     // =========================================================================

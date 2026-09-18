@@ -36,7 +36,7 @@ async function stepUp(token, action) {
 
 describe("Local EGP payment rails - Device App", () => {
   let tokenAlice, tokenRoot, deviceKey, deviceId;
-  let intentId, transferId;
+  let intentId, transferId, deviceWithdrawalId;
 
   before(async () => {
     db = await PGlite.create();
@@ -169,5 +169,61 @@ describe("Local EGP payment rails - Device App", () => {
       "SELECT ledger_natural_balance(normal_side, balance) AS bal FROM ledger_account a JOIN ledger_balance b ON b.account_id = a.id WHERE a.key = 'user:alice:available'"
     );
     assert.equal(BigInt(bal.rows[0]?.bal), 30_000_000n); // 1500 EGP / 50 = 30 USD = 30,000,000 USDT minor
+  });
+
+  test("GET /v1/payment-receiver/withdrawals reports the current EGP rate so the app knows what to send", async () => {
+    const step = await stepUp(tokenAlice, "wallet.withdraw");
+    const req1 = await req("POST", "/v1/players/alice/withdrawals", {
+      token: tokenAlice, headers: { "x-step-up-token": step },
+      body: { amount: 10, asset: "USDT", network: "VODAFONE_CASH", destination: "01033334444" },
+    });
+    assert.equal(req1.status, 201, JSON.stringify(req1.body));
+    assert.equal(req1.body.withdrawal.status, "APPROVED");
+    deviceWithdrawalId = req1.body.withdrawal.id;
+
+    const res = await req("GET", "/v1/payment-receiver/withdrawals", { headers: { "x-device-api-key": deviceKey } });
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body.rate.egpPerUsd, 50);
+    assert.ok(res.body.withdrawals.some((w) => w.id === deviceWithdrawalId));
+  });
+
+  test("a bad device key cannot complete a withdrawal", async () => {
+    const res = await req("POST", `/v1/payment-receiver/withdrawals/${deviceWithdrawalId}/complete`, {
+      headers: { "x-device-api-key": "not-a-real-key" },
+      body: { reference: "should-never-land" },
+    });
+    assert.equal(res.status, 401, JSON.stringify(res.body));
+  });
+
+  test("the device app itself completes the withdrawal it saw -- point 3 of the operator's own flow", async () => {
+    const res = await req("POST", `/v1/payment-receiver/withdrawals/${deviceWithdrawalId}/complete`, {
+      headers: { "x-device-api-key": deviceKey },
+      body: { reference: "VF-DEVICE-TEST-1" },
+    });
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body.withdrawal.status, "COMPLETED");
+
+    const pending = await req("GET", "/v1/payment-receiver/withdrawals", { headers: { "x-device-api-key": deviceKey } });
+    assert.equal(pending.body.withdrawals.some((w) => w.id === deviceWithdrawalId), false);
+
+    // The ledger attributes this posting to whoever issued the device's key
+    // (root, in "issue a new device key for the android app" above) -- the
+    // operator on the phone never needs a separate admin session for this.
+    const posted = await db.query(
+      `SELECT lt.actor_id FROM withdrawal w
+         JOIN ledger_transaction lt ON lt.id = w.settle_tx_id
+        WHERE w.id = $1`,
+      [deviceWithdrawalId]
+    );
+    assert.equal(posted.rows[0]?.actor_id, "root");
+  });
+
+  test("completing the same withdrawal twice is idempotent, not a double debit", async () => {
+    const res = await req("POST", `/v1/payment-receiver/withdrawals/${deviceWithdrawalId}/complete`, {
+      headers: { "x-device-api-key": deviceKey },
+      body: { reference: "VF-DEVICE-TEST-1-RETRY" },
+    });
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body.withdrawal.status, "COMPLETED");
   });
 });

@@ -84,6 +84,7 @@ export const ACTIONS = {
   "support.config.read":         { capability: null },
   "payment.webhook":             { capability: null },
   "payment.local_transfer.report": { capability: null },
+  "payment.local_withdrawal.device_complete": { capability: null },
 
   // --- Read surfaces ---------------------------------------------------------
   "admin.user.read":         { capability: "user.read" },
