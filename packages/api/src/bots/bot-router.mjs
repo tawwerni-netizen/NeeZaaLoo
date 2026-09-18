@@ -3,7 +3,7 @@
  */
 import { ALL_BOT_PERSONAS, ALL_GAMES, getBotById, getBotsForGame } from "./personas.mjs";
 import { generateBotReply } from "./bot-chat-service.mjs";
-import { createVsComputerService } from "../../matchmaking/src/vs-computer.mjs";
+import { createVsComputerService } from "../../../matchmaking/src/vs-computer.mjs";
 
 export function registerBotRoutes(routes) {
   // GET /v1/bots -- list bots with optional gameId and language filter (powers Leaderboards!)
@@ -55,7 +55,7 @@ export function registerBotRoutes(routes) {
   routes.push({
     method: "POST",
     path: "/v1/bots/:id/chat",
-    action: "player.chat.match.write",
+    action: "player.chat.direct.write",
     anonymous: true,
     handler: async ({ params, body }) => {
       const bot = getBotById(params.id);
