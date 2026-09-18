@@ -1,15 +1,34 @@
 /**
- * 600 AI Personas across 6 Languages (100 per language).
+ * 600 AI Personas across 6 Languages (100 per language) playing ALL 11 games on Nizalo.
  * Pure ESM JavaScript.
  * 
- * Languages:
- * 1. AR (Arabic)   - 100 Personas: Egypt, Saudi Arabia, UAE, Morocco, Algeria, Syria, Lebanon, Iraq, Jordan, Kuwait.
- * 2. EN (English)  - 100 Personas: USA, UK, Canada, Australia, South Africa, Ireland.
- * 3. ES (Spanish)  - 100 Personas: Spain, Argentina, Mexico, Colombia, Chile, Peru.
- * 4. FR (French)   - 100 Personas: France, Canada (Quebec), Belgium, Switzerland, Senegal.
- * 5. HI (Hindi)    - 100 Personas: India (Delhi, Mumbai, Bengaluru, Punjab, Hyderabad, Kolkata).
- * 6. ZH (Chinese)  - 100 Personas: China (Beijing, Shanghai, Shenzhen), Taiwan, Singapore, Hong Kong.
+ * Games:
+ * 1. chess (الشطرنج)
+ * 2. checkers (الداما)
+ * 3. backgammon (الطاولة)
+ * 4. dominoes (الدومينو)
+ * 5. billiards (البلياردو)
+ * 6. connect-four (أربعة على التوالي)
+ * 7. gomoku (جوموكو)
+ * 8. reversi (ريفيرسي)
+ * 9. seega (السيجة)
+ * 10. speed-math (الرياضيات السريعة)
+ * 11. xo (إكس أو)
  */
+
+export const ALL_GAMES = [
+  "chess",
+  "checkers",
+  "backgammon",
+  "dominoes",
+  "billiards",
+  "connect-four",
+  "gomoku",
+  "reversi",
+  "seega",
+  "speed-math",
+  "xo",
+];
 
 const AR_CITIES = [
   { city: "القاهرة", country: "مصر", code: "EG", dialect: "لهجة مصرية قاهرية دارجة وخفيفة الظل" },
@@ -17,7 +36,7 @@ const AR_CITIES = [
   { city: "الرياض", country: "السعودية", code: "SA", dialect: "لهجة نجدية سعودية رصينة ومرحبة" },
   { city: "جدة", country: "السعودية", code: "SA", dialect: "لهجة حجازية سعودية ودودة ولطيفة" },
   { city: "دبي", country: "الإمارات", code: "AE", dialect: "لهجة إماراتية خليجية أنيقة" },
-  { city: "الدار البيضاء", country: "المغرب", code: "MA", dialect: "دارجة مغربية سريعة ممزوجة بكلمات شطرنجية" },
+  { city: "الدار البيضاء", country: "المغرب", code: "MA", dialect: "دارجة مغربية سريعة ممزوجة بروح المنافسة" },
   { city: "الجزائر", country: "الجزائر", code: "DZ", dialect: "لهجة جزائرية مغاربية واثقة" },
   { city: "دمشق", country: "سوريا", code: "SY", dialect: "لهجة شامية سورية مهذبة وذكية" },
   { city: "بيروت", country: "لبنان", code: "LB", dialect: "لهجة لبنانية عفوية وذكية" },
@@ -25,7 +44,7 @@ const AR_CITIES = [
 ];
 
 const EN_CITIES = [
-  { city: "New York", country: "USA", code: "US", dialect: "Direct, fast-paced New York chess hustler vibe" },
+  { city: "New York", country: "USA", code: "US", dialect: "Direct, fast-paced New York competitor vibe" },
   { city: "London", country: "UK", code: "GB", dialect: "Polite, witty British classical style" },
   { city: "Toronto", country: "Canada", code: "CA", dialect: "Friendly and encouraging Canadian tone" },
   { city: "Sydney", country: "Australia", code: "AU", dialect: "Laid-back Aussie humor with high tactical bite" },
@@ -85,6 +104,14 @@ const PERSONALITIES = [
   "واثق من نفسه ولا يتحدث كثيراً إلا عند النقلات الحاسمة",
 ];
 
+const PLAY_STYLES = [
+  "هجومي كاسح وسريع",
+  "دفاعي تكتيكي صلب",
+  "متوازن ويستغل هفوات الخصم",
+  "حسابات رياضية هادئة ودقيقة",
+  "محترف نهايات وأفخاخ غير متوقعة",
+];
+
 export function generate600Personas() {
   const personas = [];
 
@@ -95,9 +122,28 @@ export function generate600Personas() {
       const lName = lastNames[(i * 13) % lastNames.length];
       const fullName = `${fName} ${lName}`;
       const handle = `${fName}_${lName.replace(/\s+/g, "")}_${(i * 17) % 99}`;
-      // ELO range 1550 - 2850
-      const rating = 1600 + ((i * 47) % 1250);
+      
+      // Base ELO range 1600 - 2850
+      const baseRating = 1600 + ((i * 47) % 1250);
       const personality = PERSONALITIES[i % PERSONALITIES.length];
+      const playStyle = PLAY_STYLES[i % PLAY_STYLES.length];
+
+      // Ratings across all 11 games with realistic variation per game
+      const gameRatings = {};
+      for (let gIdx = 0; gIdx < ALL_GAMES.length; gIdx++) {
+        const gName = ALL_GAMES[gIdx];
+        const variance = ((i * 19 + gIdx * 37) % 300) - 150;
+        gameRatings[gName] = Math.max(1500, Math.min(2900, baseRating + variance));
+      }
+
+      // Pick top 3 favorite games for this bot
+      const sortedGames = [...ALL_GAMES].sort((a, b) => (gameRatings[b] || 0) - (gameRatings[a] || 0));
+      const favoriteGames = sortedGames.slice(0, 3);
+
+      const totalMatches = 120 + ((i * 29) % 800);
+      const winRate = 0.55 + ((i * 13) % 25) / 100; // 55% - 79% win rate
+      const matchesWon = Math.round(totalMatches * winRate);
+      const matchesLost = totalMatches - matchesWon;
 
       personas.push({
         id: `bot_${lang}_${String(i).padStart(3, "0")}`,
@@ -106,10 +152,16 @@ export function generate600Personas() {
         country: cityObj.country,
         countryCode: cityObj.code,
         city: cityObj.city,
-        rating,
+        rating: baseRating,
+        gameRatings,
+        favoriteGames,
+        matchesWon,
+        matchesLost,
+        totalMatches,
         language: lang,
         dialect: cityObj.dialect,
         personality,
+        playStyle,
         avatarSeed: `${lang}-${i}`,
       });
     }
@@ -133,4 +185,20 @@ export const BOT_INDEX = new Map(
 
 export function getBotById(id) {
   return BOT_INDEX.get(id) ?? null;
+}
+
+/**
+ * Returns bots sorted by their rating for a specific game (or overall rating).
+ * Perfect for populating the Leaderboard of any of the 11 games!
+ */
+export function getBotsForGame(gameId, lang = null) {
+  let list = ALL_BOT_PERSONAS;
+  if (lang) {
+    list = list.filter((b) => b.language === lang);
+  }
+  return [...list].sort((a, b) => {
+    const rA = a.gameRatings?.[gameId] ?? a.rating;
+    const rB = b.gameRatings?.[gameId] ?? b.rating;
+    return rB - rA;
+  });
 }
