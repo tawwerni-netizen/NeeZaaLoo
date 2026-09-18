@@ -22,6 +22,7 @@ interface GameThumbnailProps {
 // below instead, same as every other game did before real photography
 // existed for it.
 const SUPPORTED_GAMES = new Set([
+  "chess",
   "checkers",
   "connect-four",
   "xo",

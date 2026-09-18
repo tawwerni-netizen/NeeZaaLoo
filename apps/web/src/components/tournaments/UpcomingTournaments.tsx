@@ -67,11 +67,7 @@ export function getTournamentCover(gameId: string): string {
     "speed-math": "/images/tournaments/tournament-speed-math.jpg",
     seega: "/images/tournaments/tournament-seega.jpg",
     reversi: "/images/tournaments/tournament-reversi.jpg",
-    // Not tournament-chess.jpg / chess-hero.webp: that generated art has
-    // real chess grandmasters' names on its scoreboard, implying an
-    // endorsement that doesn't exist. Hand-authored, brand-safe SVG art
-    // instead until a properly-prompted replacement photo exists.
-    chess: "/images/games/chess-cover-safe.svg",
+    chess: "/images/games/chess-hero.jpg",
     "connect-four": "/images/tournaments/tournament-connect-four.jpg",
     checkers: "/images/tournaments/tournament-checkers.jpg",
     dominoes: "/images/games/dominoes-hero.webp",

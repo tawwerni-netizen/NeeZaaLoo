@@ -50,16 +50,26 @@ fun GameSelectionScreen(
                         .height(140.dp)
                         .shadow(8.dp, RoundedCornerShape(12.dp))
                         .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(SurfaceElevated, SurfaceDark)
-                            )
-                        )
-                        .clickable { selectedGameForMode = game }
-                        .padding(12.dp),
+                        .clickable { selectedGameForMode = game },
                     contentAlignment = Alignment.BottomStart
                 ) {
-                    Column {
+                    coil.compose.AsyncImage(
+                        model = "https://nizalo.com/images/games/${game.slug}-hero.jpg",
+                        contentDescription = game.displayName,
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    // Gradient overlay for text readability
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(androidx.compose.ui.graphics.Color.Transparent, ObsidianBg.copy(alpha = 0.8f))
+                                )
+                            )
+                    )
+                    Column(modifier = Modifier.padding(12.dp)) {
                         NizaloBadge(
                             text = when (game.presentationType) {
                                 PresentationType.FULL_3D -> "FULL 3D"

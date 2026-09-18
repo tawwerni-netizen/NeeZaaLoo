@@ -99,6 +99,15 @@ fun TournamentDetailScreen(
             }
             is TournamentDetailState.Success -> {
                 val t = s.tournament
+                coil.compose.AsyncImage(
+                    model = "https://nizalo.com/images/games/${t.gameId.slug}-hero.jpg",
+                    contentDescription = t.title,
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(t.title, fontSize = 24.sp, fontWeight = FontWeight.Black, color = TextPrimary)
                 Text("Format: ${t.format.name} | Game: ${t.gameId.displayName}", color = TextSecondary)
                 Spacer(modifier = Modifier.height(8.dp))
