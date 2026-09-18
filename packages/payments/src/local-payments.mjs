@@ -18,6 +18,7 @@
  * this feature does not change shape when the app ships, only who calls it.
  */
 import { randomUUID, createHash } from "node:crypto";
+import { parseLocalPaymentSms } from "./sms-parsers.mjs";
 
 export const LocalPaymentError = {
   NOT_FOUND: "NOT_FOUND",
@@ -401,7 +402,25 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
       try { amount = BigInt(amountEgpMinor); } catch { return { ok: false, reason: LocalPaymentError.INVALID_AMOUNT }; }
       if (amount <= 0n) return { ok: false, reason: LocalPaymentError.INVALID_AMOUNT };
 
-      
+      let senderName = rawSenderName ? String(rawSenderName) : null;
+      let senderPhone = rawSenderPhone ? String(rawSenderPhone) : null;
+
+      /*
+       * Re-parse the raw SMS/notification text here and let the server's
+       * reading win over what the device extracted -- same reasoning as
+       * tawwerni.com's payment ingest: a format change gets fixed by a
+       * backend deploy, not by re-installing the APK on every phone acting
+       * as a receiver. Only trusted when it agrees on which network this is,
+       * since a network mismatch could otherwise silently reroute a transfer
+       * against the wrong rail's number.
+       */
+      const reparsed = parseLocalPaymentSms(String(rawMessage ?? ""));
+      if (reparsed && reparsed.network === net) {
+        amount = reparsed.amountEgpMinor;
+        senderName = reparsed.senderName ?? senderName;
+        senderPhone = reparsed.senderPhone ?? senderPhone;
+      }
+
       const possibleNumbers = String(receivingNumberId).split(',').map(s => s.trim()).filter(Boolean);
       const primaryNumber = possibleNumbers[0];
 
@@ -421,9 +440,8 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
              raw_message, device_id, observed_at, status)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'UNMATCHED')
         `, [
-          transferId, net, primaryNumber, 
-          rawSenderName ? String(rawSenderName) : null,
-          rawSenderPhone ? String(rawSenderPhone) : null,
+          transferId, net, primaryNumber,
+          senderName, senderPhone,
           amount.toString(), String(rawMessage), deviceId, observed
         ]);
       } catch (e) {
@@ -443,7 +461,7 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
           AND status = 'PENDING'
           AND expires_at >= $4
           AND declared_sender_phone = $5
-      `, [net, possibleNumbers, amount.toString(), observed, String(rawSenderPhone || "")]);
+      `, [net, possibleNumbers, amount.toString(), observed, String(senderPhone || "")]);
       
       if (intentRes.rows.length === 1) {
          try {

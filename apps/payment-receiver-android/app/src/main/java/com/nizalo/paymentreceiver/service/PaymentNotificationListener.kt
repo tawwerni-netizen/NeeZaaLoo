@@ -19,27 +19,18 @@ class PaymentNotificationListener : NotificationListenerService() {
         super.onNotificationPosted(sbn)
         sbn ?: return
 
-        val packageName = sbn.packageName
         val extras = sbn.notification.extras
         val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
         
         val fullMessage = "$title: $text"
-        
-        // Example logic for banking apps or e-wallets
-        // We look for Vodafone Cash or InstaPay patterns in notifications
-        
-        if (packageName.contains("vodafone") || title.contains("Vodafone", ignoreCase = true) || title.contains("VF-Cash", ignoreCase = true)) {
-            val parsed = SmsParser.parseVodafoneCash(fullMessage)
-            if (parsed != null) {
-                saveAndSync("VODAFONE_CASH", parsed, fullMessage)
-            }
-        } else if (packageName.contains("instapay") || title.contains("InstaPay", ignoreCase = true)) {
-            val parsed = SmsParser.parseInstaPay(fullMessage)
-            if (parsed != null) {
-                saveAndSync("INSTAPAY", parsed, fullMessage)
-            }
-        }
+
+        // Same content-based detection as SmsReceiver: a bank's own app shows its
+        // own package name and its own notification title, never "InstaPay", so
+        // matching on those would drop every real transfer. The message body is
+        // the only reliable signal.
+        val (network, parsed) = SmsParser.parseAny(fullMessage) ?: return
+        saveAndSync(network, parsed, fullMessage)
     }
 
     private fun saveAndSync(network: String, parsed: SmsParser.ParsedTransfer, body: String) {

@@ -18,23 +18,15 @@ class SmsReceiver : BroadcastReceiver() {
         if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
             for (sms in messages) {
-                val sender = sms.originatingAddress ?: ""
                 val body = sms.messageBody ?: ""
-                
-                // VODAFONE_CASH check
-                if (sender.equals("Vodafone", ignoreCase = true) || sender.equals("VF-Cash", ignoreCase = true)) {
-                    val parsed = SmsParser.parseVodafoneCash(body)
-                    if (parsed != null) {
-                        saveAndSync(context, "VODAFONE_CASH", parsed, body)
-                    }
-                } 
-                // INSTAPAY check
-                else if (sender.equals("InstaPay", ignoreCase = true)) {
-                    val parsed = SmsParser.parseInstaPay(body)
-                    if (parsed != null) {
-                        saveAndSync(context, "INSTAPAY", parsed, body)
-                    }
-                }
+
+                // Detection is by message content, not by sender ID: Vodafone Cash sends
+                // from a fixed shortcode, but an InstaPay receipt arrives from whichever
+                // bank the sender used (CIB, NBE, QNB, ...), never from a literal
+                // "InstaPay" address. Gating on the sender here would silently drop
+                // every real transfer.
+                val (network, parsed) = SmsParser.parseAny(body) ?: continue
+                saveAndSync(context, network, parsed, body)
             }
         }
     }
