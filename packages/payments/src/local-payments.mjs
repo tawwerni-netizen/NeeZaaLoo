@@ -496,23 +496,25 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
       return { ok: true, status: "UNMATCHED", transferId };
     },
 
-    async deviceListPendingWithdrawals({ apiKey }) {
-      // Hashed in JS, not with SQL's sha256($1::bytea): a plain JS string
-      // handed to a bytea-typed parameter is not reliably the same bytes as
-      // createHash('sha256').update(apiKey) expects -- Postgres's bytea
-      // 'escape' input format is not a UTF-8 encoding, it is its own literal
-      // syntax, and drivers differ on how a bare string gets there. Hashing
-      // here instead, exactly like the two device routes in server.mjs
-      // already do, compares hex to hex with no cast involved.
-      const hash = createHash("sha256").update(String(apiKey ?? "")).digest("hex");
-      const devRes = await db.query(
-        "SELECT id FROM payment_receiver_device WHERE api_key_hash = $1 AND enabled = true",
-        [hash]
-      );
-      if (!devRes.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
+    async deviceListPendingDeposits({ apiKey }) {
+      const device = await resolveDevice(db, apiKey);
+      if (!device) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
 
-      // Update last seen to keep device health accurate
-      await db.query(`UPDATE payment_receiver_device SET last_seen_at = now() WHERE id = $1`, [devRes.rows[0].id]);
+      const r = await db.query(
+        `SELECT id, player_id AS "playerId", network, receiving_number_id AS "receivingNumberId",
+                declared_sender_name AS "senderName", declared_sender_phone AS "senderPhone",
+                declared_amount_egp_minor::text AS "amountEgpMinor", status,
+                created_at AS "createdAt", expires_at AS "expiresAt"
+           FROM local_deposit_intent
+          WHERE status = 'PENDING'
+          ORDER BY created_at ASC LIMIT 100`
+      );
+      return { ok: true, deposits: r.rows };
+    },
+
+    async deviceListPendingWithdrawals({ apiKey }) {
+      const device = await resolveDevice(db, apiKey);
+      if (!device) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
 
       const r = await db.query(
         `SELECT id, player_id AS "playerId", asset, network, destination,
@@ -572,6 +574,28 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
       }
     },
   };
+}
+
+/**
+ * Resolves the Android app's api key to its device row, or null.
+ *
+ * Hashed in JS, not with SQL's sha256($1::bytea): a plain JS string handed
+ * to a bytea-typed parameter is not reliably the same bytes as
+ * createHash('sha256').update(apiKey) expects -- Postgres's bytea 'escape'
+ * input format is not a UTF-8 encoding, it is its own literal syntax, and
+ * drivers differ on how a bare string gets there. Hashing here instead,
+ * exactly like server.mjs's own device routes already do, compares hex to
+ * hex with no cast involved.
+ */
+async function resolveDevice(db, apiKey) {
+  const hash = createHash("sha256").update(String(apiKey ?? "")).digest("hex");
+  const r = await db.query(
+    "SELECT id, created_by AS \"createdBy\" FROM payment_receiver_device WHERE api_key_hash = $1 AND enabled = true",
+    [hash]
+  );
+  if (!r.rows.length) return null;
+  await db.query(`UPDATE payment_receiver_device SET last_seen_at = now() WHERE id = $1`, [r.rows[0].id]);
+  return r.rows[0];
 }
 
 async function readEgpRate(db) {

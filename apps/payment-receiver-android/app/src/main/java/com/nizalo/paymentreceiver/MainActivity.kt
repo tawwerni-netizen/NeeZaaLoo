@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.nizalo.paymentreceiver.api.CompleteWithdrawalRequest
+import com.nizalo.paymentreceiver.api.PendingDepositsResponse
 import com.nizalo.paymentreceiver.api.PendingWithdrawalsResponse
 import com.nizalo.paymentreceiver.api.RetrofitClient
 import com.nizalo.paymentreceiver.service.ObserverForegroundService
@@ -64,7 +65,7 @@ class MainActivity : ComponentActivity() {
         // A tap on the "New Withdrawal Request" notification (ObserverForegroundService)
         // carries this extra so the operator lands straight on the withdrawals list
         // instead of the log tab it opens to by default.
-        val initialTab = if (intent?.getBooleanExtra(EXTRA_OPEN_WITHDRAWALS, false) == true) 1 else 0
+        val initialTab = if (intent?.getBooleanExtra(EXTRA_OPEN_WITHDRAWALS, false) == true) 2 else 0
 
         setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -166,8 +167,8 @@ fun MainScreen(initialTab: Int = 0, onStartService: () -> Unit, onStopService: (
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    icon = { Text("💸") },
-                    label = { Text("طلبات السحب") },
+                    icon = { Text("📥") },
+                    label = { Text("الإيداعات") },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = NizaloAccent,
                         selectedTextColor = NizaloAccent,
@@ -179,6 +180,19 @@ fun MainScreen(initialTab: Int = 0, onStartService: () -> Unit, onStopService: (
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
+                    icon = { Text("💸") },
+                    label = { Text("طلبات السحب") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = NizaloAccent,
+                        selectedTextColor = NizaloAccent,
+                        indicatorColor = NizaloBg,
+                        unselectedIconColor = NizaloTextMuted,
+                        unselectedTextColor = NizaloTextMuted
+                    )
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
                     icon = { Text("⚙️") },
                     label = { Text("الإعدادات") },
                     colors = NavigationBarItemDefaults.colors(
@@ -201,8 +215,9 @@ fun MainScreen(initialTab: Int = 0, onStartService: () -> Unit, onStopService: (
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             when (selectedTab) {
                 0 -> LogTab(onStartService, onStopService)
-                1 -> WithdrawalsTab()
-                2 -> SettingsTab()
+                1 -> DepositsTab()
+                2 -> WithdrawalsTab()
+                3 -> SettingsTab()
             }
         }
     }
@@ -231,6 +246,99 @@ fun LogTab(onStartService: () -> Unit, onStopService: () -> Unit) {
         }
         
         Text("يتم تسجيل الرسائل تلقائياً وإرسالها للمنصة.", color = NizaloTextMuted, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+/** EGP piastres (2 decimals) -> a display string, e.g. "500.00 ج.م". */
+private fun egpFromPiastres(amountEgpMinor: String): String {
+    val v = amountEgpMinor.toLongOrNull() ?: return "$amountEgpMinor ج.م"
+    return "%.2f ج.م".format(v / 100.0)
+}
+
+private val NETWORK_LABELS = mapOf("VODAFONE_CASH" to "فودافون كاش", "INSTAPAY" to "إنستاباي")
+
+@Composable
+fun DepositsTab() {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("nizalo_prefs", Context.MODE_PRIVATE) }
+    val apiKey = prefs.getString("device_api_key", "") ?: ""
+    val serverUrl = prefs.getString("server_url", "https://nizalo.com") ?: "https://nizalo.com"
+    val scope = rememberCoroutineScope()
+
+    var deposits by remember { mutableStateOf<List<PendingDepositsResponse.Deposit>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMsg by remember { mutableStateOf("") }
+
+    val fetchDeposits = {
+        if (apiKey.isNotEmpty()) {
+            isLoading = true
+            errorMsg = ""
+            scope.launch {
+                try {
+                    val response = RetrofitClient.getApi(serverUrl).getPendingDeposits(apiKey)
+                    if (response.isSuccessful && response.body()?.ok == true) {
+                        deposits = response.body()?.deposits ?: emptyList()
+                    } else {
+                        errorMsg = "فشل في جلب البيانات: ${response.code()}"
+                    }
+                } catch (e: Exception) {
+                    errorMsg = "خطأ في الاتصال: ${e.message}"
+                } finally {
+                    isLoading = false
+                }
+            }
+        } else {
+            errorMsg = "برجاء إدخال توكن الاتصال في الإعدادات أولاً."
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        fetchDeposits()
+    }
+
+    Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("طلبات الإيداع المعلقة", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Button(onClick = { fetchDeposits() }, colors = ButtonDefaults.buttonColors(containerColor = NizaloAccent, contentColor = NizaloAccentContrast)) {
+                Text("تحديث")
+            }
+        }
+
+        Text(
+            "هذه طلبات أعلنها لاعبون بأنهم سيرسلون مبلغاً -- يتم مطابقتها وقيدها تلقائياً بمجرد وصول الرسالة، الشاشة دي للمتابعة فقط.",
+            color = NizaloTextMuted, fontSize = 12.sp, modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        if (isLoading) {
+            CircularProgressIndicator(color = NizaloAccent, modifier = Modifier.align(Alignment.CenterHorizontally).padding(32.dp))
+        } else if (errorMsg.isNotEmpty()) {
+            Text(errorMsg, color = Color.Red, modifier = Modifier.padding(16.dp))
+        } else if (deposits.isEmpty()) {
+            Text("لا توجد طلبات إيداع معلقة.", color = NizaloTextMuted, modifier = Modifier.padding(16.dp))
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(deposits) { d ->
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = NizaloSurface),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(egpFromPiastres(d.amountEgpMinor), fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(NETWORK_LABELS[d.network] ?: d.network, color = NizaloAccent, fontSize = 12.sp)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("المرسل: ${d.senderName} (${d.senderPhone})", color = NizaloTextMuted, fontSize = 13.sp)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

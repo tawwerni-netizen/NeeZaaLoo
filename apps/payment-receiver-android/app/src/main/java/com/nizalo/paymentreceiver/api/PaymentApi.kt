@@ -29,6 +29,26 @@ data class TransferReportResponse(
 data class EgpRate(val egpPerUsd: Double)
 
 @Serializable
+data class PendingDepositsResponse(
+    val ok: Boolean,
+    val deposits: List<Deposit>
+) {
+    @Serializable
+    data class Deposit(
+        val id: String,
+        val network: String,
+        val receivingNumberId: String,
+        val senderName: String,
+        val senderPhone: String,
+        // EGP piastres (2 decimals) -- unlike a withdrawal's amountMinor,
+        // this one really is EGP: it is what the PLAYER declared they are
+        // sending, before any USDT conversion happens.
+        val amountEgpMinor: String,
+        val status: String
+    )
+}
+
+@Serializable
 data class PendingWithdrawalsResponse(
     val ok: Boolean,
     val withdrawals: List<Withdrawal>,
@@ -59,6 +79,11 @@ interface PaymentApi {
         @Header("x-device-api-key") apiKey: String,
         @Body request: TransferReportRequest
     ): Response<TransferReportResponse>
+
+    @retrofit2.http.GET("v1/payment-receiver/deposits")
+    suspend fun getPendingDeposits(
+        @Header("x-device-api-key") apiKey: String
+    ): Response<PendingDepositsResponse>
 
     @retrofit2.http.GET("v1/payment-receiver/withdrawals")
     suspend fun getPendingWithdrawals(

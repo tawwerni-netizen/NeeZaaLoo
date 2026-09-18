@@ -5460,6 +5460,16 @@ function buildRoutes() {
         return { body: r };
       } },
 
+    { method: "GET", path: "/v1/payment-receiver/deposits", action: "payment.local_transfer.report", anonymous: true,
+      handler: async ({ headers, localPayments }) => {
+        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+        const apiKey = headers["x-device-api-key"];
+        if (!apiKey) return { status: 401, body: errorBody("UNAUTHENTICATED") };
+        const r = await localPayments.deviceListPendingDeposits({ apiKey });
+        if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 401 : 400, body: errorBody(r.reason) };
+        return { body: r };
+      } },
+
     { method: "GET", path: "/v1/payment-receiver/withdrawals", action: "payment.local_transfer.report", anonymous: true,
       handler: async ({ headers, localPayments }) => {
         if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };

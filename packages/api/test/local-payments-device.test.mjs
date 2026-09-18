@@ -151,6 +151,21 @@ describe("Local EGP payment rails - Device App", () => {
     intentId = res.body.intent.id;
   });
 
+  test("GET /v1/payment-receiver/deposits shows the app the pending deposit -- point 1 of the operator's own flow", async () => {
+    const res = await req("GET", "/v1/payment-receiver/deposits", { headers: { "x-device-api-key": deviceKey } });
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    const found = res.body.deposits.find((d) => d.id === intentId);
+    assert.ok(found, "the just-created intent must be visible to the device before it is matched");
+    assert.equal(found.status, "PENDING");
+    assert.equal(found.senderName, "Alice Ahmed");
+    assert.equal(found.amountEgpMinor, "150000");
+  });
+
+  test("a bad device key cannot list deposits", async () => {
+    const res = await req("GET", "/v1/payment-receiver/deposits", { headers: { "x-device-api-key": "not-a-real-key" } });
+    assert.equal(res.status, 401, JSON.stringify(res.body));
+  });
+
   test("admin manually matches transfer to intent", async () => {
     const token = await stepUp(tokenRoot, "admin.local_deposit.credit_solo");
     const res = await req("POST", `/v1/admin/payments/local/deposits/${intentId}/match/${transferId}`, {
@@ -163,6 +178,11 @@ describe("Local EGP payment rails - Device App", () => {
     // Check unmatched list is empty
     const un = await req("GET", "/v1/admin/payments/local/transfers/unmatched", { token: tokenRoot });
     assert.equal(un.body.transfers.length, 0);
+
+    // Once credited, it must drop off the device's pending-deposits list --
+    // that list is "still waiting", not a history of everything ever declared.
+    const deposits = await req("GET", "/v1/payment-receiver/deposits", { headers: { "x-device-api-key": deviceKey } });
+    assert.equal(deposits.body.deposits.some((d) => d.id === intentId), false);
 
     // Check balance
     const bal = await db.query(
