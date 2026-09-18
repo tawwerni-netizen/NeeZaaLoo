@@ -274,6 +274,33 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
 
         {step.name === "mode" && (
           <>
+            <div className={styles.heroBanner}>
+              <img 
+                src={`/images/games/${plugin.id}-hero.jpg`} 
+                className={styles.heroBackground} 
+                alt=""
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  if (!img.dataset.fallbackStage) {
+                    img.dataset.fallbackStage = "plain";
+                    img.src = `/images/games/${plugin.id}.jpg`;
+                  } else {
+                    img.onerror = null;
+                    img.src = IMG_PLACEHOLDER;
+                  }
+                }}
+              />
+              <div className={styles.heroOverlay} />
+              <div className={styles.heroContent}>
+                <h1 className={styles.heroTitle}>{gameName}</h1>
+                <p className={styles.heroSubtitle}>
+                  {isRtl 
+                    ? "العب، نافس، واربح جوائز حقيقية. أثبت مهارتك الآن!" 
+                    : "Play, compete, and win real prizes. Prove your skills now!"}
+                </p>
+              </div>
+            </div>
+            
             <ModeSelect plugin={plugin} gameId={gameId} onSelect={handleMode} />
             <div style={{ marginTop: "48px" }}>
               <LiveDuelLobby filterGameId={gameId} />

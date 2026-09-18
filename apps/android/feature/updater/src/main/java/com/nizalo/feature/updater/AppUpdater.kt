@@ -45,8 +45,8 @@ class SelfUpdateManager(private val context: Context) {
                 session.fsync(out)
             }
 
-            val intent = Intent(context, context.javaClass)
-            val pendingIntent = PendingIntent.getActivity(
+            val intent = Intent("com.nizalo.UPDATE_STATUS")
+            val pendingIntent = PendingIntent.getBroadcast(
                 context,
                 0,
                 intent,

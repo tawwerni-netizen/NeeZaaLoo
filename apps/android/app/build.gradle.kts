@@ -83,6 +83,8 @@ dependencies {
     implementation(project(":feature:wallet"))
     implementation(project(":feature:support"))
     implementation(project(":feature:updater"))
+implementation(project(":feature:social"))
+implementation(project(":feature:settings"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

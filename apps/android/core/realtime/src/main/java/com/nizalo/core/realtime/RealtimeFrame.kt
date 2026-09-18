@@ -74,6 +74,18 @@ data class SendChatMessagePayload(
 )
 
 @Serializable
+data class JoinChatChannelPayload(
+    val channelType: ChatChannelType,
+    val channelId: String
+)
+
+@Serializable
+data class LeaveChatChannelPayload(
+    val channelType: ChatChannelType,
+    val channelId: String
+)
+
+@Serializable
 data class DuelStateSyncPayload(
     val duel: Duel,
     val movesSinceLastKnown: List<GameMove> = emptyList()

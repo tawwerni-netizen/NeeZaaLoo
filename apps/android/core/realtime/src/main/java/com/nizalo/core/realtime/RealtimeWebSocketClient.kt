@@ -193,6 +193,26 @@ class RealtimeWebSocketClient(
         sendFrame(RealtimeFrame(type = FrameType.SEND_CHAT_MESSAGE, payload = payload))
     }
 
+    fun sendJoinChatChannel(channelType: ChatChannelType, channelId: String) {
+        val payload = json.encodeToJsonElement(
+            JoinChatChannelPayload(
+                channelType = channelType,
+                channelId = channelId
+            )
+        )
+        sendFrame(RealtimeFrame(type = FrameType.JOIN_CHAT_CHANNEL, payload = payload))
+    }
+
+    fun sendLeaveChatChannel(channelType: ChatChannelType, channelId: String) {
+        val payload = json.encodeToJsonElement(
+            LeaveChatChannelPayload(
+                channelType = channelType,
+                channelId = channelId
+            )
+        )
+        sendFrame(RealtimeFrame(type = FrameType.LEAVE_CHAT_CHANNEL, payload = payload))
+    }
+
     private fun scheduleReconnect() {
         if (!isRunning.get()) return
         reconnectJob?.cancel()

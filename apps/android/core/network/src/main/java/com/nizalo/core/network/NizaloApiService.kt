@@ -30,6 +30,18 @@ interface NizaloApiService {
     @GET("v1/me/progression")
     suspend fun getProgression(): Response<ApiResponse<GlobalSkillScore>>
 
+    @POST("v1/matchmaking/tickets")
+    suspend fun createMatchmakingTicket(@Body request: MatchmakingTicketRequest): Response<MatchmakingTicketResponse>
+
+    @GET("v1/matchmaking/status")
+    suspend fun getMatchmakingStatus(@Query("ticketId") ticketId: String): Response<MatchmakingStatusResponse>
+
+    @POST("v1/matchmaking/vs-computer")
+    suspend fun createVsComputerMatch(@Body request: VsComputerRequest): Response<VsComputerResponse>
+
+    @POST("v1/matchmaking/cancel")
+    suspend fun cancelMatchmakingTicket(): Response<Unit>
+
     @GET("v1/me/challenges")
     suspend fun getDailyChallenges(): Response<ApiResponse<List<DailyChallenge>>>
 

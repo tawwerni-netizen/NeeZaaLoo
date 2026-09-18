@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Nizalo</string>
+    <string name="nav_home">Inicio</string>
+    <string name="nav_games">Juegos</string>
+    <string name="nav_tournaments">Torneos</string>
+    <string name="nav_ranking">Ranking</string>
+    <string name="nav_wallet">Billetera</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="nav_social">Social</string>
+    <string name="title_matchmaking">Buscando partida</string>
+    <string name="title_profile">Mi Perfil</string>
+    <string name="title_chat">Chat Global</string>
+</resources>

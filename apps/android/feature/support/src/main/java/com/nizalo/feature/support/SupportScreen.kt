@@ -22,10 +22,9 @@ import com.nizalo.core.model.*
 
 @Composable
 fun SupportScreen(
-    tickets: List<SupportTicket>,
-    onCreateTicket: (category: SupportCategory, subject: String, message: String) -> Unit,
-    onReplyTicket: (ticketId: String, message: String) -> Unit
+    viewModel: SupportViewModel
 ) {
+    val state by viewModel.state.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
     var selectedCategoryForFaq by remember { mutableStateOf<SupportCategory?>(null) }
 
@@ -86,38 +85,67 @@ fun SupportScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (tickets.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .background(SurfaceDark, RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("No active tickets", color = TextSecondary)
-            }
-        } else {
-            tickets.forEach { ticket ->
+        when (val s = state) {
+            is SupportState.Loading -> {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .background(SurfaceDark, RoundedCornerShape(10.dp))
-                        .padding(12.dp)
+                        .height(100.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                    CircularProgressIndicator(color = GoldAccent)
+                }
+            }
+            is SupportState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(s.message, color = RubyRed)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        NizaloPrimaryButton(text = "Retry", onClick = { viewModel.loadTickets() })
+                    }
+                }
+            }
+            is SupportState.Success -> {
+                val tickets = s.tickets
+                if (tickets.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .background(SurfaceDark, RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No active tickets", color = TextSecondary)
+                    }
+                } else {
+                    tickets.forEach { ticket ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .background(SurfaceDark, RoundedCornerShape(10.dp))
+                                .padding(12.dp)
                         ) {
-                            Text(ticket.subject, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 14.sp)
-                            NizaloBadge(
-                                text = ticket.status.name,
-                                color = if (ticket.status == TicketStatus.ANSWERED) EmeraldGreen else SurfaceElevated,
-                                textColor = if (ticket.status == TicketStatus.ANSWERED) ObsidianBg else TextPrimary
-                            )
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(ticket.subject, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 14.sp)
+                                    NizaloBadge(
+                                        text = ticket.status.name,
+                                        color = if (ticket.status == TicketStatus.ANSWERED) EmeraldGreen else SurfaceElevated,
+                                        textColor = if (ticket.status == TicketStatus.ANSWERED) ObsidianBg else TextPrimary
+                                    )
+                                }
+                                Text("Category: ${ticket.category.displayName}", color = TextSecondary, fontSize = 12.sp)
+                            }
                         }
-                        Text("Category: ${ticket.category.displayName}", color = TextSecondary, fontSize = 12.sp)
                     }
                 }
             }
@@ -154,7 +182,7 @@ fun SupportScreen(
                 Button(
                     onClick = {
                         if (subject.isNotBlank() && message.isNotBlank()) {
-                            onCreateTicket(category, subject, message)
+                            viewModel.createTicket(category, subject, message)
                             showCreateDialog = false
                         }
                     },

@@ -114,3 +114,48 @@ data class AppUpdateCheckResponse(
     val releaseNotes: String,
     val isMandatory: Boolean
 )
+
+@Serializable
+data class MatchmakingTicketRequest(
+    val gameId: String,
+    val mode: String,
+    val tier: String,
+    val stakeMinor: String?,
+    val asset: String?,
+    val timeProfile: String?
+)
+
+@Serializable
+data class MatchmakingTicketResponse(
+    val ticketId: String,
+    val expiresAt: String
+)
+
+@Serializable
+data class MatchmakingTicket(
+    val id: String,
+    val gameId: String,
+    val mode: String,
+    val tier: String,
+    val status: String,
+    val duelId: String? = null,
+    val enqueuedAt: String,
+    val expiresAt: String
+)
+
+@Serializable
+data class MatchmakingStatusResponse(
+    val ticket: MatchmakingTicket?
+)
+
+@Serializable
+data class VsComputerRequest(
+    val gameId: String,
+    val difficulty: String,
+    val timeProfile: String? = null
+)
+
+@Serializable
+data class VsComputerResponse(
+    val duelId: String
+)
