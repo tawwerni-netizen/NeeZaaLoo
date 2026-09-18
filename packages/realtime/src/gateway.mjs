@@ -264,9 +264,10 @@ export function createGateway({
    * ordinary drop-and-reconnect into a false CONCURRENT_SEAT signal. */
   function broadcastPresence(duel) {
     if (!duel) return;
+    const bot = botSeat(duel);
     const connectedSeats = [
-      (duel.seatConns?.[0]?.size ?? 0) > 0,
-      (duel.seatConns?.[1]?.size ?? 0) > 0,
+      (duel.seatConns?.[0]?.size ?? 0) > 0 || Boolean(bot && bot.seat === 0),
+      (duel.seatConns?.[1]?.size ?? 0) > 0 || Boolean(bot && bot.seat === 1),
     ];
     for (const c of room(duel.duelId)) {
       send(c, {
@@ -278,7 +279,8 @@ export function createGateway({
   }
 
   function projectClockSafe(duel, t) {
-    if (!duel.vsComputer && duel.events.length === 0) {
+    const bot = botSeat(duel);
+    if (!duel.vsComputer && !bot && duel.events.length === 0) {
       const bothConnected = (duel.seatConns?.[0]?.size ?? 0) > 0 && (duel.seatConns?.[1]?.size ?? 0) > 0;
       if (!bothConnected) {
         if (duel.clock.model === "SHARED") {
@@ -540,10 +542,15 @@ export function createGateway({
   // in agreement because both are decided once, at creation, by whichever
   // path created the duel row.
   function botSeat(duel) {
-    if (!duel.vsComputer) return null;
+    if (!duel?.players) return null;
     for (let seat = 0; seat < duel.players.length; seat++) {
-      const m = /^ai-(easy|medium|hard|expert)$/.exec(duel.players[seat]);
-      if (m) return { seat, difficulty: m[1].toUpperCase(), playerId: duel.players[seat] };
+      const pid = duel.players[seat];
+      if (typeof pid !== "string") continue;
+      const m = /^ai-(easy|medium|hard|expert)$/.exec(pid);
+      if (m) return { seat, difficulty: m[1].toUpperCase(), playerId: pid };
+      if (pid.startsWith("bot_")) {
+        return { seat, difficulty: "HARD", playerId: pid };
+      }
     }
     return null;
   }
@@ -930,9 +937,12 @@ export function createGateway({
               return fail(conn, ErrorCode.RECONNECT_LIMITED);
             }
             duel.seatConns ??= [new Set(), new Set()];
+            const bot = botSeat(duel);
             const wasBothConnected = (duel.seatConns[0]?.size ?? 0) > 0 && (duel.seatConns[1]?.size ?? 0) > 0;
             duel.seatConns[seat].add(conn);
-            const nowBothConnected = (duel.seatConns[0]?.size ?? 0) > 0 && (duel.seatConns[1]?.size ?? 0) > 0;
+            const nowBothConnected = bot
+              ? (duel.seatConns[1 - bot.seat]?.size ?? 0) > 0
+              : (duel.seatConns[0]?.size ?? 0) > 0 && (duel.seatConns[1]?.size ?? 0) > 0;
             if (!duel.vsComputer && duel.events.length === 0 && !wasBothConnected && nowBothConnected) {
               if (duel.clock.model === "SHARED") duel.clock.startedAt = t;
               else duel.clock.turnStartedAt = t;

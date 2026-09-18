@@ -23,6 +23,8 @@ import { createDuelStore } from "../../../packages/realtime/src/store.mjs";
 import { createMatchmakingService } from "../../../packages/matchmaking/src/matchmaking.mjs";
 import { createChallengeService } from "../../../packages/matchmaking/src/challenge.mjs";
 import { createDispatchWorker } from "../../../packages/matchmaking/src/dispatch.mjs";
+import { createStandingByWorker } from "../../../packages/matchmaking/src/standing-by.mjs";
+import { createBotMatchSimulator } from "../../../packages/matchmaking/src/bot-simulator.mjs";
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
 import { createSandboxProvider } from "../../../packages/payments/src/provider.mjs";
 import { createOxapayProvider } from "../../../packages/payments/src/oxapay.mjs";
@@ -241,9 +243,26 @@ async function main() {
     intervalMs: fairPlaySweepIntervalMs,
   });
 
+  const standingByWorker = createTickLoop(
+    createStandingByWorker(db, mm, {
+      timeoutSeconds: Number(process.env.STANDING_BY_TIMEOUT_SECONDS || 5),
+      emit: logger.emit,
+    }),
+    { intervalMs: Number(process.env.STANDING_BY_INTERVAL_MS || 2500) }
+  );
+
+  const botMatchSimulator = createBotMatchSimulator(db, { emit: logger.emit });
+  const botSimulatorIntervalMs = Number(process.env.BOT_SIMULATOR_INTERVAL_MS || 60000);
+  const botSimulatorWorker = createTickLoop(
+    () => botMatchSimulator(),
+    { intervalMs: botSimulatorIntervalMs }
+  );
+
   const runtime = createWorkerRuntime({
     workers: [
       { name: "matchmaking_dispatch", worker: dispatchWorker },
+      { name: "standing_by_matchmaking", worker: standingByWorker, intervalMs: Number(process.env.STANDING_BY_INTERVAL_MS || 2500) },
+      { name: "bot_match_simulator", worker: botSimulatorWorker, intervalMs: botSimulatorIntervalMs },
       // Reconciliation runs far less often than matchmaking dispatch --
       // minutes, not milliseconds -- so it declares its OWN interval here
       // rather than inheriting runtime.start()'s shared cadence. Absent
