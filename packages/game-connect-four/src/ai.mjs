@@ -16,7 +16,7 @@
 import { drop, legalColumns, isWinningPlacement, COLS, ROWS, SEAT_0, SEAT_1 } from "./connect-four.mjs";
 
 export const Difficulty = Object.freeze({
-  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT",
+  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT", INVINCIBLE: "INVINCIBLE",
 });
 
 const TIER = Object.freeze({
@@ -24,6 +24,7 @@ const TIER = Object.freeze({
   [Difficulty.MEDIUM]: { maxDepth: 4, blunderChance: 0.15 },
   [Difficulty.HARD]:   { maxDepth: 6, blunderChance: 0 },
   [Difficulty.EXPERT]: { maxDepth: 8, blunderChance: 0 },
+  [Difficulty.INVINCIBLE]: { maxDepth: 10, blunderChance: 0 },
 });
 
 // Centre columns produce more possible lines of four than the edges --
@@ -130,7 +131,7 @@ function searchBestColumn(board, seat, maxDepth, deadlineAt) {
 export function createConnectFourAiAdapter() {
   return {
     chooseAction(state, seat, difficulty, deadlineMs = 2000, seed = "ai") {
-      const tier = TIER[difficulty] ?? TIER[Difficulty.MEDIUM];
+      const tier = TIER[difficulty] ?? TIER[Difficulty.EXPERT];
       const deadlineAt = Date.now() + Math.max(50, deadlineMs);
       const cols = legalColumns(state.board);
       if (cols.length === 0) return null;

@@ -39,6 +39,7 @@ import { createStreakService } from "../../../packages/engagement/src/streaks.mj
 import { createTournamentService } from "../../../packages/tournament/src/tournament.mjs";
 import { createTournamentSweep } from "../../../packages/tournament/src/sweep.mjs";
 import { createAutomatedTournamentEngine } from "../../../packages/tournament/src/automated-engine.mjs";
+import { createTournamentBotFiller } from "../../../packages/tournament/src/bot-filler.mjs";
 import { createReferralSweep } from "../../../packages/referral/src/index.mjs";
 import { createFairPlayEngine } from "../../../packages/fairplay/src/engine.mjs";
 import { createCollusionDetector } from "../../../packages/fairplay/src/collusion.mjs";
@@ -205,6 +206,16 @@ async function main() {
     intervalMs: automatedTournamentIntervalMs,
   });
 
+  const tournamentBotFiller = createTournamentBotFiller(db, tournament, {
+    fillIntervalMs: Number(process.env.TOURNAMENT_BOT_FILL_INTERVAL_MS || 30000),
+    reservedSeats: Number(process.env.TOURNAMENT_BOT_RESERVED_SEATS || 2),
+    maxWaitMs: Number(process.env.TOURNAMENT_BOT_MAX_WAIT_MS || 600000),
+  });
+  const tournamentBotFillerIntervalMs = Number(process.env.TOURNAMENT_BOT_FILLER_INTERVAL_MS || 10000);
+  const tournamentBotFillerWorker = createTickLoop(() => tournamentBotFiller.tick(), {
+    intervalMs: tournamentBotFillerIntervalMs,
+  });
+
   // PLAY WITH FRIEND: "if no action within 30 seconds, EXPIRED -- the
   // system must log this automatically." A live client polling GET
   // /v1/challenges already flips a stale row lazily (challenge.mjs's own
@@ -274,6 +285,7 @@ async function main() {
       { name: "progression_sweep", worker: progressionSweepWorker, intervalMs: progressionSweepIntervalMs },
       { name: "tournament_sweep", worker: tournamentSweepWorker, intervalMs: tournamentSweepIntervalMs },
       { name: "automated_tournament", worker: automatedTournamentWorker, intervalMs: automatedTournamentIntervalMs },
+      { name: "tournament_bot_filler", worker: tournamentBotFillerWorker, intervalMs: tournamentBotFillerIntervalMs },
       { name: "challenge_expiry", worker: challengeExpiryWorker, intervalMs: challengeExpiryIntervalMs },
       { name: "referral_sweep", worker: referralSweepWorker, intervalMs: referralSweepIntervalMs },
       { name: "fairplay_sweep", worker: fairPlaySweepWorker, intervalMs: fairPlaySweepIntervalMs },

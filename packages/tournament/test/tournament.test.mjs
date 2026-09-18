@@ -311,7 +311,8 @@ describe("single elimination — a full bracket, byes and all", () => {
     await decideRound(db, trn, settle, c.tournamentId, 1, () => "1-0");
 
     const ratings = await db.query(
-      "SELECT player_id, rating_x100, games_played FROM rating WHERE game_id='chess' ORDER BY player_id"
+      "SELECT player_id, rating_x100, games_played FROM rating WHERE game_id='chess' AND player_id = ANY($1) ORDER BY player_id",
+      [players]
     );
     assert.equal(ratings.rows.length, 2);
     assert.ok(ratings.rows.every((r) => r.games_played === 1));

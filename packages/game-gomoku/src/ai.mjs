@@ -25,7 +25,7 @@
 import { BOARD_SIZE, CELLS, other, pieceFor } from "./gomoku.mjs";
 
 export const Difficulty = Object.freeze({
-  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT",
+  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT", INVINCIBLE: "INVINCIBLE",
 });
 
 const TIER = Object.freeze({
@@ -33,6 +33,7 @@ const TIER = Object.freeze({
   [Difficulty.MEDIUM]: { blunderChance: 0.25 },
   [Difficulty.HARD]:   { blunderChance: 0.08 },
   [Difficulty.EXPERT]: { blunderChance: 0 },
+  [Difficulty.INVINCIBLE]: { blunderChance: 0 },
 });
 
 // How much a placement's DEFENSIVE value (denying the opponent that same
@@ -119,7 +120,7 @@ function placementScore(board, seat, idx) {
 export function createGomokuAiAdapter() {
   return {
     chooseAction(state, seat, difficulty, _deadlineMs, seed = "ai") {
-      const tier = TIER[difficulty] ?? TIER[Difficulty.MEDIUM];
+      const tier = TIER[difficulty] ?? TIER[Difficulty.EXPERT];
       const board = state.board;
 
       let candidates = candidateCells(board);

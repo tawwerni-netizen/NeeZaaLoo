@@ -22,7 +22,7 @@ import {
 } from "./seega.mjs";
 
 export const Difficulty = Object.freeze({
-  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT",
+  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT", INVINCIBLE: "INVINCIBLE",
 });
 
 const TIER = Object.freeze({
@@ -30,6 +30,7 @@ const TIER = Object.freeze({
   [Difficulty.MEDIUM]: { blunderChance: 0.22 },
   [Difficulty.HARD]:   { blunderChance: 0.07 },
   [Difficulty.EXPERT]: { blunderChance: 0 },
+  [Difficulty.INVINCIBLE]: { blunderChance: 0 },
 });
 
 function rngFrom(seed) {
@@ -76,7 +77,7 @@ function scoreMove(board, seat, move) {
 export function createSeegaAiAdapter() {
   return {
     chooseAction(state, seat, difficulty, _deadlineMs, seed = "ai") {
-      const tier = TIER[difficulty] ?? TIER[Difficulty.MEDIUM];
+      const tier = TIER[difficulty] ?? TIER[Difficulty.EXPERT];
       const rnd = rngFrom(`${seed}:${state.moves.length}`);
 
       if (state.phase === Phase.PLACEMENT) {

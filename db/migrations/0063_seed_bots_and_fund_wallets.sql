@@ -87,7 +87,7 @@ BEGIN
           'ADMIN',
           'admin-system',
           jsonb_build_array(
-            jsonb_build_object('account', 'platform:promotions', 'amount', v_needed::text),
+            jsonb_build_object('account', 'platform:custody:USDT:TRON', 'amount', v_needed::text),
             jsonb_build_object('account', 'user:' || v_bot_id || ':available', 'amount', (-v_needed)::text)
           ),
           'USDT',

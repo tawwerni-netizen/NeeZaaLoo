@@ -35,6 +35,7 @@ export const Difficulty = Object.freeze({
   MEDIUM: "MEDIUM",
   HARD: "HARD",
   EXPERT: "EXPERT",
+  INVINCIBLE: "INVINCIBLE",
 });
 
 // Depth is a search-effort BUDGET for iterative deepening, not a promise --
@@ -47,6 +48,7 @@ const TIER = Object.freeze({
   [Difficulty.MEDIUM]: { maxDepth: 2, blunderChance: 0.15 },
   [Difficulty.HARD]:   { maxDepth: 3, blunderChance: 0 },
   [Difficulty.EXPERT]: { maxDepth: 4, blunderChance: 0 },
+  [Difficulty.INVINCIBLE]: { maxDepth: 5, blunderChance: 0 },
 });
 
 const MATERIAL = { [PAWN]: 100, [KNIGHT]: 320, [BISHOP]: 330, [ROOK]: 500, [QUEEN]: 900, [KING]: 0 };
@@ -252,7 +254,7 @@ function searchBestMove(pos, maxDepth, deadlineAt) {
 export function createChessAiAdapter() {
   return {
     chooseAction(state, seat, difficulty, deadlineMs = 2000, seed = "ai") {
-      const tier = TIER[difficulty] ?? TIER[Difficulty.MEDIUM];
+      const tier = TIER[difficulty] ?? TIER[Difficulty.EXPERT];
       const cloned = cloneState(state);
       const pos = cloned.position;
       const deadlineAt = Date.now() + Math.max(50, deadlineMs);

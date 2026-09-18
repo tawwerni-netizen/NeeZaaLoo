@@ -21,7 +21,7 @@
 import { legalActions, pointSeat, rngFrom } from "./backgammon.mjs";
 
 export const Difficulty = Object.freeze({
-  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT",
+  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT", INVINCIBLE: "INVINCIBLE",
 });
 
 const TIER = Object.freeze({
@@ -29,6 +29,7 @@ const TIER = Object.freeze({
   [Difficulty.MEDIUM]: { blunderChance: 0.20 },
   [Difficulty.HARD]:   { blunderChance: 0.06 },
   [Difficulty.EXPERT]: { blunderChance: 0 },
+  [Difficulty.INVINCIBLE]: { blunderChance: 0 },
 });
 
 function scoreAction(state, seat, action) {
@@ -48,7 +49,7 @@ function scoreAction(state, seat, action) {
 export function createBackgammonAiAdapter() {
   return {
     chooseAction(state, seat, difficulty, _deadlineMs, seed = "ai") {
-      const tier = TIER[difficulty] ?? TIER[Difficulty.MEDIUM];
+      const tier = TIER[difficulty] ?? TIER[Difficulty.EXPERT];
       const candidates = legalActions(state, seat);
       if (candidates.length === 0) return { pass: true };
 

@@ -36,10 +36,11 @@ export const Difficulty = Object.freeze({
 // game silently ignoring that override and blocking on real multi-second
 // timers.
 const TIER = Object.freeze({
-  [Difficulty.EASY]:   { blunderChance: 0.40, delayMultiplier: 3.2 },
-  [Difficulty.MEDIUM]: { blunderChance: 0.18, delayMultiplier: 2.2 },
-  [Difficulty.HARD]:   { blunderChance: 0.06, delayMultiplier: 1.5 },
-  [Difficulty.EXPERT]: { blunderChance: 0,    delayMultiplier: 1 },
+  [Difficulty.EASY]:       { blunderChance: 0.40, delayMultiplier: 3.2 },
+  [Difficulty.MEDIUM]:     { blunderChance: 0.18, delayMultiplier: 2.2 },
+  [Difficulty.HARD]:       { blunderChance: 0.06, delayMultiplier: 1.5 },
+  [Difficulty.EXPERT]:     { blunderChance: 0,    delayMultiplier: 1 },
+  [Difficulty.INVINCIBLE]: { blunderChance: 0,    delayMultiplier: 0.8 },
 });
 
 function rngFrom(seed) {
@@ -61,7 +62,7 @@ export function createSpeedMathAiAdapter() {
      * has exhausted the question set (nothing left for it to answer).
      */
     chooseAction(state, seat, difficulty, _deadlineMs, seed = "ai") {
-      const tier = TIER[difficulty] ?? TIER[Difficulty.MEDIUM];
+      const tier = TIER[difficulty] ?? TIER[Difficulty.EXPERT];
       const progress = state.progress[seat];
       if (!progress || progress.index >= state.questions.length) return null;
       const q = state.questions[progress.index];
@@ -84,7 +85,7 @@ export function createSpeedMathAiAdapter() {
      * on why this scales the gateway's own `baseMs` rather than naming an
      * absolute duration. */
     answerDelayMs(difficulty, baseMs) {
-      return Math.round((TIER[difficulty] ?? TIER[Difficulty.MEDIUM]).delayMultiplier * baseMs);
+      return Math.round((TIER[difficulty] ?? TIER[Difficulty.EXPERT]).delayMultiplier * baseMs);
     },
   };
 }

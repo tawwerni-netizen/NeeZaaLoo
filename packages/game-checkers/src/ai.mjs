@@ -15,7 +15,7 @@
 import { legalMoves, applyMoveToBoard, hasNoMoves, SEAT_0, SEAT_1, squareToLabel } from "./checkers.mjs";
 
 export const Difficulty = Object.freeze({
-  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT",
+  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT", INVINCIBLE: "INVINCIBLE",
 });
 
 const TIER = Object.freeze({
@@ -23,6 +23,7 @@ const TIER = Object.freeze({
   [Difficulty.MEDIUM]: { maxDepth: 4, blunderChance: 0.15 },
   [Difficulty.HARD]:   { maxDepth: 6, blunderChance: 0 },
   [Difficulty.EXPERT]: { maxDepth: 8, blunderChance: 0 },
+  [Difficulty.INVINCIBLE]: { maxDepth: 10, blunderChance: 0 },
 });
 
 const MAN_VALUE = 100, KING_VALUE = 175;
@@ -128,7 +129,7 @@ function searchBestMove(board, turn, forcedFrom, maxDepth, deadlineAt) {
 export function createCheckersAiAdapter() {
   return {
     chooseAction(state, seat, difficulty, deadlineMs = 2000, seed = "ai") {
-      const tier = TIER[difficulty] ?? TIER[Difficulty.MEDIUM];
+      const tier = TIER[difficulty] ?? TIER[Difficulty.EXPERT];
       const deadlineAt = Date.now() + Math.max(50, deadlineMs);
       const forcedFrom = state.forcedFrom;
 

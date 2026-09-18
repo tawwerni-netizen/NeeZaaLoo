@@ -16,7 +16,7 @@
 import { legalMoves, outflankedBy } from "./reversi.mjs";
 
 export const Difficulty = Object.freeze({
-  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT",
+  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT", INVINCIBLE: "INVINCIBLE",
 });
 
 const TIER = Object.freeze({
@@ -24,6 +24,7 @@ const TIER = Object.freeze({
   [Difficulty.MEDIUM]: { blunderChance: 0.22 },
   [Difficulty.HARD]:   { blunderChance: 0.07 },
   [Difficulty.EXPERT]: { blunderChance: 0 },
+  [Difficulty.INVINCIBLE]: { blunderChance: 0 },
 });
 
 // The classic Othello positional weight table: corners are permanently
@@ -62,7 +63,7 @@ function scoreMove(board, seat, place) {
 export function createReversiAiAdapter() {
   return {
     chooseAction(state, seat, difficulty, _deadlineMs, seed = "ai") {
-      const tier = TIER[difficulty] ?? TIER[Difficulty.MEDIUM];
+      const tier = TIER[difficulty] ?? TIER[Difficulty.EXPERT];
       const candidates = legalMoves(state.board, seat);
       if (candidates.length === 0) return { pass: true };
 

@@ -18,15 +18,16 @@
 import { CUE, EIGHT, SOLIDS, STRIPES, BALL_R, POCKETS, TABLE_W, TABLE_H, SEAT_0 } from "./billiards.mjs";
 
 export const Difficulty = Object.freeze({
-  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT",
+  EASY: "EASY", MEDIUM: "MEDIUM", HARD: "HARD", EXPERT: "EXPERT", INVINCIBLE: "INVINCIBLE",
 });
 
 // Radians of random aim error (applied as a uniform offset) and power jitter.
 const TIER = Object.freeze({
-  [Difficulty.EASY]:   { angleNoise: 0.34, powerNoise: 0.30, missChance: 0.30 },
-  [Difficulty.MEDIUM]: { angleNoise: 0.16, powerNoise: 0.18, missChance: 0.12 },
-  [Difficulty.HARD]:   { angleNoise: 0.06, powerNoise: 0.10, missChance: 0.03 },
-  [Difficulty.EXPERT]: { angleNoise: 0.015, powerNoise: 0.05, missChance: 0 },
+  [Difficulty.EASY]:       { angleNoise: 0.34, powerNoise: 0.30, missChance: 0.30 },
+  [Difficulty.MEDIUM]:     { angleNoise: 0.16, powerNoise: 0.18, missChance: 0.12 },
+  [Difficulty.HARD]:       { angleNoise: 0.06, powerNoise: 0.10, missChance: 0.03 },
+  [Difficulty.EXPERT]:     { angleNoise: 0.015, powerNoise: 0.05, missChance: 0 },
+  [Difficulty.INVINCIBLE]: { angleNoise: 0, powerNoise: 0, missChance: 0 },
 });
 
 function rngFrom(seed) {
@@ -96,7 +97,7 @@ export function createBilliardsAiAdapter() {
      * including already-potted balls, which this reads around.
      */
     chooseAction(state, seat, difficulty, _deadlineMs = 1500, seed = "ai") {
-      const tier = TIER[difficulty] ?? TIER[Difficulty.MEDIUM];
+      const tier = TIER[difficulty] ?? TIER[Difficulty.EXPERT];
       const rnd = rngFrom(`${seed}:${state.shots?.length ?? 0}`);
       const onTable = [...state.balls.values()].filter((b) => !b.potted);
       const cue = onTable.find((b) => b.id === CUE);

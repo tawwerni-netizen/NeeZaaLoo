@@ -264,10 +264,9 @@ export function createGateway({
    * ordinary drop-and-reconnect into a false CONCURRENT_SEAT signal. */
   function broadcastPresence(duel) {
     if (!duel) return;
-    const bot = botSeat(duel);
     const connectedSeats = [
-      (duel.seatConns?.[0]?.size ?? 0) > 0 || Boolean(bot && bot.seat === 0),
-      (duel.seatConns?.[1]?.size ?? 0) > 0 || Boolean(bot && bot.seat === 1),
+      (duel.seatConns?.[0]?.size ?? 0) > 0 || Boolean(getBotSeat(duel, 0)),
+      (duel.seatConns?.[1]?.size ?? 0) > 0 || Boolean(getBotSeat(duel, 1)),
     ];
     for (const c of room(duel.duelId)) {
       send(c, {
@@ -279,8 +278,8 @@ export function createGateway({
   }
 
   function projectClockSafe(duel, t) {
-    const bot = botSeat(duel);
-    if (!duel.vsComputer && !bot && duel.events.length === 0) {
+    const hasBot = Boolean(getBotSeat(duel, 0) || getBotSeat(duel, 1));
+    if (!duel.vsComputer && !hasBot && duel.events.length === 0) {
       const bothConnected = (duel.seatConns?.[0]?.size ?? 0) > 0 && (duel.seatConns?.[1]?.size ?? 0) > 0;
       if (!bothConnected) {
         if (duel.clock.model === "SHARED") {
@@ -541,41 +540,41 @@ export function createGateway({
   // duel, exactly like `duel.vsComputer` being false; the two are always
   // in agreement because both are decided once, at creation, by whichever
   // path created the duel row.
+  function getBotSeat(duel, seat) {
+    if (!duel?.players) return null;
+    const pid = duel.players[seat];
+    if (typeof pid !== "string") return null;
+    const m = /^ai-(easy|medium|hard|expert|invincible)$/i.exec(pid);
+    if (m) return { seat, difficulty: m[1].toUpperCase(), playerId: pid };
+    if (pid.startsWith("bot_")) {
+      return { seat, difficulty: "INVINCIBLE", playerId: pid };
+    }
+    return null;
+  }
+
   function botSeat(duel) {
     if (!duel?.players) return null;
+    const currentSeat = duel.clock?.toMove;
+    if (currentSeat != null) {
+      const activeBot = getBotSeat(duel, currentSeat);
+      if (activeBot) return activeBot;
+    }
     for (let seat = 0; seat < duel.players.length; seat++) {
-      const pid = duel.players[seat];
-      if (typeof pid !== "string") continue;
-      const m = /^ai-(easy|medium|hard|expert)$/.exec(pid);
-      if (m) return { seat, difficulty: m[1].toUpperCase(), playerId: pid };
-      if (pid.startsWith("bot_")) {
-        return { seat, difficulty: "HARD", playerId: pid };
-      }
+      const bot = getBotSeat(duel, seat);
+      if (bot) return bot;
     }
     return null;
   }
 
   /**
-   * If it is now the bot's turn in a VS_COMPUTER duel, schedule its move.
-   * Called after every state-changing event (a fresh claim, a human's
-   * move, a reconnect-triggered hydration) so a bot never needs its own
-   * poll loop -- it only ever reacts to the SAME transitions a human
-   * opponent's client would react to.
-   *
-   * The move itself is submitted through runIntent()/publishNewEvents(),
-   * identical to a human's INTENT -- a bot has no shortcut around move
-   * validation, the clock, or the event log (directive: "AI must not
-   * become the authority for results"). Dispatches on the duel's own
-   * clock model: an ALTERNATING game has a real "whose turn is it"; a
-   * SIMULTANEOUS game (Speed Math) does not, so its bot instead paces
-   * itself independently through its OWN question sequence (see
-   * scheduleBotAnswerIfNeeded below).
+   * If it is now the bot's turn in a VS_COMPUTER or tournament duel, schedule its move.
+   * Dispatches on the duel's own clock model. Supports human-vs-bot and bot-vs-bot matches.
    */
   function scheduleBotMoveIfNeeded(duel, plugin) {
     if (duel.status !== DuelState.LIVE) return;
     if (duel.clock.model === "SHARED") return scheduleBotAnswerIfNeeded(duel, plugin);
-    const bot = botSeat(duel);
-    if (!bot || duel.clock.toMove !== bot.seat) {
+    const bot = getBotSeat(duel, duel.clock.toMove);
+    if (!bot) {
       const existing = aiTimers.get(duel.duelId);
       if (existing) {
         clearTimeout(existing);
@@ -589,8 +588,7 @@ export function createGateway({
 
     const timer = setTimeout(async () => {
       aiTimers.delete(duel.duelId);
-      // Re-check everything: the duel may have ended (resignation, a
-      // draw, a timeout) or moved on in the time this timer was pending.
+      // Re-check everything: duel state or turn may have changed
       if (duel.status !== DuelState.LIVE || duel.clock.toMove !== bot.seat) return;
       const t = now();
       try {
@@ -615,43 +613,40 @@ export function createGateway({
 
   /**
    * The SIMULTANEOUS-game sibling of the ALTERNATING scheduler above.
-   * There is no "the bot's turn" here -- both seats can answer at any
-   * time, on their own pace, exactly like two humans racing the same
-   * shared deadline. So instead of waiting to be handed a turn, this
-   * schedules ONE answer, submits it, and -- regardless of what the
-   * human opponent is doing -- immediately schedules the bot's NEXT
-   * answer, until either the bot exhausts its own question set (nothing
-   * left to answer) or runIntent() itself ends the duel because the
-   * shared clock ran out (the same expiry check a human's own late
-   * answer would hit).
+   * Schedules independent question progress for any bot seated in the match.
    */
   function scheduleBotAnswerIfNeeded(duel, plugin) {
     if (duel.status !== DuelState.LIVE) return;
-    const bot = botSeat(duel);
-    if (!bot) return;
     const adapter = aiAdapters.get(duel.gameId);
     if (!adapter) return;
-    if (aiTimers.has(duel.duelId)) return; // already progressing on its own schedule
+    const numPlayers = duel.players?.length ?? 2;
 
-    const timer = setTimeout(async () => {
-      aiTimers.delete(duel.duelId);
-      if (duel.status !== DuelState.LIVE) return;
-      const t = now();
-      try {
-        const progressIndex = duel.state.progress?.[bot.seat]?.index ?? 0;
-        const answer = adapter.chooseAction(duel.state, bot.seat, bot.difficulty, aiThinkMs, `${duel.duelId}:${progressIndex}`);
-        if (answer === null || answer === undefined) return; // the bot has nothing left of its own to answer
-        const before = duel.events.length;
-        const res = runIntent(duel, plugin, { playerId: bot.playerId, intent: answer }, t);
-        if (res.ok) await publishNewEvents(duel, plugin, before, t);
-        scheduleBotAnswerIfNeeded(duel, plugin);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error(`[AI BOT] scheduleBotAnswerIfNeeded error for duel ${duel.duelId} (${duel.gameId}):`, err);
-      }
-    }, adapter.answerDelayMs?.(bot.difficulty, aiMoveDelayMs) ?? aiMoveDelayMs);
-    if (typeof timer.unref === "function") timer.unref();
-    aiTimers.set(duel.duelId, timer);
+    for (let seat = 0; seat < numPlayers; seat++) {
+      const bot = getBotSeat(duel, seat);
+      if (!bot) continue;
+      const timerKey = `${duel.duelId}:${seat}`;
+      if (aiTimers.has(timerKey)) continue; // already progressing on its own schedule
+
+      const timer = setTimeout(async () => {
+        aiTimers.delete(timerKey);
+        if (duel.status !== DuelState.LIVE) return;
+        const t = now();
+        try {
+          const progressIndex = duel.state.progress?.[bot.seat]?.index ?? 0;
+          const answer = adapter.chooseAction(duel.state, bot.seat, bot.difficulty, aiThinkMs, `${duel.duelId}:${progressIndex}`);
+          if (answer === null || answer === undefined) return; // nothing left of its own to answer
+          const before = duel.events.length;
+          const res = runIntent(duel, plugin, { playerId: bot.playerId, intent: answer }, t);
+          if (res.ok) await publishNewEvents(duel, plugin, before, t);
+          scheduleBotAnswerIfNeeded(duel, plugin);
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error(`[AI BOT] scheduleBotAnswerIfNeeded error for duel ${duel.duelId} (${duel.gameId}):`, err);
+        }
+      }, adapter.answerDelayMs?.(bot.difficulty, aiMoveDelayMs) ?? aiMoveDelayMs);
+      if (typeof timer.unref === "function") timer.unref();
+      aiTimers.set(timerKey, timer);
+    }
   }
 
   /**
@@ -791,6 +786,10 @@ export function createGateway({
     leaseTokens.delete(duelId);
     const timer = aiTimers.get(duelId);
     if (timer) { clearTimeout(timer); aiTimers.delete(duelId); }
+    for (let s = 0; s < 2; s++) {
+      const st = aiTimers.get(`${duelId}:${s}`);
+      if (st) { clearTimeout(st); aiTimers.delete(`${duelId}:${s}`); }
+    }
   }
 
   /**
@@ -937,12 +936,13 @@ export function createGateway({
               return fail(conn, ErrorCode.RECONNECT_LIMITED);
             }
             duel.seatConns ??= [new Set(), new Set()];
-            const bot = botSeat(duel);
-            const wasBothConnected = (duel.seatConns[0]?.size ?? 0) > 0 && (duel.seatConns[1]?.size ?? 0) > 0;
+            const bot0 = getBotSeat(duel, 0);
+            const bot1 = getBotSeat(duel, 1);
+            const wasBothConnected = (Boolean(bot0) || (duel.seatConns[0]?.size ?? 0) > 0) &&
+                                     (Boolean(bot1) || (duel.seatConns[1]?.size ?? 0) > 0);
             duel.seatConns[seat].add(conn);
-            const nowBothConnected = bot
-              ? (duel.seatConns[1 - bot.seat]?.size ?? 0) > 0
-              : (duel.seatConns[0]?.size ?? 0) > 0 && (duel.seatConns[1]?.size ?? 0) > 0;
+            const nowBothConnected = (Boolean(bot0) || (duel.seatConns[0]?.size ?? 0) > 0) &&
+                                     (Boolean(bot1) || (duel.seatConns[1]?.size ?? 0) > 0);
             if (!duel.vsComputer && duel.events.length === 0 && !wasBothConnected && nowBothConnected) {
               if (duel.clock.model === "SHARED") duel.clock.startedAt = t;
               else duel.clock.turnStartedAt = t;

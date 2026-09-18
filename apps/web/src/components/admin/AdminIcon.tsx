@@ -8,10 +8,11 @@
 type IconName =
   | "dashboard" | "players" | "games" | "matches" | "tournaments" | "arena"
   | "finance" | "deposits" | "withdrawals" | "risk" | "fairplay" | "support"
-  | "chat" | "referrals" | "store" | "content" | "systemHealth" | "settings" | "rbac"
+  | "chat" | "referrals" | "store" | "content" | "systemHealth" | "settings" | "rbac" | "bot"
   | "search" | "bell" | "chevronDown" | "customize" | "trendUp" | "trendDown" | "menu";
 
 const PATHS: Record<IconName, string> = {
+  bot: "M12 2v2M9 4h6a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Zm-3 7h.01M15 11h.01M9 15h6M2 12h2M20 12h2",
   dashboard: "M3 3h7v9H3V3Zm11 0h7v5h-7V3ZM3 15h7v6H3v-6Zm11-4h7v10h-7V11Z",
   players: "M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM2 19c0-3.3 2.7-6 6-6s6 2.7 6 6H2Zm12.5-4c2.5.3 4.5 2.3 4.8 4.8H15c0-.2 0-.5-.1-.7-.2-1.6-1-3-2.1-4.1H14.5Z",
   games: "M6 9h2v2h2v2H8v2H6v-2H4v-2h2V9Zm10 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm-3-4.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM7 4h6c3.9 0 7 3.1 7 7s-3.1 7-7 7l-.6-.1L11 15H9l-1.4 2.9-.6.1c-3.9 0-7-3.1-7-7s3.1-7 7-7Z",

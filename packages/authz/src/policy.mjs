@@ -190,6 +190,8 @@ export const ACTIONS = {
   "admin.user.confiscate":   { capability: "user.restrict", stepUp: true },
   "admin.settings.read":     { capability: "control.read" },
   "admin.settings.manage":   { capability: "economy.manage" },
+  "admin.bot.read":          { capability: "control.read" },
+  "admin.bot.manage":        { capability: "control.toggle" },
 
   // --- The admin plane itself ------------------------------------------------
   "admin.role.grant":        { capability: "role.manage", stepUp: true, fourEyes: true },

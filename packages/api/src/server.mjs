@@ -26,6 +26,7 @@ import { createVsComputerService } from "../../matchmaking/src/vs-computer.mjs";
 import { createChallengeService, ChallengeError } from "../../matchmaking/src/challenge.mjs";
 import { DEFAULT_SPAWNERS } from "../../matchmaking/src/spawn.mjs";
 import { isValidStakeMinor } from "../../matchmaking/src/stakes.mjs";
+import { STANDING_BY_BOT_IDS } from "../../matchmaking/src/standing-by.mjs";
 import { tryResolveTimeControl, resolveTimeControl, DEFAULT_TIME_PROFILE } from "../../duel-engine/src/time-profiles.mjs";
 import { SUPPORTED_LOCALE_CODES, DEFAULT_LOCALE } from "../../i18n/src/locales.mjs";
 import { RbacError } from "../../authz/src/rbac.mjs";
@@ -3964,6 +3965,229 @@ function buildRoutes() {
           }
           throw e;
         }
+      } },
+
+    // --- Admin: Bots & AI Personas Control --------------------------------------
+    { method: "GET", path: "/v1/admin/bots/overview", action: "admin.bot.read",
+      handler: async ({ db, query }) => {
+        // 1. Fetch bot platform configs
+        const cfgRes = await db.query(
+          `SELECT key, value, updated_at, updated_by FROM bot_platform_config ORDER BY key ASC`
+        );
+        const config = {};
+        for (const row of cfgRes.rows) {
+          config[row.key] = row.value;
+        }
+
+        // 2. Fetch stats
+        const totalBotsRes = await db.query(
+          `SELECT COUNT(*)::int AS count FROM player WHERE is_ai IS TRUE OR id LIKE 'bot_%'`
+        );
+        const activeDuelsRes = await db.query(
+          `SELECT COUNT(*)::int AS count FROM duel WHERE status IN ('READY', 'LIVE') AND (seat_0 LIKE 'bot_%' OR seat_1 LIKE 'bot_%')`
+        );
+        const activeTournamentsRes = await db.query(
+          `SELECT COUNT(DISTINCT tournament_id)::int AS count FROM tournament_registration tr
+            JOIN tournament t ON t.id = tr.tournament_id
+           WHERE tr.player_id LIKE 'bot_%' AND t.status IN ('REGISTRATION', 'LIVE', 'FINALS')`
+        );
+        const totalLiquidityRes = await db.query(
+          `SELECT COALESCE(SUM(b.balance), 0)::text AS total_minor
+             FROM ledger_account a
+             JOIN ledger_balance b ON b.account_id = a.id
+            WHERE a.owner_type = 'USER' AND a.owner_id LIKE 'bot_%' AND a.asset = 'USDT'`
+        );
+
+        // 3. Query bots with filtering and pagination
+        const rawQ = query?.get ? query.get("q") : query?.q;
+        const q = (typeof rawQ === "string" ? rawQ : "").trim();
+
+        const rawLang = query?.get ? query.get("lang") : query?.lang;
+        const lang = (typeof rawLang === "string" ? rawLang : "all").trim();
+
+        const rawStandingBy = query?.get ? query.get("standing_by") : query?.standing_by;
+        const standingByFilter = (typeof rawStandingBy === "string" ? rawStandingBy : "all").trim();
+
+        const rawLimit = query?.get ? query.get("limit") : query?.limit;
+        const limit = Math.min(100, Math.max(1, parseInt(rawLimit, 10) || 50));
+
+        const rawOffset = query?.get ? query.get("offset") : query?.offset;
+        const offset = Math.max(0, parseInt(rawOffset, 10) || 0);
+
+        let whereClauses = ["(p.is_ai IS TRUE OR p.id LIKE 'bot_%')"];
+        let queryParams = [];
+
+        if (q) {
+          queryParams.push(`%${q}%`);
+          whereClauses.push(`(p.id ILIKE $${queryParams.length} OR p.handle ILIKE $${queryParams.length})`);
+        }
+
+        if (lang && lang !== "all") {
+          queryParams.push(`bot_${lang}_%`);
+          whereClauses.push(`p.id LIKE $${queryParams.length}`);
+        }
+
+        if (standingByFilter === "true") {
+          queryParams.push(STANDING_BY_BOT_IDS);
+          whereClauses.push(`p.id = ANY($${queryParams.length}::text[])`);
+        } else if (standingByFilter === "false") {
+          queryParams.push(STANDING_BY_BOT_IDS);
+          whereClauses.push(`NOT (p.id = ANY($${queryParams.length}::text[]))`);
+        }
+
+        const whereSql = "WHERE " + whereClauses.join(" AND ");
+
+        const countRes = await db.query(
+          `SELECT COUNT(*)::int AS total FROM player p ${whereSql}`,
+          queryParams
+        );
+        const totalFiltered = countRes.rows[0]?.total || 0;
+
+        queryParams.push(limit);
+        const limitParam = queryParams.length;
+        queryParams.push(offset);
+        const offsetParam = queryParams.length;
+
+        const botsRes = await db.query(
+          `SELECT p.id, p.handle, p.bio, p.created_at,
+                  COALESCE(lb.balance, 0)::text AS balance_minor,
+                  ROUND(COALESCE(AVG(r.rating_x100), 150000) / 100.0) AS avg_rating,
+                  COUNT(r.game_id)::int AS games_count
+             FROM player p
+             LEFT JOIN ledger_account la ON la.key = 'user:' || p.id || ':available' AND la.asset = 'USDT'
+             LEFT JOIN ledger_balance lb ON lb.account_id = la.id
+             LEFT JOIN rating r ON r.player_id = p.id
+            ${whereSql}
+            GROUP BY p.id, p.handle, p.bio, p.created_at, lb.balance
+            ORDER BY p.id ASC
+            LIMIT $${limitParam} OFFSET $${offsetParam}`,
+          queryParams
+        );
+
+        const standingBySet = new Set(STANDING_BY_BOT_IDS);
+        const bots = botsRes.rows.map((row) => ({
+          id: row.id,
+          handle: row.handle,
+          bio: row.bio,
+          balance_usdt: (Number(BigInt(row.balance_minor || "0")) / 1_000_000).toFixed(2),
+          avg_rating: Math.round(Number(row.avg_rating || 1500)),
+          is_standing_by: standingBySet.has(row.id),
+          games_count: row.games_count,
+        }));
+
+        const totalLiquidityUsdt = (Number(BigInt(totalLiquidityRes.rows[0]?.total_minor || "0")) / 1_000_000).toFixed(2);
+
+        return {
+          body: {
+            config,
+            stats: {
+              total_bots: totalBotsRes.rows[0]?.count || 600,
+              standing_by_count: STANDING_BY_BOT_IDS.length,
+              active_duels_count: activeDuelsRes.rows[0]?.count || 0,
+              tournaments_active_count: activeTournamentsRes.rows[0]?.count || 0,
+              total_liquidity_usdt: totalLiquidityUsdt,
+            },
+            bots,
+            pagination: {
+              total: totalFiltered,
+              limit,
+              offset,
+            },
+          },
+        };
+      } },
+
+    { method: "POST", path: "/v1/admin/bots/config", action: "admin.bot.manage",
+      handler: async ({ body, actor, db }) => {
+        const { key, value } = body || {};
+        const validKeys = ["ai_difficulty", "standing_by", "tournaments", "simulator"];
+        if (!key || !validKeys.includes(key) || typeof value !== "object" || value === null) {
+          return { status: 400, body: errorBody("INVALID_CONFIG_KEY", `key must be one of: ${validKeys.join(", ")}`) };
+        }
+
+        const res = await db.query(
+          `INSERT INTO bot_platform_config (key, value, updated_at, updated_by)
+           VALUES ($1, $2::jsonb, now(), $3)
+           ON CONFLICT (key) DO UPDATE
+             SET value = EXCLUDED.value,
+                 updated_at = now(),
+                 updated_by = EXCLUDED.updated_by
+           RETURNING key, value, updated_at, updated_by`,
+          [key, JSON.stringify(value), actor?.id || "admin"]
+        );
+
+        return {
+          body: { ok: true, config: res.rows[0] },
+          audit: { subjectId: key, detail: value },
+        };
+      } },
+
+    { method: "POST", path: "/v1/admin/bots/topup", action: "admin.bot.manage",
+      handler: async ({ body, actor, db }) => {
+        const { botId, targetBalanceUsdt = 10000, amountUsdt } = body || {};
+        const targetMinor = BigInt(Math.round(Number(targetBalanceUsdt) * 1_000_000));
+        const specificAmountMinor = amountUsdt ? BigInt(Math.round(Number(amountUsdt) * 1_000_000)) : null;
+
+        let targetBots = [];
+        if (botId) {
+          targetBots = [botId];
+        } else {
+          const r = await db.query(
+            `SELECT id FROM player WHERE is_ai IS TRUE OR id LIKE 'bot_%' ORDER BY id ASC`
+          );
+          targetBots = r.rows.map((row) => row.id);
+        }
+
+        let toppedUpCount = 0;
+        let totalCreditedMinor = 0n;
+
+        for (const id of targetBots) {
+          const balRes = await db.query(
+            `SELECT COALESCE(b.balance, 0)::text AS balance
+               FROM ledger_account a
+               LEFT JOIN ledger_balance b ON b.account_id = a.id
+              WHERE a.key = 'user:' || $1 || ':available' AND a.asset = 'USDT'`,
+            [id]
+          );
+
+          const curBal = BigInt(balRes.rows[0]?.balance || "0");
+          let needed = 0n;
+          if (specificAmountMinor != null && specificAmountMinor > 0n) {
+            needed = specificAmountMinor;
+          } else if (curBal < targetMinor) {
+            needed = targetMinor - curBal;
+          }
+
+          if (needed > 0n) {
+            const idempotencyKey = `bot-topup-${id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+            await db.query(
+              `SELECT ledger_post(
+                $1,
+                'ADJUSTMENT',
+                'ADMIN',
+                $2,
+                jsonb_build_array(
+                  jsonb_build_object('account', 'platform:custody:USDT:TRON', 'amount', $3::text),
+                  jsonb_build_object('account', 'user:' || $4 || ':available', 'amount', $5::text)
+                ),
+                'USDT',
+                'Admin top-up bot liquidity'
+              )`,
+              [idempotencyKey, actor?.id || "admin", needed.toString(), id, (-needed).toString()]
+            );
+            toppedUpCount++;
+            totalCreditedMinor += needed;
+          }
+        }
+
+        return {
+          body: {
+            ok: true,
+            toppedUpCount,
+            totalCreditedUsdt: (Number(totalCreditedMinor) / 1_000_000).toFixed(2),
+          },
+          audit: { subjectId: botId || "all-bots", detail: { toppedUpCount } },
+        };
       } },
 
     // --- Admin: the Payment & Stablecoin Control Center -------------------------

@@ -18,7 +18,21 @@ export const STANDING_BY_BOT_IDS = [
 
 export function createStandingByWorker(db, mm, { timeoutSeconds = 5, emit = () => {} } = {}) {
   return async function tick() {
-    // 1. Find active human tickets waiting >= timeoutSeconds
+    let effectiveTimeout = timeoutSeconds;
+    try {
+      const cfgRes = await db.query(
+        `SELECT value FROM bot_platform_config WHERE key = 'standing_by'`
+      );
+      if (cfgRes.rows.length > 0) {
+        const val = cfgRes.rows[0].value;
+        if (val.enabled === false) return { pairedCount: 0, disabled: true };
+        if (val.wait_seconds != null) effectiveTimeout = Number(val.wait_seconds);
+      }
+    } catch {
+      // fallback to constructor parameter
+    }
+
+    // 1. Find active human tickets waiting >= effectiveTimeout
     const ticketsRes = await db.query(
       `SELECT t.id, t.player_id, t.game_id, t.mode, t.time_control, t.tier,
               t.stake_minor, t.rating_x100, t.asset
@@ -30,7 +44,7 @@ export function createStandingByWorker(db, mm, { timeoutSeconds = 5, emit = () =
           AND t.enqueued_at <= now() - ($1 || ' seconds')::interval
         ORDER BY t.enqueued_at ASC
         LIMIT 5`,
-      [timeoutSeconds]
+      [effectiveTimeout]
     );
 
     if (ticketsRes.rows.length === 0) return { pairedCount: 0 };

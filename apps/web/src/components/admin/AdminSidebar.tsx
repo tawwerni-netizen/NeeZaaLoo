@@ -17,6 +17,7 @@ const GROUPS: NavGroup[] = [
       { label: "Games", icon: "games", href: "/admin/games" },
       { label: "Matches", icon: "matches", href: "/admin/matches" },
       { label: "Tournaments", icon: "tournaments", href: "/admin/tournaments" },
+      { label: "AI & Bots", icon: "bot", href: "/admin/bots" },
       { label: "Live Arena", icon: "arena", href: "/admin/arena" },
     ],
   },
