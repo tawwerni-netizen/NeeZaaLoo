@@ -67,6 +67,29 @@ export const ChessPlugin = {
    * client can assert a result, a score, or an elapsed time.
    */
   applyIntent(state, intent, ctx) {
+    if (intent === "undo") {
+      if (state.moves.length < 2) return { ok: false, reason: "NOTHING_TO_UNDO" };
+      if (state.position.turn !== seatToColour(ctx.seat)) {
+        return { ok: false, reason: "NOT_YOUR_TURN" };
+      }
+      const nextMoves = state.moves.slice(0, -2);
+      const rehydrated = ChessPlugin.rehydrate({ fen: state.initialFen }).state;
+      for (const m of nextMoves) {
+        const move = findLegalMove(rehydrated.position, m);
+        if (move) {
+          makeMove(rehydrated.position, move);
+          rehydrated.moves.push(m);
+          rehydrated.history.push(positionKey(rehydrated.position));
+        }
+      }
+      return {
+        ok: true,
+        state: rehydrated,
+        record: { uci: "undo", fenAfter: toFen(rehydrated.position) },
+        events: [{ type: "UNDO", payload: { ply: rehydrated.moves.length } }],
+      };
+    }
+
     if (typeof intent !== "string" || !/^[a-h][1-8][a-h][1-8][nbrq]?$/.test(intent)) {
       return { ok: false, reason: "MALFORMED" };
     }

@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { parseFenBoard, squareAt, sideToMoveFromFen, FILES } from "./fen";
 import { ChessPieceSvg } from "./ChessPieceSvg";
 import { useI18n } from "@/lib/i18n/context";
 import { useVisualSettings } from "./TableEnvironment";
+import { playPieceSound, CHESS_THEMES, type ChessBoardTheme } from "@/lib/chess-audio";
+import { ChessAmbientPlayer } from "./ChessAmbientPlayer";
 import styles from "./ChessBoard.module.css";
 
 type Props = {
@@ -27,6 +29,35 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
   const sideToMove = useMemo(() => sideToMoveFromFen(fen), [fen]);
   const [selected, setSelected] = useState<string | null>(null);
   const [pendingPromo, setPendingPromo] = useState<{ from: string; to: string } | null>(null);
+  const [theme, setTheme] = useState<ChessBoardTheme>("emerald");
+  const lastSoundMoveRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("nizalo_chess_theme") as ChessBoardTheme | null;
+      if (saved && CHESS_THEMES[saved]) setTheme(saved);
+    } catch {}
+  }, []);
+
+  function handleThemeChange(tId: ChessBoardTheme) {
+    setTheme(tId);
+    try {
+      localStorage.setItem("nizalo_chess_theme", tId);
+    } catch {}
+  }
+
+  // Play piece-specific sound when opponent moves
+  useEffect(() => {
+    if (!lastMove) return;
+    const moveKey = `${lastMove.from}-${lastMove.to}`;
+    if (lastSoundMoveRef.current === moveKey) return;
+    lastSoundMoveRef.current = moveKey;
+
+    const destFile = FILES.indexOf(lastMove.to[0] || "");
+    const destRank = parseInt(lastMove.to[1] || "1", 10) - 1;
+    const piece = squareAt(board, destFile, destRank);
+    playPieceSound(piece?.type || "p", false, inCheck);
+  }, [lastMove, board, inCheck]);
 
   const flipped = mySeat === 1;
   const displayFiles = flipped ? [...FILES].reverse() : FILES;
@@ -52,9 +83,16 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
 
     if (selected && destinationsFromSelected.has(sq)) {
       const matching = legalMoves.filter((m) => m.startsWith(selected) && m.slice(2, 4) === sq);
+      const fromFile = FILES.indexOf(selected[0] || "");
+      const fromRank = parseInt(selected[1] || "1", 10) - 1;
+      const movingPiece = squareAt(board, fromFile, fromRank);
+      const destPiece = squareAt(board, file, rank);
+
       if (matching.length > 1) {
         setPendingPromo({ from: selected, to: sq });
       } else if (matching[0]) {
+        playPieceSound(movingPiece?.type || "p", Boolean(destPiece), inCheck);
+        lastSoundMoveRef.current = `${selected}-${sq}`;
         onMove(matching[0]);
       }
       setSelected(null);
@@ -68,14 +106,47 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
     }
   }
 
-  function choosePromotion(piece: (typeof PROMO_PIECES)[number]) {
+  function choosePromotion(promoPiece: (typeof PROMO_PIECES)[number]) {
     if (!pendingPromo) return;
-    onMove(`${pendingPromo.from}${pendingPromo.to}${piece}`);
+    playPieceSound(promoPiece, false, inCheck);
+    lastSoundMoveRef.current = `${pendingPromo.from}-${pendingPromo.to}`;
+    onMove(`${pendingPromo.from}${pendingPromo.to}${promoPiece}`);
     setPendingPromo(null);
   }
 
+  const currentColors = CHESS_THEMES[theme] || CHESS_THEMES.emerald;
+
   return (
-    <div className={styles.wrap}>
+    <div
+      className={styles.wrap}
+      style={{
+        "--theme-sq-light": currentColors.lightSq,
+        "--theme-sq-dark": currentColors.darkSq,
+        "--board-border": currentColors.border,
+      } as React.CSSProperties}
+    >
+      {/* Theme Picker & Ambient Music Controls */}
+      <div className={styles.themeControls}>
+        <div className={styles.themeSelector}>
+          {(Object.keys(CHESS_THEMES) as ChessBoardTheme[]).map((tId) => (
+            <button
+              key={tId}
+              type="button"
+              className={`${styles.themeBtn} ${theme === tId ? styles.themeBtnActive : ""}`}
+              onClick={() => handleThemeChange(tId)}
+              title={CHESS_THEMES[tId].nameAr}
+            >
+              <span
+                className={styles.themeColorDot}
+                style={{ background: CHESS_THEMES[tId].darkSq }}
+              />
+              <span>{CHESS_THEMES[tId].nameAr}</span>
+            </button>
+          ))}
+        </div>
+        <ChessAmbientPlayer />
+      </div>
+
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         {/* Outer 3D Table Bevel Frame */}
         <div className={styles.tableBevel}>

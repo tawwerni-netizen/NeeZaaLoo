@@ -15,7 +15,7 @@
  * sees the request, and the handler cannot re-open that decision.
  */
 import { createServer } from "node:http";
-import { randomUUID, createHash } from "node:crypto";
+import { randomUUID, createHash, randomBytes } from "node:crypto";
 import { authorize, Decision, ACTIONS, capabilitiesFor, undeclaredActions } from "../../authz/src/policy.mjs";
 import {
   compileRoutes, matchRoute, readJsonBody, sendJson, sendText, errorBody,
@@ -41,6 +41,7 @@ import { BlockError } from "../../chat/src/blocks.mjs";
 import { ReportError } from "../../chat/src/reports.mjs";
 import { createDirectChatService } from "../../chat/src/direct.mjs";
 import { createConsentService, ConsentError } from "../../compliance/src/consent.mjs";
+import { registerBotRoutes } from "./bots/bot-router.mjs";
 
 async function poolBatch(tasks, concurrency = 3) {
   const results = new Array(tasks.length);
@@ -596,7 +597,7 @@ function chatErrorStatus(reason) {
 }
 
 function buildRoutes() {
-  return [
+  const routes = [
     { method: "GET", path: "/v1/health", action: "player.login", anonymous: true,
       // `payments` reports whether THIS RUNNING PROCESS has a real payment
       // provider wired, as a bare boolean -- no key, no key fragment, no
@@ -630,6 +631,39 @@ function buildRoutes() {
       }) },
 
     // --- Auth ----------------------------------------------------------------
+    { method: "POST", path: "/v1/auth/guest", action: "player.login", anonymous: true,
+      handler: async ({ auth, ip, userAgent }) => {
+        const uid = randomBytes(4).toString("hex");
+        const handle = `Guest_${uid}`;
+        const email = `guest_${uid}@nizalo.internal`;
+        const password = `G_${randomBytes(8).toString("hex")}!1A`;
+        const reg = await auth.register({
+          playerId: handle,
+          handle,
+          email,
+          password,
+          termsAccepted: true,
+          locale: "ar",
+          policyVersion: "1.0.0",
+        }, { ip, userAgent });
+        if (!reg.ok) return { status: 400, body: errorBody(reg.reason) };
+        const log = await auth.login({
+          identifier: email,
+          password,
+        }, { ip });
+        if (!log.ok) return { status: 400, body: errorBody(log.reason) };
+        return {
+          status: 201,
+          body: {
+            isGuest: true,
+            playerId: reg.playerId,
+            accessToken: log.accessToken,
+            refreshToken: log.refreshToken,
+            expiresInS: log.expiresInS,
+          },
+        };
+      } },
+
     { method: "POST", path: "/v1/auth/register", action: "player.register", anonymous: true,
       handler: async ({ body, auth, welcomeEmail, ip, userAgent }) => {
         const { handle, email, password, referralCode, termsAccepted, locale, policyVersion } = body ?? {};
@@ -5538,6 +5572,8 @@ function buildRoutes() {
         return { body: { ok: true, withdrawal: r.withdrawal } };
       } },
   ];
+  registerBotRoutes(routes);
+  return routes;
 }
 
 export { ACTIONS };

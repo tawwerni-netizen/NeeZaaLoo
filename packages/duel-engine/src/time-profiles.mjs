@@ -34,9 +34,15 @@ import { TurnModel } from "./duel.mjs";
 const PROFILES = {
   chess: {
     turnModel: TurnModel.ALTERNATING,
-    BLITZ:    { initialMs: 180_000, incrementMs: 2_000 },  // 3+2
-    STANDARD: { initialMs: 300_000, incrementMs: 3_000 },  // 5+3
-    EXTENDED: { initialMs: 600_000, incrementMs: 5_000 },  // 10+5
+    BLITZ:    { initialMs: 180_000, incrementMs: 2_000, perMoveMs: 10_000 },  // 10s per move
+    STANDARD: { initialMs: 300_000, incrementMs: 3_000, perMoveMs: 60_000 },  // 1m per move (Anti-cheat strict cap)
+    EXTENDED: { initialMs: 600_000, incrementMs: 5_000, perMoveMs: 120_000 }, // 2m per move
+    PER_MOVE_5S:   { initialMs: 5_000, incrementMs: 0, perMoveMs: 5_000 },
+    PER_MOVE_10S:  { initialMs: 10_000, incrementMs: 0, perMoveMs: 10_000 },
+    PER_MOVE_30S:  { initialMs: 30_000, incrementMs: 0, perMoveMs: 30_000 },
+    PER_MOVE_60S:  { initialMs: 60_000, incrementMs: 0, perMoveMs: 60_000 },
+    PER_MOVE_120S: { initialMs: 120_000, incrementMs: 0, perMoveMs: 120_000 },
+    UNLIMITED:     { initialMs: 86_400_000, incrementMs: 0, perMoveMs: 86_400_000 },
   },
   checkers: {
     turnModel: TurnModel.ALTERNATING,

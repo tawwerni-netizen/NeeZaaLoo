@@ -21,6 +21,7 @@ import { TableEnvironmentProvider } from "@/components/game/TableEnvironment";
 import { GameVisualSettings } from "@/components/game/GameVisualSettings";
 import { getGame } from "@/lib/games";
 import { get, post } from "@/lib/api";
+import { playUndoSound } from "@/lib/chess-audio";
 import styles from "./DuelShell.module.css";
 
 const BOT_IDS = new Set(["ai-easy", "ai-medium", "ai-hard", "ai-expert"]);
@@ -180,6 +181,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
 
   const vsComputer = players?.some((p) => BOT_IDS.has(p)) ?? false;
   const botId = players?.find((p) => BOT_IDS.has(p)) ?? null;
+  const botDifficulty = botId ? (BOT_DIFFICULTY[botId] ?? "MEDIUM") : null;
   const opponentConnected = vsComputer
     ? true
     : opponentSeat !== null && connectedSeats
@@ -318,6 +320,18 @@ export function DuelShell({ duelId }: { duelId: string }) {
 
             {!isSpectator && (
               <div className={styles.actionsRow}>
+                {vsComputer && botDifficulty === "EASY" && gameId === "chess" && (
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      sendIntent("undo");
+                      playUndoSound();
+                    }}
+                    disabled={!canMove}
+                  >
+                    ↩ {locale === "ar" ? "تراجع عن الحركة" : "Undo Move"}
+                  </Button>
+                )}
                 {plugin.supportsDraw && (
                   <Button variant="ghost" onClick={offerDraw} disabled={drawOfferBy !== null}>{t("game.offer_draw")}</Button>
                 )}

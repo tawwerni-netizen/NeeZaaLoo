@@ -25,9 +25,10 @@ import { StakeSelect, type StakeChoice } from "@/components/play/StakeSelect";
 import { FriendChallenge } from "@/components/play/FriendChallenge";
 import { TimeControlSelect, type TimeProfile } from "@/components/play/TimeControlSelect";
 import { getGame, type Difficulty } from "@/lib/games";
-import { post } from "@/lib/api";
+import { post, setTokens } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthPopup } from "@/lib/auth-popup-context";
+import { ChessTimePerMoveSelect } from "@/components/play/ChessTimePerMoveSelect";
 import { useI18n } from "@/lib/i18n/context";
 import styles from "./playGame.module.css";
 
@@ -123,13 +124,23 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
     }
   }
 
-  async function startVsComputer(chosenDifficulty: Difficulty | null, chosenProfile: TimeProfile = "STANDARD") {
-    if (!player) {
-      openPopup();
-      return;
-    }
+  async function startVsComputer(chosenDifficulty: Difficulty | null, chosenProfile: string = "STANDARD") {
     setCreating(true);
     try {
+      if (!player) {
+        if (chosenDifficulty === "EASY") {
+          try {
+            const guestRes = await post<{ accessToken: string; refreshToken: string }>("/v1/auth/guest", {});
+            setTokens(guestRes.accessToken, guestRes.refreshToken, true);
+          } catch {
+            // Non-fatal, attempt proceed
+          }
+        } else {
+          setCreating(false);
+          openPopup();
+          return;
+        }
+      }
       const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", {
         gameId,
         difficulty: chosenDifficulty ?? "MEDIUM",
@@ -137,7 +148,7 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
         ...(gameId === "dominoes" ? { variant: dominoesVariant } : {}),
       });
       router.push(`/${locale}/game/${r.duelId}`);
-    } finally {
+    } catch {
       setCreating(false);
     }
   }
@@ -312,17 +323,36 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
           <DifficultySelect
             plugin={plugin}
             onSelect={(d) => {
+              if (d !== "EASY" && !player) {
+                openPopup();
+                return;
+              }
               setDifficulty(d);
-              setStep({ name: "time_control", difficulty: d });
+              if (gameId === "chess" && d === "EASY") {
+                // Easy mode: Open/unlimited time, instant guest start!
+                void startVsComputer("EASY", "UNLIMITED");
+              } else if (gameId === "chess" && d === "EXPERT") {
+                // Expert mode: Mandatory official strict rules (1m per move anti-cheat)
+                void startVsComputer("EXPERT", "PER_MOVE_60S");
+              } else {
+                setStep({ name: "time_control", difficulty: d });
+              }
             }}
           />
         )}
 
         {step.name === "time_control" && (
-          <TimeControlSelect
-            plugin={plugin}
-            onSelect={(profile) => void startVsComputer(step.difficulty, profile)}
-          />
+          gameId === "chess" ? (
+            <ChessTimePerMoveSelect
+              onSelect={(profile) => void startVsComputer(step.difficulty, profile)}
+              loading={creating}
+            />
+          ) : (
+            <TimeControlSelect
+              plugin={plugin}
+              onSelect={(profile) => void startVsComputer(step.difficulty, profile)}
+            />
+          )
         )}
 
         {step.name === "friend_stake" && (

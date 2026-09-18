@@ -15,6 +15,17 @@ import "@/lib/games"; // registers every known game by side effect -- see that m
 
 export default function GamePage({ params }: { params: Promise<{ duelId: string }> }) {
   const { duelId } = use(params);
+  const isGuest = duelId.startsWith("guest");
+
+  if (isGuest) {
+    return (
+      <>
+        <Header />
+        <DuelShell duelId={duelId} />
+      </>
+    );
+  }
+
   return (
     <RequireAuth>
       <Header />

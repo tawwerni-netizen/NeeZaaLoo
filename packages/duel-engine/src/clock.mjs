@@ -28,6 +28,16 @@ export const FLAG = "FLAG";
  *   intent is accepted.
  */
 export function createClock(tc, startedAtMs, initialToMove = 0) {
+  if (tc.perMoveMs || tc.model === "PER_MOVE") {
+    const limit = tc.perMoveMs ?? tc.initialMs;
+    return {
+      model: "PER_MOVE",
+      perMoveMs: limit,
+      remaining: [limit, limit],
+      toMove: initialToMove,
+      turnStartedAt: startedAtMs,
+    };
+  }
   if (!Number.isFinite(tc.initialMs) || tc.initialMs <= 0) {
     throw new TypeError("initialMs must be a positive number");
   }
@@ -73,6 +83,18 @@ export function applyMove(clock, serverTimeMs, { keepMover = false } = {}) {
     throw new RangeError("clock: server time moved backwards");
   }
 
+  if (clock.model === "PER_MOVE") {
+    if (elapsed > clock.perMoveMs) {
+      clock.remaining[i] = 0;
+      return { flagged: true, byIndex: i, remaining: [...clock.remaining] };
+    }
+    clock.remaining[0] = clock.perMoveMs;
+    clock.remaining[1] = clock.perMoveMs;
+    clock.toMove = keepMover ? i : i ^ 1;
+    clock.turnStartedAt = serverTimeMs;
+    return { flagged: false, byIndex: null, remaining: [...clock.remaining] };
+  }
+
   const left = clock.remaining[i] - elapsed;
 
   if (left < 0) {
@@ -93,13 +115,19 @@ export function applyMove(clock, serverTimeMs, { keepMover = false } = {}) {
 export function checkFlag(clock, serverTimeMs) {
   const i = clock.toMove;
   const elapsed = serverTimeMs - clock.turnStartedAt;
-  return elapsed >= clock.remaining[i] ? { flagged: true, byIndex: i } : { flagged: false, byIndex: null };
+  const maxAllowed = clock.model === "PER_MOVE" ? clock.perMoveMs : clock.remaining[i];
+  return elapsed >= maxAllowed ? { flagged: true, byIndex: i } : { flagged: false, byIndex: null };
 }
 
 /** Display-only projection. The client renders from this and never authors it. */
 export function readClock(clock, serverTimeMs) {
   const i = clock.toMove;
   const elapsed = Math.max(0, serverTimeMs - clock.turnStartedAt);
+  if (clock.model === "PER_MOVE") {
+    const live = [clock.perMoveMs, clock.perMoveMs];
+    live[i] = Math.max(0, clock.perMoveMs - elapsed);
+    return { model: "PER_MOVE", remaining: live, toMove: i, perMoveMs: clock.perMoveMs };
+  }
   const live = [...clock.remaining];
   live[i] = Math.max(0, live[i] - elapsed);
   return { remaining: live, toMove: i };
