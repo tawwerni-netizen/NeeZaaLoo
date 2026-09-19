@@ -60,7 +60,6 @@ const GAME_ICONS: Record<string, string> = {
   reversi: "⚪",
   gomoku: "🟢",
   seega: "🎯",
-  billiards: "🎱",
 };
 
 // Complete multilingual localized copy across all 6 supported languages

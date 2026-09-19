@@ -89,6 +89,288 @@
   margin-bottom: var(--nz-space-6);
 }
 
+/* ==========================================================================
+   Psychological Trust & Conversion Bar
+   ========================================================================== */
+.psychologicalTrustBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: var(--nz-space-6);
+  width: 100%;
+}
+
+.trustItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.trustItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.trustIcon {
+  font-size: 13.5px;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   Tactile Cyber-Luxury Quick Stakes Match Selector
+   ========================================================================== */
+.quickStakeSection {
+  width: 100%;
+  max-width: 1100px;
+  margin: var(--nz-space-2) auto var(--nz-space-4);
+  padding: 22px 24px;
+  background: linear-gradient(180deg, rgba(20, 27, 44, 0.8) 0%, rgba(11, 15, 26, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+.quickStakeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.quickStakeTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quickStakeTitleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #60a5fa;
+}
+
+.quickStakePulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 8px #3b82f6;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.5;
+  }
+}
+
+.quickStakeTitleText {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.quickStakeSub {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #10b981;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quickStakeGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+.quickStakeCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 16px;
+  padding: 16px 12px;
+  background: linear-gradient(180deg, rgba(24, 32, 52, 0.75) 0%, rgba(13, 17, 28, 0.92) 100%);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+  overflow: hidden;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.22s ease,
+              border-color 0.22s ease,
+              background 0.22s ease;
+}
+
+.cardGlowLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  opacity: 0.85;
+  transition: height 0.2s ease, opacity 0.2s ease;
+}
+
+.quickStakeCard:hover .cardGlowLine {
+  height: 5px;
+  opacity: 1;
+}
+
+.cardTopRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.popularBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: linear-gradient(135deg, #ef4444, #f59e0b);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.subtleBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2.5px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9999px;
+}
+
+.quickStakeTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.stakeAmountVal {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+  font-family: var(--nz-font-num);
+}
+
+.stakeAmountCurrency {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.quickStakePrizeBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 6px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.prizePrefix {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #a7f3d0;
+}
+
+.prizeNumber {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #34d399;
+  font-family: var(--nz-font-num);
+}
+
+.prizeCurrency {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #a7f3d0;
+}
+
+.quickStakeTag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #cbd5e1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Card Themes with Cyber-Glow */
+.cardEmerald:hover {
+  transform: translateY(-6px);
+  border-color: rgba(16, 185, 129, 0.55);
+  box-shadow: 0 14px 32px rgba(16, 185, 129, 0.25);
+}
+
+.cardSapphire:hover {
+  transform: translateY(-6px);
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: 0 14px 32px rgba(59, 130, 246, 0.25);
+}
+
+.cardViolet:hover {
+  transform: translateY(-6px);
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow: 0 14px 32px rgba(139, 92, 246, 0.25);
+}
+
+.cardGold:hover {
+  transform: translateY(-6px);
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 14px 32px rgba(245, 158, 11, 0.25);
+}
+
+.cardRuby:hover {
+  transform: translateY(-6px);
+  border-color: rgba(239, 68, 68, 0.55);
+  box-shadow: 0 14px 32px rgba(239, 68, 68, 0.25);
+}
+
 .featured {
   display: flex;
   align-items: center;
@@ -681,50 +963,46 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 18px;
-  border-radius: var(--nz-radius-lg, 12px);
-  background: rgba(14, 19, 29, 0.72);
+  padding: 20px 18px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(20, 27, 44, 0.75) 0%, rgba(11, 15, 26, 0.92) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
   overflow: hidden;
+  cursor: default;
 }
 
 .metricCard:hover {
-  transform: translateY(-3px);
+  transform: translateY(-5px);
 }
 
-.metricCardEmerald {
-  border-top: 3px solid #22c55e;
+.metricCard:hover .cardGlowLine {
+  height: 5px;
+  opacity: 1;
 }
+
 .metricCardEmerald:hover {
-  border-color: #22c55e;
-  box-shadow: 0 10px 28px rgba(34, 197, 94, 0.25);
+  border-color: rgba(16, 185, 129, 0.55);
+  box-shadow: 0 14px 32px rgba(16, 185, 129, 0.25);
 }
 
-.metricCardGold {
-  border-top: 3px solid #c9a96e;
-}
 .metricCardGold:hover {
-  border-color: #c9a96e;
-  box-shadow: 0 10px 28px rgba(201, 169, 110, 0.25);
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 14px 32px rgba(245, 158, 11, 0.25);
 }
 
-.metricCardRuby {
-  border-top: 3px solid #f43f5e;
-}
 .metricCardRuby:hover {
-  border-color: #f43f5e;
-  box-shadow: 0 10px 28px rgba(244, 63, 94, 0.25);
+  border-color: rgba(236, 72, 153, 0.55);
+  box-shadow: 0 14px 32px rgba(236, 72, 153, 0.25);
 }
 
-.metricCardCyan {
-  border-top: 3px solid #06b6d4;
-}
 .metricCardCyan:hover {
-  border-color: #06b6d4;
-  box-shadow: 0 10px 28px rgba(6, 182, 212, 0.25);
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: 0 14px 32px rgba(59, 130, 246, 0.25);
 }
 
 .metricCardHeader {

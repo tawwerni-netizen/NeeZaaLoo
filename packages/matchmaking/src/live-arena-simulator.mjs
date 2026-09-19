@@ -15,7 +15,6 @@ import { resolveTimeControl } from "../../duel-engine/src/time-profiles.mjs";
 
 const SIM_GAMES = [
   "chess",
-  "billiards",
   "dominoes",
   "backgammon",
   "checkers",
@@ -85,7 +84,10 @@ export function createLiveArenaSimulator(db, { targetMatches = 10, emit = () => 
         const botsRes = await db.query(
           `SELECT id, handle
              FROM player
-            WHERE is_ai IS TRUE OR id LIKE 'bot_%'
+            WHERE (is_ai IS TRUE OR id LIKE 'bot_%' OR id LIKE 'top_p_%')
+              AND handle NOT LIKE 'ai_%'
+              AND handle NOT LIKE 'bot_%'
+              AND handle NOT LIKE 'test_%'
             ORDER BY random()
             LIMIT 2`
         );

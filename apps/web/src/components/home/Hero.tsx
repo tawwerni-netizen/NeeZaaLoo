@@ -8,16 +8,72 @@ import { transition } from "@/lib/motion";
 import { useI18n } from "@/lib/i18n/context";
 import { get } from "@/lib/api";
 import { listGames } from "@/lib/games";
+import { playCardHoverSound, playDifficultySelectSound } from "@/lib/game-audio";
 import styles from "./Hero.module.css";
 
 const FEATURED_COUNT = 6;
 
 const QUICK_STAKES = [
-  { stake: 2, prize: 3.52, tagAr: "🚀 بداية سريعة", tagEn: "🚀 Quick Start", popular: false },
-  { stake: 5, prize: 8.8, tagAr: "🔥 نزال الأبطال", tagEn: "🔥 Champions", popular: true },
-  { stake: 10, prize: 17.6, tagAr: "⚡ تحدي المحترفين", tagEn: "⚡ Pro Match", popular: false },
-  { stake: 25, prize: 44.0, tagAr: "💎 نزال النخبة", tagEn: "💎 Elite Duel", popular: false },
-  { stake: 50, prize: 88.0, tagAr: "👑 كبار المتحدين", tagEn: "👑 High Roller", popular: false },
+  {
+    stake: 2,
+    prize: 3.52,
+    badgeAr: "بداية آمنة 🟢",
+    badgeEn: "Safe Start 🟢",
+    tagAr: "🚀 تجربة سريعة",
+    tagEn: "🚀 Quick Trial",
+    popular: false,
+    accentColor: "#10B981",
+    themeClass: styles.cardEmerald,
+    soundLevel: "EASY" as const,
+  },
+  {
+    stake: 5,
+    prize: 8.8,
+    badgeAr: "الأكثر طلباً 🔥",
+    badgeEn: "Most Popular 🔥",
+    tagAr: "🔥 نزال الأبطال",
+    tagEn: "🔥 Champions Duel",
+    popular: true,
+    accentColor: "#3B82F6",
+    themeClass: styles.cardSapphire,
+    soundLevel: "MEDIUM" as const,
+  },
+  {
+    stake: 10,
+    prize: 17.6,
+    badgeAr: "تحدي المحترفين ⚡",
+    badgeEn: "Pro Challenge ⚡",
+    tagAr: "⚡ مبارزة تكتيكية",
+    tagEn: "⚡ Tactical Duel",
+    popular: false,
+    accentColor: "#8B5CF6",
+    themeClass: styles.cardViolet,
+    soundLevel: "HARD" as const,
+  },
+  {
+    stake: 25,
+    prize: 44.0,
+    badgeAr: "طاولة النخبة 💎",
+    badgeEn: "Elite Table 💎",
+    tagAr: "💎 جائزة كبرى",
+    tagEn: "💎 Grand Prize",
+    popular: false,
+    accentColor: "#F59E0B",
+    themeClass: styles.cardGold,
+    soundLevel: "EXPERT" as const,
+  },
+  {
+    stake: 50,
+    prize: 88.0,
+    badgeAr: "كبار المتحدين 👑",
+    badgeEn: "High Roller 👑",
+    tagAr: "👑 جائزة $88 كاش",
+    tagEn: "👑 $88 Cash Prize",
+    popular: false,
+    accentColor: "#EF4444",
+    themeClass: styles.cardRuby,
+    soundLevel: "EXPERT" as const,
+  },
 ];
 
 type ShowcaseSlide = {
@@ -198,22 +254,6 @@ const SHOWCASE_SLIDES: ShowcaseSlide[] = [
     tagEn: "PLAY SEEGA ↗",
     targetHref: "/play/seega",
   },
-  {
-    id: "billiards",
-    gameId: "billiards",
-    image: "/images/games/billiards-hero.jpg",
-    superAr: "أرينا البلياردو الاحترافي 8-Ball",
-    superEn: "PRO 8-BALL BILLIARDS",
-    titleAr: "بلياردو الثمان كرات: دقة، فيزياء، ومنافسات كاش",
-    titleEn: "8-Ball Pool: Realistic Physics & Cash Duels",
-    metaAr: "محاكاة فيزيائية حقيقية • جوائز كاش فورية • بدون حظ",
-    metaEn: "Rigid-Body Physics • Real Cash Stakes • Pure Skill",
-    badgeAr: "مباشر كاش",
-    badgeEn: "CASH DUELS",
-    tagAr: "العب بلياردو ↗",
-    tagEn: "PLAY BILLIARDS ↗",
-    targetHref: "/play/billiards",
-  },
 ];
 
 const stage = (index: number, reduceMotion: boolean | null) => ({
@@ -271,29 +311,37 @@ export function Hero() {
           <motion.div {...stage(0, reduceMotion)} className={styles.eyebrowWrap}>
             <span className={styles.eyebrowBadge}>
               <span className={styles.eyebrowBeacon} aria-hidden="true" />
-              <span>{isRtl ? "منصة الألعاب التنافسية المهارية الأولى" : t("home.hero.eyebrow")}</span>
+              <span>{isRtl ? "🏆 منصة الألعاب التنافسية المهارية الأولى • كاش فوري" : t("home.hero.eyebrow")}</span>
             </span>
           </motion.div>
 
           <motion.h1 {...stage(1, reduceMotion)} className={styles.headline}>
-            <span>{isRtl ? "العب واكسب بمهارتك." : "Play & Win With Skill."}</span>{" "}
-            <span className={styles.headlineAccent}>{isRtl ? "اربح كاش فورياً." : "Instant Cash Rewards."}</span>
+            <span>{isRtl ? "حوّل ذكاءك ومهارتك إلى أرباح." : "Turn Skill Into Real Cash."}</span>{" "}
+            <span className={styles.headlineAccent}>{isRtl ? "سحب فوري خلال 60 ثانية." : "Instant 60s Cashout."}</span>
           </motion.h1>
 
           <motion.p {...stage(2, reduceMotion)} className={styles.subhead}>
             {isRtl
-              ? "نافس لاعبين حقيقيين 1v1 في 10 ألعاب مهارية معتمدة بدون أي عنصر حظ. اربح جوائز USDT كاش تُحوَّل لمحفظتك وتُسحب فوراً خلال 60 ثانية."
+              ? "نافس لاعبين حقيقيين 1v1 في 10 ألعاب مهارية معتمدة بدون أي عنصر حظ أو صدفة. اربح جوائز USDT كاش تُحوَّل لمحفظتك وتُسحب فوراً في أقل من دقيقة."
               : t("home.hero.subhead")}
           </motion.p>
 
           <motion.div {...stage(3, reduceMotion)} className={styles.actions}>
-            <LocaleLink href="/play">
+            <LocaleLink
+              href="/play"
+              onMouseEnter={() => playCardHoverSound()}
+              onClick={() => playDifficultySelectSound("HARD")}
+            >
               <Button variant="primary" className={styles.primaryBtn}>
                 <span style={{ marginInlineEnd: "8px" }}>⚔️</span>
                 {isRtl ? "ابدأ النزال واكسب الكاش" : t("home.hero.cta_primary")}
               </Button>
             </LocaleLink>
-            <LocaleLink href="/wallet">
+            <LocaleLink
+              href="/wallet"
+              onMouseEnter={() => playCardHoverSound()}
+              onClick={() => playDifficultySelectSound("MEDIUM")}
+            >
               <Button variant="ghost" className={styles.secondaryBtn}>
                 <span style={{ marginInlineEnd: "8px" }}>💳</span>
                 {isRtl ? "شحن المحفظة فوراً" : "Instant Deposit"}
@@ -301,19 +349,40 @@ export function Hero() {
             </LocaleLink>
           </motion.div>
 
-          {/* Instant Quick-Stake Match Selector (1-Click Cash Action & Net Payout Display) */}
+          {/* Psychological Trust & Conversion Anchors */}
+          <div className={styles.psychologicalTrustBar}>
+            <div className={styles.trustItem}>
+              <span className={styles.trustIcon}>⚡</span>
+              <span>{isRtl ? "سحب فوري تلقائي < 60 ثانية" : "Instant <60s Cashout"}</span>
+            </div>
+            <div className={styles.trustItem}>
+              <span className={styles.trustIcon}>🛡️</span>
+              <span>{isRtl ? "0% حظ • 100% مهارة وتكتيك" : "100% Skill • Zero RNG"}</span>
+            </div>
+            <div className={styles.trustItem}>
+              <span className={styles.trustIcon}>💰</span>
+              <span>{isRtl ? "88% من وعاء النزال للفائز" : "88% Winner Share"}</span>
+            </div>
+            <div className={styles.trustItem}>
+              <span className={styles.trustIcon}>🎁</span>
+              <span>{isRtl ? "بونص ترحيبي 100% على أول إيداع" : "100% Welcome Bonus"}</span>
+            </div>
+          </div>
+
+          {/* Instant Quick-Stake Match Selector (Tactile Cyber-Luxury Cards) */}
           <div className={styles.quickStakeSection}>
             <div className={styles.quickStakeHeader}>
               <div className={styles.quickStakeTitle}>
-                <span>⚡</span>
-                <span>
-                  {isRtl
-                    ? "باقات التحدي السريع (العب واكسب الجائزة فوراً):"
-                    : "Instant Challenge Tiers (Play & win prize immediately):"}
+                <span className={styles.quickStakeTitleBadge}>
+                  <span className={styles.quickStakePulse} />
+                  <span>{isRtl ? "باقات التحدي السريع" : "Instant Challenge Tiers"}</span>
+                </span>
+                <span className={styles.quickStakeTitleText}>
+                  {isRtl ? "اختر رهانك واربح الجائزة فوراً:" : "Select your stake and win cash immediately:"}
                 </span>
               </div>
               <span className={styles.quickStakeSub}>
-                {isRtl ? "سحب الأرباح فوري خلال 60 ثانية ⚡" : "Instant 60s Cash Withdrawal ⚡"}
+                {isRtl ? "تسوية آلية وسحب كاش فوري ⚡" : "Automated Settlement & Instant Cashout ⚡"}
               </span>
             </div>
 
@@ -322,20 +391,26 @@ export function Hero() {
                 <LocaleLink
                   key={qs.stake}
                   href={`/play?stake=${qs.stake}&tier=CASH`}
-                  className={`${styles.quickStakeCard} ${qs.popular ? styles.quickStakeCardPopular : ""}`}
+                  className={`${styles.quickStakeCard} ${qs.themeClass} ${qs.popular ? styles.quickStakeCardPopular : ""}`}
+                  onMouseEnter={() => playCardHoverSound()}
+                  onClick={() => playDifficultySelectSound(qs.soundLevel)}
                   title={isRtl ? `بدء نزال بقيمة ${qs.stake} USDT` : `Start a ${qs.stake} USDT duel`}
                 >
-                  {qs.popular && (
-                    <span className={styles.popularBadge}>
-                      {isRtl ? "🔥 الأكثر طلباً" : "🔥 Most Popular"}
+                  <div className={styles.cardGlowLine} style={{ background: `linear-gradient(90deg, ${qs.accentColor}, transparent)` }} />
+                  <div className={styles.cardTopRow}>
+                    <span
+                      className={qs.popular ? styles.popularBadge : styles.subtleBadge}
+                      style={!qs.popular ? { color: qs.accentColor, borderColor: `${qs.accentColor}55` } : undefined}
+                    >
+                      {isRtl ? qs.badgeAr : qs.badgeEn}
                     </span>
-                  )}
+                  </div>
                   <div className={styles.quickStakeTop}>
                     <span className={styles.stakeAmountVal}>${qs.stake}</span>
                     <span className={styles.stakeAmountCurrency}>USDT</span>
                   </div>
                   <div className={styles.quickStakePrizeBox}>
-                    <span className={styles.prizePrefix}>{isRtl ? "تكسب:" : "Win:"}</span>
+                    <span className={styles.prizePrefix}>{isRtl ? "تكسب صافي:" : "Net Win:"}</span>
                     <span className={styles.prizeNumber}>${qs.prize.toFixed(2)}</span>
                     <span className={styles.prizeCurrency}>USDT</span>
                   </div>
@@ -432,9 +507,11 @@ export function Hero() {
             <button
               type="button"
               className={`${styles.carouselArrow} ${styles.carouselArrowPrev}`}
+              onMouseEnter={() => playCardHoverSound()}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                playCardHoverSound();
                 if (isRtl) nextSlide();
                 else prevSlide();
               }}
@@ -448,9 +525,11 @@ export function Hero() {
             <button
               type="button"
               className={`${styles.carouselArrow} ${styles.carouselArrowNext}`}
+              onMouseEnter={() => playCardHoverSound()}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                playCardHoverSound();
                 if (isRtl) prevSlide();
                 else nextSlide();
               }}
@@ -471,9 +550,11 @@ export function Hero() {
                   aria-selected={idx === currentIdx}
                   aria-label={`${isRtl ? slide.titleAr : slide.titleEn} (${idx + 1}/${SHOWCASE_SLIDES.length})`}
                   className={`${styles.indicatorBar} ${idx === currentIdx ? styles.indicatorBarActive : ""}`}
+                  onMouseEnter={() => playCardHoverSound()}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    playCardHoverSound();
                     setCurrentIdx(idx);
                   }}
                 />
@@ -482,36 +563,44 @@ export function Hero() {
           </div>
         </motion.div>
 
-        {/* Redesigned 4 Luxury Glassmorphic Guarantee Cards (100% Truthful - Zero Cold-Start Flaws) */}
+        {/* Redesigned 4 Luxury Glassmorphic Guarantee Cards */}
         <div className={styles.metricCardsGrid}>
-          {/* Card 1: Instant Matchmaking & AI Ready */}
-          <div className={`${styles.metricCard} ${styles.metricCardEmerald}`}>
+          {/* Card 1: 1v1 Live Human Showdowns */}
+          <div
+            className={`${styles.metricCard} ${styles.metricCardEmerald}`}
+            onMouseEnter={() => playCardHoverSound()}
+          >
+            <div className={styles.cardGlowLine} style={{ background: "linear-gradient(90deg, #10B981, #059669)" }} />
             <div className={styles.metricCardHeader}>
-              <div className={styles.metricIconWrap}>🤖</div>
+              <div className={styles.metricIconWrap}>⚔️</div>
               <span className={styles.metricBadgeLive}>
                 <span className={styles.statPulseDot} />
-                {t("home.hero.guarantees.card_ai_badge") || (isRtl ? "متاح 24/7" : "Active 24/7")}
+                {isRtl ? "ميدان حي 24/7" : "Live Arena 24/7"}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                {t("home.hero.guarantees.card_ai_metric") || (isRtl ? "فوري 24/7" : "Instant 24/7")}
+                {isRtl ? "فوري 24/7" : "Instant 24/7"}
               </div>
               <div className={styles.metricTitle}>
-                {t("home.hero.guarantees.card_ai_title") || (isRtl ? "نزالات فورية وتحدي الحاسوب" : "Instant AI & Member Duels")}
+                {isRtl ? "نزالات حية ومنافسات حقيقية 1v1" : "Live 1v1 Member Showdowns"}
               </div>
               <div className={styles.metricSub}>
-                {t("home.hero.guarantees.card_ai_sub") || (isRtl ? "العب فوراً ضد الذكاء الاصطناعي أو نافس صديقاً برابط مباشر" : "Play AI or challenge friends with zero wait time")}
+                {isRtl ? "نافس لاعبين مهرة من مختلف الدول بتطابق فوري، أو تحدَّ أصدقاءك برابط مباشر" : "Instant matchmaking against active players or challenge friends via direct link"}
               </div>
             </div>
           </div>
 
           {/* Card 2: Instant Automated Cash Payouts */}
-          <div className={`${styles.metricCard} ${styles.metricCardGold}`}>
+          <div
+            className={`${styles.metricCard} ${styles.metricCardGold}`}
+            onMouseEnter={() => playCardHoverSound()}
+          >
+            <div className={styles.cardGlowLine} style={{ background: "linear-gradient(90deg, #F59E0B, #D97706)" }} />
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>⚡</div>
               <span className={styles.metricBadgeOnline}>
-                ⚡ {t("home.hero.guarantees.card_payout_badge") || (isRtl ? "سحب فوري" : "Instant Cashout")}
+                ⚡ {isRtl ? "سحب فوري" : "Instant Cashout"}
               </span>
             </div>
             <div className={styles.metricCardBody}>
@@ -519,20 +608,24 @@ export function Hero() {
                 <bdi dir="ltr">&lt; 60s</bdi>
               </div>
               <div className={styles.metricTitle}>
-                {t("home.hero.guarantees.card_payout_title") || (isRtl ? "سحب كاش فوري وتلقائي" : "Instant Automated Cashout")}
+                {isRtl ? "سحب كاش فوري وتلقائي" : "Instant Automated Cashout"}
               </div>
               <div className={styles.metricSub}>
-                {t("home.hero.guarantees.card_payout_sub") || (isRtl ? "تحويل مباشر لمحفظتك بالـ USDT عبر TRC20 و BEP20" : "Direct to your USDT wallet with zero wait time")}
+                {isRtl ? "سحب مباشر لمحفظتك بالـ USDT (TRC20 / BEP20) أو وسائل الدفع المعتمدة بدون أي انتظار" : "Direct to your USDT wallet with zero waiting time or holds"}
               </div>
             </div>
           </div>
 
           {/* Card 3: 88% Winner Payout Rate */}
-          <div className={`${styles.metricCard} ${styles.metricCardRuby}`}>
+          <div
+            className={`${styles.metricCard} ${styles.metricCardRuby}`}
+            onMouseEnter={() => playCardHoverSound()}
+          >
+            <div className={styles.cardGlowLine} style={{ background: "linear-gradient(90deg, #EC4899, #8B5CF6)" }} />
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>🏆</div>
               <span className={styles.metricBadgePayout}>
-                💎 {t("home.hero.guarantees.card_rate_badge") || (isRtl ? "عمولة 12% فقط" : "12% Platform Fee")}
+                💎 {isRtl ? "عمولة 12% فقط" : "12% Platform Fee"}
               </span>
             </div>
             <div className={styles.metricCardBody}>
@@ -540,31 +633,35 @@ export function Hero() {
                 88%
               </div>
               <div className={styles.metricTitle}>
-                {t("home.hero.guarantees.card_rate_title") || (isRtl ? "حصة الفائز من وعاء النزال" : "Winner's Share of Prize Pool")}
+                {isRtl ? "حصة الفائز من وعاء النزال" : "Winner's Share of Prize Pool"}
               </div>
               <div className={styles.metricSub}>
-                {t("home.hero.guarantees.card_rate_sub") || (isRtl ? "أعلى نسبة توزيع أرباح للاعبين المهرة بالكامل" : "Highest skill gaming payout rate in the region")}
+                {isRtl ? "أعلى نسبة توزيع أرباح للاعبين المهرة؛ الفائز يحصد الجائزة كاملة فور إعلان النتيجة" : "Highest skill gaming payout rate in the region with instant prize credit"}
               </div>
             </div>
           </div>
 
           {/* Card 4: 100% Skill & Zero RNG */}
-          <div className={`${styles.metricCard} ${styles.metricCardCyan}`}>
+          <div
+            className={`${styles.metricCard} ${styles.metricCardCyan}`}
+            onMouseEnter={() => playCardHoverSound()}
+          >
+            <div className={styles.cardGlowLine} style={{ background: "linear-gradient(90deg, #3B82F6, #06B6D4)" }} />
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>🛡️</div>
               <span className={styles.metricBadgeFair}>
-                🔒 {t("home.hero.guarantees.card_fair_badge") || (isRtl ? "تحكيم حتمي 100%" : "100% Provably Fair")}
+                🔒 {isRtl ? "تحكيم حتمي 100%" : "100% Provably Fair"}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                <bdi dir="ltr">{t("home.hero.guarantees.card_fair_metric") || "100% Skill"}</bdi>
+                <bdi dir="ltr">100% {isRtl ? "مهارة" : "Skill"}</bdi>
               </div>
               <div className={styles.metricTitle}>
-                {t("home.hero.guarantees.card_fair_title") || (isRtl ? "مهارة بدون أي صدفة أو حظ" : "Zero Luck, Zero RNG, Anti-Cheat")}
+                {isRtl ? "مهارة بدون أي صدفة أو حظ" : "Zero Luck, Zero RNG, Anti-Cheat"}
               </div>
               <div className={styles.metricSub}>
-                {t("home.hero.guarantees.card_fair_sub") || (isRtl ? "خوادم مشفرة وقواعد حتمية تضمن تكافؤ الفرص" : "Deterministic server verification guarantees integrity")}
+                {isRtl ? "خوادم مشفرة وقواعد حتمية تضمن انتصار الأذكى تكتيكياً بدون أي تحيز" : "Deterministic server verification guarantees integrity and fair play"}
               </div>
             </div>
           </div>

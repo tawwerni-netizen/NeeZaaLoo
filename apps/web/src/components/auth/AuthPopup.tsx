@@ -98,8 +98,17 @@ export function AuthPopup() {
         return;
       }
       setGoogleStarting(false);
-      const reason = e instanceof ApiError ? (e.code ?? "GOOGLE_LOGIN_UNAVAILABLE") : "NETWORK_ERROR";
-      setGoogleErrorKey(authErrorKey(reason));
+      const isUnconfigured = !clientId || (e instanceof ApiError && e.code === "GOOGLE_LOGIN_UNAVAILABLE");
+      if (isUnconfigured) {
+        setGoogleErrorKey(
+          locale === "ar"
+            ? "تسجيل الدخول عبر Google يتطلب تفعيل مفاتيح OAuth (Google Client ID & Secret) في لوحة الاستضافة. يمكنك تسجيل الدخول بالبريد الإلكتروني وكلمة المرور أو برمز التحقق حالياً."
+            : "Google Sign-In requires configuring Google OAuth keys in hosting environment. Please sign in with Email & Password or Email code."
+        );
+      } else {
+        const reason = e instanceof ApiError ? (e.code ?? "GOOGLE_LOGIN_UNAVAILABLE") : "NETWORK_ERROR";
+        setGoogleErrorKey(t(authErrorKey(reason)));
+      }
     }
   }
 

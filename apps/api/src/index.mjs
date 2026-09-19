@@ -23,6 +23,8 @@
  */
 import pg from "pg";
 import { createPgAdapter } from "../../../packages/ledger/src/pg-adapter.mjs";
+import { migrate } from "../../../packages/ledger/src/migrate.mjs";
+import { seedBotsAndFund } from "./bots/seed-bots.mjs";
 import { createAuthService } from "../../../packages/auth/src/service.mjs";
 import { createSettlementService } from "../../../packages/settlement/src/settle.mjs";
 import { createTournamentService } from "../../../packages/tournament/src/tournament.mjs";
@@ -133,6 +135,25 @@ async function main() {
 
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 8) });
   const db = createPgAdapter(pool);
+
+  // Auto-apply pending migrations and seed personas on startup
+  try {
+    const ran = await migrate(db, { log: true });
+    if (ran.length > 0) {
+      logger.emit("db.migrations_applied", { count: ran.length, files: ran });
+      console.log(`[database] Successfully applied ${ran.length} migrations:`, ran);
+    }
+  } catch (err) {
+    logger.emit("db.migration_error", { error: err.message });
+    console.error("[database] Migration error on startup:", err.message);
+  }
+
+  try {
+    const seedResult = await seedBotsAndFund(db);
+    console.log(`[bots] Seeded/updated ${seedResult.totalBots} personas on startup.`);
+  } catch (err) {
+    console.warn("[bots] Seeder warning on startup:", err.message);
+  }
 
   const auth = createAuthService(db, { signingKey, encryptionKey });
   const settlement = createSettlementService(db);

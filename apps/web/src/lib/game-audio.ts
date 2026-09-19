@@ -337,7 +337,7 @@ export function playCardHoverSound() {
   osc.stop(now + 0.035);
 }
 
-export function playDifficultySelectSound(difficulty: "EASY" | "MEDIUM" | "HARD" | "EXPERT") {
+export function playDifficultySelectSound(difficulty: "EASY" | "MEDIUM" | "HARD" | "EXPERT" = "MEDIUM") {
   const ctx = getAudioContext();
   if (!ctx) return;
   const now = ctx.currentTime;

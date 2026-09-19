@@ -21,7 +21,6 @@ export const ALL_GAMES = [
   "checkers",
   "backgammon",
   "dominoes",
-  "billiards",
   "connect-four",
   "gomoku",
   "reversi",
@@ -78,8 +77,10 @@ const ZH_CITIES = [
   { city: "Singapore", country: "Singapore", code: "SG", dialect: "Singlish/Mandarin mix, crisp and efficient" },
 ];
 
-const FIRST_NAMES_AR = ["أحمد", "يوسف", "عمر", "طارق", "كريم", "خالد", "زياد", "حمزة", "ياسين", "فهد", "سعود", "سلطان", "مهدي", "أمين", "بلال", "عثمان", "سامي", "إبراهيم", "مروان", "علي"];
-const LAST_NAMES_AR = ["الشريف", "النجدي", "العتيبي", "السالم", "الفاسي", "البوزيدي", "الخالدي", "الحلبي", "الراوي", "المنصوري", "الكردي", "الشهري", "السعيدي", "الغامدي", "السباعي"];
+const FIRST_NAMES_AR_ROMAN = ["Ahmed", "Youssef", "Omar", "Tariq", "Kareem", "Khaled", "Ziyad", "Hamza", "Yassine", "Fahad", "Saud", "Sultan", "Mehdi", "Amine", "Bilal", "Othman", "Sami", "Ibrahim", "Marwan", "Ali"];
+const LAST_NAMES_AR_ROMAN = ["AlSharif", "AlNajdi", "AlOtaibi", "AlSalem", "AlFassi", "AlBouzidi", "AlKhalidi", "AlHusseini", "AlRawi", "AlMansouri", "AlKurdi", "AlShehri", "AlSaeedi", "AlGhamdi", "AlSebaei"];
+const FIRST_NAMES_AR_NATIVE = ["أحمد", "يوسف", "عمر", "طارق", "كريم", "خالد", "زياد", "حمزة", "ياسين", "فهد", "سعود", "سلطان", "مهدي", "أمين", "بلال", "عثمان", "سامي", "إبراهيم", "مروان", "علي"];
+const LAST_NAMES_AR_NATIVE = ["الشريف", "النجدي", "العتيبي", "السالم", "الفاسي", "البوزيدي", "الخالدي", "الحلبي", "الراوي", "المنصوري", "الكردي", "الشهري", "السعيدي", "الغامدي", "السباعي"];
 
 const FIRST_NAMES_EN = ["James", "Alexander", "David", "Liam", "Lucas", "Noah", "Ethan", "Oliver", "Daniel", "William", "Benjamin", "Henry", "Samuel", "Sebastian", "Jack"];
 const LAST_NAMES_EN = ["Smith", "Johnson", "Williams", "Brown", "Miller", "Davis", "Wilson", "Taylor", "Anderson", "Thomas", "Moore", "Martin", "Clark", "Lewis", "Walker"];
@@ -121,14 +122,19 @@ export function generate600Personas() {
       const fName = firstNames[(i * 7) % firstNames.length];
       const lName = lastNames[(i * 13) % lastNames.length];
       const fullName = `${fName} ${lName}`;
-      const handle = `${fName}_${lName.replace(/\s+/g, "")}_${(i * 17) % 99}`;
+      const cleanFName = fName.replace(/[^A-Za-z0-9]/g, "");
+      const cleanLName = lName.replace(/[^A-Za-z0-9]/g, "");
+      const numSuffix = String((i * 17) % 99 + 1);
+      const maxLen = 23 - numSuffix.length;
+      const baseHandle = `${cleanFName}_${cleanLName}`.slice(0, maxLen);
+      const handle = `${baseHandle}_${numSuffix}`;
       
       // Base ELO range 1600 - 2850
       const baseRating = 1600 + ((i * 47) % 1250);
       const personality = PERSONALITIES[i % PERSONALITIES.length];
       const playStyle = PLAY_STYLES[i % PLAY_STYLES.length];
 
-      // Ratings across all 11 games with realistic variation per game
+      // Ratings across all 10 games with realistic variation per game
       const gameRatings = {};
       for (let gIdx = 0; gIdx < ALL_GAMES.length; gIdx++) {
         const gName = ALL_GAMES[gIdx];
@@ -167,7 +173,7 @@ export function generate600Personas() {
     }
   }
 
-  addLanguageBatch("ar", AR_CITIES, FIRST_NAMES_AR, LAST_NAMES_AR, 100);
+  addLanguageBatch("ar", AR_CITIES, FIRST_NAMES_AR_ROMAN, LAST_NAMES_AR_ROMAN, 100);
   addLanguageBatch("en", EN_CITIES, FIRST_NAMES_EN, LAST_NAMES_EN, 100);
   addLanguageBatch("es", ES_CITIES, FIRST_NAMES_ES, LAST_NAMES_ES, 100);
   addLanguageBatch("fr", FR_CITIES, FIRST_NAMES_FR, LAST_NAMES_FR, 100);

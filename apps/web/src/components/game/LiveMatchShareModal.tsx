@@ -60,7 +60,6 @@ const LANG_CONFIG: Record<
 
 const GAME_EMOJIS: Record<string, string> = {
   chess: "♟️",
-  billiards: "🎱",
   backgammon: "🎲",
   dominoes: "🀄",
   checkers: "⚪",

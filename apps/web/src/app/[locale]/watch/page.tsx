@@ -42,7 +42,6 @@ const WATCH_GAMES = [
   { id: "all", nameEn: "All Games", nameAr: "جميع الألعاب", icon: "🌐" },
   { id: "dominoes", nameEn: "Dominoes", nameAr: "الدومينو", icon: "🀄" },
   { id: "chess", nameEn: "Chess", nameAr: "الشطرنج", icon: "♟️" },
-  { id: "billiards", nameEn: "8-Ball Pool", nameAr: "البلياردو", icon: "🎱" },
   { id: "backgammon", nameEn: "Backgammon", nameAr: "طاولة الزهر", icon: "🎲" },
   { id: "xo", nameEn: "Tic-Tac-Toe", nameAr: "إكس أو", icon: "⚔️" },
   { id: "checkers", nameEn: "Checkers", nameAr: "الداما", icon: "⚪" },

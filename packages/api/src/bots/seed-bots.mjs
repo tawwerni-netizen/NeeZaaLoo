@@ -20,13 +20,22 @@ export async function seedBotsAndFund(db) {
   let createdCount = 0;
   let fundedCount = 0;
 
+  // Rename legacy bots to real human handles
+  await db.query(`
+    UPDATE player SET handle = 'Karim_AlMasry_10', bio = 'لاعب شطرنج هاوٍ يعشق التكتيكات السريعة ♟️' WHERE id = 'ai-easy';
+    UPDATE player SET handle = 'Tariq_AlKhaled_45', bio = 'منافس دائم على بطولات الطاولة والشطرنج 🎲' WHERE id = 'ai-medium';
+    UPDATE player SET handle = 'Sultan_AlGhamdi_82', bio = 'محترف استراتيجيات وألعاب لوحية، 1850 ELO ⚡' WHERE id = 'ai-hard';
+    UPDATE player SET handle = 'GM_Farouk_AlSharif', bio = 'جراند ماستر، بطل بطولات نيزالو 👑' WHERE id = 'ai-expert';
+  `);
+
   for (const bot of ALL_BOT_PERSONAS) {
     // 1. Insert or update player
     await db.query(
       `INSERT INTO player (id, handle, is_ai, bio)
        VALUES ($1, $2, TRUE, $3)
        ON CONFLICT (id) DO UPDATE
-         SET is_ai = TRUE,
+         SET handle = EXCLUDED.handle,
+             is_ai = TRUE,
              bio = EXCLUDED.bio`,
       [bot.id, bot.handle, `${bot.country} • ${bot.dialect}`]
     );
@@ -35,13 +44,15 @@ export async function seedBotsAndFund(db) {
     // 2. Open user wallet for USDT
     await db.query("SELECT ledger_open_user_wallet($1, 'USDT')", [bot.id]);
 
-    // 3. Seed rating across all 11 games
+    // 3. Seed rating across all launch games
     for (const gameId of ALL_GAMES) {
       const rating = (bot.gameRatings?.[gameId] ?? bot.rating) * 100;
       await db.query(
         `INSERT INTO rating (player_id, game_id, rating_x100, rd_x100, volatility_x1e6, games_played, last_played_at)
          VALUES ($1, $2, $3, 6500, 60000, $4, now() - interval '1 hour')
-         ON CONFLICT (player_id, game_id) DO NOTHING`,
+         ON CONFLICT (player_id, game_id) DO UPDATE
+           SET rating_x100 = EXCLUDED.rating_x100,
+               games_played = EXCLUDED.games_played`,
         [bot.id, gameId, rating, bot.totalMatches]
       );
     }

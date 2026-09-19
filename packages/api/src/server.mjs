@@ -2589,7 +2589,9 @@ function buildRoutes() {
             `SELECT r.player_id, p.handle, p.avatar_key, p.selected_badge_code,
                     r.rating_x100, r.rd_x100, r.games_played
                FROM rating r JOIN player p ON p.id = r.player_id
-              WHERE r.game_id = $2 AND (p.is_ai IS FALSE OR p.is_ai IS NULL)
+              WHERE r.game_id = $2
+                AND p.handle NOT LIKE 'ai_%'
+                AND p.handle NOT LIKE 'test_%'
               ORDER BY r.rating_x100 DESC, r.games_played DESC LIMIT $1`, [limit, gameId]
           );
         } else {
@@ -2599,7 +2601,8 @@ function buildRoutes() {
                     COALESCE(SUM(r.games_played), 0)::int AS games_played
                FROM player p
                LEFT JOIN rating r ON r.player_id = p.id
-              WHERE (p.is_ai IS FALSE OR p.is_ai IS NULL)
+              WHERE p.handle NOT LIKE 'ai_%'
+                AND p.handle NOT LIKE 'test_%'
               GROUP BY p.id, p.handle, p.avatar_key, p.selected_badge_code
               ORDER BY rating_x100 DESC, games_played DESC, p.created_at ASC
               LIMIT $1`, [limit]

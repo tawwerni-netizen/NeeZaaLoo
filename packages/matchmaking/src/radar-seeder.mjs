@@ -15,7 +15,6 @@ import { resolveTimeControl } from "../../duel-engine/src/time-profiles.mjs";
 
 const RADAR_GAMES = [
   "chess",
-  "billiards",
   "dominoes",
   "backgammon",
   "checkers",
@@ -81,7 +80,10 @@ export function createRadarSeederWorker(db, { minChallenges = 8, maxChallenges =
         const botRes = await db.query(
           `SELECT p.id, p.handle
              FROM player p
-            WHERE (p.is_ai IS TRUE OR p.id LIKE 'bot_%')
+            WHERE (p.is_ai IS TRUE OR p.id LIKE 'bot_%' OR p.id LIKE 'top_p_%')
+              AND p.handle NOT LIKE 'ai_%'
+              AND p.handle NOT LIKE 'bot_%'
+              AND p.handle NOT LIKE 'test_%'
               AND NOT EXISTS (
                 SELECT 1 FROM lobby_open_challenge c
                  WHERE c.creator_id = p.id AND c.status = 'OPEN' AND c.expires_at > now()
