@@ -143,6 +143,31 @@ function getEnv(childPort) {
 // ---------------------------------------------------------------------------
 const { execSync } = require("node:child_process");
 
+function getInodesForPort(p) {
+  const inodes = new Set();
+  const hexPort = p.toString(16).toUpperCase().padStart(4, "0");
+  for (const file of ["/proc/net/tcp", "/proc/net/tcp6"]) {
+    try {
+      if (!fs.existsSync(file)) continue;
+      const content = fs.readFileSync(file, "utf8");
+      const lines = content.split("\n");
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const parts = line.split(/\s+/);
+        const localAddr = parts[1];
+        if (localAddr && localAddr.toUpperCase().endsWith(":" + hexPort)) {
+          const inode = parts[9];
+          if (inode && inode !== "0") {
+            inodes.add(inode);
+          }
+        }
+      }
+    } catch {}
+  }
+  return inodes;
+}
+
 function freePort(p) {
   if (process.platform === "win32") {
     try {
@@ -155,29 +180,87 @@ function freePort(p) {
         }
       }
     } catch {}
-  } else {
-    try {
-      execSync(`ss -lptn 'sport = :${p}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill -9 2>/dev/null || true`);
-    } catch {}
-    try {
-      execSync(`netstat -tlpn 2>/dev/null | grep ':${p} ' | awk '{print $7}' | cut -d/ -f1 | grep -v '^-$' | xargs -r kill -9 2>/dev/null || true`);
-    } catch {}
-    try {
-      execSync(`fuser -k -9 ${p}/tcp 2>/dev/null || true`);
-    } catch {}
-    try {
-      execSync(`lsof -ti :${p} 2>/dev/null | xargs -r kill -9 2>/dev/null || true`);
-    } catch {}
+    return;
   }
+
+  // Linux: 1. Pure Node /proc inspection via socket inodes
+  try {
+    const inodes = getInodesForPort(p);
+    if (inodes.size > 0 && fs.existsSync("/proc")) {
+      const entries = fs.readdirSync("/proc");
+      for (const entry of entries) {
+        if (!/^\d+$/.test(entry)) continue;
+        const pid = Number(entry);
+        if (pid === process.pid) continue;
+
+        const fdDir = `/proc/${entry}/fd`;
+        try {
+          const fds = fs.readdirSync(fdDir);
+          for (const fd of fds) {
+            try {
+              const link = fs.readlinkSync(`${fdDir}/${fd}`);
+              for (const inode of inodes) {
+                if (link.includes(`[${inode}]`)) {
+                  console.log(`[freePort] Killing PID ${pid} listening on port ${p} (inode ${inode})`);
+                  try { process.kill(pid, "SIGKILL"); } catch {}
+                  break;
+                }
+              }
+            } catch {}
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+
+  // Linux: 2. Fallback shell utilities if available in $PATH
+  try { execSync(`fuser -k -9 ${p}/tcp 2>/dev/null || true`); } catch {}
+  try { execSync(`lsof -ti :${p} 2>/dev/null | xargs -r kill -9 2>/dev/null || true`); } catch {}
+  try { execSync(`ss -lptn 'sport = :${p}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill -9 2>/dev/null || true`); } catch {}
+  try { execSync(`netstat -tlpn 2>/dev/null | grep ':${p} ' | awk '{print $7}' | cut -d/ -f1 | grep -v '^-$' | xargs -r kill -9 2>/dev/null || true`); } catch {}
 }
 
 function cleanupZombies() {
-  if (process.platform !== "win32") {
+  if (process.platform === "win32") return;
+
+  // 1. Pure Node /proc inspection: terminate any stale node processes from previous builds or sub-apps
+  try {
+    if (fs.existsSync("/proc")) {
+      const entries = fs.readdirSync("/proc");
+      for (const entry of entries) {
+        if (!/^\d+$/.test(entry)) continue;
+        const pid = Number(entry);
+        if (pid === process.pid) continue;
+
+        try {
+          const cmdline = fs.readFileSync(`/proc/${entry}/cmdline`, "utf8").replace(/\0/g, " ");
+          const isStale =
+            (cmdline.includes("node") || cmdline.includes("npm")) &&
+            (cmdline.includes("apps/api") ||
+             cmdline.includes("apps/worker") ||
+             cmdline.includes("apps/gateway") ||
+             cmdline.includes("standalone/apps/web") ||
+             cmdline.includes("hbuilds/versions") ||
+             cmdline.includes("packages/api") ||
+             cmdline.includes("server.mjs") ||
+             (cmdline.includes("server.js") && pid !== process.pid));
+
+          if (isStale) {
+            console.log(`[cleanupZombies] Killing stale PID ${pid}: ${cmdline.slice(0, 80)}`);
+            try { process.kill(pid, "SIGKILL"); } catch {}
+          }
+        } catch {}
+      }
+    }
+  } catch (e) {
+    console.warn("[cleanupZombies] /proc scan error:", e.message);
+  }
+
+  // 2. Simple fallback pkill commands (no complex regex syntax)
+  const targets = ["apps/api", "apps/worker", "apps/gateway", "standalone/apps/web", "hbuilds/versions"];
+  for (const t of targets) {
     try {
-      const myPid = process.pid;
-      execSync(`pkill -9 -f "node.*apps/(api|gateway|worker)" 2>/dev/null || true`);
-      execSync(`pkill -9 -f "node.*hostinger/server.js" 2>/dev/null || true`);
-      execSync(`pgrep -f "node.*(apps/|hostinger)" 2>/dev/null | grep -v "^${myPid}$" | xargs -r kill -9 2>/dev/null || true`);
+      execSync(`pkill -9 -f "${t}" 2>/dev/null || true`);
     } catch {}
   }
 }
