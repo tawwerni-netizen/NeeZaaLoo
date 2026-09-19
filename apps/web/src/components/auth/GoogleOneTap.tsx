@@ -23,8 +23,8 @@ export function GoogleOneTap() {
   useEffect(() => {
     let live = true;
     get<{ googleLogin?: string }>("/v1/health")
-      .then((res) => { if (live) setGoogleAvailable(res?.googleLogin === "configured"); })
-      .catch(() => { if (live) setGoogleAvailable(false); });
+      .then((res) => { if (live) setGoogleAvailable(res?.googleLogin === "configured" || !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID); })
+      .catch(() => { if (live) setGoogleAvailable(!!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID); });
     return () => { live = false; };
   }, []);
 

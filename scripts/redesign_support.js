@@ -1,4 +1,18 @@
+const fs = require('fs');
+let tsx = fs.readFileSync('apps/web/src/app/[locale]/support/page.tsx', 'utf8');
 
+tsx = tsx.replace(
+  '<h1 className={styles.title}>{t("support.my_tickets_title")}</h1>',
+  '<h1 className={styles.title}><span className={styles.titleIcon}>🎫</span> {t("support.my_tickets_title")}</h1>'
+);
+tsx = tsx.replace(
+  '<p className={styles.empty}>{t("support.no_tickets")}</p>',
+  '<div className={styles.emptyState}><span className={styles.emptyIcon}>💬</span><p className={styles.emptyText}>{t("support.no_tickets")}</p></div>'
+);
+
+fs.writeFileSync('apps/web/src/app/[locale]/support/page.tsx', tsx);
+
+const css = `
 .wrap {
   max-width: 800px;
   margin: 0 auto;
@@ -107,3 +121,6 @@
 .open { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
 .closed { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
 .resolved { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+`;
+
+fs.writeFileSync('apps/web/src/app/[locale]/support/support.module.css', css);

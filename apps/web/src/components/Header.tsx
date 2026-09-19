@@ -37,41 +37,13 @@ export function Header() {
   const reduceMotion = useReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const PRIMARY_NAV: NavItem[] = [
-    { 
-      label: locale === "ar" ? "العب" : "Play", 
-      icon: "🎮",
-      items: [
-        { href: "/play", label: locale === "ar" ? "الميدان الحي" : "Live Arena", icon: "⚔️" },
-        { href: "/games", label: locale === "ar" ? "الألعاب" : "Games", icon: "🎲" },
-      ]
-    },
-    { 
-      label: locale === "ar" ? "المنافسات" : "Competitions", 
-      icon: "🏆",
-      items: [
-        { href: "/tournaments", label: locale === "ar" ? "البطولات" : "Tournaments", icon: "🏆" },
-        { href: "/rank", label: locale === "ar" ? "المتصدرين" : "Leaderboard", icon: "👑" },
-      ]
-    },
-    { 
-      label: locale === "ar" ? "المجتمع" : "Community", 
-      icon: "💬",
-      items: [
-        { href: "/chat", label: locale === "ar" ? "الدردشة العامة" : "Global Chat", icon: "💬" },
-        { href: "/fair-play", label: locale === "ar" ? "النزاهة والأمان" : "Fair Play", icon: "🛡️" },
-        { href: "/learn", label: locale === "ar" ? "الأكاديمية" : "Academy", icon: "📖" },
-        { href: "/support", label: locale === "ar" ? "الدعم الفني" : "Support", icon: "❓" },
-      ]
-    },
-    { 
-      label: locale === "ar" ? "الخزنة" : "Vault", 
-      icon: "💎",
-      items: [
-        { href: "/wallet", label: locale === "ar" ? "المحفظة" : "Wallet", icon: "💎" },
-        { href: "/referrals", label: locale === "ar" ? "نظام الإحالة" : "Referrals", icon: "🎁" },
-      ]
-    }
+  const PRIMARY_NAV = [
+    { href: "/play", label: locale === "ar" ? "الميدان" : "Arena", icon: "⚔️" },
+    { href: "/games", label: locale === "ar" ? "الألعاب" : "Games", icon: "🎲" },
+    { href: "/tournaments", label: locale === "ar" ? "البطولات" : "Tournaments", icon: "🏆" },
+    { href: "/clans", label: locale === "ar" ? "العشائر" : "Clans", icon: "🛡️" },
+    { href: "/rank", label: locale === "ar" ? "التصنيف" : "Rank", icon: "👑" },
+    { href: "/wallet", label: locale === "ar" ? "المحفظة" : "Wallet", icon: "💎" },
   ];
 
   const isActive = (href: string) => pathname === `/${locale}${href}`;

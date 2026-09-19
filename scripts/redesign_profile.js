@@ -1,4 +1,6 @@
+const fs = require('fs');
 
+const css = `
 .wrap {
   min-height: 100vh;
   padding: 40px 20px;
@@ -279,3 +281,6 @@
   .nickname { justify-content: center; flex-wrap: wrap; }
   .expContainer { margin: 16px auto 0; }
 }
+`;
+
+fs.writeFileSync('apps/web/src/app/[locale]/profile/profile.module.css', css);

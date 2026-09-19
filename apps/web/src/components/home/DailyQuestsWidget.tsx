@@ -24,14 +24,7 @@ export function DailyQuestsWidget() {
   const [quests, setQuests] = useState<Challenge[] | null>(null);
 
   useEffect(() => {
-    if (!player) {
-      // Mock quests for guests
-      setQuests([
-        { code: "GUEST_1", metric: "WIN_FREE_MATCHES", gameId: null, progress: 1, target: 3, expReward: 100, completed: false },
-        { code: "GUEST_2", metric: "PLAY_RATED_MATCH", gameId: null, progress: 0, target: 1, expReward: 50, completed: false },
-      ]);
-      return;
-    }
+    if (!player) { setQuests([]); return; }
     
     let cancelled = false;
     get<{ challenges: Challenge[] }>("/v1/me/daily-challenges")
@@ -66,7 +59,7 @@ export function DailyQuestsWidget() {
             {quests === null ? (
                <p style={{ color: "var(--nz-text-2)" }}>Loading quests...</p>
             ) : quests.length === 0 ? (
-               <p style={{ color: "var(--nz-text-2)" }}>No daily quests available right now.</p>
+               {player ? <p style={{ color: "var(--nz-text-2)" }}>{locale === "ar" ? "لا توجد مهام متاحة الآن." : "No daily quests available right now."}</p> : <p style={{ color: "var(--nz-text-2)" }}>{locale === "ar" ? "قم بتسجيل الدخول لرؤية مهامك اليومية." : "Log in to see your daily quests."}</p>}
             ) : quests.map((quest) => (
               <motion.div 
                 key={quest.code} 

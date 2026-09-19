@@ -35,7 +35,7 @@ function SupportContent() {
   return (
     <div className={styles.wrap}>
       <div className={styles.headerRow}>
-        <h1 className={styles.title}>{t("support.my_tickets_title")}</h1>
+        <h1 className={styles.title}><span className={styles.titleIcon}>🎫</span> {t("support.my_tickets_title")}</h1>
         <LocaleLink href="/support/new">
           <Button variant="primary">{t("support.new_ticket_cta")}</Button>
         </LocaleLink>
@@ -45,7 +45,7 @@ function SupportContent() {
         <div className={styles.card} />
       ) : tickets.length === 0 ? (
         <div className={styles.card}>
-          <p className={styles.empty}>{t("support.no_tickets")}</p>
+          <div className={styles.emptyState}><span className={styles.emptyIcon}>💬</span><p className={styles.emptyText}>{t("support.no_tickets")}</p></div>
         </div>
       ) : (
         tickets.map((ticket) => (

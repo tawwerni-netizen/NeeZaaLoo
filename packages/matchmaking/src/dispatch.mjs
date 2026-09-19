@@ -109,7 +109,7 @@ export function createDispatchWorker(db, {
       // in hand is correct without a second load.
     }
 
-    await store.markLive(duel);
+    // DO NOT markLive here! Gateway will do it when both clients connect.
     return { duelId, outcome: DispatchOutcome.LIVE, players: duel.players, gameId: duel.gameId };
   }
 

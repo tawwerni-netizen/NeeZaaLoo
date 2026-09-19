@@ -17,7 +17,7 @@ import {
   createRateLimiter, takeToken,
 } from "./protocol.mjs";
 import {
-  runIntent, resign, offerDraw, declineDraw, acceptDraw,
+  start, runIntent, resign, offerDraw, declineDraw, acceptDraw,
   claimTimeout, DuelState, serializeReplay, replayHash, projectClock,
 } from "../../duel-engine/src/duel.mjs";
 import { globalChannelId, isChannelOpenForWrites } from "../../chat/src/channels.mjs";
