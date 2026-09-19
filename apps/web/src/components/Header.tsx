@@ -69,7 +69,7 @@ export function Header() {
                 {group.label}
               </span>
               <div className={styles.navDropdown}>
-                {group.items?.map((item) => (
+                {(group as any).items?.map((item: any) => (
                   <LocaleLink key={item.href} href={item.href} className={styles.navDropdownItem}>
                     {item.icon && <span className={styles.dropdownIcon}>{item.icon}</span>}
                     {item.label}
@@ -267,7 +267,7 @@ export function Header() {
                   <div key={i} className={styles.mobileNavGroupWrapper}>
                     <div className={styles.mobileNavGroupTitle}>{group.label}</div>
                     <div className={styles.mobileNavGroupItems}>
-                      {group.items?.map((item, j) => (
+                      {(group as any).items?.map((item: any, j: any) => (
                         <LocaleLink
                           key={item.href}
                           href={item.href}

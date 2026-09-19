@@ -59,7 +59,7 @@ export function DailyQuestsWidget() {
             {quests === null ? (
                <p style={{ color: "var(--nz-text-2)" }}>Loading quests...</p>
             ) : quests.length === 0 ? (
-               {player ? <p style={{ color: "var(--nz-text-2)" }}>{locale === "ar" ? "لا توجد مهام متاحة الآن." : "No daily quests available right now."}</p> : <p style={{ color: "var(--nz-text-2)" }}>{locale === "ar" ? "قم بتسجيل الدخول لرؤية مهامك اليومية." : "Log in to see your daily quests."}</p>}
+               player ? <p style={{ color: "var(--nz-text-2)" }}>{locale === "ar" ? "لا توجد مهام متاحة الآن." : "No daily quests available right now."}</p> : <p style={{ color: "var(--nz-text-2)" }}>{locale === "ar" ? "قم بتسجيل الدخول لرؤية مهامك اليومية." : "Log in to see your daily quests."}</p>
             ) : quests.map((quest) => (
               <motion.div 
                 key={quest.code} 
