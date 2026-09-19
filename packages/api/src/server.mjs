@@ -2755,7 +2755,7 @@ function buildRoutes() {
              FROM tournament t
             WHERE t.visibility = 'PUBLIC'
               AND ($1::text[] IS NULL OR t.status::text = ANY($1::text[]))
-            ORDER BY t.created_at DESC LIMIT 100`,
+            ORDER BY t.created_at DESC LIMIT 250`,
           [statuses.length ? statuses : null]
         );
         return { body: { tournaments: r.rows } };

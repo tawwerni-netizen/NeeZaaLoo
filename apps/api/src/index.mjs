@@ -28,6 +28,8 @@ import { seedBotsAndFund } from "./bots/seed-bots.mjs";
 import { createAuthService } from "../../../packages/auth/src/service.mjs";
 import { createSettlementService } from "../../../packages/settlement/src/settle.mjs";
 import { createTournamentService } from "../../../packages/tournament/src/tournament.mjs";
+import { createAutomatedTournamentEngine } from "../../../packages/tournament/src/automated-engine.mjs";
+import { createTournamentBotFiller } from "../../../packages/tournament/src/bot-filler.mjs";
 import { createGlobalSkillService } from "../../../packages/global-skill/src/service.mjs";
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
 import { createRailService } from "../../../packages/payments/src/valuation.mjs";
@@ -180,6 +182,65 @@ async function main() {
   }
   const emailServiceInstance = createEmailService({ provider: emailProvider });
   const tournament = createTournamentService(db, { emailService: emailServiceInstance });
+
+  // Initialize automated tournament engine on API startup
+  const automatedTournamentEngine = createAutomatedTournamentEngine(db, tournament);
+  try {
+    const tourRes = await automatedTournamentEngine.tick();
+    if (tourRes.spawned?.length > 0) {
+      console.log(`[tournaments] Automated engine spawned ${tourRes.spawned.length} open tournaments across all active games.`);
+    }
+  } catch (err) {
+    console.warn("[tournaments] Engine startup tick warning:", err.message);
+  }
+
+  const tournamentBotFiller = createTournamentBotFiller(db, tournament, {
+    fillIntervalMs: 0,
+    reservedSeats: 2,
+    maxWaitMs: 600000,
+  });
+  try {
+    const fillRes = await tournamentBotFiller.tick();
+    if (fillRes.filled > 0) {
+      console.log(`[tournaments] Tournament bot filler registered ${fillRes.filled} personas on startup.`);
+    }
+  } catch (err) {
+    console.warn("[tournaments] Bot filler startup warning:", err.message);
+  }
+
+  // Pre-seed 6 to 8 bot participants in open FREE tournaments to ensure vibrant lobbies
+  try {
+    const openFree = await db.query(
+      `SELECT t.id, t.game_id,
+              (SELECT count(*)::int FROM tournament_registration tr WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS reg_count
+         FROM tournament t
+        WHERE t.status = 'REGISTRATION' AND t.tier = 'FREE'`
+    );
+    for (const t of openFree.rows) {
+      if (t.reg_count < 6) {
+        const needed = 8 - t.reg_count;
+        const bots = await db.query(
+          `SELECT p.id, COALESCE(r.rating_x100, 180000) AS rating_x100
+             FROM player p
+             LEFT JOIN rating r ON r.player_id = p.id AND r.game_id = $1
+            WHERE p.is_ai = TRUE AND p.id LIKE 'bot_%'
+              AND NOT EXISTS (SELECT 1 FROM tournament_registration tr WHERE tr.tournament_id = $2 AND tr.player_id = p.id)
+            ORDER BY random()
+            LIMIT $3`,
+          [t.game_id, t.id, needed]
+        );
+        for (const b of bots.rows) {
+          await tournament.register({
+            tournamentId: t.id,
+            playerId: b.id,
+            ratingX100: Number(b.rating_x100),
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[tournaments] Free tournament initial seed warning:", err.message);
+  }
   const emailVerification = createEmailVerificationFlow(db, { emailChallenge, emailIdentity, emailService: emailServiceInstance });
   const welcomeEmail = createWelcomeEmailFlow(db, { emailService: emailServiceInstance });
   const emailLoginCode = createEmailLoginCodeFlow(db, { emailChallenge, emailIdentity, emailService: emailServiceInstance });

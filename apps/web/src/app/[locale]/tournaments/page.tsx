@@ -536,7 +536,9 @@ function TournamentsList() {
               <div className={styles.metricContent}>
                 <div className={styles.metricValue}>
                   <bdi className="nz-num">
-                    {`+$${Math.floor(siteStats.totalPrizesUsd).toLocaleString("en-US")} USDT`}
+                    {siteStats.totalPrizesUsd > 0
+                      ? `+$${Math.floor(siteStats.totalPrizesUsd).toLocaleString("en-US")} USDT`
+                      : texts.metric1Val}
                   </bdi>
                 </div>
                 <div className={styles.metricTitle}>{texts.metric1Title}</div>

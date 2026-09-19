@@ -339,7 +339,7 @@ describe("Global Skill Score API", () => {
       "INSERT INTO game (id, display_name, plugin_version, is_live) VALUES ('speed-math','Speed Math',1,TRUE) ON CONFLICT DO NOTHING"
     );
     await db.query(
-      "INSERT INTO rating (player_id, game_id, rating_x100, rd_x100, games_played) VALUES ('ply2','speed-math',160000,5000,20)"
+      "INSERT INTO rating (player_id, game_id, rating_x100, rd_x100, games_played) VALUES ('ply2','speed-math',350000,5000,20) ON CONFLICT (player_id, game_id) DO UPDATE SET rating_x100 = 350000"
     );
     const r = await req("GET", "/v1/leaderboard?game=speed-math", { token: await tokenFor("ply1") });
     assert.equal(r.status, 200);
