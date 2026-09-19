@@ -322,6 +322,7 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
         {step.name === "difficulty" && (
           <DifficultySelect
             plugin={plugin}
+            gameName={gameName}
             onSelect={(d) => {
               if (d !== "EASY" && !player) {
                 openPopup();

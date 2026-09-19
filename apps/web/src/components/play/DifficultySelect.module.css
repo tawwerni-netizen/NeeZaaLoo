@@ -1,11 +1,411 @@
-.heading {
-  font-size: var(--nz-text-2xl);
-  padding-block: var(--nz-space-10) var(--nz-space-8);
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-block: var(--nz-space-6) var(--nz-space-12);
+  animation: fadeIn 0.35s ease-out;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.header {
+  margin-bottom: var(--nz-space-8);
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #E2E8F0;
+  margin-bottom: 12px;
+}
+
+.badgePulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+  animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+.heading {
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  color: #F8FAFC;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.gameHighlight {
+  color: #60A5FA;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #94A3B8;
+  margin: 0;
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+/* Grid */
 .grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: var(--nz-space-8);
+}
+
+@media (max-width: 1120px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* Card Base */
+.card {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--nz-space-4);
-  padding-bottom: var(--nz-space-16);
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 20px;
+  padding: 22px 18px;
+  background: linear-gradient(180deg, rgba(24, 32, 52, 0.8) 0%, rgba(13, 17, 28, 0.95) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease,
+              background 0.25s ease;
+  overflow: hidden;
+  user-select: none;
+}
+
+.card:focus-visible {
+  outline: 2px solid #60A5FA;
+  outline-offset: 4px;
+}
+
+.cardGlowLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  opacity: 0.85;
+  transition: height 0.2s ease, opacity 0.2s ease;
+}
+
+.card:hover .cardGlowLine {
+  height: 5px;
+  opacity: 1;
+}
+
+/* Card Themes */
+.cardEasy .cardGlowLine {
+  background: linear-gradient(90deg, #10B981, #059669);
+}
+.cardEasy:hover {
+  transform: translateY(-7px);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 18px 40px rgba(16, 185, 129, 0.22);
+}
+.cardEasy .ctaButton {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34D399;
+}
+.cardEasy:hover .ctaButton {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+}
+
+.cardMedium .cardGlowLine {
+  background: linear-gradient(90deg, #3B82F6, #2563EB);
+}
+.cardMedium:hover {
+  transform: translateY(-7px);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 18px 40px rgba(59, 130, 246, 0.22);
+}
+.cardMedium .ctaButton {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  color: #60A5FA;
+}
+.cardMedium:hover .ctaButton {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: #FFFFFF;
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+}
+
+.cardHard .cardGlowLine {
+  background: linear-gradient(90deg, #8B5CF6, #7C3AED);
+}
+.cardHard:hover {
+  transform: translateY(-7px);
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 18px 40px rgba(139, 92, 246, 0.22);
+}
+.cardHard .ctaButton {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.3) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  color: #A78BFA;
+}
+.cardHard:hover .ctaButton {
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  color: #FFFFFF;
+  box-shadow: 0 6px 18px rgba(139, 92, 246, 0.4);
+}
+
+.cardExpert .cardGlowLine {
+  background: linear-gradient(90deg, #F59E0B, #EF4444);
+}
+.cardExpert:hover {
+  transform: translateY(-7px);
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 18px 45px rgba(245, 158, 11, 0.28);
+}
+.cardExpert .ctaButton {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(239, 68, 68, 0.3) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #FBBF24;
+}
+.cardExpert:hover .ctaButton {
+  background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%);
+  color: #FFFFFF;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+}
+
+/* Card Elements */
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.cardBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #F1F5F9;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+}
+
+.eloPill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #CBD5E1;
+  font-family: var(--nz-font-mono, monospace);
+  margin-inline-start: auto;
+}
+
+.cardHero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.iconCircle {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.card:hover .iconCircle {
+  transform: scale(1.08);
+}
+
+.emojiIcon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0 0 2px 0;
+  letter-spacing: -0.01em;
+}
+
+.cardTier {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
+.cardDesc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #CBD5E1;
+  margin: 0 0 16px 0;
+  min-height: 48px;
+}
+
+.specsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.specItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.specIcon {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.specText {
+  font-size: 12px;
+  color: #E2E8F0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Card Footer */
+.cardFooter {
+  margin-top: auto;
+}
+
+.ctaButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ctaArrow {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+:global([dir="rtl"]) .card:hover .ctaArrow {
+  transform: translateX(-4px);
+}
+
+:global([dir="ltr"]) .card:hover .ctaArrow {
+  transform: translateX(4px);
+}
+
+.guestNote {
+  text-align: center;
+  font-size: 11px;
+  color: #F59E0B;
+  font-weight: 600;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* Footer Tip */
+.footerTip {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.tipIcon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tipText {
+  font-size: 13px;
+  color: #94A3B8;
+  line-height: 1.6;
+}
+
+.tipText strong {
+  color: #E2E8F0;
 }
