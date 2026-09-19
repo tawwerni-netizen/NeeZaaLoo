@@ -24,7 +24,7 @@
 import pg from "pg";
 import { createPgAdapter } from "../../../packages/ledger/src/pg-adapter.mjs";
 import { migrate } from "../../../packages/ledger/src/migrate.mjs";
-import { seedBotsAndFund } from "./bots/seed-bots.mjs";
+import { seedBotsAndFund } from "../../../packages/api/src/bots/seed-bots.mjs";
 import { createAuthService } from "../../../packages/auth/src/service.mjs";
 import { createSettlementService } from "../../../packages/settlement/src/settle.mjs";
 import { createTournamentService } from "../../../packages/tournament/src/tournament.mjs";
