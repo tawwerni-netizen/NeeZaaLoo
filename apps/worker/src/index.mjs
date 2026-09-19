@@ -71,7 +71,12 @@ async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("DATABASE_URL is required");
 
-  const pool = new Pool({ connectionString: databaseUrl, max: Number(process.env.DB_POOL_SIZE || 4) });
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    max: Number(process.env.DB_POOL_SIZE || 3),
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 5000,
+  });
   const db = createPgAdapter(pool);
 
   // LOCAL (a developer's own terminal) wants readable output; every other

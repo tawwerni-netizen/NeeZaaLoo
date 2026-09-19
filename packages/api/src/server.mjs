@@ -256,10 +256,15 @@ export function createApi({
   async function loadControls() {
     const t = now();
     if (controlCache.value && t - controlCache.at < controlCacheMs) return controlCache.value;
-    const r = await db.query("SELECT key, control_enabled(key) AS on FROM platform_control");
-    const value = Object.fromEntries(r.rows.map((x) => [x.key, x.on]));
-    controlCache = { at: t, value };
-    return value;
+    try {
+      const r = await db.query("SELECT key, control_enabled(key) AS on FROM platform_control");
+      const value = Object.fromEntries(r.rows.map((x) => [x.key, x.on]));
+      controlCache = { at: t, value };
+      return value;
+    } catch (err) {
+      if (controlCache.value) return controlCache.value;
+      return {};
+    }
   }
 
   /** Resolve the caller. An absent or bad token means an anonymous actor. */

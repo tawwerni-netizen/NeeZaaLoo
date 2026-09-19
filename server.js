@@ -133,20 +133,43 @@ function getEnv(childPort) {
     OXAPAY_MERCHANT_API_KEY: process.env.OXAPAY_MERCHANT_API_KEY || "",
     OXAPAY_PAYOUT_API_KEY:   process.env.OXAPAY_PAYOUT_API_KEY || "",
     OXAPAY_CALLBACK_URL:     process.env.OXAPAY_CALLBACK_URL || "https://nizalo.com/v1/payments/oxapay/webhook",
+    DB_POOL_SIZE:            process.env.DB_POOL_SIZE || "3",
   });
 }
 
 // ---------------------------------------------------------------------------
 // Process Management (Hardened for Hostinger Cloud / cGroup Process Quotas)
 // ---------------------------------------------------------------------------
+const { execSync } = require("node:child_process");
+
+function freePort(p) {
+  if (process.platform === "win32") {
+    try {
+      const out = execSync(`netstat -ano | findstr :${p}`, { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] });
+      for (const line of out.split("\n")) {
+        const parts = line.trim().split(/\s+/);
+        const pid = parts[parts.length - 1];
+        if (pid && pid !== "0" && pid !== String(process.pid)) {
+          try { execSync(`taskkill /F /PID ${pid} >nul 2>&1`); } catch {}
+        }
+      }
+    } catch {}
+  } else {
+    try { execSync(`fuser -k -9 ${p}/tcp 2>/dev/null || true`); } catch {}
+    try { execSync(`lsof -ti :${p} | xargs kill -9 2>/dev/null || true`); } catch {}
+  }
+}
+
 const children = {};
-const crashTrackers = {};
+let isShuttingDown = false;
 
 function startProcess(name, script, childPort, customCwd) {
   let failures = 0;
   let lastCrash = 0;
 
   function launch() {
+    if (isShuttingDown) return;
+    freePort(childPort);
     console.log(`[${name}] Spawning on port ${childPort}...`);
     try {
       const baseEnv = name === "Next.js"
@@ -172,6 +195,7 @@ function startProcess(name, script, childPort, customCwd) {
         cwd: customCwd || here,
         env: childEnv,
         stdio: "inherit",
+        detached: process.platform !== "win32",
       });
 
       child.on("error", (err) => {
@@ -179,6 +203,7 @@ function startProcess(name, script, childPort, customCwd) {
       });
 
       child.on("exit", (code, signal) => {
+        if (isShuttingDown) return;
         const now = Date.now();
         if (now - lastCrash > 60000) {
           failures = 0; // Reset count if stable for > 60s
@@ -186,8 +211,11 @@ function startProcess(name, script, childPort, customCwd) {
         lastCrash = now;
         failures++;
 
+        // Free port cleanly before attempting restart
+        freePort(childPort);
+
         // Exponential backoff to prevent fork storms
-        const delay = failures <= 2 ? 2000 : failures <= 4 ? 5000 : failures <= 6 ? 10000 : 30000;
+        const delay = failures <= 2 ? 1500 : failures <= 4 ? 4000 : failures <= 6 ? 8000 : 20000;
         console.warn(`[${name}] Exited (code=${code}, signal=${signal}). Crash count: ${failures}. Restarting in ${delay / 1000}s...`);
         setTimeout(launch, delay);
       });
@@ -200,17 +228,31 @@ function startProcess(name, script, childPort, customCwd) {
   launch();
 }
 
+// Clean any leftover ports before boot
+[nextPort, apiPort, gwPort, 4001].forEach(freePort);
+
 startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
 startProcess("API",     apiScript,    apiPort);
 startProcess("Gateway", gwScript,     gwPort);
 startProcess("Worker",  workerScript, 4001);
 
 function shutdown() {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
   console.log("Shutting down all child processes...");
   Object.keys(children).forEach((k) => {
-    try { if (children[k]) children[k].kill('SIGKILL'); } catch (e) {}
+    try {
+      const child = children[k];
+      if (child) {
+        if (process.platform !== "win32" && child.pid) {
+          try { process.kill(-child.pid, "SIGKILL"); } catch {}
+        }
+        child.kill("SIGKILL");
+      }
+    } catch (e) {}
   });
-  process.exit(0);
+  [nextPort, apiPort, gwPort, 4001].forEach(freePort);
+  setTimeout(() => process.exit(0), 150);
 }
 process.on("SIGINT",  shutdown);
 process.on("SIGTERM", shutdown);

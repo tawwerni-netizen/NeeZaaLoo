@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
         subject: payload.sub || payload.id,
         name: payload.name || payload.given_name || payload.email.split("@")[0],
       }),
+      signal: AbortSignal.timeout(8000),
     }).catch(() => null);
 
     if (!syncRes || !syncRes.ok) {
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
           subject: payload.sub || payload.id,
           name: payload.name || payload.given_name || payload.email.split("@")[0],
         }),
+        signal: AbortSignal.timeout(8000),
       }).catch(() => null);
     }
 

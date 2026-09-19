@@ -79,6 +79,7 @@ export async function GET(request: Request) {
         subject: profile.id || profile.sub,
         name: profile.name,
       }),
+      signal: AbortSignal.timeout(8000),
     }).catch(() => null);
 
     if (!syncRes || !syncRes.ok) {
@@ -90,6 +91,7 @@ export async function GET(request: Request) {
           subject: profile.id || profile.sub,
           name: profile.name,
         }),
+        signal: AbortSignal.timeout(8000),
       }).catch(() => null);
     }
 

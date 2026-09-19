@@ -28,13 +28,6 @@ import { seedBotsAndFund } from "../../../packages/api/src/bots/seed-bots.mjs";
 import { createAuthService } from "../../../packages/auth/src/service.mjs";
 import { createSettlementService } from "../../../packages/settlement/src/settle.mjs";
 import { createTournamentService } from "../../../packages/tournament/src/tournament.mjs";
-import { createAutomatedTournamentEngine } from "../../../packages/tournament/src/automated-engine.mjs";
-import { createTournamentBotFiller } from "../../../packages/tournament/src/bot-filler.mjs";
-import { createTournamentSweep } from "../../../packages/tournament/src/sweep.mjs";
-import { createLiveArenaSimulator } from "../../../packages/matchmaking/src/live-arena-simulator.mjs";
-import { createRadarSeederWorker } from "../../../packages/matchmaking/src/radar-seeder.mjs";
-import { createBotMatchSimulator } from "../../../packages/matchmaking/src/bot-simulator.mjs";
-import { createTickLoop } from "../../../packages/bootstrap/src/index.mjs";
 import { createGlobalSkillService } from "../../../packages/global-skill/src/service.mjs";
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
 import { createRailService } from "../../../packages/payments/src/valuation.mjs";
@@ -140,7 +133,12 @@ async function main() {
   const signingKey = loadOrGenerateKey("AUTH_SIGNING_KEY_B64", { bytes: 32, logger });
   const encryptionKey = loadOrGenerateKey("AUTH_ENCRYPTION_KEY_B64", { bytes: 32, logger });
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 4) });
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: Number(process.env.DB_POOL_SIZE || 3),
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 5000,
+  });
   const db = createPgAdapter(pool);
 
   // Auto-apply pending migrations and seed personas asynchronously in background
@@ -187,74 +185,6 @@ async function main() {
   }
   const emailServiceInstance = createEmailService({ provider: emailProvider });
   const tournament = createTournamentService(db, { emailService: emailServiceInstance });
-
-  // Initialize automated tournament engine asynchronously in background
-  const automatedTournamentEngine = createAutomatedTournamentEngine(db, tournament);
-  const tournamentBotFiller = createTournamentBotFiller(db, tournament, {
-    fillIntervalMs: 0,
-    reservedSeats: 2,
-    maxWaitMs: 600000,
-  });
-
-  (async () => {
-    try {
-      const tourRes = await automatedTournamentEngine.tick();
-      if (tourRes.spawned?.length > 0) {
-        console.log(`[tournaments] Automated engine spawned ${tourRes.spawned.length} open tournaments.`);
-      }
-    } catch (err) {
-      console.warn("[tournaments] Engine startup tick warning:", err.message);
-    }
-
-    try {
-      const fillRes = await tournamentBotFiller.tick();
-      if (fillRes.filled > 0) {
-        console.log(`[tournaments] Tournament bot filler registered ${fillRes.filled} personas.`);
-      }
-    } catch (err) {
-      console.warn("[tournaments] Bot filler startup warning:", err.message);
-    }
-  })().catch((err) => console.error("[tournaments] Background startup error:", err.message));
-
-  // 24/7 Bot Duels, Radar Seeder & Continuous Tournament Background Loops
-  const automatedTournamentLoop = createTickLoop(() => automatedTournamentEngine.tick(), {
-    intervalMs: Number(process.env.AUTOMATED_TOURNAMENT_INTERVAL_MS || 5000),
-  });
-  automatedTournamentLoop.start();
-
-  const tournamentBotFillerLoop = createTickLoop(() => tournamentBotFiller.tick(), {
-    intervalMs: Number(process.env.TOURNAMENT_BOT_FILLER_INTERVAL_MS || 10000),
-  });
-  tournamentBotFillerLoop.start();
-
-  const tournamentSweep = createTournamentSweep(db, tournament, settlement);
-  const tournamentSweepLoop = createTickLoop(() => tournamentSweep.sweepAll(), {
-    intervalMs: Number(process.env.TOURNAMENT_SWEEP_INTERVAL_MS || 3000),
-  });
-  tournamentSweepLoop.start();
-
-  const liveArenaSimulator = createLiveArenaSimulator(db, { emit: logger.emit });
-  const liveArenaSimulatorLoop = createTickLoop(() => liveArenaSimulator(), {
-    intervalMs: Number(process.env.LIVE_ARENA_SIMULATOR_INTERVAL_MS || 5000),
-  });
-  liveArenaSimulatorLoop.start();
-
-  const radarSeeder = createRadarSeederWorker(db, { emit: logger.emit });
-  const radarSeederLoop = createTickLoop(() => radarSeeder(), {
-    intervalMs: Number(process.env.RADAR_SEEDER_INTERVAL_MS || 5000),
-  });
-  radarSeederLoop.start();
-
-  const settlementSweepLoop = createTickLoop(() => settlement.settleDue(), {
-    intervalMs: Number(process.env.SETTLEMENT_SWEEP_INTERVAL_MS || 3000),
-  });
-  settlementSweepLoop.start();
-
-  const botMatchSimulator = createBotMatchSimulator(db, { emit: logger.emit });
-  const botSimulatorLoop = createTickLoop(() => botMatchSimulator(), {
-    intervalMs: Number(process.env.BOT_SIMULATOR_INTERVAL_MS || 60000),
-  });
-  botSimulatorLoop.start();
 
   const emailVerification = createEmailVerificationFlow(db, { emailChallenge, emailIdentity, emailService: emailServiceInstance });
   const welcomeEmail = createWelcomeEmailFlow(db, { emailService: emailServiceInstance });
@@ -497,13 +427,6 @@ async function main() {
     logger,
     gracefulShutdownMs: Number(process.env.GRACEFUL_SHUTDOWN_MS || 10000),
     stop: async () => {
-      automatedTournamentLoop.stop();
-      tournamentBotFillerLoop.stop();
-      tournamentSweepLoop.stop();
-      liveArenaSimulatorLoop.stop();
-      radarSeederLoop.stop();
-      settlementSweepLoop.stop();
-      botSimulatorLoop.stop();
       await Promise.all([api.close(), obs.stop(), chatBus.close()]);
       await pool.end();
     },
