@@ -1,0 +1,25 @@
+- [ ] 1. Active Match Notification: Add 'Resign' (استسلام) button next to 'Return to Match'.
+- [ ] 2. Game Speed & UX: 
+  - [ ] Reduce AI think time (currently ~1.5s - 2s).
+  - [ ] Hide 'Waiting for opponent' when it's the user's turn.
+- [ ] 3. In-Game Icons Overflow: Fix CSS on mobile so icons (sound, theme, etc.) wrap or scroll.
+- [ ] 4. UX Simplicity: Make the flow from landing to playing simpler.
+- [ ] 5. Game Move Lag: Reduce latency in game moves (AI delay + frontend optimistic updates if possible).
+- [ ] 6. Tournaments Seed Data: Randomize player counts (e.g. 5/16, 12/16) instead of all being 8/16.
+- [ ] 7. Guest Accounts: Re-evaluate Guest UX. Do not show them as logged-in users with a 'Guest_XYZ' handle. Make it seamless.
+- [ ] 8. Live Arena Bots: 
+  - [ ] Investigate why bots timeout (1-0). Does gateway simulate bot-vs-bot matches?
+  - [ ] Verify my previous UI changes applied (the user likely took screenshots before my commit).
+- [ ] 9. Live Arena Title: Change 'الساحة المباشرة' to 'بث المباريات الحية' and improve UI further if needed.
+- [ ] 10. Tournaments UI & Images: Generate 5 professional images and redesign the Upcoming Tournaments section.
+- [ ] 11. Tournaments 'None Scheduled' Error: Fix the query or logic causing this message.
+- [ ] 12. Rank Page: 
+  - [ ] Fix initial loading state to not show 'No one here'.
+  - [ ] Randomize bot ELOs instead of all being 2900.
+- [ ] 13. Global Skill Page: Redesign with a banner and psychological hooks.
+- [ ] 14. Learn Page: Redesign for better conversion and attractiveness.
+- [ ] 15. Mobile Language Switcher: Add a prominent language toggle on mobile.
+- [ ] 16. Profile Page: Fix loading error and redesign.
+- [ ] 17. Referrals Page Error: Fix the API failing to load details.
+- [ ] 18. Referrals Page Redesign: Redesign for better conversion.
+- [ ] 19. Admin Dashboard: Fix 'Could not load the dashboard (INTERNAL)' error.

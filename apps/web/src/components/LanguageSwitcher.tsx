@@ -15,11 +15,12 @@ function pathWithoutLocale(pathname: string): string {
 }
 
 interface LanguageSwitcherProps {
+  variant?: "full" | "compact";
   dropDirection?: "down" | "up";
   onSelect?: () => void;
 }
 
-export function LanguageSwitcher({ dropDirection = "down", onSelect }: LanguageSwitcherProps = {}) {
+export function LanguageSwitcher({ dropDirection = "down", onSelect, variant = "full" }: LanguageSwitcherProps = {}) {
   const { locale, t } = useI18n();
   const { player, setLocale } = useAuth();
   const router = useRouter();
@@ -90,7 +91,7 @@ export function LanguageSwitcher({ dropDirection = "down", onSelect }: LanguageS
         <span className={styles.flagIcon} aria-hidden="true">
           <FlagIcon locale={currentLocale.code} className={styles.flagSvg} />
         </span>
-        <span className={styles.langName}>{currentLocale.nativeName}</span>
+        {variant !== "compact" && <span className={styles.langName}>{currentLocale.nativeName}</span>}
         <span className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ""}`} aria-hidden="true">
           ▾
         </span>
@@ -130,3 +131,4 @@ export function LanguageSwitcher({ dropDirection = "down", onSelect }: LanguageS
     </div>
   );
 }
+

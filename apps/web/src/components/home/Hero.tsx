@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { get } from "@/lib/api";
 import { listGames } from "@/lib/games";
 import { playCardHoverSound, playDifficultySelectSound } from "@/lib/game-audio";
+import { HeroParticles } from "./HeroParticles";
 import styles from "./Hero.module.css";
 
 const FEATURED_COUNT = 6;
@@ -305,6 +306,7 @@ export function Hero() {
 
   return (
     <section className={styles.hero} dir={isRtl ? "rtl" : "ltr"}>
+      <HeroParticles />
       <div className={`nz-container ${styles.container}`}>
         {/* Top Hero Statement / Copy Zone */}
         <div className={styles.headerZone}>

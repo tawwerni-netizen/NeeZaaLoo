@@ -13,8 +13,8 @@
  * either; its card in ModeSelect links straight into the standalone
  * /tournaments surface.
  */
-import { use, useState } from "react";
-import { useRouter } from "next/navigation";
+import { use, useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MatchmakingFlow } from "@/components/matchmaking/MatchmakingFlow";
@@ -47,16 +47,27 @@ type Step =
   | { name: "friend"; stake: StakeChoice }
   | { name: "matchmaking"; stake: StakeChoice };
 
-export default function PlayGamePage({ params }: { params: Promise<{ gameId: string }> }) {
+function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) {
   const { gameId } = use(params);
   const { t, locale, dir } = useI18n();
   const { player } = useAuth();
   const { openPopup } = useAuthPopup();
   const isRtl = dir === "rtl";
   const router = useRouter();
+  const searchParams = useSearchParams();
   const plugin = getGame(gameId);
 
-  const [step, setStep] = useState<Step>({ name: "mode" });
+  const [step, setStep] = useState<Step>(() => {
+    const tier = searchParams.get("tier");
+    const stake = searchParams.get("stake");
+    if (tier === "CASH" && stake && !isNaN(Number(stake))) {
+      return {
+        name: "matchmaking",
+        stake: { tier: "CASH", stakeMinor: String(Number(stake) * 1_000_000), asset: "USDT" },
+      };
+    }
+    return { name: "mode" };
+  });
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [dominoesVariant, setDominoesVariant] = useState<"TRADITIONAL" | "AMERICAN">("TRADITIONAL");
   const [creating, setCreating] = useState(false);
@@ -381,3 +392,13 @@ export default function PlayGamePage({ params }: { params: Promise<{ gameId: str
     </>
   );
 }
+
+
+export default function PlayGamePage(props: { params: Promise<{ gameId: string }> }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InnerPlayGamePage {...props} />
+    </Suspense>
+  );
+}
+

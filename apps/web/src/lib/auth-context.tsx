@@ -12,7 +12,7 @@ function readCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1] ?? "") : null;
 }
 
-type Player = { id: string; handle: string; locale: SupportedLocale; created_at: string; isAdmin?: boolean };
+type Player = { id: string; handle: string; locale: SupportedLocale; created_at: string; isAdmin?: boolean; isGuest?: boolean };
 
 type AuthState = {
   player: Player | null;
@@ -51,6 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       const me = await get<Player>("/v1/me");
+      if (me?.handle?.startsWith("Guest_")) {
+        me.isGuest = true;
+      }
       setPlayer(me);
     } catch (err) {
       // Only clear tokens if the backend explicitly rejected the credentials

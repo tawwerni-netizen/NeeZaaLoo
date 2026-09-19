@@ -260,21 +260,21 @@ export function DuelShell({ duelId }: { duelId: string }) {
             <span className={connected ? styles.live : styles.offline}>{connectionLabel}</span>
             {isSpectator && (
               <>
-                <span className={styles.spectatorBadge} title="مشاهدة فقط بدون تدخل في سير اللعب">
-                  👁️ {locale === "ar" ? "مشاهدة مباشرة (قراءة فقط)" : "Live Spectator (Read-Only)"}
+                <span className={styles.spectatorBadge} title="مشاهد مباشر (قراءة فقط)">
+                  👁️ {locale === "ar" ? "مشاهد مباشر (قراءة فقط)" : "Live Spectator (Read-Only)"}
                 </span>
                 {duelMeta?.winnerCash != null && duelMeta.winnerCash > 0 && (
-                  <span className={styles.spectatorPrizeBadge} title="جائزة الرابح الصافية بعد خصم عمولة المنصة">
+                  <span className={styles.spectatorPrizeBadge} title="الجائزة النقدية للفائز">
                     <span className={styles.prizePulseDot} />
-                    ⚡ {locale === "ar" ? `جائزة الفائز: $${duelMeta.winnerCash.toFixed(2)} USDT كاش` : `Winner Cash: $${duelMeta.winnerCash.toFixed(2)} USDT`}
+                    💰 {locale === "ar" ? `الجائزة النقدية: $${duelMeta.winnerCash.toFixed(2)} USDT` : `Winner Cash: $${duelMeta.winnerCash.toFixed(2)} USDT`}
                   </span>
                 )}
               </>
             )}
-            {!vsComputer && opponentSeat !== null && connectedSeats && !opponentConnected && !completed && (
-              <span className={styles.waitingBadge} title="في انتظار دخول الطرف الثاني للمبارزة">
+            {!vsComputer && opponentSeat !== null && !completed && clock?.toMove === opponentSeat && (
+              <span className={styles.waitingBadge} title="في انتظار الخصم ليلعب">
                 <span className={styles.waitingDot} />
-                {locale === "ar" ? "في انتظار الخصم..." : "Waiting for opponent..."}
+                {locale === "ar" ? "في انتظار لعب الخصم..." : "Waiting for opponent's move..."}
               </span>
             )}
           </span>

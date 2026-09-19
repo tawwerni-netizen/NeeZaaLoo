@@ -63,15 +63,18 @@ const { Pool } = pg;
 
 async function main() {
   requireEnv(["DATABASE_URL"]);
-
   const sink = process.env.LOG_FORMAT === "pretty" ? createConsoleSink() : createStructuredLogSink();
   const logger = createLogger({ service: "gateway", sink });
   const metrics = createMetricsRegistry();
 
   const signingKey = loadOrGenerateKey("AUTH_SIGNING_KEY_B64", { bytes: 32, logger });
   const encryptionKey = loadOrGenerateKey("AUTH_ENCRYPTION_KEY_B64", { bytes: 32, logger });
+  if (!process.env.DATABASE_URL) {
+    logger.emit("system.error", { msg: "DATABASE_URL is required" });
+    process.exit(1);
+  }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 20) });
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 8) });
   const db = createPgAdapter(pool);
 
   const auth = createAuthService(db, { signingKey, encryptionKey });

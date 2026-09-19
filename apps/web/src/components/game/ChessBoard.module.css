@@ -101,12 +101,20 @@
   max-width: 580px;
   margin-bottom: 4px;
   padding: 0 4px;
+  flex-wrap: nowrap;
 }
 
 .themeSelector {
   display: flex;
   align-items: center;
   gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  /* Hide scrollbar for cleaner look */
+  scrollbar-width: none;
+}
+.themeSelector::-webkit-scrollbar {
+  display: none;
 }
 
 .themeBtn {

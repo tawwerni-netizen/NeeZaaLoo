@@ -175,12 +175,16 @@ export function Header() {
                 <span className={styles.chatIcon}>💬</span>
               </LocaleLink>
               <NotificationCenter />
+              <LanguageSwitcher variant="compact" />
             </>
           ) : (
-            <LocaleLink href="/play" className={styles.mobileHeaderPlayBtn}>
-              <span>⚔️</span>
-              <span>{t("nav.play_now")}</span>
-            </LocaleLink>
+            <>
+              <LocaleLink href="/play" className={styles.mobileHeaderPlayBtn}>
+                <span>⚔️</span>
+                <span>{t("nav.play_now")}</span>
+              </LocaleLink>
+              <LanguageSwitcher variant="compact" />
+            </>
           )}
 
           <button

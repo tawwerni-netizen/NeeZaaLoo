@@ -104,11 +104,44 @@ export function ActiveMatchBanner() {
           </div>
         </div>
 
-        <LocaleLink href={`/game/${activeDuel.id}`} className={styles.returnBtn}>
-          <span>{isAr ? "العودة للمباراة" : "Return to Match"}</span>
-          <span aria-hidden="true">→</span>
-        </LocaleLink>
+        <div className={styles.actionButtons}>
+          <ResignButton duelId={activeDuel.id} isAr={isAr} onResigned={() => setActiveDuel(null)} />
+          <LocaleLink href={`/game/${activeDuel.id}`} className={styles.returnBtn}>
+            <span>{isAr ? "العودة للمباراة" : "Return to Match"}</span>
+            <span aria-hidden="true">→</span>
+          </LocaleLink>
+        </div>
       </div>
     </div>
+  );
+}
+
+import { useDuelSocket } from "@/lib/use-duel-socket";
+
+function ResignButton({ duelId, isAr, onResigned }: { duelId: string; isAr: boolean; onResigned: () => void }) {
+  const { resign, connected } = useDuelSocket(duelId);
+  const [confirming, setConfirming] = useState(false);
+
+  if (confirming) {
+    return (
+      <button
+        onClick={() => {
+          if (connected && resign) {
+            resign();
+            onResigned();
+          }
+        }}
+        className={styles.resignBtnConfirm}
+        disabled={!connected}
+      >
+        {isAr ? "تأكيد الإستسلام" : "Confirm Resign"}
+      </button>
+    );
+  }
+
+  return (
+    <button onClick={() => setConfirming(true)} className={styles.resignBtn}>
+      {isAr ? "إستسلام" : "Resign"}
+    </button>
   );
 }

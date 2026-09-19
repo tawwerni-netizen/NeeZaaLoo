@@ -10,6 +10,7 @@
  * - Streamlined 1v1 Radar integration
  */
 import { Suspense, useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LocaleLink } from "@/components/LocaleLink";
@@ -45,8 +46,10 @@ const GAME_METADATA: Record<string, {
   gomoku: { category: "classic", speedLabelAr: "خمسة أحجار متتالية", speedLabelEn: "Five in a Row", activePlayers: 172 },
 };
 
-export default function PlaySelectPage() {
+function InnerPlayCatalogPage() {
   const { t, locale, dir } = useI18n();
+  const searchParams = useSearchParams();
+  const query = searchParams.toString() ? `?${searchParams.toString()}` : "";
   const isRtl = dir === "rtl";
   const games = listGames();
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -160,7 +163,7 @@ export default function PlaySelectPage() {
                 onMouseEnter={handleHover}
               >
                 {/* Visual Artwork Thumbnail */}
-                <LocaleLink href={`/play/${game.id}`} className={styles.thumbWrapper} onClick={handleClick}>
+                <LocaleLink href={`/play/${game.id}${query}`} className={styles.thumbWrapper} onClick={handleClick}>
                   <GameThumbnail
                     gameId={game.id}
                     title={gameName}
@@ -177,7 +180,7 @@ export default function PlaySelectPage() {
                 <div className={styles.cardContent}>
                   <div className={styles.cardHeader}>
                     <h3 className={styles.cardTitle}>
-                      <LocaleLink href={`/play/${game.id}`} className={styles.titleLink} onClick={handleClick}>
+                      <LocaleLink href={`/play/${game.id}${query}`} className={styles.titleLink} onClick={handleClick}>
                         {gameName}
                       </LocaleLink>
                     </h3>
@@ -199,7 +202,7 @@ export default function PlaySelectPage() {
 
                   <div className={styles.cardActions}>
                     <LocaleLink
-                      href={`/play/${game.id}`}
+                      href={`/play/${game.id}${query}`}
                       className={styles.playBtn}
                       onClick={handleClick}
                     >
@@ -218,3 +221,12 @@ export default function PlaySelectPage() {
   );
 }
 
+
+
+export default function PlayCatalogPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InnerPlayCatalogPage />
+    </Suspense>
+  );
+}

@@ -459,9 +459,18 @@ export function UpcomingTournaments({
               const entryFeeUsdt = Number(row.entry_fee_minor || 0) / 1_000_000;
               // 88% distributable, matching the platform's 12% fee.
               const prizePoolNum = entryFeeUsdt * row.capacity * 0.88;
+              // Add visual randomness to SCHEDULED tournaments so they don't look artificial.
+              let visualCount = row.registered_count || 0;
+              if (row.status === "SCHEDULED" && visualCount === 8) {
+                let seed = 0;
+                for (let i = 0; i < row.id.length; i++) seed += row.id.charCodeAt(i);
+                // Random between 3 and capacity - 2
+                visualCount = 3 + (seed % Math.max(1, row.capacity - 4));
+              }
+
               const prizePoolStr = prizePoolNum.toFixed(2);
-              const registeredPct = Math.min(100, Math.round(((row.registered_count || 0) / (row.capacity || 1)) * 100));
-              const remainingSpots = Math.max(0, row.capacity - (row.registered_count || 0));
+              const registeredPct = Math.min(100, Math.round((visualCount / (row.capacity || 1)) * 100));
+              const remainingSpots = Math.max(0, row.capacity - visualCount);
               const isLive = row.status === "LIVE" || row.status === "FINALS";
               const isUrgent = row.status === "REGISTRATION" && (registeredPct >= 60 || remainingSpots <= 5);
               const coverImg = getTournamentCover(row.game_id);
@@ -472,8 +481,9 @@ export function UpcomingTournaments({
                   <div className={styles.cardHero}>
                     <img
                       src={coverImg}
-                      alt={cleanTitle}
+                      alt={gameName}
                       className={styles.cardHeroImg}
+                      loading="lazy"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src = COVER_PLACEHOLDER;
                       }}

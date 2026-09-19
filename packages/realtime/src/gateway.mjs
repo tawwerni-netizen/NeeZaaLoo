@@ -103,11 +103,12 @@ export function createGateway({
   // and fixed rather than derived from the bot's own remaining clock time:
   // simplicity over squeezing every legal millisecond out of a time
   // scramble, which is not a case this platform needs to optimise for.
-  aiThinkMs = 1200,
+  // How long the engine spends evaluating the board (if ai-hard/expert/invincible).
+  aiThinkMs = 500,
   // A small, fixed pause before a bot's move is submitted, purely so the
   // opponent's client has a moment to render the position before the
   // reply lands -- an instantaneous bot move reads as broken, not strong.
-  aiMoveDelayMs = 750,
+  aiMoveDelayMs = 200,
   // The Fair Play Engine (packages/fairplay) -- optional, like `chat` and
   // `metrics` above: a caller that omits it (most existing tests) simply
   // gets no signal recording at all, exactly the prior behaviour. When
