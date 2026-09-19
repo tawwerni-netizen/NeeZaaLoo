@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { ease } from "@/lib/motion";
 import { useVisualSettings } from "./TableEnvironment";
+import { playPencilMarkSound, playFourInARowSound } from "@/lib/game-audio";
 import styles from "./XOBoard.module.css";
 
 const LINES: readonly (readonly [number, number, number])[] = [
@@ -95,27 +96,39 @@ export function XOBoard({ board, lastMove, legalCells, mySeat, canMove, onMove }
   const winLine = useMemo(() => winningLine(board, lastMove), [board, lastMove]);
   const winSet = useMemo(() => new Set(winLine ?? []), [winLine]);
 
+  useEffect(() => {
+    if (winLine) {
+      playFourInARowSound();
+    }
+  }, [winLine]);
+
   return (
     <div className={styles.wrap}>
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
-        <div className={styles.titaniumFrame}>
-          <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>
-            {board.map((mark, cell) => {
-              const isLegal = mark === 0 && (legalCells.length === 0 || legalCells.includes(cell));
-              const isNewest = lastMove === cell;
+        <div className={styles.chalkboardFrame} dir="ltr">
+          <div className={styles.chalkGrid} role="grid" aria-label={t("game.move_history")}>
+            {Array.from({ length: 9 }).map((_, cell) => {
+              const mark = board[cell] ?? 0;
+              const isLegal = legalCells.includes(cell);
               const isWinning = winSet.has(cell);
-              const isPreview = hoverCell === cell && mark === 0 && isLegal;
+              const isNewest = lastMove === cell;
+              const isHovered = hoverCell === cell;
+              const isPreview = isHovered && isLegal && mark === 0;
 
               return (
                 <button
                   key={cell}
                   type="button"
                   role="gridcell"
-                  aria-label={`${t("game.move_history")} ${cell}`}
-                  className={[styles.cell, isWinning ? styles.winningCell : ""].join(" ")}
+                  className={[
+                    styles.cell,
+                    isLegal && canMove ? styles.cellLegal : "",
+                    isWinning ? styles.cellWinning : "",
+                  ].join(" ")}
                   disabled={!canMove || !isLegal}
                   onClick={() => {
                     if (canMove && isLegal) {
+                      playPencilMarkSound();
                       setHoverCell(null);
                       onMove(cell);
                     }

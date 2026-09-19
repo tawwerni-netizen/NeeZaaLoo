@@ -21,7 +21,7 @@ type LiveMatch = {
 };
 
 const POLL_MS = 10000;
-const PREVIEW_LIMIT = 3;
+const PREVIEW_LIMIT = 6;
 
 export function LiveArenaSection() {
   const { t, dir } = useI18n();

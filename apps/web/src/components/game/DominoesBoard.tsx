@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import { useVisualSettings } from "./TableEnvironment";
+import { playDominoTileClickSound } from "@/lib/game-audio";
 import styles from "./DominoesBoard.module.css";
 
 type Tile = [number, number];
@@ -103,10 +104,12 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
     const ends = legalEndsFor(tile, line);
     if (ends.length === 0) return;
     if (ends[0] === "ANY") {
+      playDominoTileClickSound();
       onMove({ tile });
       return;
     }
     if (ends.length === 1) {
+      playDominoTileClickSound();
       onMove({ tile, end: ends[0] as "LEFT" | "RIGHT" });
       return;
     }
@@ -119,6 +122,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
       e.preventDefault();
     }
     if (!selected) return;
+    playDominoTileClickSound();
     onMove({ tile: selected, end });
     setSelected(null);
   }

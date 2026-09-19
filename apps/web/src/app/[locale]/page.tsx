@@ -1,4 +1,5 @@
 import { Header } from "@/components/Header";
+import { LiveWinnersTicker } from "@/components/home/LiveWinnersTicker";
 import { Hero } from "@/components/home/Hero";
 import { LiveArenaSection } from "@/components/home/LiveArenaSection";
 import { LandingTournaments } from "@/components/home/LandingTournaments";
@@ -15,6 +16,7 @@ export default function LandingPage() {
   return (
     <>
       <Header />
+      <LiveWinnersTicker />
       <main>
         <Hero />
         <LiveArenaSection />

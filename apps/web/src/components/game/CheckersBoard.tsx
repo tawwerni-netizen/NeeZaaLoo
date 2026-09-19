@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { useVisualSettings } from "./TableEnvironment";
+import { playCheckersMoveSound, playCheckersJumpSound, playKingCrownedSound } from "@/lib/game-audio";
 import styles from "./CheckersBoard.module.css";
 
 const FILES = "abcdefgh";
@@ -118,11 +119,27 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
     const sq = squareLabel(row, col);
 
     if (forcedFrom) {
-      if (destinationsFromSelected.has(sq)) onMove(`${forcedFrom}${sq}`);
+      if (destinationsFromSelected.has(sq)) {
+        if (isJumpDestination(forcedFrom, sq)) {
+          playCheckersJumpSound();
+        } else {
+          playCheckersMoveSound();
+        }
+        onMove(`${forcedFrom}${sq}`);
+      }
       return;
     }
 
     if (selected && destinationsFromSelected.has(sq)) {
+      const isJump = isJumpDestination(selected, sq);
+      const isCoronation = (mySeat === 0 && sq[1] === "8") || (mySeat === 1 && sq[1] === "1");
+      if (isCoronation) {
+        playKingCrownedSound();
+      } else if (isJump) {
+        playCheckersJumpSound();
+      } else {
+        playCheckersMoveSound();
+      }
       onMove(`${selected}${sq}`);
       setSelected(null);
       return;

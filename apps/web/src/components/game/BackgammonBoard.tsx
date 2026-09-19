@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import { useVisualSettings } from "./TableEnvironment";
+import { playDiceRollSound, playCheckerSlideSound, playCheckerHitSound } from "@/lib/game-audio";
 import styles from "./BackgammonBoard.module.css";
 
 type LegalAction = { from: number | "BAR"; die: number; to: number | "OFF" };
@@ -99,11 +100,25 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
     return v > 0 ? { seat: 0, count: v } : { seat: 1, count: -v };
   }
 
+  const prevDiceRef = useRef<string>("");
+  useEffect(() => {
+    const diceStr = (dice || []).join(",");
+    if (diceStr && diceStr !== prevDiceRef.current) {
+      playDiceRollSound();
+    }
+    prevDiceRef.current = diceStr;
+  }, [dice]);
+
   function handlePointClick(idx: number) {
     if (!canMove || !legalActions) return;
-    const { seat } = pointOwnerAndCount(idx);
+    const { seat, count } = pointOwnerAndCount(idx);
     const dest = destinationsFromSelected.get(String(idx));
     if (selected !== null && dest) {
+      if (seat !== null && mySeat !== null && seat !== mySeat && count === 1) {
+        playCheckerHitSound();
+      } else {
+        playCheckerSlideSound();
+      }
       onMove({ from: selected, die: dest.die });
       setSelected(null);
       return;
@@ -124,6 +139,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
     if (!canMove || selected === null) return;
     const dest = destinationsFromSelected.get("OFF");
     if (dest) {
+      playCheckerSlideSound();
       onMove({ from: selected, die: dest.die });
       setSelected(null);
     }

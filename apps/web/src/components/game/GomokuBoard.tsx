@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { ease } from "@/lib/motion";
 import { useVisualSettings } from "./TableEnvironment";
+import { playGomokuStoneSound, playFourInARowSound } from "@/lib/game-audio";
 import styles from "./GomokuBoard.module.css";
 
 const SIZE = 15;
@@ -81,6 +82,12 @@ export function GomokuBoard({ board, lastMove, legalCells, mySeat, canMove, onMo
   const winLine = useMemo(() => winningLine(board, lastMove), [board, lastMove]);
   const winSet = useMemo(() => new Set(winLine ?? []), [winLine]);
 
+  useEffect(() => {
+    if (winLine && winLine.length >= 5) {
+      playFourInARowSound();
+    }
+  }, [winLine]);
+
   return (
     <div className={styles.wrap}>
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
@@ -99,21 +106,21 @@ export function GomokuBoard({ board, lastMove, legalCells, mySeat, canMove, onMo
             {/* Brass Hoshi Star Points */}
             {STAR_POINTS.map((idx) => (
               <span
-                key={`star-${idx}`}
+                key={idx}
                 className={styles.starPoint}
-                style={{ left: `${((idx % SIZE) + 0.5) * (100 / SIZE)}%`, top: `${(Math.floor(idx / SIZE) + 0.5) * (100 / SIZE)}%` }}
+                style={{ left: `${(((idx % SIZE) + 0.5) * 100) / SIZE}%`, top: `${((Math.floor(idx / SIZE) + 0.5) * 100) / SIZE}%` }}
                 aria-hidden="true"
               />
             ))}
 
-            {/* 5-in-a-row Victory Ray */}
-            {winLine && winLine.length > 0 && (
-              <svg className={styles.winOverlay} viewBox="0 0 15 15" preserveAspectRatio="none" aria-hidden="true">
+            {/* 5-in-a-Row Golden Laser Line */}
+            {winLine && (
+              <svg className={styles.winLaserSvg} viewBox="0 0 15 15" preserveAspectRatio="none" aria-hidden="true">
                 <defs>
                   <linearGradient id="gomoku-win-gold" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#FFF" />
-                    <stop offset="50%" stopColor="#FF5A2B" />
-                    <stop offset="100%" stopColor="#F6D365" />
+                    <stop offset="50%" stopColor="#F6D365" />
+                    <stop offset="100%" stopColor="#FDA085" />
                   </linearGradient>
                 </defs>
                 <motion.line
@@ -150,6 +157,7 @@ export function GomokuBoard({ board, lastMove, legalCells, mySeat, canMove, onMo
                   disabled={!canMove || !isLegal}
                   onClick={() => {
                     if (canMove && isLegal) {
+                      playGomokuStoneSound();
                       setHoverCell(null);
                       onMove(cell);
                     }

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { useVisualSettings } from "./TableEnvironment";
+import { playSeegaMoveSound, playSeegaCaptureSound } from "@/lib/game-audio";
 import styles from "./SeegaBoard.module.css";
 
 const BOARD_SIZE = 5;
@@ -71,11 +72,15 @@ export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, 
     if (!canMove) return;
 
     if (phase === "PLACEMENT") {
-      if (legalPlacements.includes(idx)) onMove({ place: idx });
+      if (legalPlacements.includes(idx)) {
+        playSeegaMoveSound();
+        onMove({ place: idx });
+      }
       return;
     }
 
     if (selected !== null && destinationsFromSelected.has(idx)) {
+      playSeegaMoveSound();
       onMove({ from: selected, to: idx });
       setSelected(null);
       return;

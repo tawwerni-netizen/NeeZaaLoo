@@ -1,0 +1,336 @@
+﻿.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 9, 15, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  position: relative;
+  background: linear-gradient(180deg, #111827 0%, #0b0f17 100%);
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 30px rgba(255, 215, 0, 0.12);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 520px;
+  padding: 24px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.94); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 14px;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shareIconPulse {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(16, 185, 129, 0.2));
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.modalTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(90deg, #ffd700 0%, #fff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modalSubtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 2px 0 0 0;
+}
+
+.closeBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.15s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.matchSummaryCard {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.matchGameBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gameIcon {
+  font-size: 22px;
+}
+
+.gameTitle {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.playersVs {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vsBadge {
+  color: #ffd700;
+  font-weight: 800;
+  font-size: 0.75rem;
+}
+
+.liveTag {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.langSelectorRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.langLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.langTabs {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.langTab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.langTab:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.langTabActive {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(16, 185, 129, 0.25));
+  border-color: #ffd700;
+  color: #ffd700;
+  font-weight: 700;
+}
+
+.messagePreviewBox {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 110px;
+  overflow-y: auto;
+}
+
+.socialGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.socialBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  text-decoration: none;
+  color: #fff;
+}
+
+.btnWhatsapp {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.25);
+}
+
+.btnWhatsapp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.4);
+}
+
+.btnTelegram {
+  background: linear-gradient(135deg, #229ED9 0%, #0088cc 100%);
+  box-shadow: 0 4px 14px rgba(34, 158, 217, 0.25);
+}
+
+.btnTelegram:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(34, 158, 217, 0.4);
+}
+
+.btnTwitter {
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.btnTwitter:hover {
+  background: #111;
+  border-color: rgba(255, 255, 255, 0.45);
+  transform: translateY(-2px);
+}
+
+.btnFacebook {
+  background: linear-gradient(135deg, #1877F2 0%, #0e5aab 100%);
+  box-shadow: 0 4px 14px rgba(24, 119, 242, 0.25);
+}
+
+.btnFacebook:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(24, 119, 242, 0.4);
+}
+
+.copyLinkRow {
+  display: flex;
+  gap: 8px;
+}
+
+.urlInput {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.copyBtn {
+  background: linear-gradient(135deg, #ffd700 0%, #f59e0b 100%);
+  color: #0b0f17;
+  border: none;
+  border-radius: 9px;
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.copyBtn:hover {
+  background: #ffe033;
+  transform: translateY(-1px);
+}
+
+.copyBtnCopied {
+  background: #10b981;
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .langTabs {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .socialGrid {
+    grid-template-columns: 1fr;
+  }
+}

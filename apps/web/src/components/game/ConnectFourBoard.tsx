@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { ease } from "@/lib/motion";
 import { useVisualSettings } from "./TableEnvironment";
+import { playChipDropSound, playFourInARowSound } from "@/lib/game-audio";
 import styles from "./ConnectFourBoard.module.css";
 
 const COLS = 7, ROWS = 6;
@@ -86,6 +87,12 @@ export function ConnectFourBoard({ board, turn, lastMove, legalColumns, canMove,
   );
   const winSet = useMemo(() => new Set((winLine ?? []).map(([r, c]) => `${r}-${c}`)), [winLine]);
 
+  useEffect(() => {
+    if (winLine && winLine.length >= 4) {
+      playFourInARowSound();
+    }
+  }, [winLine]);
+
   const previewRow = useMemo(() => {
     if (hoverCol === null || !legalColumns.includes(hoverCol)) return null;
     for (let r = 0; r < ROWS; r++) if (board[r]?.[hoverCol] === 0) return r;
@@ -108,6 +115,7 @@ export function ConnectFourBoard({ board, turn, lastMove, legalColumns, canMove,
               onClick={() => {
                 if (canMove && isLegal) {
                   setHoverCol(null);
+                  playChipDropSound(previewRow ?? 0);
                   onMove(col);
                 }
               }}

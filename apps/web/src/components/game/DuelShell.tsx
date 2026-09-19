@@ -19,6 +19,7 @@ import { PlayerStrip } from "@/components/game/PlayerStrip";
 import { ResultCeremony } from "@/components/game/ResultCeremony";
 import { TableEnvironmentProvider } from "@/components/game/TableEnvironment";
 import { GameVisualSettings } from "@/components/game/GameVisualSettings";
+import { LiveMatchShareModal } from "@/components/game/LiveMatchShareModal";
 import { getGame } from "@/lib/games";
 import { get, post } from "@/lib/api";
 import { playUndoSound } from "@/lib/chess-audio";
@@ -49,6 +50,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const [connectedSeats, setConnectedSeats] = useState<[boolean, boolean] | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const [completedInfo, setCompletedInfo] = useState<{
     completed: boolean;
     result: string | null;
@@ -235,7 +237,11 @@ export function DuelShell({ duelId }: { duelId: string }) {
         <div className={styles.statusBar}>
           <span className={styles.statusGroup}>
             <span className={connected ? styles.live : styles.offline}>{connectionLabel}</span>
-            {isSpectator && <span className={styles.spectatorBadge}>{t("game.spectating")}</span>}
+            {isSpectator && (
+              <span className={styles.spectatorBadge} title="مشاهدة فقط بدون تدخل في سير اللعب">
+                👁️ {locale === "ar" ? "مشاهدة مباشرة (قراءة فقط)" : "Live Spectator (Read-Only)"}
+              </span>
+            )}
             {!vsComputer && opponentSeat !== null && connectedSeats && !opponentConnected && !completed && (
               <span className={styles.waitingBadge} title="في انتظار دخول الطرف الثاني للمبارزة">
                 <span className={styles.waitingDot} />
@@ -244,7 +250,18 @@ export function DuelShell({ duelId }: { duelId: string }) {
             )}
           </span>
           <div className={styles.statusActions}>
-            {seat !== undefined && (
+            <button
+              type="button"
+              className={styles.shareLiveBtn}
+              onClick={() => setShareModalOpen(true)}
+              aria-label={locale === "ar" ? "مشاركة البث المباشر" : "Share Live Stream"}
+              title={locale === "ar" ? "مشاركة البث المباشر بـ 6 لغات" : "Share live duel across 6 languages"}
+            >
+              <span className={styles.shareIcon}>📡</span>
+              <span className={styles.shareLabel}>{locale === "ar" ? "مشاركة البث" : "Share Live"}</span>
+            </button>
+
+            {!isSpectator && seat !== undefined && (
               <button
                 type="button"
                 className={[styles.chatBtn, chatOpen ? styles.chatBtnActive : ""].join(" ")}
@@ -389,15 +406,25 @@ export function DuelShell({ duelId }: { duelId: string }) {
           {isSpectator ? t("game.watching_as", { handle: player?.handle ?? "" }) : t("game.playing_as", { handle: player?.handle ?? "" })}
         </p>
 
-        {seat !== undefined && (
+        {!isSpectator && seat !== undefined && (
           <ChatDrawer
-            channelKind={isSpectator ? "SPECTATOR" : "MATCH"}
+            channelKind="MATCH"
             duelId={duelId}
             isOpen={chatOpen}
             onOpenChange={setChatOpen}
             onUnreadChange={setChatUnread}
           />
         )}
+
+        <LiveMatchShareModal
+          isOpen={shareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+          duelId={duelId}
+          gameId={gameId ?? "game"}
+          gameName={plugin ? t(`common.game_names.${plugin.nameKey}`) : undefined}
+          player1={players?.[0] ? (players[0] === player?.id ? (player?.handle || "You") : (players[0].startsWith("ai-") ? "Computer" : players[0])) : "Player 1"}
+          player2={players?.[1] ? (players[1] === player?.id ? (player?.handle || "You") : (players[1].startsWith("ai-") ? "Computer" : players[1])) : "Player 2"}
+        />
       </main>
     </TableEnvironmentProvider>
   );

@@ -24,6 +24,8 @@ import { createMatchmakingService } from "../../../packages/matchmaking/src/matc
 import { createChallengeService } from "../../../packages/matchmaking/src/challenge.mjs";
 import { createDispatchWorker } from "../../../packages/matchmaking/src/dispatch.mjs";
 import { createStandingByWorker } from "../../../packages/matchmaking/src/standing-by.mjs";
+import { createRadarSeederWorker } from "../../../packages/matchmaking/src/radar-seeder.mjs";
+import { createLiveArenaSimulator } from "../../../packages/matchmaking/src/live-arena-simulator.mjs";
 import { createBotMatchSimulator } from "../../../packages/matchmaking/src/bot-simulator.mjs";
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
 import { createSandboxProvider } from "../../../packages/payments/src/provider.mjs";
@@ -269,11 +271,25 @@ async function main() {
     { intervalMs: botSimulatorIntervalMs }
   );
 
+  const radarSeederIntervalMs = Number(process.env.RADAR_SEEDER_INTERVAL_MS || 5000);
+  const radarSeederWorker = createTickLoop(
+    createRadarSeederWorker(db, { emit: logger.emit }),
+    { intervalMs: radarSeederIntervalMs }
+  );
+
+  const liveArenaSimulatorIntervalMs = Number(process.env.LIVE_ARENA_SIMULATOR_INTERVAL_MS || 5000);
+  const liveArenaSimulatorWorker = createTickLoop(
+    createLiveArenaSimulator(db, { emit: logger.emit }),
+    { intervalMs: liveArenaSimulatorIntervalMs }
+  );
+
   const runtime = createWorkerRuntime({
     workers: [
       { name: "matchmaking_dispatch", worker: dispatchWorker },
       { name: "standing_by_matchmaking", worker: standingByWorker, intervalMs: Number(process.env.STANDING_BY_INTERVAL_MS || 2500) },
       { name: "bot_match_simulator", worker: botSimulatorWorker, intervalMs: botSimulatorIntervalMs },
+      { name: "radar_seeder", worker: radarSeederWorker, intervalMs: radarSeederIntervalMs },
+      { name: "live_arena_simulator", worker: liveArenaSimulatorWorker, intervalMs: liveArenaSimulatorIntervalMs },
       // Reconciliation runs far less often than matchmaking dispatch --
       // minutes, not milliseconds -- so it declares its OWN interval here
       // rather than inheriting runtime.start()'s shared cadence. Absent

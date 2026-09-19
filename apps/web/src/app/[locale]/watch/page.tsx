@@ -21,6 +21,7 @@ import { badgeIcon } from "@/components/profile/badge-icons";
 import { useI18n } from "@/lib/i18n/context";
 import { get } from "@/lib/api";
 import { getGame } from "@/lib/games";
+import { LiveMatchShareModal } from "@/components/game/LiveMatchShareModal";
 import styles from "./watch.module.css";
 
 type LiveMatchPlayer = { handle: string; badge: string | null; ratingX100: number | null };
@@ -41,6 +42,7 @@ const WATCH_GAMES = [
   { id: "all", nameEn: "All Games", nameAr: "جميع الألعاب", icon: "🌐" },
   { id: "dominoes", nameEn: "Dominoes", nameAr: "الدومينو", icon: "🀄" },
   { id: "chess", nameEn: "Chess", nameAr: "الشطرنج", icon: "♟️" },
+  { id: "billiards", nameEn: "8-Ball Pool", nameAr: "البلياردو", icon: "🎱" },
   { id: "backgammon", nameEn: "Backgammon", nameAr: "طاولة الزهر", icon: "🎲" },
   { id: "xo", nameEn: "Tic-Tac-Toe", nameAr: "إكس أو", icon: "⚔️" },
   { id: "checkers", nameEn: "Checkers", nameAr: "الداما", icon: "⚪" },
@@ -69,6 +71,7 @@ function WatchContent() {
   const [searchHandle, setSearchHandle] = useState("");
   const [includeBots, setIncludeBots] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sharingMatch, setSharingMatch] = useState<LiveMatch | null>(null);
 
   const loadMatches = async (isManual = false) => {
     if (isManual) setRefreshing(true);
@@ -111,7 +114,12 @@ function WatchContent() {
         <div>
           <div className={styles.titleBadge}>
             <span className={styles.livePulseDot} />
-            <span>{isRtl ? "بث مباشر فوري" : "REALTIME ARENA FEED"}</span>
+            <span>{isRtl ? "بث مباشر فوري (مشاهدة فقط)" : "REALTIME ARENA FEED (READ-ONLY)"}</span>
+            {matches && matches.length > 0 && (
+              <span style={{ marginInlineStart: 8, color: "#ffd700", fontWeight: 800 }}>
+                • {isRtl ? `${matches.length} مباريات جارية الآن` : `${matches.length} Live Matches Now`}
+              </span>
+            )}
           </div>
           <h1 className={styles.title}>{t("watch.title")}</h1>
           <p className={styles.subtitle}>{t("watch.subtitle")}</p>
@@ -242,6 +250,14 @@ function WatchContent() {
                     <button
                       type="button"
                       className={styles.copyLinkBtn}
+                      title={isRtl ? "مشاركة رابط البث بـ 6 لغات" : "Share live stream in 6 languages"}
+                      onClick={() => setSharingMatch(m)}
+                    >
+                      📡
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.copyLinkBtn}
                       title={copiedId === m.duelId ? (isRtl ? "تم نسخ الرابط!" : "Copied!") : (isRtl ? "نسخ رابط المشاهدة" : "Copy spectator link")}
                       onClick={() => handleCopyLink(m.duelId)}
                     >
@@ -254,6 +270,18 @@ function WatchContent() {
             );
           })}
         </div>
+      )}
+
+      {sharingMatch && (
+        <LiveMatchShareModal
+          isOpen={Boolean(sharingMatch)}
+          onClose={() => setSharingMatch(null)}
+          duelId={sharingMatch.duelId}
+          gameId={sharingMatch.gameId}
+          gameName={t(`common.game_names.${getGame(sharingMatch.gameId)?.nameKey ?? sharingMatch.gameId}`)}
+          player1={sharingMatch.players[0]?.handle || "Player 1"}
+          player2={sharingMatch.players[1]?.handle || "Player 2"}
+        />
       )}
     </div>
   );

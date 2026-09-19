@@ -62,6 +62,37 @@
   justify-content: center;
 }
 
+.shareLiveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  padding: 6px 14px;
+  border-radius: var(--nz-radius-pill);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(16, 185, 129, 0.15));
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  color: #ffd700;
+  font-family: var(--nz-font-sans);
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.shareLiveBtn:hover {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.28), rgba(16, 185, 129, 0.28));
+  border-color: #ffd700;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+}
+
+.shareIcon {
+  font-size: 15px;
+}
+
+.shareLabel {
+  font-weight: 700;
+}
+
 .waitingBadge {
   display: inline-flex;
   align-items: center;

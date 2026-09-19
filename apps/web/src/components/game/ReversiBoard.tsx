@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { useVisualSettings } from "./TableEnvironment";
+import { playReversiFlipSound } from "@/lib/game-audio";
 import styles from "./ReversiBoard.module.css";
 
 type LastMove = { action: "PLACE"; seat: 0 | 1; place: number; flipped: number[] } | { action: "PASS"; seat: 0 | 1 } | null;
@@ -55,6 +57,17 @@ export function ReversiBoard({ board, legalMoves, lastMove, canMove, onMove }: P
   const justPlaced = lastMove?.action === "PLACE" ? lastMove.place : null;
   const mustPass = canMove && legalMoves.length === 0;
 
+  const prevLastMoveRef = useRef<string>("");
+  useEffect(() => {
+    if (lastMove && lastMove.action === "PLACE") {
+      const key = `${lastMove.place}-${lastMove.flipped.join(",")}`;
+      if (key !== prevLastMoveRef.current) {
+        playReversiFlipSound(lastMove.flipped.length || 1);
+      }
+      prevLastMoveRef.current = key;
+    }
+  }, [lastMove]);
+
   return (
     <div className={styles.wrap}>
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
@@ -72,7 +85,10 @@ export function ReversiBoard({ board, legalMoves, lastMove, canMove, onMove }: P
                   role="gridcell"
                   className={[styles.cell, isLegal ? styles.legal : ""].join(" ")}
                   disabled={!canMove || !isLegal}
-                  onClick={() => onMove({ place: idx })}
+                  onClick={() => {
+                    playReversiFlipSound(1);
+                    onMove({ place: idx });
+                  }}
                 >
                   {isLegal && mark === 0 && <span className={styles.hintDot} aria-hidden="true" />}
                   {mark !== 0 && (

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { ease } from "@/lib/motion";
 import { useVisualSettings } from "./TableEnvironment";
+import { playSpeedMathCorrectSound, playSpeedMathWrongSound, playComboStreakSound } from "@/lib/game-audio";
 import styles from "./SpeedMathBoard.module.css";
 
 type Question = { a: number; b: number; op: "+" | "-" | "*" | "/"; index: number };
@@ -38,7 +39,17 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
     if (prev && you.answered > prev.answered) {
       const isCorrect = you.correct > prev.correct;
       setFeedback(isCorrect ? "correct" : "incorrect");
-      setStreak((s) => (isCorrect ? s + 1 : 0));
+      if (isCorrect) {
+        if (streak >= 1) {
+          playComboStreakSound(streak + 1);
+        } else {
+          playSpeedMathCorrectSound();
+        }
+        setStreak((s) => s + 1);
+      } else {
+        playSpeedMathWrongSound();
+        setStreak(0);
+      }
       const timer = setTimeout(() => setFeedback(null), 550);
       return () => clearTimeout(timer);
     }
