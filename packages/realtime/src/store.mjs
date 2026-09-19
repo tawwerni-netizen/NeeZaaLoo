@@ -109,10 +109,27 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
      * @param {number} recoveredAtMs server time at which play resumes
      */
     async recoverLive(plugins, recoveredAtMs) {
+      try {
+        await db.query(
+          `UPDATE duel 
+              SET status = 'ABORTED', 
+                  termination_reason = 'STALE_ABANDONED', 
+                  completed_at = now()
+            WHERE status IN ('LIVE','READY','RESERVED') 
+              AND (started_at < now() - interval '10 minutes' OR (started_at IS NULL AND created_at < now() - interval '10 minutes'))`
+        );
+      } catch (err) {
+        console.warn("[realtime-recovery] Stale duel cleanup warning:", err.message);
+      }
+
       const rows = await db.query(
         `SELECT id, game_id, plugin_version, seat_0, seat_1, tier, stake_minor::text AS stake,
                 asset, initial_state, seed, time_control, clock_state, status, is_vs_computer
-           FROM duel WHERE status IN ('LIVE','READY','RESERVED')`
+           FROM duel 
+          WHERE status IN ('LIVE','READY','RESERVED')
+            AND (started_at >= now() - interval '10 minutes' OR (started_at IS NULL AND created_at >= now() - interval '10 minutes'))
+          ORDER BY created_at DESC
+          LIMIT 30`
       );
       const out = new Map();
       for (const row of rows.rows) {

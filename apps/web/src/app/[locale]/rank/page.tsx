@@ -142,27 +142,50 @@ export default function RankPage() {
         )}
 
         {/* Game Filter Pills */}
-        <div className={styles.filtersWrap}>
-          <button
-            type="button"
-            className={selectedGame === "all" ? styles.filterActive : styles.filter}
-            onClick={() => setSelectedGame("all")}
-          >
-            <span>🌐</span> {dir === "rtl" ? "الترتيب العام الشامل" : "All Games Combined"}
-          </button>
-          {games.map((g) => {
-            const name = t(`common.game_names.${g.nameKey}`);
-            return (
-              <button
-                key={g.id}
-                type="button"
-                className={selectedGame === g.id ? styles.filterActive : styles.filter}
-                onClick={() => setSelectedGame(g.id)}
-              >
-                {name}
-              </button>
-            );
-          })}
+        <div className={styles.filtersSection}>
+          <div className={styles.filtersHeader}>
+            <span className={styles.filtersTitle}>
+              {dir === "rtl" ? "اختر اللعبة لعرض المتصدرين:" : "Select Game Category:"}
+            </span>
+          </div>
+          <div className={styles.filtersWrap}>
+            <button
+              type="button"
+              className={selectedGame === "all" ? styles.filterActive : styles.filter}
+              onClick={() => setSelectedGame("all")}
+            >
+              <span className={styles.filterIcon}>🌐</span>
+              <span className={styles.filterText}>{dir === "rtl" ? "الترتيب العام الشامل" : "All Games Combined"}</span>
+            </button>
+            {games.map((g) => {
+              const name = t(`common.game_names.${g.nameKey}`);
+              const GAME_ICONS: Record<string, string> = {
+                chess: "♟️",
+                dominoes: "🀄",
+                backgammon: "🎲",
+                "speed-math": "🔢",
+                xo: "❌",
+                "connect-four": "🔴",
+                checkers: "⚫",
+                reversi: "⚪",
+                gomoku: "🟢",
+                seega: "🎯",
+                billiards: "🎱",
+              };
+              const icon = GAME_ICONS[g.id] || "🎮";
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  className={selectedGame === g.id ? styles.filterActive : styles.filter}
+                  onClick={() => setSelectedGame(g.id)}
+                >
+                  <span className={styles.filterIcon}>{icon}</span>
+                  <span className={styles.filterText}>{name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Leaderboard Body */}

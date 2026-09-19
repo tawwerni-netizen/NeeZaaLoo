@@ -24,7 +24,7 @@ export function DailyQuestsWidget() {
   const [quests, setQuests] = useState<Challenge[] | null>(null);
 
   useEffect(() => {
-    if (!player) { setQuests([]); return; }
+    if (!player) return;
     
     let cancelled = false;
     get<{ challenges: Challenge[] }>("/v1/me/daily-challenges")
@@ -33,6 +33,9 @@ export function DailyQuestsWidget() {
     
     return () => { cancelled = true; };
   }, [player]);
+
+  // Daily quests are exclusive to registered/logged-in players
+  if (!player) return null;
 
   return (
     <section className={styles.section}>

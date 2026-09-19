@@ -68,6 +68,17 @@ function GoogleCompleteInner() {
   const [error, setError] = useState<string | null>(null);
   const attempted = useRef(false);
 
+  function notifyOpenerAndRedirect(target: string) {
+    if (typeof window !== "undefined" && window.opener) {
+      try {
+        window.opener.postMessage({ type: "NIZALO_AUTH_SUCCESS" }, "*");
+        window.close();
+        return;
+      } catch {}
+    }
+    router.replace(target);
+  }
+
   async function finalize(withTotp?: string) {
     if (!handoff) { setStatus("error"); setError(t(authErrorKey("BAD_STATE"))); return; }
     try {
@@ -75,7 +86,7 @@ function GoogleCompleteInner() {
         "/v1/auth/google/finalize", { handoffCode: handoff, totpCode: withTotp }
       );
       await applySession(r.accessToken, r.refreshToken);
-      router.replace(getRedirectTarget(returnTo, locale));
+      notifyOpenerAndRedirect(getRedirectTarget(returnTo, locale));
     } catch (e) {
       const code = e instanceof ApiError ? (e.code ?? "BAD_STATE") : "NETWORK_ERROR";
       if (code === "TOTP_REQUIRED") {
@@ -95,14 +106,14 @@ function GoogleCompleteInner() {
         setStatus("working");
         applySession(access, refresh)
           .then(() => {
-            router.replace(getRedirectTarget(returnTo, locale));
+            notifyOpenerAndRedirect(getRedirectTarget(returnTo, locale));
           })
           .catch(() => {
             setStatus("error");
             setError(t(authErrorKey("BAD_STATE")));
           });
       } else {
-        router.replace(getRedirectTarget(returnTo, locale));
+        notifyOpenerAndRedirect(getRedirectTarget(returnTo, locale));
       }
       return;
     }

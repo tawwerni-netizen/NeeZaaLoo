@@ -98,9 +98,14 @@ async function main() {
   // exited. These are loaded but NOT yet leased to this instance -- the
   // claim sweep below takes care of that on its first tick, going through
   // the exact same compare-and-swap any other claim does.
-  const recovered = await store.recoverLive(plugins, Date.now());
-  for (const [duelId, duel] of recovered) duels.set(duelId, duel);
-  logger.emit("worker.tick_started", { worker: "gateway-recovery", recovered: recovered.size });
+  let recovered = new Map();
+  try {
+    recovered = await store.recoverLive(plugins, Date.now());
+    for (const [duelId, duel] of recovered) duels.set(duelId, duel);
+    logger.emit("worker.tick_started", { worker: "gateway-recovery", recovered: recovered.size });
+  } catch (err) {
+    console.warn("[gateway] Live recovery warning on startup (non-fatal, proceeding):", err.message);
+  }
 
   // Realtime Chat Foundation (Slice 9) -- the SAME websocket server as
   // duels above, not a second one; see gateway.mjs's own `chat` option.

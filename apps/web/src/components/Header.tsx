@@ -62,22 +62,20 @@ export function Header() {
         </LocaleLink>
 
         <nav className={styles.primaryNav} aria-label="Primary">
-          {PRIMARY_NAV.map((group, i) => (
-            <div key={i} className={styles.navGroup}>
-              <span className={styles.navGroupLabel}>
-                <span className={styles.navGroupIcon}>{group.icon}</span>
-                {group.label}
-              </span>
-              <div className={styles.navDropdown}>
-                {(group as any).items?.map((item: any) => (
-                  <LocaleLink key={item.href} href={item.href} className={styles.navDropdownItem}>
-                    {item.icon && <span className={styles.dropdownIcon}>{item.icon}</span>}
-                    {item.label}
-                  </LocaleLink>
-                ))}
-              </div>
-            </div>
-          ))}
+          {PRIMARY_NAV.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <LocaleLink
+                key={item.href}
+                href={item.href}
+                className={active ? styles.navLinkActive : styles.navLink}
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+                <span className={styles.navLabel}>{item.label}</span>
+                {active && <span className={styles.activeIndicator} />}
+              </LocaleLink>
+            );
+          })}
         </nav>
 
         {/* Desktop Secondary Actions */}
@@ -263,25 +261,21 @@ export function Header() {
                 {locale === "ar" ? "القائمة الرئيسية" : "Main Navigation"}
               </div>
               <div className={styles.mobileNavGrid}>
-                {PRIMARY_NAV.map((group, i) => (
-                  <div key={i} className={styles.mobileNavGroupWrapper}>
-                    <div className={styles.mobileNavGroupTitle}>{group.label}</div>
-                    <div className={styles.mobileNavGroupItems}>
-                      {(group as any).items?.map((item: any, j: any) => (
-                        <LocaleLink
-                          key={item.href}
-                          href={item.href}
-                          className={isActive(item.href) ? styles.mobileNavTileActive : styles.mobileNavTile}
-                          onClick={closeMenu}
-                        >
-                          <span className={styles.mobileNavTileIcon}>{item.icon}</span>
-                          <span className={styles.mobileNavTileLabel}>{item.label}</span>
-                          {isActive(item.href) && <span className={styles.activeGlowDot} />}
-                        </LocaleLink>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                {PRIMARY_NAV.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <LocaleLink
+                      key={item.href}
+                      href={item.href}
+                      className={active ? styles.mobileNavTileActive : styles.mobileNavTile}
+                      onClick={closeMenu}
+                    >
+                      <span className={styles.mobileNavTileIcon}>{item.icon}</span>
+                      <span className={styles.mobileNavTileLabel}>{item.label}</span>
+                      {active && <span className={styles.activeGlowDot} />}
+                    </LocaleLink>
+                  );
+                })}
               </div>
             </div>
 

@@ -77,13 +77,39 @@ export function AuthPopup() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, closePopup]);
 
+  function launchGooglePopup(url: string) {
+    const width = 500;
+    const height = 650;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    
+    const popup = window.open(
+      url,
+      "nizalo_google_auth",
+      `width=${width},height=${height},left=${left},top=${top},status=no,toolbar=no,menubar=no`
+    );
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === "NIZALO_AUTH_SUCCESS") {
+        window.removeEventListener("message", onMessage);
+        closePopup();
+        window.location.reload();
+      }
+    };
+    window.addEventListener("message", onMessage);
+
+    if (!popup || popup.closed || typeof popup.closed === "undefined") {
+      window.location.href = url;
+    }
+  }
+
   async function onGoogleClick() {
     setGoogleErrorKey(null);
     setGoogleStarting(true);
     try {
       const { url } = await get<{ url: string }>(`/v1/auth/google/start?locale=${locale}`);
       if (url) {
-        window.location.href = url;
+        launchGooglePopup(url);
         return;
       }
     } catch (e) {
@@ -92,9 +118,10 @@ export function AuthPopup() {
         const redirectUri = `${window.location.origin}/api/auth/google/callback`;
         const scope = encodeURIComponent("openid email profile");
         const state = encodeURIComponent(JSON.stringify({ locale }));
-        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
           redirectUri
         )}&response_type=code&scope=${scope}&state=${state}&prompt=select_account`;
+        launchGooglePopup(authUrl);
         return;
       }
       setGoogleStarting(false);

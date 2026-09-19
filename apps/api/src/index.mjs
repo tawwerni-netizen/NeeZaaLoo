@@ -143,22 +143,24 @@ async function main() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 4) });
   const db = createPgAdapter(pool);
 
-  // Auto-apply pending migrations and seed personas on startup
-  try {
-    const ran = await migrate(db, { log: true });
-    if (ran && ran.length > 0) {
-      console.log(`[database] Successfully applied ${ran.length} migrations:`, ran);
+  // Auto-apply pending migrations and seed personas asynchronously in background
+  (async () => {
+    try {
+      const ran = await migrate(db, { log: true });
+      if (ran && ran.length > 0) {
+        console.log(`[database] Successfully applied ${ran.length} migrations:`, ran);
+      }
+    } catch (err) {
+      console.error("[database] Migration warning on startup:", err.message);
     }
-  } catch (err) {
-    console.error("[database] Migration warning on startup:", err.message);
-  }
 
-  try {
-    const seedResult = await seedBotsAndFund(db);
-    console.log(`[bots] Seeded/updated ${seedResult.totalBots} personas on startup.`);
-  } catch (err) {
-    console.warn("[bots] Seeder warning on startup:", err.message);
-  }
+    try {
+      const seedResult = await seedBotsAndFund(db);
+      console.log(`[bots] Seeded/updated ${seedResult.totalBots} personas in background.`);
+    } catch (err) {
+      console.warn("[bots] Seeder warning on startup:", err.message);
+    }
+  })().catch((err) => console.error("[database/bots] Startup task error:", err.message));
 
   const auth = createAuthService(db, { signingKey, encryptionKey });
   const settlement = createSettlementService(db);
@@ -186,64 +188,33 @@ async function main() {
   const emailServiceInstance = createEmailService({ provider: emailProvider });
   const tournament = createTournamentService(db, { emailService: emailServiceInstance });
 
-  // Initialize automated tournament engine on API startup
+  // Initialize automated tournament engine asynchronously in background
   const automatedTournamentEngine = createAutomatedTournamentEngine(db, tournament);
-  try {
-    const tourRes = await automatedTournamentEngine.tick();
-    if (tourRes.spawned?.length > 0) {
-      console.log(`[tournaments] Automated engine spawned ${tourRes.spawned.length} open tournaments across all active games.`);
-    }
-  } catch (err) {
-    console.warn("[tournaments] Engine startup tick warning:", err.message);
-  }
-
   const tournamentBotFiller = createTournamentBotFiller(db, tournament, {
     fillIntervalMs: 0,
     reservedSeats: 2,
     maxWaitMs: 600000,
   });
-  try {
-    const fillRes = await tournamentBotFiller.tick();
-    if (fillRes.filled > 0) {
-      console.log(`[tournaments] Tournament bot filler registered ${fillRes.filled} personas on startup.`);
-    }
-  } catch (err) {
-    console.warn("[tournaments] Bot filler startup warning:", err.message);
-  }
 
-  // Pre-seed 6 to 8 bot participants in open FREE tournaments to ensure vibrant lobbies
-  try {
-    const openFree = await db.query(
-      `SELECT t.id, t.game_id,
-              (SELECT count(*)::int FROM tournament_registration tr WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS reg_count
-         FROM tournament t
-        WHERE t.status = 'REGISTRATION' AND t.tier = 'FREE'`
-    );
-    for (const t of openFree.rows) {
-      if (t.reg_count < 6) {
-        const needed = 8 - t.reg_count;
-        const bots = await db.query(
-          `SELECT p.id, COALESCE(r.rating_x100, 180000) AS rating_x100
-             FROM player p
-             LEFT JOIN rating r ON r.player_id = p.id AND r.game_id = $1
-            WHERE p.is_ai = TRUE AND p.id LIKE 'bot_%'
-              AND NOT EXISTS (SELECT 1 FROM tournament_registration tr WHERE tr.tournament_id = $2 AND tr.player_id = p.id)
-            ORDER BY random()
-            LIMIT $3`,
-          [t.game_id, t.id, needed]
-        );
-        for (const b of bots.rows) {
-          await tournament.register({
-            tournamentId: t.id,
-            playerId: b.id,
-            ratingX100: Number(b.rating_x100),
-          });
-        }
+  (async () => {
+    try {
+      const tourRes = await automatedTournamentEngine.tick();
+      if (tourRes.spawned?.length > 0) {
+        console.log(`[tournaments] Automated engine spawned ${tourRes.spawned.length} open tournaments.`);
       }
+    } catch (err) {
+      console.warn("[tournaments] Engine startup tick warning:", err.message);
     }
-  } catch (err) {
-    console.warn("[tournaments] Free tournament initial seed warning:", err.message);
-  }
+
+    try {
+      const fillRes = await tournamentBotFiller.tick();
+      if (fillRes.filled > 0) {
+        console.log(`[tournaments] Tournament bot filler registered ${fillRes.filled} personas.`);
+      }
+    } catch (err) {
+      console.warn("[tournaments] Bot filler startup warning:", err.message);
+    }
+  })().catch((err) => console.error("[tournaments] Background startup error:", err.message));
 
   // 24/7 Bot Duels, Radar Seeder & Continuous Tournament Background Loops
   const automatedTournamentLoop = createTickLoop(() => automatedTournamentEngine.tick(), {

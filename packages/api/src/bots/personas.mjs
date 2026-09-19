@@ -117,17 +117,23 @@ export function generate600Personas() {
   const personas = [];
 
   function addLanguageBatch(lang, cities, firstNames, lastNames, baseCount = 100) {
+    const usedHandles = new Set();
     for (let i = 1; i <= baseCount; i++) {
       const cityObj = cities[(i - 1) % cities.length];
-      const fName = firstNames[(i * 7) % firstNames.length];
-      const lName = lastNames[(i * 13) % lastNames.length];
+      const fName = firstNames[(i - 1) % firstNames.length];
+      const lName = lastNames[Math.floor((i - 1) / firstNames.length) % lastNames.length];
       const fullName = `${fName} ${lName}`;
       const cleanFName = fName.replace(/[^A-Za-z0-9]/g, "");
       const cleanLName = lName.replace(/[^A-Za-z0-9]/g, "");
-      const numSuffix = String((i * 17) % 99 + 1);
-      const maxLen = 23 - numSuffix.length;
-      const baseHandle = `${cleanFName}_${cleanLName}`.slice(0, maxLen);
-      const handle = `${baseHandle}_${numSuffix}`;
+      
+      let handle = `${cleanFName}_${cleanLName}`;
+      if (usedHandles.has(handle)) {
+        handle = `${cleanFName}${cleanLName}`;
+      }
+      if (usedHandles.has(handle)) {
+        handle = `Al_${cleanFName}_${cleanLName}`;
+      }
+      usedHandles.add(handle);
       
       // Base ELO range 1600 - 2850
       const baseRating = 1600 + ((i * 47) % 1250);

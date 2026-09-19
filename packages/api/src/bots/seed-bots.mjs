@@ -20,12 +20,12 @@ export async function seedBotsAndFund(db) {
   let createdCount = 0;
   let fundedCount = 0;
 
-  // Rename legacy bots to real human handles
+  // Rename legacy bots to real human handles without numbers
   await db.query(`
-    UPDATE player SET handle = 'Karim_AlMasry_10', bio = 'لاعب شطرنج هاوٍ يعشق التكتيكات السريعة ♟️' WHERE id = 'ai-easy';
-    UPDATE player SET handle = 'Tariq_AlKhaled_45', bio = 'منافس دائم على بطولات الطاولة والشطرنج 🎲' WHERE id = 'ai-medium';
-    UPDATE player SET handle = 'Sultan_AlGhamdi_82', bio = 'محترف استراتيجيات وألعاب لوحية، 1850 ELO ⚡' WHERE id = 'ai-hard';
-    UPDATE player SET handle = 'GM_Farouk_AlSharif', bio = 'جراند ماستر، بطل بطولات نيزالو 👑' WHERE id = 'ai-expert';
+    UPDATE player SET handle = 'Karim_AlMasry', bio = 'لاعب شطرنج هاوٍ يعشق التكتيكات السريعة ♟️' WHERE id = 'ai-easy';
+    UPDATE player SET handle = 'Tariq_AlKhaled', bio = 'منافس دائم على بطولات الطاولة والشطرنج 🎲' WHERE id = 'ai-medium';
+    UPDATE player SET handle = 'Sultan_AlGhamdi', bio = 'محترف استراتيجيات وألعاب لوحية، 1850 ELO ⚡' WHERE id = 'ai-hard';
+    UPDATE player SET handle = 'Farouk_AlSharif', bio = 'جراند ماستر، بطل بطولات نيزالو 👑' WHERE id = 'ai-expert';
   `);
 
   for (const bot of ALL_BOT_PERSONAS) {
