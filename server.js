@@ -212,7 +212,7 @@ startProcess("Worker",  workerScript, 4001);
 function shutdown() {
   console.log("Shutting down all child processes...");
   Object.keys(children).forEach((k) => {
-    try { if (children[k]) children[k].kill(); } catch (e) {}
+    try { if (children[k]) children[k].kill('SIGKILL'); } catch (e) {}
   });
   process.exit(0);
 }
@@ -446,14 +446,11 @@ function waitForNextReady(targetPort, maxAttempts, onReady) {
   probe();
 }
 
-console.log("[Bootstrap] Waiting for Next.js to become ready before opening public port...");
-waitForNextReady(nextPort, 60, () => {
-  server.listen(port, hostname, () => {
-    console.log(`========================================`);
-    console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
-    console.log(`  -> Next.js   : ${nextPort}`);
-    console.log(`  -> API       : ${apiPort}`);
-    console.log(`  -> Gateway   : ${gwPort}`);
-    console.log(`========================================`);
-  });
+server.listen(port, hostname, () => {
+  console.log(`========================================`);
+  console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
+  console.log(`  -> Next.js   : ${nextPort}`);
+  console.log(`  -> API       : ${apiPort}`);
+  console.log(`  -> Gateway   : ${gwPort}`);
+  console.log(`========================================`);
 });
