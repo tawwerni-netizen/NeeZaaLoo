@@ -140,7 +140,7 @@ async function main() {
   const signingKey = loadOrGenerateKey("AUTH_SIGNING_KEY_B64", { bytes: 32, logger });
   const encryptionKey = loadOrGenerateKey("AUTH_ENCRYPTION_KEY_B64", { bytes: 32, logger });
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 5) });
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 4) });
   const db = createPgAdapter(pool);
 
   // Auto-apply pending migrations and seed personas on startup

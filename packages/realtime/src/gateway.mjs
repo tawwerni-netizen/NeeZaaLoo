@@ -785,8 +785,10 @@ export function createGateway({
       return { ok: false, reason: "NO_SUCH_DUEL" };
     }
     if (duel.status === DuelState.READY) {
-      await store.markLive(duel, now());
-      duel.status = DuelState.LIVE;
+      if (duel.vsComputer) {
+        await store.markLive(duel, now());
+        duel.status = DuelState.LIVE;
+      }
     }
     duels.set(duelId, duel);
     leaseTokens.set(duelId, res.token);

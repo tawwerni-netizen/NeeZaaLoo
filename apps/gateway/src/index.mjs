@@ -74,7 +74,7 @@ async function main() {
     process.exit(1);
   }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 8) });
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 4) });
   const db = createPgAdapter(pool);
 
   const auth = createAuthService(db, { signingKey, encryptionKey });
