@@ -70,34 +70,44 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/${locale}/login?error=email_not_provided`);
     }
 
-    const apiTarget = process.env.API_INTERNAL_URL || "http://127.0.0.1:4000";
-    let syncRes = await fetch(`${apiTarget}/v1/auth/google/sync-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: profile.email,
-        subject: profile.id || profile.sub,
-        name: profile.name,
-      }),
-      signal: AbortSignal.timeout(8000),
-    }).catch(() => null);
+    const syncPayload = JSON.stringify({
+      email: profile.email,
+      subject: profile.id || profile.sub,
+      name: profile.name,
+    });
 
-    if (!syncRes || !syncRes.ok) {
-      syncRes = await fetch(`${origin}/v1/auth/google/sync-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: profile.email,
-          subject: profile.id || profile.sub,
-          name: profile.name,
-        }),
-        signal: AbortSignal.timeout(8000),
-      }).catch(() => null);
+    const candidates = [
+      process.env.API_INTERNAL_URL || "http://127.0.0.1:4000",
+      "http://localhost:4000",
+      "http://127.0.0.1:3000",
+      "http://localhost:3000",
+      origin,
+    ].filter(Boolean);
+
+    let syncRes: Response | null = null;
+    let lastError: any = null;
+
+    for (const base of candidates) {
+      try {
+        const candidateRes = await fetch(`${base}/v1/auth/google/sync-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: syncPayload,
+          signal: AbortSignal.timeout(8000),
+        });
+        if (candidateRes.ok) {
+          syncRes = candidateRes;
+          break;
+        } else {
+          lastError = `Status ${candidateRes.status} from ${base}`;
+        }
+      } catch (err: any) {
+        lastError = err?.message || err;
+      }
     }
 
     if (!syncRes || !syncRes.ok) {
-      const errText = syncRes ? await syncRes.text().catch(() => "") : "no_response";
-      console.error("Failed to sync session with Nizalo backend:", errText);
+      console.error("[Google Callback] All sync targets failed. Last error:", lastError);
       const code = syncRes?.status ? `sync_failed_${syncRes.status}` : "sync_failed";
       return NextResponse.redirect(`${origin}/${locale}/login?error=${code}`);
     }

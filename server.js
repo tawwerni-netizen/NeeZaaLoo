@@ -133,7 +133,7 @@ function getEnv(childPort) {
     OXAPAY_MERCHANT_API_KEY: process.env.OXAPAY_MERCHANT_API_KEY || "",
     OXAPAY_PAYOUT_API_KEY:   process.env.OXAPAY_PAYOUT_API_KEY || "",
     OXAPAY_CALLBACK_URL:     process.env.OXAPAY_CALLBACK_URL || "https://nizalo.com/v1/payments/oxapay/webhook",
-    DB_POOL_SIZE:            process.env.DB_POOL_SIZE || "3",
+    DB_POOL_SIZE:            process.env.DB_POOL_SIZE || "2",
   });
 }
 
@@ -160,6 +160,16 @@ function freePort(p) {
   }
 }
 
+function cleanupZombies() {
+  if (process.platform !== "win32") {
+    try {
+      const myPid = process.pid;
+      // Terminate any orphaned nizalo node processes from previous runs, preserving this master process
+      execSync(`pgrep -f "node.*(apps/|hostinger)" | grep -v "^${myPid}$" | xargs -r kill -9 2>/dev/null || true`);
+    } catch {}
+  }
+}
+
 const children = {};
 let isShuttingDown = false;
 
@@ -177,16 +187,17 @@ function startProcess(name, script, childPort, customCwd) {
             PORT: String(childPort),
             HOSTNAME: "127.0.0.1",
             NODE_ENV: "production",
+            API_INTERNAL_URL: `http://127.0.0.1:${apiPort}`,
           })
         : getEnv(childPort);
 
-      // Capping threads per node instance prevents hitting Hostinger's 120-process ceiling
+      // Dedicated memory ceilings per process: 768MB for Next.js SSR, 512MB for backend services
+      const defaultOldSpace = name === "Next.js" ? "768" : "512";
       const nodeOptions = process.env.NODE_OPTIONS
-        ? `${process.env.NODE_OPTIONS} --v8-pool-size=1 --max-old-space-size=384`
-        : "--v8-pool-size=1 --max-old-space-size=384";
+        ? `${process.env.NODE_OPTIONS} --max-old-space-size=${defaultOldSpace}`
+        : `--max-old-space-size=${defaultOldSpace}`;
 
       const childEnv = Object.assign({}, baseEnv, {
-        UV_THREADPOOL_SIZE: "2",
         NODE_OPTIONS: nodeOptions,
         OBSERVABILITY_PORT: String(childPort + 100),
       });
@@ -228,7 +239,8 @@ function startProcess(name, script, childPort, customCwd) {
   launch();
 }
 
-// Clean any leftover ports before boot
+// Clean any leftover zombie processes and ports before boot
+cleanupZombies();
 [nextPort, apiPort, gwPort, 4001].forEach(freePort);
 
 startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));

@@ -34,35 +34,44 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward to backend sync-session
-    const apiTarget = process.env.API_INTERNAL_URL || "http://127.0.0.1:4000";
-    let syncRes = await fetch(`${apiTarget}/v1/auth/google/sync-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: payload.email,
-        subject: payload.sub || payload.id,
-        name: payload.name || payload.given_name || payload.email.split("@")[0],
-      }),
-      signal: AbortSignal.timeout(8000),
-    }).catch(() => null);
+    const syncPayload = JSON.stringify({
+      email: payload.email,
+      subject: payload.sub || payload.id,
+      name: payload.name || payload.given_name || payload.email.split("@")[0],
+    });
 
-    if (!syncRes || !syncRes.ok) {
-      const origin = request.nextUrl.origin;
-      syncRes = await fetch(`${origin}/v1/auth/google/sync-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: payload.email,
-          subject: payload.sub || payload.id,
-          name: payload.name || payload.given_name || payload.email.split("@")[0],
-        }),
-        signal: AbortSignal.timeout(8000),
-      }).catch(() => null);
+    const candidates = [
+      process.env.API_INTERNAL_URL || "http://127.0.0.1:4000",
+      "http://localhost:4000",
+      "http://127.0.0.1:3000",
+      "http://localhost:3000",
+      request.nextUrl.origin,
+    ].filter(Boolean);
+
+    let syncRes: Response | null = null;
+    let lastError: any = null;
+
+    for (const base of candidates) {
+      try {
+        const candidateRes = await fetch(`${base}/v1/auth/google/sync-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: syncPayload,
+          signal: AbortSignal.timeout(8000),
+        });
+        if (candidateRes.ok) {
+          syncRes = candidateRes;
+          break;
+        } else {
+          lastError = `Status ${candidateRes.status} from ${base}`;
+        }
+      } catch (err: any) {
+        lastError = err?.message || err;
+      }
     }
 
     if (!syncRes || !syncRes.ok) {
-      const errText = syncRes ? await syncRes.text() : "No response from backend";
-      console.error("[OneTap] sync-session error:", errText);
+      console.error("[OneTap] All sync targets failed. Last error:", lastError);
       return NextResponse.json({ ok: false, error: "SYNC_SESSION_FAILED" }, { status: 502 });
     }
 

@@ -73,7 +73,7 @@ async function main() {
 
   const pool = new Pool({
     connectionString: databaseUrl,
-    max: Number(process.env.DB_POOL_SIZE || 3),
+    max: Number(process.env.DB_POOL_SIZE || 2),
     idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 5000,
   });
@@ -152,7 +152,7 @@ async function main() {
   // genuinely reached SETTLED. Runs frequently: this is the ordinary,
   // expected path for every completed match, cash or free, tournament or
   // not.
-  const settlementSweepIntervalMs = Number(process.env.SETTLEMENT_SWEEP_INTERVAL_MS || 3000);
+  const settlementSweepIntervalMs = Number(process.env.SETTLEMENT_SWEEP_INTERVAL_MS || 6000);
   const settlementSweepWorker = createTickLoop(() => settlement.settleDue(), {
     intervalMs: settlementSweepIntervalMs,
   });
@@ -171,7 +171,7 @@ async function main() {
   const mastery = createMasteryService(db);
   const streaks = createStreakService(db);
   const progression = createProgressionService(db, { exp, achievements, badges, mastery, streaks });
-  const progressionSweepIntervalMs = Number(process.env.PROGRESSION_SWEEP_INTERVAL_MS || 3000);
+  const progressionSweepIntervalMs = Number(process.env.PROGRESSION_SWEEP_INTERVAL_MS || 6000);
   const progressionSweepWorker = createTickLoop(
     async () => {
       const duels = await progression.progressionDue();
@@ -202,13 +202,13 @@ async function main() {
 
   const tournament = createTournamentService(db, { emailService });
   const tournamentSweep = createTournamentSweep(db, tournament, settlement);
-  const tournamentSweepIntervalMs = Number(process.env.TOURNAMENT_SWEEP_INTERVAL_MS || 3000);
+  const tournamentSweepIntervalMs = Number(process.env.TOURNAMENT_SWEEP_INTERVAL_MS || 6000);
   const tournamentSweepWorker = createTickLoop(() => tournamentSweep.sweepAll(), {
     intervalMs: tournamentSweepIntervalMs,
   });
 
   const automatedTournamentEngine = createAutomatedTournamentEngine(db, tournament);
-  const automatedTournamentIntervalMs = Number(process.env.AUTOMATED_TOURNAMENT_INTERVAL_MS || 5000);
+  const automatedTournamentIntervalMs = Number(process.env.AUTOMATED_TOURNAMENT_INTERVAL_MS || 10000);
   const automatedTournamentWorker = createTickLoop(() => automatedTournamentEngine.tick(), {
     intervalMs: automatedTournamentIntervalMs,
   });
@@ -218,7 +218,7 @@ async function main() {
     reservedSeats: Number(process.env.TOURNAMENT_BOT_RESERVED_SEATS || 2),
     maxWaitMs: Number(process.env.TOURNAMENT_BOT_MAX_WAIT_MS || 600000),
   });
-  const tournamentBotFillerIntervalMs = Number(process.env.TOURNAMENT_BOT_FILLER_INTERVAL_MS || 10000);
+  const tournamentBotFillerIntervalMs = Number(process.env.TOURNAMENT_BOT_FILLER_INTERVAL_MS || 15000);
   const tournamentBotFillerWorker = createTickLoop(() => tournamentBotFiller.tick(), {
     intervalMs: tournamentBotFillerIntervalMs,
   });
@@ -231,7 +231,7 @@ async function main() {
   // closed tab, a player who never opened the popup at all. Runs often
   // given the window itself is only 30 seconds.
   const challenge = createChallengeService(db);
-  const challengeExpiryIntervalMs = Number(process.env.CHALLENGE_EXPIRY_INTERVAL_MS || 5000);
+  const challengeExpiryIntervalMs = Number(process.env.CHALLENGE_EXPIRY_INTERVAL_MS || 10000);
   const challengeExpiryWorker = createTickLoop(() => challenge.expireStale(), {
     intervalMs: challengeExpiryIntervalMs,
   });
@@ -240,7 +240,7 @@ async function main() {
   // attributed referees, verifies anti-fraud scoring, and atomically posts the
   // $1 reward through the double-entry ledger.
   const referralSweep = createReferralSweep(db);
-  const referralSweepIntervalMs = Number(process.env.REFERRAL_SWEEP_INTERVAL_MS || 10000);
+  const referralSweepIntervalMs = Number(process.env.REFERRAL_SWEEP_INTERVAL_MS || 15000);
   const referralSweepWorker = createTickLoop(() => referralSweep.sweepDue(), {
     intervalMs: referralSweepIntervalMs,
   });
@@ -266,7 +266,7 @@ async function main() {
       timeoutSeconds: Number(process.env.STANDING_BY_TIMEOUT_SECONDS || 5),
       emit: logger.emit,
     }),
-    { intervalMs: Number(process.env.STANDING_BY_INTERVAL_MS || 2500) }
+    { intervalMs: Number(process.env.STANDING_BY_INTERVAL_MS || 5000) }
   );
 
   const botMatchSimulator = createBotMatchSimulator(db, { emit: logger.emit });
@@ -276,13 +276,13 @@ async function main() {
     { intervalMs: botSimulatorIntervalMs }
   );
 
-  const radarSeederIntervalMs = Number(process.env.RADAR_SEEDER_INTERVAL_MS || 5000);
+  const radarSeederIntervalMs = Number(process.env.RADAR_SEEDER_INTERVAL_MS || 10000);
   const radarSeederWorker = createTickLoop(
     createRadarSeederWorker(db, { emit: logger.emit }),
     { intervalMs: radarSeederIntervalMs }
   );
 
-  const liveArenaSimulatorIntervalMs = Number(process.env.LIVE_ARENA_SIMULATOR_INTERVAL_MS || 5000);
+  const liveArenaSimulatorIntervalMs = Number(process.env.LIVE_ARENA_SIMULATOR_INTERVAL_MS || 10000);
   const liveArenaSimulatorWorker = createTickLoop(
     createLiveArenaSimulator(db, { emit: logger.emit }),
     { intervalMs: liveArenaSimulatorIntervalMs }
