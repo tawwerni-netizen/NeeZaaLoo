@@ -73,10 +73,12 @@ async function main() {
 
   const pool = new Pool({
     connectionString: databaseUrl,
-    max: Number(process.env.DB_POOL_SIZE || 2),
-    idleTimeoutMillis: 10000,
+    max: Number(process.env.DB_POOL_SIZE || 1),
+    idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 5000,
+    statement_timeout: 6000,
   });
+  pool.on("error", (err) => console.error("[worker pg pool error]", err.message));
   const db = createPgAdapter(pool);
 
   // LOCAL (a developer's own terminal) wants readable output; every other

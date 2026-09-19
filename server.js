@@ -155,8 +155,18 @@ function freePort(p) {
       }
     } catch {}
   } else {
-    try { execSync(`fuser -k -9 ${p}/tcp 2>/dev/null || true`); } catch {}
-    try { execSync(`lsof -ti :${p} | xargs kill -9 2>/dev/null || true`); } catch {}
+    try {
+      execSync(`ss -lptn 'sport = :${p}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill -9 2>/dev/null || true`);
+    } catch {}
+    try {
+      execSync(`netstat -tlpn 2>/dev/null | grep ':${p} ' | awk '{print $7}' | cut -d/ -f1 | grep -v '^-$' | xargs -r kill -9 2>/dev/null || true`);
+    } catch {}
+    try {
+      execSync(`fuser -k -9 ${p}/tcp 2>/dev/null || true`);
+    } catch {}
+    try {
+      execSync(`lsof -ti :${p} 2>/dev/null | xargs -r kill -9 2>/dev/null || true`);
+    } catch {}
   }
 }
 
@@ -164,8 +174,9 @@ function cleanupZombies() {
   if (process.platform !== "win32") {
     try {
       const myPid = process.pid;
-      // Terminate any orphaned nizalo node processes from previous runs, preserving this master process
-      execSync(`pgrep -f "node.*(apps/|hostinger)" | grep -v "^${myPid}$" | xargs -r kill -9 2>/dev/null || true`);
+      execSync(`pkill -9 -f "node.*apps/(api|gateway|worker)" 2>/dev/null || true`);
+      execSync(`pkill -9 -f "node.*hostinger/server.js" 2>/dev/null || true`);
+      execSync(`pgrep -f "node.*(apps/|hostinger)" 2>/dev/null | grep -v "^${myPid}$" | xargs -r kill -9 2>/dev/null || true`);
     } catch {}
   }
 }
@@ -206,7 +217,7 @@ function startProcess(name, script, childPort, customCwd) {
         cwd: customCwd || here,
         env: childEnv,
         stdio: "inherit",
-        detached: process.platform !== "win32",
+        detached: false,
       });
 
       child.on("error", (err) => {
@@ -255,14 +266,12 @@ function shutdown() {
   Object.keys(children).forEach((k) => {
     try {
       const child = children[k];
-      if (child) {
-        if (process.platform !== "win32" && child.pid) {
-          try { process.kill(-child.pid, "SIGKILL"); } catch {}
-        }
-        child.kill("SIGKILL");
+      if (child && child.pid) {
+        try { process.kill(child.pid, "SIGKILL"); } catch {}
       }
     } catch (e) {}
   });
+  cleanupZombies();
   [nextPort, apiPort, gwPort, 4001].forEach(freePort);
   setTimeout(() => process.exit(0), 150);
 }

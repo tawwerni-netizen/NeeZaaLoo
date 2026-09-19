@@ -135,10 +135,12 @@ async function main() {
 
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: Number(process.env.DB_POOL_SIZE || 3),
-    idleTimeoutMillis: 10000,
+    max: Number(process.env.DB_POOL_SIZE || 2),
+    idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 5000,
+    statement_timeout: 6000,
   });
+  pool.on("error", (err) => console.error("[api pg pool error]", err.message));
   const db = createPgAdapter(pool);
 
   // Auto-apply pending migrations and seed personas asynchronously in background
