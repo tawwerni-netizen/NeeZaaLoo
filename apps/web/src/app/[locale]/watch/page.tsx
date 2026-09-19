@@ -31,6 +31,10 @@ type LiveMatch = {
   startedAt: string;
   isTournamentMatch: boolean;
   isVsComputer?: boolean;
+  tier?: "FREE" | "CASH";
+  stakeMinor?: string;
+  asset?: string;
+  winnerPrizeMinor?: string | null;
   moveCount: number;
   players: LiveMatchPlayer[];
 };
@@ -54,10 +58,10 @@ const WATCH_GAMES = [
 
 export default function WatchPage() {
   return (
-    <RequireAuth>
+    <>
       <Header />
       <WatchContent />
-    </RequireAuth>
+    </>
   );
 }
 
@@ -235,6 +239,22 @@ function WatchContent() {
 
                 {m.isTournamentMatch && (
                   <span className={styles.tournamentBadge}>{t("watch.tournament_badge")}</span>
+                )}
+
+                {m.winnerPrizeMinor && Number(m.winnerPrizeMinor) > 0 ? (
+                  <div className={styles.prizeBanner}>
+                    <span className={styles.prizeIcon}>⚡</span>
+                    <span className={styles.prizeText}>
+                      {isRtl
+                        ? `جائزة الفائز: $${(Number(m.winnerPrizeMinor) / 1_000_000).toFixed(2)} USDT كاش`
+                        : `Winner Prize: $${(Number(m.winnerPrizeMinor) / 1_000_000).toFixed(2)} USDT Cash`}
+                    </span>
+                  </div>
+                ) : (
+                  <div className={styles.freeBanner}>
+                    <span>🎮</span>
+                    <span>{isRtl ? "نزال تدريبي وتنافسي حر" : "Free Tactical Duel"}</span>
+                  </div>
                 )}
 
                 <div className={styles.matchPlayers}>

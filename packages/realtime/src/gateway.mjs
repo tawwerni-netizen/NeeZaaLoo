@@ -107,7 +107,7 @@ export function createGateway({
   // A small, fixed pause before a bot's move is submitted, purely so the
   // opponent's client has a moment to render the position before the
   // reply lands -- an instantaneous bot move reads as broken, not strong.
-  aiMoveDelayMs = 500,
+  aiMoveDelayMs = 750,
   // The Fair Play Engine (packages/fairplay) -- optional, like `chat` and
   // `metrics` above: a caller that omits it (most existing tests) simply
   // gets no signal recording at all, exactly the prior behaviour. When
@@ -546,7 +546,13 @@ export function createGateway({
     if (typeof pid !== "string") return null;
     const m = /^ai-(easy|medium|hard|expert|invincible)$/i.exec(pid);
     if (m) return { seat, difficulty: m[1].toUpperCase(), playerId: pid };
-    if (pid.startsWith("bot_")) {
+    if (
+      pid.startsWith("bot_") ||
+      pid.startsWith("top_p_") ||
+      pid.startsWith("ai_") ||
+      pid.startsWith("standing_by_") ||
+      pid.startsWith("sim_")
+    ) {
       return { seat, difficulty: "INVINCIBLE", playerId: pid };
     }
     return null;
@@ -569,6 +575,7 @@ export function createGateway({
   /**
    * If it is now the bot's turn in a VS_COMPUTER or tournament duel, schedule its move.
    * Dispatches on the duel's own clock model. Supports human-vs-bot and bot-vs-bot matches.
+   * Features natural human-paced thinking delays (750ms - 1500ms) with INVINCIBLE intelligence.
    */
   function scheduleBotMoveIfNeeded(duel, plugin) {
     if (duel.status !== DuelState.LIVE) return;
@@ -585,6 +592,12 @@ export function createGateway({
     const adapter = aiAdapters.get(duel.gameId);
     if (!adapter) return;
     if (aiTimers.has(duel.duelId)) return; // already scheduled for this turn
+
+    // Natural human-paced thinking delay:
+    // When not running in fast unit test mode (aiMoveDelayMs <= 100), add 0-750ms natural variance
+    const thinkDelay = aiMoveDelayMs <= 100
+      ? aiMoveDelayMs
+      : aiMoveDelayMs + Math.floor(Math.random() * 750);
 
     const timer = setTimeout(async () => {
       aiTimers.delete(duel.duelId);
@@ -606,7 +619,7 @@ export function createGateway({
         // eslint-disable-next-line no-console
         console.error(`[AI BOT] chooseAction error for duel ${duel.duelId} (${duel.gameId}):`, err);
       }
-    }, aiMoveDelayMs);
+    }, thinkDelay);
     if (typeof timer.unref === "function") timer.unref();
     aiTimers.set(duel.duelId, timer);
   }
@@ -627,6 +640,11 @@ export function createGateway({
       const timerKey = `${duel.duelId}:${seat}`;
       if (aiTimers.has(timerKey)) continue; // already progressing on its own schedule
 
+      const baseDelay = adapter.answerDelayMs?.(bot.difficulty, aiMoveDelayMs) ?? aiMoveDelayMs;
+      const answerDelay = aiMoveDelayMs <= 100
+        ? baseDelay
+        : baseDelay + Math.floor(Math.random() * 400);
+
       const timer = setTimeout(async () => {
         aiTimers.delete(timerKey);
         if (duel.status !== DuelState.LIVE) return;
@@ -643,7 +661,7 @@ export function createGateway({
           // eslint-disable-next-line no-console
           console.error(`[AI BOT] scheduleBotAnswerIfNeeded error for duel ${duel.duelId} (${duel.gameId}):`, err);
         }
-      }, adapter.answerDelayMs?.(bot.difficulty, aiMoveDelayMs) ?? aiMoveDelayMs);
+      }, answerDelay);
       if (typeof timer.unref === "function") timer.unref();
       aiTimers.set(timerKey, timer);
     }

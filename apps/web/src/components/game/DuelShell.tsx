@@ -56,10 +56,31 @@ export function DuelShell({ duelId }: { duelId: string }) {
     result: string | null;
     reason: string | null;
   }>({ completed: false, result: null, reason: null });
+  const [duelMeta, setDuelMeta] = useState<{
+    tier?: string | undefined;
+    winnerCash?: number | null;
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!duelId || duelId.startsWith("guest")) return;
+    get<{ duel: { tier?: string; stake_minor?: string } }>(`/v1/duels/${duelId}`)
+      .then((res) => {
+        if (res?.duel) {
+          const tier = res.duel.tier;
+          const stakeMinor = res.duel.stake_minor;
+          let winnerCash: number | null = null;
+          if (tier === "CASH" && stakeMinor) {
+            winnerCash = (Number(stakeMinor) * 2 * 0.88) / 1_000_000;
+          }
+          setDuelMeta({ tier, winnerCash });
+        }
+      })
+      .catch(() => {});
+  }, [duelId]);
 
   useEffect(() => {
     if (!latest || typeof latest !== "object") return;
@@ -238,9 +259,17 @@ export function DuelShell({ duelId }: { duelId: string }) {
           <span className={styles.statusGroup}>
             <span className={connected ? styles.live : styles.offline}>{connectionLabel}</span>
             {isSpectator && (
-              <span className={styles.spectatorBadge} title="مشاهدة فقط بدون تدخل في سير اللعب">
-                👁️ {locale === "ar" ? "مشاهدة مباشرة (قراءة فقط)" : "Live Spectator (Read-Only)"}
-              </span>
+              <>
+                <span className={styles.spectatorBadge} title="مشاهدة فقط بدون تدخل في سير اللعب">
+                  👁️ {locale === "ar" ? "مشاهدة مباشرة (قراءة فقط)" : "Live Spectator (Read-Only)"}
+                </span>
+                {duelMeta?.winnerCash != null && duelMeta.winnerCash > 0 && (
+                  <span className={styles.spectatorPrizeBadge} title="جائزة الرابح الصافية بعد خصم عمولة المنصة">
+                    <span className={styles.prizePulseDot} />
+                    ⚡ {locale === "ar" ? `جائزة الفائز: $${duelMeta.winnerCash.toFixed(2)} USDT كاش` : `Winner Cash: $${duelMeta.winnerCash.toFixed(2)} USDT`}
+                  </span>
+                )}
+              </>
             )}
             {!vsComputer && opponentSeat !== null && connectedSeats && !opponentConnected && !completed && (
               <span className={styles.waitingBadge} title="في انتظار دخول الطرف الثاني للمبارزة">

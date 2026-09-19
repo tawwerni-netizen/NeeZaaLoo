@@ -614,3 +614,126 @@ export function playDefeatSound() {
     osc.stop(t + 0.28);
   });
 }
+
+// -------------------------------------------------------------
+// Tactile UI & Interaction Audio (Cyber-Luxury Feel)
+// -------------------------------------------------------------
+
+/**
+ * Crisp, tactile mechanical click for button presses.
+ */
+export function playButtonClickSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(480, now);
+  osc.frequency.exponentialRampToValueAtTime(140, now + 0.025);
+
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.028);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.03);
+}
+
+/**
+ * Energetic cybernetic chime when selecting a game mode or entering a lobby.
+ */
+export function playModeSelectSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  const freqs = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+  freqs.forEach((freq, idx) => {
+    const t = now + idx * 0.035;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, t);
+
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.18);
+  });
+}
+
+/**
+ * Dramatic, heroic clash sound when accepting a challenge or launching into battle.
+ */
+export function playChallengeAcceptSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // Blade/metallic sweep
+  const oscSweep = ctx.createOscillator();
+  const gainSweep = ctx.createGain();
+  oscSweep.type = "sawtooth";
+  oscSweep.frequency.setValueAtTime(300, now);
+  oscSweep.frequency.exponentialRampToValueAtTime(1200, now + 0.09);
+
+  gainSweep.gain.setValueAtTime(0.15, now);
+  gainSweep.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+  oscSweep.connect(gainSweep);
+  gainSweep.connect(ctx.destination);
+  oscSweep.start(now);
+  oscSweep.stop(now + 0.11);
+
+  // Impact strike
+  setTimeout(() => {
+    const ctx2 = getAudioContext();
+    if (!ctx2) return;
+    const tHit = ctx2.currentTime;
+    const oscHit = ctx2.createOscillator();
+    const gainHit = ctx2.createGain();
+    oscHit.type = "triangle";
+    oscHit.frequency.setValueAtTime(880, tHit);
+    oscHit.frequency.exponentialRampToValueAtTime(220, tHit + 0.18);
+
+    gainHit.gain.setValueAtTime(0.35, tHit);
+    gainHit.gain.exponentialRampToValueAtTime(0.0001, tHit + 0.2);
+
+    oscHit.connect(gainHit);
+    gainHit.connect(ctx2.destination);
+    oscHit.start(tHit);
+    oscHit.stop(tHit + 0.22);
+  }, 70);
+}
+
+/**
+ * Authentic crystal coin chime for stakes, winnings, and USDT payout badges.
+ */
+export function playCoinClinkSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  const coinPitches = [2489, 3136]; // D#7, G7 - crisp crystalline resonance
+  coinPitches.forEach((pitch, i) => {
+    const t = now + i * 0.04;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(pitch, t);
+
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.3);
+  });
+}

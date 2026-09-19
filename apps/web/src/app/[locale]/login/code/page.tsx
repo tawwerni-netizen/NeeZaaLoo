@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
@@ -14,11 +14,20 @@ import styles from "@/components/auth/AuthForm.module.css";
 type Step = "request" | "verify";
 
 export default function EmailCodeLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <EmailCodeLoginContent />
+    </Suspense>
+  );
+}
+
+function EmailCodeLoginContent() {
   const { applySession } = useAuth();
   const { t, locale } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("request");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams?.get("email") || "");
   const [code, setCode] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [needsTotp, setNeedsTotp] = useState(false);

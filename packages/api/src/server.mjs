@@ -2317,6 +2317,7 @@ function buildRoutes() {
 
         const r = await db.query(
           `SELECT d.id, d.game_id, d.started_at, d.created_at, d.pairing_key, d.is_vs_computer,
+                  d.tier, d.stake_minor, d.asset,
                   pa.handle AS handle_0, pa.selected_badge_code AS badge_0,
                   COALESCE(pb.handle, CASE WHEN d.is_vs_computer THEN 'Computer AI' ELSE 'Player 2' END) AS handle_1,
                   pb.selected_badge_code AS badge_1,
@@ -2338,26 +2339,37 @@ function buildRoutes() {
         );
         return {
           body: {
-            matches: r.rows.map((row) => ({
-              duelId: row.id,
-              gameId: row.game_id,
-              startedAt: row.started_at || row.created_at,
-              isVsComputer: Boolean(row.is_vs_computer),
-              // A tournament pairing's duel is keyed "tournament:<id>:r<n>:s<slot>"
-              // (see tournament.mjs's createRound()) -- a real, safe signal the
-              // Live Arena can use to badge "TOURNAMENT MATCH" without exposing
-              // anything server-only.
-              isTournamentMatch: row.pairing_key?.startsWith("tournament:") ?? false,
-              moveCount: row.move_count,
-              players: [
-                { handle: row.handle_0, badge: row.badge_0, ratingX100: row.rating_0 ?? null },
-                {
-                  handle: row.handle_1,
-                  badge: row.badge_1,
-                  ratingX100: row.is_vs_computer ? 160000 : (row.rating_1 ?? null)
-                },
-              ],
-            })),
+            matches: r.rows.map((row) => {
+              const stakeBig = row.stake_minor ? BigInt(row.stake_minor) : 0n;
+              const winnerPrizeMinor = row.tier === "CASH" && stakeBig > 0n
+                ? ((stakeBig * 2n * 88n) / 100n).toString()
+                : null;
+
+              return {
+                duelId: row.id,
+                gameId: row.game_id,
+                startedAt: row.started_at || row.created_at,
+                isVsComputer: Boolean(row.is_vs_computer),
+                tier: row.tier || "FREE",
+                stakeMinor: row.stake_minor || "0",
+                asset: row.asset || (row.tier === "CASH" ? "USDT" : null),
+                winnerPrizeMinor,
+                // A tournament pairing's duel is keyed "tournament:<id>:r<n>:s<slot>"
+                // (see tournament.mjs's createRound()) -- a real, safe signal the
+                // Live Arena can use to badge "TOURNAMENT MATCH" without exposing
+                // anything server-only.
+                isTournamentMatch: row.pairing_key?.startsWith("tournament:") ?? false,
+                moveCount: row.move_count,
+                players: [
+                  { handle: row.handle_0, badge: row.badge_0, ratingX100: row.rating_0 ?? null },
+                  {
+                    handle: row.handle_1,
+                    badge: row.badge_1,
+                    ratingX100: row.is_vs_computer ? 160000 : (row.rating_1 ?? null),
+                  },
+                ],
+              };
+            }),
           },
         };
       } },

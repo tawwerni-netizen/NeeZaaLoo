@@ -364,8 +364,8 @@ export function Hero() {
               <span>{isRtl ? "88% من وعاء النزال للفائز" : "88% Winner Share"}</span>
             </div>
             <div className={styles.trustItem}>
-              <span className={styles.trustIcon}>🎁</span>
-              <span>{isRtl ? "بونص ترحيبي 100% على أول إيداع" : "100% Welcome Bonus"}</span>
+              <span className={styles.trustIcon}>🏆</span>
+              <span>{isRtl ? "بطولات يومية ومبارزات فورية كاش" : "Daily Tournaments & Instant Cash Duels"}</span>
             </div>
           </div>
 

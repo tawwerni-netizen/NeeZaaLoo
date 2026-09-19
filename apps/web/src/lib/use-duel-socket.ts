@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getTokens } from "./api";
+import { getTokens, setTokens, post } from "./api";
 
 export function getGatewayUrl(): string {
   if (process.env.NEXT_PUBLIC_GATEWAY_URL) {
@@ -72,9 +72,18 @@ export function useDuelSocket(duelId: string) {
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let ws: WebSocket;
 
-    function connect() {
-      const { accessToken } = getTokens();
-      if (!accessToken) return;
+    async function connect() {
+      let { accessToken } = getTokens();
+      if (!accessToken) {
+        try {
+          const guestRes = await post<{ accessToken: string; refreshToken: string }>("/v1/auth/guest", {});
+          setTokens(guestRes.accessToken, guestRes.refreshToken, true);
+          accessToken = guestRes.accessToken;
+        } catch {
+          return;
+        }
+      }
+      if (!accessToken || closedByUsRef.current) return;
 
       const gateway = getGatewayUrl();
       ws = new WebSocket(gateway);

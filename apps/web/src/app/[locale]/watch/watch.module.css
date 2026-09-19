@@ -230,6 +230,49 @@
   transform: translateY(-2px);
 }
 
+.prizeBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.14) 0%, rgba(16, 185, 129, 0.12) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  border-radius: 10px;
+  padding: 6px 12px;
+  margin-block: 4px;
+}
+
+.prizeIcon {
+  color: #ffd700;
+  font-size: 14px;
+  animation: prizePulse 1.5s infinite ease-in-out;
+}
+
+@keyframes prizePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+.prizeText {
+  font-size: 13px;
+  font-weight: 800;
+  color: #facc15;
+  letter-spacing: 0.01em;
+}
+
+.freeBanner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-block: 4px;
+}
+
 .cardTop {
   display: flex;
   align-items: center;

@@ -205,8 +205,11 @@ function LoginForm() {
 
           <GoogleButton onError={(err) => setError(err)} returnTo={returnTo} />
 
-          <LocaleLink href="/login/code" className={styles.secondaryLink}>
-            {t("auth.login.email_code_cta")}
+          <LocaleLink
+            href={`/login/code${identifier.trim() ? `?email=${encodeURIComponent(identifier.trim())}` : ""}`}
+            className={styles.secondaryLink}
+          >
+            <span>📩</span> {locale === "ar" ? "الدخول السريع برمز التحقق (Gmail / بريدك) بدون كلمة مرور" : t("auth.login.email_code_cta")}
           </LocaleLink>
 
           <p className={styles.switch}>
