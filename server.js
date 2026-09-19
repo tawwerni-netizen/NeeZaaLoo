@@ -134,6 +134,7 @@ function getEnv(childPort) {
     OXAPAY_PAYOUT_API_KEY:   process.env.OXAPAY_PAYOUT_API_KEY || "",
     OXAPAY_CALLBACK_URL:     process.env.OXAPAY_CALLBACK_URL || "https://nizalo.com/v1/payments/oxapay/webhook",
     DB_POOL_SIZE:            process.env.DB_POOL_SIZE || "2",
+    API_INTERNAL_URL:        process.env.API_INTERNAL_URL || ("http://127.0.0.1:" + apiPort),
   });
 }
 
@@ -321,7 +322,7 @@ function proxyHttp(req, res, targetPort) {
       path:     req.url,
       method:   req.method,
       headers:  pHeaders,
-      timeout:  30000,
+      timeout:  45000,
       agent:    keepAliveAgent,
     },
     (proxyRes) => {

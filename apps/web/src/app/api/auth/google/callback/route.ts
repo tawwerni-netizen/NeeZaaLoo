@@ -93,13 +93,15 @@ export async function GET(request: Request) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: syncPayload,
-          signal: AbortSignal.timeout(8000),
+          signal: AbortSignal.timeout(4000),
         });
         if (candidateRes.ok) {
           syncRes = candidateRes;
           break;
         } else {
-          lastError = `Status ${candidateRes.status} from ${base}`;
+          const errText = await candidateRes.text().catch(() => "");
+          lastError = `Status ${candidateRes.status} from ${base}: ${errText.slice(0, 100)}`;
+          console.warn(`[Google Callback] Candidate ${base} returned status ${candidateRes.status}:`, errText.slice(0, 100));
         }
       } catch (err: any) {
         lastError = err?.message || err;

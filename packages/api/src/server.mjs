@@ -4936,26 +4936,54 @@ function buildRoutes() {
     // --- Google OAuth Seamless Session Sync ---
     { method: "POST", path: "/v1/auth/google/sync-session", action: "player.login", anonymous: true,
       handler: async ({ body, ip, db, auth }) => {
-        const { email, subject, name } = body ?? {};
-        if (!email || typeof email !== "string") {
-          return { status: 400, body: errorBody("BAD_REQUEST", "email is required") };
-        }
-        const normEmail = email.trim().toLowerCase();
-        let playerId = null;
-        if (subject) {
-          const oid = await db.query(
-            "SELECT player_id FROM oauth_identity WHERE provider = 'google' AND provider_subject = $1",
-            [String(subject)]
-          );
-          if (oid.rows.length) playerId = oid.rows[0].player_id;
-        }
-        if (!playerId) {
-          const em = await db.query(
-            "SELECT player_id FROM email_identity WHERE email = $1",
-            [normEmail]
-          );
-          if (em.rows.length) {
-            playerId = em.rows[0].player_id;
+        try {
+          const { email, subject, name } = body ?? {};
+          if (!email || typeof email !== "string") {
+            return { status: 400, body: errorBody("BAD_REQUEST", "email is required") };
+          }
+          const normEmail = email.trim().toLowerCase();
+          let playerId = null;
+          if (subject) {
+            const oid = await db.query(
+              "SELECT player_id FROM oauth_identity WHERE provider = 'google' AND provider_subject = $1",
+              [String(subject)]
+            );
+            if (oid.rows.length) playerId = oid.rows[0].player_id;
+          }
+          if (!playerId) {
+            const em = await db.query(
+              "SELECT player_id FROM email_identity WHERE email = $1",
+              [normEmail]
+            );
+            if (em.rows.length) {
+              playerId = em.rows[0].player_id;
+              if (subject) {
+                await db.query(
+                  `INSERT INTO oauth_identity (id, player_id, provider, provider_subject, email, email_verified, created_at)
+                   VALUES ($1, $2, 'google', $3, $4, true, now())
+                   ON CONFLICT (provider, provider_subject) DO NOTHING`,
+                  [`oid_${randomUUID()}`, playerId, String(subject), normEmail]
+                ).catch(() => {});
+              }
+            }
+          }
+          if (!playerId) {
+            const rawBase = normEmail.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "_") || "player";
+            const base = (rawBase.length < 3 ? `${rawBase}_player` : rawBase).slice(0, 18);
+            let handle = base;
+            const exists = await db.query("SELECT 1 FROM player WHERE handle = $1", [handle]);
+            if (exists.rows.length) {
+              handle = `${base}_${Math.floor(1000 + Math.random() * 9000)}`;
+            }
+            playerId = handle;
+            await db.query("INSERT INTO player (id, handle, locale) VALUES ($1, $2, 'en')", [playerId, handle]);
+            await db.query("SELECT ledger_open_user_wallet($1)", [playerId]).catch(() => {});
+            await db.query(
+              `INSERT INTO email_identity (id, player_id, email, email_display, verified_at, created_at)
+               VALUES ($1, $2, $3, $4, now(), now())
+               ON CONFLICT (email) DO NOTHING`,
+              [`eid_${randomUUID()}`, playerId, normEmail, email.trim()]
+            );
             if (subject) {
               await db.query(
                 `INSERT INTO oauth_identity (id, player_id, provider, provider_subject, email, email_verified, created_at)
@@ -4965,45 +4993,25 @@ function buildRoutes() {
               ).catch(() => {});
             }
           }
+          const sessionRes = await auth.loginPasswordless({ playerId }, { ip });
+          if (!sessionRes.ok) {
+            console.error(`[sync-session] loginPasswordless failed for ${playerId}:`, sessionRes.reason);
+            return { status: 400, body: errorBody(sessionRes.reason) };
+          }
+          return {
+            status: 200,
+            body: {
+              ok: true,
+              playerId,
+              accessToken: sessionRes.accessToken,
+              refreshToken: sessionRes.refreshToken,
+              expiresInSeconds: sessionRes.expiresInSeconds,
+            }
+          };
+        } catch (err) {
+          console.error("[sync-session fatal error]:", err);
+          return { status: 500, body: errorBody("INTERNAL_ERROR", err.message) };
         }
-        if (!playerId) {
-          const rawBase = normEmail.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "_") || "player";
-          const base = (rawBase.length < 3 ? `${rawBase}_player` : rawBase).slice(0, 18);
-          let handle = base;
-          const exists = await db.query("SELECT 1 FROM player WHERE handle = $1", [handle]);
-          if (exists.rows.length) {
-            handle = `${base}_${Math.floor(1000 + Math.random() * 9000)}`;
-          }
-          playerId = handle;
-          await db.query("INSERT INTO player (id, handle, locale) VALUES ($1, $2, 'en')", [playerId, handle]);
-          await db.query("SELECT ledger_open_user_wallet($1)", [playerId]);
-          await db.query(
-            `INSERT INTO email_identity (id, player_id, email, email_display, verified_at, created_at)
-             VALUES ($1, $2, $3, $4, now(), now())
-             ON CONFLICT (email) DO NOTHING`,
-            [`eid_${randomUUID()}`, playerId, normEmail, email.trim()]
-          );
-          if (subject) {
-            await db.query(
-              `INSERT INTO oauth_identity (id, player_id, provider, provider_subject, email, email_verified, created_at)
-               VALUES ($1, $2, 'google', $3, $4, true, now())
-               ON CONFLICT (provider, provider_subject) DO NOTHING`,
-              [`oid_${randomUUID()}`, playerId, String(subject), normEmail]
-            ).catch(() => {});
-          }
-        }
-        const sessionRes = await auth.loginPasswordless({ playerId }, { ip });
-        if (!sessionRes.ok) return { status: 400, body: errorBody(sessionRes.reason) };
-        return {
-          status: 200,
-          body: {
-            ok: true,
-            playerId,
-            accessToken: sessionRes.accessToken,
-            refreshToken: sessionRes.refreshToken,
-            expiresInSeconds: sessionRes.expiresInSeconds,
-          }
-        };
       } },
 
     // --- Admin Platform Events Stream (Topbar Bell) ---

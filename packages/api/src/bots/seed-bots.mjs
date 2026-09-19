@@ -17,6 +17,17 @@ export const STANDING_BY_BOT_IDS = new Set([
 ]);
 
 export async function seedBotsAndFund(db) {
+  // Guard: If AI personas are already seeded in the database, skip the heavy 6,600-query loop
+  // to avoid monopolizing connection pools on server startup.
+  try {
+    const check = await db.query("SELECT COUNT(*) AS count FROM player WHERE is_ai = TRUE");
+    if (Number(check.rows[0]?.count || 0) >= 200) {
+      return { totalBots: ALL_BOT_PERSONAS.length, createdCount: 0, fundedCount: 0, skipped: true };
+    }
+  } catch (err) {
+    console.warn("[bots] Could not verify existing bot count, continuing with seed:", err.message);
+  }
+
   let createdCount = 0;
   let fundedCount = 0;
 
