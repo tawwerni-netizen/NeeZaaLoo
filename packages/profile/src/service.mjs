@@ -111,7 +111,7 @@ export function createProfileService(db, {
 
   async function publicProfileFor(playerId) {
     const p = await db.query(
-      "SELECT id, handle, bio, avatar_key, selected_badge_code, selected_frame_code, created_at FROM player WHERE id = $1", [playerId]
+      "SELECT id, handle, bio, avatar_key, selected_badge_code, selected_frame_code, created_at, clan_id, (SELECT tag FROM clan WHERE id = player.clan_id) AS clan_tag FROM player WHERE id = $1", [playerId]
     );
     if (!p.rows.length) return null;
     const row = p.rows[0];

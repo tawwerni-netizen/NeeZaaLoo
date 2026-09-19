@@ -81,17 +81,21 @@ export function LiveArenaSection() {
               const nameKey = getGame(m.gameId)?.nameKey ?? m.gameId;
               return (
                 <LocaleLink key={m.duelId} href={`/game/${m.duelId}`} className={styles.card}>
-                  <div className={styles.cardTop}>
-                    <span className={styles.liveDot} aria-hidden="true" />
-                    <span className={styles.gameName}>{t(`common.game_names.${nameKey}`)}</span>
-                    {m.isTournamentMatch && <span className={styles.tournamentTag}>{t("watch.tournament_badge")}</span>}
+                  <img src={`/images/games/${m.gameId}-hero.jpg`} alt={m.gameId} className={styles.cardCoverImage} />
+                  <div className={styles.cardCoverOverlay} />
+                  <div className={styles.cardContent}>
+                    <div className={styles.cardTop}>
+                      <span className={styles.liveDot} aria-hidden="true" />
+                      <span className={styles.gameName}>{t(`common.game_names.${nameKey}`)}</span>
+                      {m.isTournamentMatch && <span className={styles.tournamentTag}>{t("watch.tournament_badge")}</span>}
+                    </div>
+                    <div className={styles.players}>
+                      <span className={styles.handle}>{m.players[0]?.handle}</span>
+                      <span className={styles.vs}>{t("watch.vs")}</span>
+                      <span className={styles.handle}>{m.players[1]?.handle}</span>
+                    </div>
+                    <span className={styles.moves}>{t("watch.move_count", { count: m.moveCount })}</span>
                   </div>
-                  <div className={styles.players}>
-                    <span className={styles.handle}>{m.players[0]?.handle}</span>
-                    <span className={styles.vs}>{t("watch.vs")}</span>
-                    <span className={styles.handle}>{m.players[1]?.handle}</span>
-                  </div>
-                  <span className={styles.moves}>{t("watch.move_count", { count: m.moveCount })}</span>
                 </LocaleLink>
               );
             })}

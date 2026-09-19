@@ -30,6 +30,7 @@ import { transition } from "@/lib/motion";
 import { Countdown } from "@/components/game/Countdown";
 import { LocaleLink } from "@/components/LocaleLink";
 import { Button } from "@/components/Button";
+import { Avatar } from "@/components/profile/Avatar";
 import type { StakeChoice } from "@/components/play/StakeSelect";
 import styles from "./MatchmakingFlow.module.css";
 
@@ -153,23 +154,47 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
 
         {phase === "waiting" && (
           <motion.div key="waiting" {...fade(reduceMotion)} className={styles.center}>
-            <p className={styles.status}>{findingMessage}</p>
+            <div className={styles.radarContainer}>
+              <div className={styles.radarPulse}></div>
+              <div className={styles.radarPulseDelay}></div>
+              <div className={styles.radarCore}></div>
+            </div>
+            <p className={styles.radarStatus}>{findingMessage}</p>
             <p className={`nz-num ${styles.timer}`}>{formatElapsed(elapsedSec)}</p>
             <button className={styles.cancelLink} onClick={() => void cancel()}>{t("matchmaking.cancel")}</button>
           </motion.div>
         )}
 
         {phase === "matched" && opponent && (
-          <motion.div key="matched" {...fade(reduceMotion)} className={styles.vsWrap}>
-            <div className={styles.vsSide}>
-              <span className={styles.vsLabel}>{t("matchmaking.you")}</span>
-              <span className={styles.vsHandle}>{player?.handle}</span>
-            </div>
-            <span className={styles.vsMark}>{t("matchmaking.vs")}</span>
-            <div className={styles.vsSide}>
-              <span className={styles.vsLabel}>{t("matchmaking.opponent")}</span>
-              <span className={styles.vsHandle}>{opponent.handle}</span>
-            </div>
+          <motion.div key="matched" {...fade(reduceMotion)} className={styles.vsDramaticWrap}>
+            <motion.div 
+              className={styles.vsPlayerSide}
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: "spring", damping: 12 }}
+            >
+              <Avatar nickname={player?.handle || "You"} avatarUrl={null} size={100} />
+              <span className={styles.vsHandleDramatic}>{player?.handle}</span>
+            </motion.div>
+            
+            <motion.div 
+              className={styles.vsLightningCenter}
+              initial={{ scale: 0, rotate: -15 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+            >
+              <span className={styles.vsMarkDramatic}>VS</span>
+            </motion.div>
+
+            <motion.div 
+              className={styles.vsPlayerSide}
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: "spring", damping: 12 }}
+            >
+              <Avatar nickname={opponent.handle} avatarUrl={null} size={100} />
+              <span className={styles.vsHandleDramatic}>{opponent.handle}</span>
+            </motion.div>
           </motion.div>
         )}
 

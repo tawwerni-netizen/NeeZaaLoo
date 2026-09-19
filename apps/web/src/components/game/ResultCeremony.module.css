@@ -135,3 +135,79 @@
 .actionBtn {
   width: 100%;
 }
+
+/* --- Guest Conversion & Gems VFX --- */
+.guestConversionCard {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(14, 19, 29, 0.9));
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: var(--nz-radius-lg);
+  padding: 20px;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.guestConversionIcon {
+  font-size: 32px;
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8));
+}
+
+.guestConversionTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fbbf24;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-tight);
+}
+
+.guestConversionDesc {
+  font-size: 14px;
+  color: var(--nz-text-2);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.guestConversionBtn {
+  width: 100%;
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  border: none;
+  color: #fff;
+  padding: 14px;
+  border-radius: var(--nz-radius);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.guestConversionBtn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+.gemDeltaItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: var(--nz-radius-pill);
+  font-weight: 800;
+  font-size: 16px;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+  animation: pulseGem 1.5s infinite alternate;
+}
+
+@keyframes pulseGem {
+  0% { transform: scale(1); box-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
+  100% { transform: scale(1.05); box-shadow: 0 0 25px rgba(251, 191, 36, 0.5); }
+}

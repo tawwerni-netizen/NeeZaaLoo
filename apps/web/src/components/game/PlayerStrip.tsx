@@ -67,13 +67,14 @@ function useInterpolatedClock(serverRemainingMs: number | null, active: boolean)
 }
 
 export function PlayerStrip({
-  playerId, active, remainingMs, flagged, disconnected,
+  playerId, active, remainingMs, flagged, disconnected, reverse = false,
 }: {
   playerId: string;
   active: boolean;
   remainingMs: number | null;
   flagged: boolean;
   disconnected?: boolean;
+  reverse?: boolean;
 }) {
   const { t } = useI18n();
   const isBot = playerId in BOT_DIFFICULTY;
@@ -95,8 +96,8 @@ export function PlayerStrip({
   const isFlagged = flagged || (currentRemainingMs !== null && currentRemainingMs <= 0);
 
   return (
-    <div className={[styles.strip, active ? styles.active : ""].join(" ")}>
-      <Avatar nickname={nickname} avatarUrl={avatarUrl} size={40} />
+    <div className={[styles.strip, active ? styles.active : "", reverse ? styles.reverse : ""].join(" ")}>
+      <Avatar nickname={nickname} avatarUrl={avatarUrl} size={40} rating={preview?.globalSkill ?? null} />
       <div className={styles.info}>
         <div className={styles.nameRow}>
           <span className={styles.nickname}>{isBot ? `♞ ${nickname}` : nickname}</span>
@@ -133,3 +134,4 @@ function formatClock(ms: number): string {
   }
   return `${m}:${String(s).padStart(2, "0")}`;
 }
+

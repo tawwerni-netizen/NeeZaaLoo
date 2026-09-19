@@ -48,6 +48,7 @@ export type PublicProfile = {
   nickname: string;
   bio: string;
   avatarUrl: string | null;
+  clanTag?: string;
   selectedBadge: string | null;
   selectedFrame: string | null;
   exp: ExpProgress;

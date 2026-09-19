@@ -1,0 +1,214 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  padding: 40px 0;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 40px;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.1), transparent);
+  padding: 40px 20px;
+  border-radius: var(--nz-radius-lg);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  background: linear-gradient(90deg, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--nz-text-2);
+  margin-bottom: 24px;
+}
+
+.heroActions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--nz-line);
+  padding-bottom: 12px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--nz-text-2);
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: color 0.2s;
+}
+
+.tab:hover {
+  color: var(--nz-text);
+}
+
+.tabActive {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--nz-primary);
+  cursor: pointer;
+  padding: 8px 16px;
+  border-bottom: 2px solid var(--nz-primary);
+}
+
+.clanGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.clanCard {
+  background: var(--nz-surface);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clanCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.clanHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.clanLogo {
+  font-size: 40px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--nz-bg);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.clanName {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.clanTag {
+  font-size: 14px;
+  color: var(--nz-primary);
+  font-weight: 600;
+}
+
+.clanStats {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  border-radius: var(--nz-radius);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--nz-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statValue {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--nz-font-mono);
+}
+
+.joinBtn {
+  width: 100%;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--nz-surface);
+  border-radius: var(--nz-radius-lg);
+  border: 1px dashed var(--nz-line);
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+.modalContent {
+  background: var(--nz-surface);
+  padding: 32px;
+  border-radius: var(--nz-radius-xl);
+  width: 90%;
+  max-width: 400px;
+  border: 1px solid var(--nz-line);
+}
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.inputGroup label {
+  font-size: 14px;
+  color: var(--nz-text-2);
+}
+.input {
+  background: var(--nz-bg);
+  border: 1px solid var(--nz-line);
+  padding: 12px;
+  border-radius: var(--nz-radius);
+  color: var(--nz-text);
+  font-size: 16px;
+}
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+}

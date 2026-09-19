@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { LocaleLink } from "@/components/LocaleLink";
 import { useI18n } from "@/lib/i18n/context";
 import type { SupportedLocale } from "@/lib/i18n/locale";
@@ -88,103 +88,66 @@ const MAIN_BANNERS: LocalizedBanner[] = [
     tag: {
       ar: "⚡ تسوية فورية",
       en: "⚡ Instant Payouts",
-      zh: "⚡ 即时结算",
+      zh: "⚡ 秒速提现",
       hi: "⚡ त्वरित भुगतान",
       es: "⚡ Pagos Instantáneos",
       fr: "⚡ Paiements Instantanés",
     },
     title: {
-      ar: "سحوبات USDT مباشرة ومؤكدة",
-      en: "Direct USDT Settlement",
-      zh: "USDT 直接结算",
-      hi: "प्रत्यक्ष USDT सेटलमेंट",
-      es: "Liquidación Directa en USDT",
-      fr: "Règlement Direct en USDT",
+      ar: "دفعات فورية غير قابلة للاحتجاز",
+      en: "Non-Custodial Instant Rewards",
+      zh: "非托管式即时奖金结算",
+      hi: "गैर-कस्टोडियल त्वरित पुरस्कार",
+      es: "Recompensas Instantáneas No Custodiadas",
+      fr: "Récompenses Instantanées Non Dépositaires",
     },
     desc: {
-      ar: "سحوبات تشفيرية شفافة بدون رسوم منصة على الأرباح المؤهلة.",
-      en: "Transparent cryptographic withdrawals with zero platform fees on eligible earnings.",
-      zh: "透明的加密货币提款，合规收益零平台手续费。",
-      hi: "पात्र कमाई पर शून्य प्लेटफ़ॉर्म शुल्क के साथ पारदर्शी ब्लॉकचेन निकासी।",
-      es: "Retiros criptográficos transparentes con cero comisiones de plataforma en ganancias elegibles.",
-      fr: "Retraits cryptographiques transparents sans frais de plateforme sur les gains éligibles.",
+      ar: "تصل جوائزك مباشرة إلى محفظتك في ثوانٍ بفضل تقنية العقود الذكية لضمان حقك فور انتهاء النزال.",
+      en: "Your winnings hit your wallet in seconds via on-chain smart contracts. Zero delays.",
+      zh: "对局结束，奖金通过链上智能合约即刻发放至您的钱包。零延迟，绝对透明。",
+      hi: "आपकी जीत ऑन-चेन स्मार्ट कॉन्ट्रैक्ट्स के माध्यम से सेकंडों में आपके वॉलेट में आ जाती है। शून्य विलंब।",
+      es: "Tus ganancias llegan a tu billetera en segundos mediante contratos inteligentes en cadena. Cero retrasos.",
+      fr: "Vos gains arrivent dans votre portefeuille en quelques secondes via des contrats intelligents on-chain. Zéro délai.",
     },
     cta: {
-      ar: "فتح المحفظة",
-      en: "Open Wallet",
-      zh: "打开钱包",
-      hi: "वॉलेट खोलें",
-      es: "Abrir Billetera",
-      fr: "Ouvrir le Portefeuille",
+      ar: "اكتشف المحفظة",
+      en: "Explore Wallet",
+      zh: "探索钱包",
+      hi: "वॉलेट देखें",
+      es: "Explorar Billetera",
+      fr: "Explorer le Portefeuille",
     },
   },
   {
-    id: "skill",
-    img: "/images/banners/banner-certified-skill.jpg",
-    href: "/learn",
-    tag: {
-      ar: "🧠 مهارة معتمدة 100%",
-      en: "🧠 Certified Skill",
-      zh: "🧠 认证技巧",
-      hi: "🧠 प्रमाणित कौशल",
-      es: "🧠 Habilidad Certificada",
-      fr: "🧠 Compétence Certifiée",
-    },
-    title: {
-      ar: "100% استراتيجية ومهارة خالصة",
-      en: "100% Pure Strategy & Skill",
-      zh: "100% 纯粹策略与技巧",
-      hi: "100% शुद्ध रणनीति एवं कौशल",
-      es: "100% Estrategia y Habilidad Pura",
-      fr: "100% Pure Stratégie et Habileté",
-    },
-    desc: {
-      ar: "خوارزميات صفرية الصدفة والحظ. قواعد شفافة يتم التحقق منها عبر خادم مستقل.",
-      en: "Zero chance, zero luck algorithms. Transparent rules verified on server-authoritative state.",
-      zh: "零随机、无运气算法。透明规则经服务器权威状态严格验证。",
-      hi: "शून्य संयोग, शून्य भाग्य एल्गोरिदम। सर्वर-सत्यापित पारदर्शी नियम।",
-      es: "Cero azar, cero algoritmos de suerte. Reglas transparentes verificadas en el servidor.",
-      fr: "Zéro hasard, zéro chance. Règles transparentes vérifiées sur l'état du serveur.",
-    },
-    cta: {
-      ar: "استكشف القواعد",
-      en: "Learn Rules",
-      zh: "了解规则",
-      hi: "नियम जानें",
-      es: "Ver Reglas",
-      fr: "Apprendre les Règles",
-    },
-  },
-  {
-    id: "cups",
-    img: "/images/banners/banner-freeroll-cups.jpg",
+    id: "tournaments",
+    img: "/images/banners/banner-tournaments.jpg",
     href: "/tournaments",
     tag: {
-      ar: "🏅 الكؤوس والبطولات",
-      en: "🏅 Daily Cups",
-      zh: "🏅 每日锦标杯",
-      hi: "🏅 दैनिक कप",
-      es: "🏅 Copas Diarias",
-      fr: "🏅 Coupes Quotidiennes",
+      ar: "🌍 بطولات ضخمة",
+      en: "🌍 Major Tournaments",
+      zh: "🌍 大型锦标赛",
+      hi: "🌍 प्रमुख टूर्नामेंट",
+      es: "🌍 Grandes Torneos",
+      fr: "🌍 Tournois Majeurs",
     },
     title: {
-      ar: "بطولات مصنفة وكؤوس يومية مجانية",
-      en: "Ranked Tournaments & Free Cups",
-      zh: "天梯排位赛与免费杯赛",
-      hi: "रैंक्ड टूर्नामेंट और निःशुल्क कप",
-      es: "Torneos Clasificatorios y Copas Gratis",
-      fr: "Tournois Classés et Coupes Gratuites",
+      ar: "نظام إقصاء متطور ومنافسات كبرى",
+      en: "Advanced Knockout Systems",
+      zh: "高级淘汰晋级系统",
+      hi: "उन्नत नॉकआउट सिस्टम",
+      es: "Sistemas Avanzados de Eliminación",
+      fr: "Systèmes d'Élimination Avancés",
     },
     desc: {
-      ar: "تنافس يومياً بنظام المجموعات السويسري وخروج المغلوب لتصدر لوحة الشرف.",
-      en: "Compete daily in Swiss brackets, single elimination, and leaderboard qualifiers.",
-      zh: "每日参与瑞士轮战圈、单败淘汰赛与天梯预选赛。",
-      hi: "स्विस ब्रैकेट, सिंगल एलिमिनेशन और लीडरबोर्ड क्वालीफायर में प्रतिदिन मुकाबला करें।",
-      es: "Compite a diario en cuadros suizos, eliminación directa y clasificatorios.",
-      fr: "Participez quotidiennement à des tournois suisses et à élimination directe.",
+      ar: "شارك في بطولات ضخمة بنظام الإقصاء أو السويسري ونافس النخبة على جوائز مالية قيّمة.",
+      en: "Compete in massive Swiss or Elimination bracket tournaments against the elite for massive prizes.",
+      zh: "参与庞大的瑞士轮或单败淘汰赛制锦标赛，与精英对决，赢取巨额奖金。",
+      hi: "विशाल स्विस या एलिमिनेशन ब्रैकेट टूर्नामेंट में अभिजात वर्ग के खिलाफ प्रतिस्पर्धा करें।",
+      es: "Compite en torneos masivos suizos o de eliminación directa contra la élite por grandes premios.",
+      fr: "Participez à des tournois massifs en système suisse ou à élimination directe contre l'élite.",
     },
     cta: {
-      ar: "عرض البطولات",
+      ar: "تصفح البطولات",
       en: "View Tournaments",
       zh: "查看比赛",
       hi: "टूर्नामेंट देखें",
@@ -234,184 +197,36 @@ const MAIN_BANNERS: LocalizedBanner[] = [
     img: "/images/banners/banner-anti-cheat.jpg",
     href: "/fair-play",
     tag: {
-      ar: "🛡️ حراسة أمنية متقدمة",
-      en: "🛡️ Sentinel Security",
-      zh: "🛡️ 哨兵反作弊",
-      hi: "🛡️ सेंटिनल सुरक्षा",
-      es: "🛡️ Seguridad Sentinel",
-      fr: "🛡️ Sécurité Sentinel",
+      ar: "🛡️ حراسة سيبرانية",
+      en: "🛡️ Cyber Overwatch",
+      zh: "🛡️ 赛博防作弊",
+      hi: "🛡️ साइबर ओवरवॉच",
+      es: "🛡️ CiberVigilancia",
+      fr: "🛡️ CyberSurveillance",
     },
     title: {
-      ar: "نظام مكافحة الغش التشفيري الحتمي",
-      en: "Cryptographic Anti-Cheat System",
-      zh: "密码学反作弊防御系统",
-      hi: "क्रिप्टोग्राफ़िक एंटी-चीट सिस्टम",
-      es: "Sistema Criptográfico Anti-Trampas",
-      fr: "Système Cryptographique Anti-Triche",
+      ar: "نظام حماية متقدم ضد الغش",
+      en: "Advanced Anti-Cheat Matrix",
+      zh: "高级反作弊矩阵",
+      hi: "उन्नत एंटी-चीट मैट्रिक्स",
+      es: "Matriz Avanzada Anti-Trampas",
+      fr: "Matrice Anti-Triche Avancée",
     },
     desc: {
-      ar: "تحقق كامل من كل حركة وتحليلات سلوكية فورية لحماية نزاهة كل مباراة.",
-      en: "Full client-move verification and behavioral heuristics protecting every match.",
-      zh: "全量客户端操作核验与实时行为启发式分析，保障每一局公正。",
-      hi: "हर मैच की रक्षा करने वाला पूर्ण चाल सत्यापन और व्यवहार विश्लेषण।",
-      es: "Verificación total de movimientos y análisis heurístico protegiendo cada partida.",
-      fr: "Vérification complète des mouvements et analyses comportementales protégeant chaque match.",
+      ar: "تقنيات تحليل سلوك مدعومة بالذكاء الاصطناعي لضمان اللعب النظيف ومعاقبة الغشاشين فوراً.",
+      en: "AI-driven behavioral analysis ensures fair play and permanently bans cheaters.",
+      zh: "基于 AI 的行为分析系统，确保竞技绝对公平，严惩作弊者。",
+      hi: "AI-संचालित व्यवहार विश्लेषण निष्पक्ष खेल सुनिश्चित करता है।",
+      es: "El análisis de comportamiento impulsado por IA asegura el juego limpio.",
+      fr: "L'analyse comportementale par IA garantit un jeu équitable et bannit les tricheurs.",
     },
     cta: {
-      ar: "ميثاق اللعب النظيف",
-      en: "Fair Play Policy",
-      zh: "公平守则",
-      hi: "निष्पक्ष खेल नीति",
-      es: "Juego Limpio",
-      fr: "Jeu Équitable",
-    },
-  },
-  {
-    id: "leaderboard",
-    img: "/images/banners/banner-global-leaderboard.jpg",
-    href: "/rank",
-    tag: {
-      ar: "👑 لوحة المتصدرين",
-      en: "👑 Leaderboards",
-      zh: "👑 荣耀排行榜",
-      hi: "👑 लीडरबोर्ड",
-      es: "👑 Tablas de Clasificación",
-      fr: "👑 Classements",
-    },
-    title: {
-      ar: "قاعة المشاهير وخواتم التتويج الموسمية",
-      en: "Hall of Fame & Seasonal Rings",
-      zh: "名人堂与赛季荣耀之戒",
-      hi: "हॉल ऑफ फेम एवं मौसमी रिंग्स",
-      es: "Salón de la Fama y Anillos de Temporada",
-      fr: "Temple de la Renommée et Anneaux Saisonniers",
-    },
-    desc: {
-      ar: "ارتقِ في التصنيفات العالمية، واحصد شارات المواسم، وأثبت سيادتك بين الأساتذة.",
-      en: "Climb the global ranks, claim seasonal badges, and prove master status.",
-      zh: "攀登全球天梯，斩获赛季勋章，证明您的顶尖大师地位。",
-      hi: "वैश्विक रैंकिंग में ऊपर चढ़ें, मौसमी बैज प्राप्त करें और मास्टर स्थिति साबित करें।",
-      es: "Asciende en el ranking global, reclama insignias y demuestra tu estatus de maestro.",
-      fr: "Grimpez dans les classements, obtenez des badges saisonniers et prouvez votre statut.",
-    },
-    cta: {
-      ar: "تفقد الترتيب",
-      en: "Check Rankings",
-      zh: "查看排行",
-      hi: "रैंकिंग देखें",
-      es: "Ver Clasificación",
-      fr: "Consulter le Classement",
-    },
-  },
-  {
-    id: "vip",
-    img: "/images/banners/banner-vip-club.jpg",
-    href: "/profile",
-    tag: {
-      ar: "💎 امتيازات الإتقان",
-      en: "💎 Mastery Perks",
-      zh: "💎 大师尊享特权",
-      hi: "💎 मास्टरी सुविधाएं",
-      es: "💎 Ventajas de Maestría",
-      fr: "💎 Avantages de Maîtrise",
-    },
-    title: {
-      ar: "مكافآت حصرية لفئات المحترفين",
-      en: "Exclusive Mastery Tier Rewards",
-      zh: "大师阶梯专属荣耀奖励",
-      hi: "विशिष्ट मास्टरी टियर पुरस्कार",
-      es: "Recompensas Exclusivas por Niveles",
-      fr: "Récompenses Exclusives des Niveaux",
-    },
-    desc: {
-      ar: "احصل على صور رمزية نادرة، ودعوات لبطولات كبرى خاصة، ومعالجة ذات أولوية.",
-      en: "Earn custom avatars, exclusive tournament invitations, and priority processing.",
-      zh: "获取专属头像、特邀锦标赛门票以及极速优先处理权益。",
-      hi: "कस्टम अवतार, विशेष टूर्नामेंट आमंत्रण और प्राथमिकता प्रसंस्करण अर्जित करें।",
-      es: "Consigue avatares personalizados, invitaciones exclusivas a torneos y prioridad.",
-      fr: "Gagnez des avatars personnalisés, des invitations exclusives et un traitement prioritaire.",
-    },
-    cta: {
-      ar: "استعراض المستويات",
-      en: "View Tiers",
-      zh: "查看阶梯",
-      hi: "टियर देखें",
-      es: "Ver Niveles",
-      fr: "Voir les Niveaux",
-    },
-  },
-  {
-    id: "multilingual",
-    img: "/images/banners/banner-multilingual-arena.jpg",
-    href: "/games",
-    tag: {
-      ar: "🌍 مجتمع عالمي",
-      en: "🌍 Global Community",
-      zh: "🌍 全球竞技社区",
-      hi: "🌍 वैश्विक समुदाय",
-      es: "🌍 Comunidad Global",
-      fr: "🌍 Communauté Mondiale",
-    },
-    title: {
-      ar: "تنافس بـ 6 لغات عالمية معتمدة",
-      en: "Play Across 6 Languages",
-      zh: "支持 6 种主流语言竞技",
-      hi: "6 भाषाओं में सहजता से खेलें",
-      es: "Juega en 6 Idiomas Oficiales",
-      fr: "Jouez dans 6 Langues Officielles",
-    },
-    desc: {
-      ar: "ترجمة كاملة وتجربة متسقة بالعربية، الإنجليزية، الصينية، الإسبانية، الفرنسية، والهندية.",
-      en: "Fully localized in Arabic, English, Chinese, Spanish, French, and Hindi.",
-      zh: "阿拉伯语、英语、中文、西班牙语、法语与印地语全方位无缝本地化。",
-      hi: "अरबी, अंग्रेजी, चीनी, स्पेनिश, फ्रेंच और हिंदी में पूरी तरह से स्थानीयकृत।",
-      es: "Completamente traducido al árabe, inglés, chino, español, francés e hindi.",
-      fr: "Entièrement traduit en arabe, anglais, chinois, espagnol, français et hindi.",
-    },
-    cta: {
-      ar: "استكشف الألعاب",
-      en: "Explore Games",
-      zh: "探索游戏",
-      hi: "खेल खोजें",
-      es: "Explorar Juegos",
-      fr: "Explorer les Jeux",
-    },
-  },
-  {
-    id: "platforms",
-    img: "/images/banners/banner-mobile-desktop.jpg",
-    href: "/register",
-    tag: {
-      ar: "📱 تجربة لعب متكاملة",
-      en: "📱 Seamless Play",
-      zh: "📱 多端无缝畅玩",
-      hi: "📱 निर्बाध खेल",
-      es: "📱 Juego Fluido",
-      fr: "📱 Jeu Fluide",
-    },
-    title: {
-      ar: "تزامن تام بين الموبايل والديسكتوب",
-      en: "Mobile & Desktop Synchronized",
-      zh: "手机与电脑端实时同步",
-      hi: "मोबाइल और डेस्कटॉप सिंक्रनाइज़्ड",
-      es: "Móvil y Escritorio Sincronizados",
-      fr: "Mobile et Ordinateur Synchronisés",
-    },
-    desc: {
-      ar: "ابدأ مباراتك على هاتفك وأكملها على حاسوبك دون أدنى تأخير في المزامنة.",
-      en: "Start a match on your phone, finish on your desktop. Zero sync delay.",
-      zh: "手机开局，电脑收官，状态秒级同步零延迟。",
-      hi: "अपने फोन पर मैच शुरू करें, अपने डेस्कटॉप पर समाप्त करें। शून्य विलंब।",
-      es: "Inicia la partida en tu móvil y termínala en tu escritorio sin retrasos.",
-      fr: "Commencez un match sur mobile, terminez sur ordinateur sans aucun délai.",
-    },
-    cta: {
-      ar: "العب الآن",
-      en: "Play Now",
-      zh: "立即畅玩",
-      hi: "अभी खेलें",
-      es: "Jugar Ahora",
-      fr: "Jouer Maintenant",
+      ar: "تفاصيل الحماية",
+      en: "Security Details",
+      zh: "安全详情",
+      hi: "सुरक्षा विवरण",
+      es: "Detalles de Seguridad",
+      fr: "Détails de Sécurité",
     },
   },
 ];
@@ -422,13 +237,6 @@ export function ConversionBannerStrip() {
   const loc = (locale as SupportedLocale) || "en";
 
   const [activeIdx, setActiveIdx] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveIdx((prev) => (prev + 1) % MAIN_BANNERS.length);
-    }, 6500);
-    return () => clearInterval(timer);
-  }, []);
 
   const banners = useMemo(() => {
     return MAIN_BANNERS.map((b) => ({
@@ -442,7 +250,6 @@ export function ConversionBannerStrip() {
     }));
   }, [loc]);
 
-  const active = banners[activeIdx] ?? banners[0]!;
   const strings = SECTION_STRINGS[loc] ?? SECTION_STRINGS.en;
 
   return (
@@ -455,45 +262,39 @@ export function ConversionBannerStrip() {
           </div>
         </div>
 
-        <div className={styles.carouselWrap}>
-          <picture className={styles.bannerPicture}>
-            <source srcSet={active.img.replace(/\.jpg$/, ".webp")} type="image/webp" />
-            <img
-              src={active.img}
-              alt={active.title}
-              className={styles.bannerImg}
-              loading="lazy"
-              decoding="async"
-            />
-          </picture>
-          <div className={styles.bannerOverlay}>
-            <div className={styles.bannerCopyCard}>
-              <span className={styles.tagPill}>{active.tag}</span>
-              <h3 className={styles.bannerTitle}>{active.title}</h3>
-              <p className={styles.bannerDesc}>
-                <bdi>{active.desc}</bdi>
-              </p>
-              <LocaleLink href={active.href} className={styles.ctaBtn}>
-                <span>{active.cta}</span>
-                <span aria-hidden="true">{isRtl ? "←" : "→"}</span>
-              </LocaleLink>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.pillsNav}>
-          {banners.map((b, i) => (
-            <button
-              key={b.id}
-              className={`${styles.navPill} ${activeIdx === i ? styles.navPillActive : ""}`}
-              onClick={() => setActiveIdx(i)}
-            >
-              {b.tag}
-            </button>
-          ))}
+        <div className={styles.accordionContainer}>
+          {banners.map((b, idx) => {
+            const isActive = activeIdx === idx;
+            return (
+              <div
+                key={b.id}
+                className={`${styles.accordionItem} ${isActive ? styles.accordionItemActive : ""}`}
+                onMouseEnter={() => setActiveIdx(idx)}
+              >
+                <img
+                  src={b.img}
+                  alt={b.title}
+                  className={styles.bannerImg}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className={styles.bannerOverlay} />
+                <div className={styles.contentWrapper}>
+                  <span className={styles.tagPill}>{b.tag}</span>
+                  <h3 className={styles.bannerTitle}>{b.title}</h3>
+                  <p className={styles.bannerDesc}>
+                    <bdi>{b.desc}</bdi>
+                  </p>
+                  <LocaleLink href={b.href} className={styles.ctaBtn}>
+                    <span>{b.cta}</span>
+                    <span aria-hidden="true">{isRtl ? "←" : "→"}</span>
+                  </LocaleLink>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
-

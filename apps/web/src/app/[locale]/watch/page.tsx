@@ -230,7 +230,7 @@ function WatchContent() {
             return (
               <div key={m.duelId} className={styles.matchCard}>
                 <div className={styles.cardCover}>
-                  <img src="/images/arena/match_cover.jpg" alt="Cover" className={styles.cardCoverImage} />
+                  <img src={`/images/games/${m.gameId}-hero.jpg`} alt={m.gameId} className={styles.cardCoverImage} />
                   <div className={styles.cardCoverOverlay} />
                 </div>
                 <div className={styles.cardTop}>
@@ -319,7 +319,7 @@ function WatchContent() {
 
 function PlayerChip({ player }: { player: LiveMatchPlayer | undefined }) {
   if (!player) return null;
-  const isBot = player.handle.startsWith("bot_") || player.handle.startsWith("ai_");
+  const isBot = player.handle === 'Computer AI';
   const avatarUrl = isBot ? `https://api.dicebear.com/7.x/bottts/svg?seed=${player.handle}&backgroundColor=1e293b` : null;
   const rating = player.ratingX100 != null ? Math.round(player.ratingX100 / 100) : 1200;
   
@@ -328,20 +328,32 @@ function PlayerChip({ player }: { player: LiveMatchPlayer | undefined }) {
   if (rating >= 2000) rankColor = "#fbbf24"; // Gold/Expert
   else if (rating >= 1500) rankColor = "#60a5fa"; // Blue/Advanced
 
-  return (
-    <LocaleLink href={`/players/${encodeURIComponent(player.handle)}`} className={styles.playerChip}>
+  const content = (
+    <>
       <div className={styles.playerAvatar} style={{ borderColor: rankColor }}>
-        <Avatar nickname={player.handle} avatarUrl={avatarUrl} size={52} />
+        <Avatar nickname={player.handle} avatarUrl={avatarUrl} size={52} rating={rating ?? null} />
       </div>
       <span className={styles.playerInfo}>
         <span className={styles.playerHandle} style={{ color: isBot ? "#93c5fd" : undefined }}>
-          {isBot ? player.handle.replace("bot_", "BOT_") : player.handle}
+          {player.handle}
         </span>
         <span className={`nz-num ${styles.playerRating}`} style={{ color: rankColor, borderColor: rankColor }}>
           {rating}
         </span>
       </span>
       {player.badge && <span className={styles.playerBadge}>{badgeIcon(player.badge)}</span>}
+    </>
+  );
+
+  const isGuest = player.handle === 'Computer AI' || player.handle === 'Player 2' || player.handle.startsWith('Guest_');
+
+  if (isGuest) {
+    return <div className={styles.playerChip}>{content}</div>;
+  }
+
+  return (
+    <LocaleLink href={`/players/${encodeURIComponent(player.handle)}`} className={styles.playerChip}>
+      {content}
     </LocaleLink>
   );
 }

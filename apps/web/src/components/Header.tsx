@@ -1,26 +1,5 @@
 "use client";
 
-/**
- * Primary navigation.
- *
- * Primary: PLAY · TOURNAMENTS · RANK · LEARN.
- * Secondary: WALLET · PROFILE · SUPPORT · DOWNLOAD APP (signed in), or the
- * auth entry points (signed out) -- both open the SAME popup
- * (lib/auth-popup-context.tsx) rather than navigating away, so a visitor
- * never loses the page they were reading to get there. /login and
- * /register still exist and work on their own for deep links and non-JS
- * fallback; the popup is a faster path to the same place, not a
- * replacement for them.
- *
- * Wallet and Download App have no real page yet -- rendered as an honest,
- * disabled "Soon" item rather than a link to a page that doesn't exist,
- * the same rule apps/web/src/components/admin/AdminSidebar.tsx already
- * applies to its own not-yet-built surfaces.
- *
- * Below 880px the whole nav collapses behind a single menu toggle -- six
- * primary items plus secondary ones has no honest way to fit a phone
- * screen otherwise.
- */
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -38,7 +17,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import styles from "./Header.module.css";
 
-type NavItem = { href: string; label: string; icon: string };
+type NavItem = { href?: string; label: string; icon: string; items?: { href: string; label: string; icon?: string; }[] };
 
 const DEPOSIT_LABELS: Record<string, string> = {
   ar: "إيداع",
@@ -59,10 +38,40 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const PRIMARY_NAV: NavItem[] = [
-    { href: "/play", label: t("nav.play"), icon: "⚔️" },
-    { href: "/tournaments", label: t("nav.tournaments"), icon: "🏆" },
-    { href: "/rank", label: t("nav.rank"), icon: "👑" },
-    { href: "/learn", label: t("nav.learn"), icon: "📖" },
+    { 
+      label: locale === "ar" ? "العب" : "Play", 
+      icon: "🎮",
+      items: [
+        { href: "/play", label: locale === "ar" ? "الميدان الحي" : "Live Arena", icon: "⚔️" },
+        { href: "/games", label: locale === "ar" ? "الألعاب" : "Games", icon: "🎲" },
+      ]
+    },
+    { 
+      label: locale === "ar" ? "المنافسات" : "Competitions", 
+      icon: "🏆",
+      items: [
+        { href: "/tournaments", label: locale === "ar" ? "البطولات" : "Tournaments", icon: "🏆" },
+        { href: "/rank", label: locale === "ar" ? "المتصدرين" : "Leaderboard", icon: "👑" },
+      ]
+    },
+    { 
+      label: locale === "ar" ? "المجتمع" : "Community", 
+      icon: "💬",
+      items: [
+        { href: "/chat", label: locale === "ar" ? "الدردشة العامة" : "Global Chat", icon: "💬" },
+        { href: "/fair-play", label: locale === "ar" ? "النزاهة والأمان" : "Fair Play", icon: "🛡️" },
+        { href: "/learn", label: locale === "ar" ? "الأكاديمية" : "Academy", icon: "📖" },
+        { href: "/support", label: locale === "ar" ? "الدعم الفني" : "Support", icon: "❓" },
+      ]
+    },
+    { 
+      label: locale === "ar" ? "الخزنة" : "Vault", 
+      icon: "💎",
+      items: [
+        { href: "/wallet", label: locale === "ar" ? "المحفظة" : "Wallet", icon: "💎" },
+        { href: "/referrals", label: locale === "ar" ? "نظام الإحالة" : "Referrals", icon: "🎁" },
+      ]
+    }
   ];
 
   const isActive = (href: string) => pathname === `/${locale}${href}`;
@@ -81,14 +90,21 @@ export function Header() {
         </LocaleLink>
 
         <nav className={styles.primaryNav} aria-label="Primary">
-          {PRIMARY_NAV.map((item, i) => (
-            <LocaleLink
-              key={`${item.href}-${i}`}
-              href={item.href}
-              className={isActive(item.href) ? styles.navActive : styles.navLink}
-            >
-              {item.label}
-            </LocaleLink>
+          {PRIMARY_NAV.map((group, i) => (
+            <div key={i} className={styles.navGroup}>
+              <span className={styles.navGroupLabel}>
+                <span className={styles.navGroupIcon}>{group.icon}</span>
+                {group.label}
+              </span>
+              <div className={styles.navDropdown}>
+                {group.items?.map((item) => (
+                  <LocaleLink key={item.href} href={item.href} className={styles.navDropdownItem}>
+                    {item.icon && <span className={styles.dropdownIcon}>{item.icon}</span>}
+                    {item.label}
+                  </LocaleLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
@@ -103,23 +119,23 @@ export function Header() {
                   className={styles.walletBalanceMain}
                   title={
                     locale === "ar"
-                      ? `إجمالي الرصيد: $${totalUsd.toFixed(2)} USD (المتاح للعب: $${availableUsd.toFixed(2)} USDT)`
-                      : `Total Balance: $${totalUsd.toFixed(2)} USD (Available to play: $${availableUsd.toFixed(2)} USDT)`
+                      ? `إجمالي الرصيد: ${totalUsd.toFixed(2)} 💎 (المتاح للعب: ${availableUsd.toFixed(2)} 💎)`
+                      : `Total Balance: ${totalUsd.toFixed(2)} N-Gems (Available to play: ${availableUsd.toFixed(2)} N-Gems)`
                   }
                 >
                   <div className={styles.walletIconWrap}>
                     <span className={styles.walletLiveDot} />
-                    <span className={styles.walletIcon}>💳</span>
+                    <span className={styles.walletIcon}>💎</span>
                   </div>
                   <div className={styles.walletAmountWrap}>
                     <span className={styles.walletAmountNum}>
                       {balanceLoading ? (
-                        <span className={styles.walletShimmer}>$0.00</span>
+                        <span className={styles.walletShimmer}>0.00</span>
                       ) : (
-                        `$${totalUsd.toFixed(2)}`
+                        `${totalUsd.toFixed(2)}`
                       )}
                     </span>
-                    <span className={styles.walletAssetTag}>USD</span>
+                    <span className={styles.walletAssetTag}>N-Gems</span>
                   </div>
                 </LocaleLink>
 
@@ -165,9 +181,9 @@ export function Header() {
                 aria-label={t("nav.wallet")}
                 title={locale === "ar" ? "رصيد المحفظة" : "Wallet Balance"}
               >
-                <span className={styles.walletIcon}>💳</span>
+                <span className={styles.walletIcon}>💎</span>
                 <span className={styles.mobileBalanceNum}>
-                  ${totalUsd.toFixed(2)}
+                  {totalUsd.toFixed(2)}
                 </span>
                 <span className={styles.mobileDepositPlus}>+</span>
               </LocaleLink>
@@ -228,17 +244,17 @@ export function Header() {
                 {/* Mobile Drawer Balance Showcase */}
                 <div className={styles.mobileDrawerBalanceBox}>
                   <div className={styles.mobileDrawerBalanceLabel}>
-                    <span>💳</span>
+                    <span>💎</span>
                     <span>{locale === "ar" ? "رصيد المحفظة:" : "Wallet Balance:"}</span>
                   </div>
                   <div className={styles.mobileDrawerBalanceVal}>
-                    ${totalUsd.toFixed(2)} <span style={{ fontSize: "11px", color: "#4ade80" }}>USD</span>
+                    {totalUsd.toFixed(2)} <span style={{ fontSize: "11px", color: "#4ade80" }}>N-Gems</span>
                   </div>
                 </div>
 
                 <div className={styles.mobileUserActions}>
                   <LocaleLink href="/wallet" className={styles.mobileCardWalletBtn} onClick={closeMenu}>
-                    <span className={styles.walletIcon}>💳</span>
+                    <span className={styles.walletIcon}>💎</span>
                     <span>{t("nav.wallet")}</span>
                   </LocaleLink>
                   <LocaleLink href="/profile" className={styles.mobileCardProfileBtn} onClick={closeMenu}>
@@ -247,7 +263,7 @@ export function Header() {
                 </div>
               </div>
             ) : (
-              <div className={styles.mobileGuestCard}>
+               <div className={styles.mobileGuestCard}>
                 <div className={styles.mobileGuestTitle}>
                   {locale === "ar" ? "ميدان نزلو للمبارزات" : "Nizalo Duel Arena"}
                 </div>
@@ -275,17 +291,24 @@ export function Header() {
                 {locale === "ar" ? "القائمة الرئيسية" : "Main Navigation"}
               </div>
               <div className={styles.mobileNavGrid}>
-                {PRIMARY_NAV.map((item, i) => (
-                  <LocaleLink
-                    key={`m-${item.href}-${i}`}
-                    href={item.href}
-                    className={isActive(item.href) ? styles.mobileNavTileActive : styles.mobileNavTile}
-                    onClick={closeMenu}
-                  >
-                    <span className={styles.mobileNavTileIcon}>{item.icon}</span>
-                    <span className={styles.mobileNavTileLabel}>{item.label}</span>
-                    {isActive(item.href) && <span className={styles.activeGlowDot} />}
-                  </LocaleLink>
+                {PRIMARY_NAV.map((group, i) => (
+                  <div key={i} className={styles.mobileNavGroupWrapper}>
+                    <div className={styles.mobileNavGroupTitle}>{group.label}</div>
+                    <div className={styles.mobileNavGroupItems}>
+                      {group.items?.map((item, j) => (
+                        <LocaleLink
+                          key={item.href}
+                          href={item.href}
+                          className={isActive(item.href) ? styles.mobileNavTileActive : styles.mobileNavTile}
+                          onClick={closeMenu}
+                        >
+                          <span className={styles.mobileNavTileIcon}>{item.icon}</span>
+                          <span className={styles.mobileNavTileLabel}>{item.label}</span>
+                          {isActive(item.href) && <span className={styles.activeGlowDot} />}
+                        </LocaleLink>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -302,7 +325,7 @@ export function Header() {
                     <span className={styles.serviceLabel}>{t("nav.chat")}</span>
                   </LocaleLink>
                   <LocaleLink href="/wallet" className={styles.mobileServiceItem} onClick={closeMenu}>
-                    <span className={styles.serviceIcon}>💳</span>
+                    <span className={styles.serviceIcon}>💎</span>
                     <span className={styles.serviceLabel}>{t("nav.wallet")}</span>
                   </LocaleLink>
                   <LocaleLink href="/referrals" className={styles.mobileServiceItem} onClick={closeMenu}>

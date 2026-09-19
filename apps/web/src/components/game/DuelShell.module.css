@@ -327,3 +327,33 @@
   animation: modalFadeIn 1.5s infinite ease-in-out;
 }
 
+
+.vsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 800px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  padding: var(--nz-space-3);
+  border-radius: var(--nz-radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: var(--nz-space-2);
+}
+
+.vsBadge {
+  font-family: var(--nz-font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffb800;
+  text-shadow: 0 0 10px rgba(255, 184, 0, 0.6);
+  padding: 0 var(--nz-space-4);
+  font-style: italic;
+}
+
+.boardContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}

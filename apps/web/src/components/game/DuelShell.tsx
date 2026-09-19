@@ -338,31 +338,36 @@ export function DuelShell({ duelId }: { duelId: string }) {
           />
         ) : plugin && (view || plugin.id === "billiards") ? (
           <div className={styles.duelArena}>
-            {players && opponentSeat !== null && (
-              <PlayerStrip
-                playerId={players[opponentSeat] ?? ""}
-                active={isSharedClock ? true : clock?.toMove === opponentSeat}
-                remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[opponentSeat] ?? null}
-                flagged={false}
-              />
-            )}
+            <div className={styles.vsHeader}>
+              {players && mySeat !== null && (
+                <PlayerStrip
+                  playerId={players[mySeat] ?? ""}
+                  active={isSharedClock ? true : clock?.toMove === mySeat}
+                  remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[mySeat] ?? null}
+                  flagged={false}
+                />
+              )}
+              <div className={styles.vsBadge}>VS</div>
+              {players && opponentSeat !== null && (
+                <PlayerStrip
+                  playerId={players[opponentSeat] ?? ""}
+                  active={isSharedClock ? true : clock?.toMove === opponentSeat}
+                  remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[opponentSeat] ?? null}
+                  flagged={false}
+                  reverse={true}
+                />
+              )}
+            </div>
 
-            <plugin.Board
-              view={view ?? {}}
-              lastMove={lastMove}
-              mySeat={mySeat}
-              canMove={canMove}
-              onMove={(intent) => sendIntent(intent)}
-            />
-
-            {players && mySeat !== null && (
-              <PlayerStrip
-                playerId={players[mySeat] ?? ""}
-                active={isSharedClock ? true : clock?.toMove === mySeat}
-                remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[mySeat] ?? null}
-                flagged={false}
+            <div className={styles.boardContainer}>
+              <plugin.Board
+                view={view ?? {}}
+                lastMove={lastMove}
+                mySeat={mySeat}
+                canMove={canMove}
+                onMove={(intent) => sendIntent(intent)}
               />
-            )}
+            </div>
 
             {!isSpectator && (
               <div className={styles.actionsRow}>

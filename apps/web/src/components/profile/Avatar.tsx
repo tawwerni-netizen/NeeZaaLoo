@@ -14,29 +14,44 @@ type AvatarProps = {
   nickname: string;
   avatarUrl: string | null;
   size?: number;
+  rating?: number | null;
 };
 
-export function Avatar({ nickname, avatarUrl, size = 64 }: AvatarProps) {
+export function Avatar({ nickname, avatarUrl, size = 64, rating }: AvatarProps) {
   const [failed, setFailed] = useState(false);
   const dimension = { width: size, height: size };
 
-  if (!avatarUrl || failed) {
-    return (
-      <div className={styles.placeholder} style={{ ...dimension, fontSize: size * 0.4 }} aria-hidden="true">
-        {nickname.charAt(0).toUpperCase()}
-      </div>
-    );
+  
+  let tier = '';
+  if (rating != null) {
+    if (rating >= 2200) tier = 'diamond';
+    else if (rating >= 1800) tier = 'gold';
+    else if (rating >= 1300) tier = 'silver';
   }
 
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- avatars are
-    // arbitrary external/local URLs, not a build-time-known asset set.
+  const borderClass = tier ? styles[`border-${tier}`] : '';
+
+  const content = (!avatarUrl || failed) ? (
+    <div className={styles.placeholder} style={{ width: size, height: size, fontSize: size * 0.4 }} aria-hidden="true">
+      {nickname.charAt(0).toUpperCase()}
+    </div>
+  ) : (
     <img
       src={avatarUrl}
       alt=""
       className={styles.avatar}
-      style={dimension}
+      style={{ width: size, height: size }}
       onError={() => setFailed(true)}
     />
   );
+
+  return (
+    <div className={styles.avatarWrapper} style={{ width: size, height: size }}>
+      {tier && <div className={`${styles.animatedBorder} ${borderClass}`} />}
+      <div className={styles.avatarInner}>
+        {content}
+      </div>
+    </div>
+  );
+
 }

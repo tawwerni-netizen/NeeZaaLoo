@@ -5,6 +5,7 @@ import { LiveArenaSection } from "@/components/home/LiveArenaSection";
 import { LandingTournaments } from "@/components/home/LandingTournaments";
 import { GameModes } from "@/components/home/GameModes";
 import { FeatureGrid } from "@/components/home/FeatureGrid";
+import { DailyQuestsWidget } from "@/components/home/DailyQuestsWidget";
 import { ConversionBannerStrip } from "@/components/home/ConversionBannerStrip";
 import { LearnTeaser } from "@/components/home/LearnTeaser";
 import { DownloadAppTeaser } from "@/components/home/DownloadAppTeaser";
@@ -20,6 +21,7 @@ export default function LandingPage() {
       <main>
         <Hero />
         <LiveArenaSection />
+        <DailyQuestsWidget />
         <LandingTournaments />
         <GameModes />
         <FeatureGrid />

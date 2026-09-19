@@ -72,3 +72,112 @@
     gap: var(--nz-space-6);
   }
 }
+
+/* --- Radar Matchmaking Effect --- */
+.radarContainer {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radarCore {
+  width: 30px;
+  height: 30px;
+  background: #3b82f6;
+  border-radius: 50%;
+  box-shadow: 0 0 15px #3b82f6;
+  z-index: 2;
+  animation: radarCorePulse 1.5s infinite alternate;
+}
+
+.radarPulse,
+.radarPulseDelay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: transparent;
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  opacity: 0;
+  animation: radarWave 2s infinite cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+
+.radarPulseDelay {
+  animation-delay: 1s;
+}
+
+@keyframes radarCorePulse {
+  0% { transform: scale(1); box-shadow: 0 0 10px #3b82f6; }
+  100% { transform: scale(1.2); box-shadow: 0 0 25px #3b82f6; }
+}
+
+@keyframes radarWave {
+  0% { width: 30px; height: 30px; opacity: 1; border-width: 4px; }
+  100% { width: 140px; height: 140px; opacity: 0; border-width: 1px; }
+}
+
+.radarStatus {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--nz-text);
+  margin-bottom: 8px;
+  animation: pulseOpacity 1.5s infinite;
+}
+
+@keyframes pulseOpacity {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* --- VS Dramatic Screen --- */
+.vsDramaticWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.vsPlayerSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 2;
+}
+
+.vsHandleDramatic {
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.vsLightningCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.vsMarkDramatic {
+  font-size: 42px;
+  font-weight: 900;
+  font-style: italic;
+  background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.6));
+  padding: 0 10px;
+}

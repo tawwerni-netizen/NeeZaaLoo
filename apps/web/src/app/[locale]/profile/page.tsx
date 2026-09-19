@@ -96,7 +96,7 @@ function ProfileContent() {
 
           <div className={styles.identity}>
             <h1 className={styles.nickname}>
-              {profile.nickname} {profile.selectedBadge && <span>{badgeIcon(profile.selectedBadge)}</span>}
+              {profile.nickname} {profile.clanTag && <span style={{ color: "var(--nz-primary)", marginLeft: 8 }}>{profile.clanTag}</span>} {profile.selectedBadge && <span>{badgeIcon(profile.selectedBadge)}</span>}
             </h1>
             <div className={styles.levelRow}>
               <span>{t("profile.level_label")} {profile.exp.level}</span>
