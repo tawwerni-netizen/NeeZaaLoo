@@ -290,6 +290,14 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
       openPopup();
       return;
     }
+    if (duel.tier === "CASH") {
+      const currentBal = userBalanceUSDT ?? 0;
+      if (currentBal < duel.stakeUSDT) {
+        setBalanceWarningModal({ open: true, requiredStake: duel.stakeUSDT });
+        return;
+      }
+    }
+    
     setAcceptingId(duel.id);
     try {
       const r = await post<{ duelId: string }>(`/v1/challenges/open/${duel.id}/accept`, {});
@@ -299,6 +307,12 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
       }
     } catch (err: any) {
       console.error("Failed to accept open challenge:", err);
+      const errMsg = err?.response?.data?.error?.message || err?.message || "Failed";
+      if (errMsg.includes("balance") || errMsg.includes("funds")) {
+         setBalanceWarningModal({ open: true, requiredStake: duel.stakeUSDT });
+      } else {
+         alert(isRtl ? `عذراً، لا يمكن قبول هذا التحدي: ${errMsg}` : `Cannot accept challenge: ${errMsg}`);
+      }
       await loadOpenChallenges();
     } finally {
       setAcceptingId(null);
@@ -632,11 +646,16 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                 } ${duel.isUserCreated ? styles.duelCardUser : ""} ${
                   isTargeted ? styles.duelCardTargeted : ""
                 }`}
+                style={{
+                  backgroundImage: `linear-gradient(to right, rgba(16, 20, 30, 0.95) 0%, rgba(16, 20, 30, 0.7) 100%), url(/images/games/${duel.gameId}-hero.jpg)`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
               >
                 <div className={styles.duelCardTop}>
                   <div className={styles.challengerInfo}>
                     <div className={styles.challengerAvatarWrap}>
-                      <div className={styles.challengerAvatar}>
+                      <div className={styles.challengerAvatar} style={{ borderColor: isHighElo ? "#fbbf24" : undefined }}>
                         {duel.challenger.avatarLetter}
                       </div>
                       {isHighElo && <span className={styles.avatarRingHighElo} />}
@@ -649,17 +668,17 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                         )}
                       </div>
                       <div className={styles.challengerElo}>
-                        <span>{isRtl ? `تصنيف: ${duel.challenger.elo}` : `Rating: ${duel.challenger.elo}`}</span>
+                        <span>{isRtl ? `التقييم: ${duel.challenger.elo}` : `Rating: ${duel.challenger.elo}`}</span>
                         {isHighElo && <span>👑</span>}
                       </div>
                     </div>
                   </div>
 
-                  <div className={styles.duelGameBadge}>
+                  <div className={styles.duelGameBadgeGlass}>
                     <img
                       src={`/images/games/${duel.gameId}-badge.jpg`}
                       alt={duel.gameName}
-                      className={styles.duelGameThumb}
+                      className={styles.duelGameThumbGlass}
                       onError={(e) => {
                         const img = e.target as HTMLImageElement;
                         if (!img.dataset.fallbackStage) {

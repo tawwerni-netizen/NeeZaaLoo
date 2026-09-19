@@ -113,8 +113,15 @@ function WatchContent() {
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.headerRow}>
-        <div>
+      <div className={styles.heroContainer}>
+        <img
+          src="/images/arena/hero.jpg"
+          alt="Live Arena"
+          className={styles.heroImage}
+        />
+        <div className={styles.heroOverlay} />
+        
+        <div className={styles.heroContent}>
           <div className={styles.titleBadge}>
             <span className={styles.livePulseDot} />
             <span>{isRtl ? "بث مباشر فوري (مشاهدة فقط)" : "REALTIME ARENA FEED (READ-ONLY)"}</span>
@@ -126,22 +133,22 @@ function WatchContent() {
           </div>
           <h1 className={styles.title}>{t("watch.title")}</h1>
           <p className={styles.subtitle}>{t("watch.subtitle")}</p>
-        </div>
 
-        <div className={styles.headerActions}>
-          <button
-            type="button"
-            className={`${styles.refreshBtn} ${refreshing ? styles.refreshing : ""}`}
-            onClick={() => void loadMatches(true)}
-            disabled={refreshing}
-            title={isRtl ? "تحديث فوري للمباريات" : "Refresh matches"}
-          >
-            <span className={styles.refreshIcon}>🔄</span>
-            <span>{isRtl ? "تحديث مباشر" : "Live Refresh"}</span>
-          </button>
-          <LocaleLink href="/play" className={styles.createDuelBtn}>
-            <span>⚔️ {isRtl ? "أطلق مبارزة الآن" : "Start a Duel"}</span>
-          </LocaleLink>
+          <div className={styles.heroActions}>
+            <button
+              type="button"
+              className={`${styles.refreshBtn} ${refreshing ? styles.refreshing : ""}`}
+              onClick={() => void loadMatches(true)}
+              disabled={refreshing}
+              title={isRtl ? "تحديث فوري للمباريات" : "Refresh matches"}
+            >
+              <span className={styles.refreshIcon}>🔄</span>
+              <span>{isRtl ? "تحديث مباشر" : "Live Refresh"}</span>
+            </button>
+            <LocaleLink href="/play" className={styles.createDuelBtn}>
+              <span>⚔️ {isRtl ? "أطلق مبارزة الآن" : "Start a Duel"}</span>
+            </LocaleLink>
+          </div>
         </div>
       </div>
 
@@ -222,6 +229,10 @@ function WatchContent() {
             const nameKey = getGame(m.gameId)?.nameKey ?? m.gameId;
             return (
               <div key={m.duelId} className={styles.matchCard}>
+                <div className={styles.cardCover}>
+                  <img src="/images/arena/match_cover.jpg" alt="Cover" className={styles.cardCoverImage} />
+                  <div className={styles.cardCoverOverlay} />
+                </div>
                 <div className={styles.cardTop}>
                   <span className={styles.gameName}>{t(`common.game_names.${nameKey}`)}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -308,16 +319,27 @@ function WatchContent() {
 
 function PlayerChip({ player }: { player: LiveMatchPlayer | undefined }) {
   if (!player) return null;
+  const isBot = player.handle.startsWith("bot_") || player.handle.startsWith("ai_");
+  const avatarUrl = isBot ? `https://api.dicebear.com/7.x/bottts/svg?seed=${player.handle}&backgroundColor=1e293b` : null;
+  const rating = player.ratingX100 != null ? Math.round(player.ratingX100 / 100) : 1200;
+  
+  // Rank color mapping
+  let rankColor = "#94a3b8"; // Silver
+  if (rating >= 2000) rankColor = "#fbbf24"; // Gold/Expert
+  else if (rating >= 1500) rankColor = "#60a5fa"; // Blue/Advanced
+
   return (
-    // Spectator discovery (LIVE MATCH -> WATCH -> VIEW PLAYER): a real
-    // link to the player's own profile, not just a static label.
     <LocaleLink href={`/players/${encodeURIComponent(player.handle)}`} className={styles.playerChip}>
-      <Avatar nickname={player.handle} avatarUrl={null} size={32} />
+      <div className={styles.playerAvatar} style={{ borderColor: rankColor }}>
+        <Avatar nickname={player.handle} avatarUrl={avatarUrl} size={52} />
+      </div>
       <span className={styles.playerInfo}>
-        <span className={styles.playerHandle}>{player.handle}</span>
-        {player.ratingX100 != null && (
-          <span className={`nz-num ${styles.playerRating}`}>{Math.round(player.ratingX100 / 100)}</span>
-        )}
+        <span className={styles.playerHandle} style={{ color: isBot ? "#93c5fd" : undefined }}>
+          {isBot ? player.handle.replace("bot_", "BOT_") : player.handle}
+        </span>
+        <span className={`nz-num ${styles.playerRating}`} style={{ color: rankColor, borderColor: rankColor }}>
+          {rating}
+        </span>
       </span>
       {player.badge && <span className={styles.playerBadge}>{badgeIcon(player.badge)}</span>}
     </LocaleLink>

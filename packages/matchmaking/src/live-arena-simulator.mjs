@@ -128,17 +128,6 @@ export function createLiveArenaSimulator(db, { targetMatches = 10, emit = () => 
           ]
         );
 
-        // Add 1 to 3 simulated move events so spectators see realistic progression
-        const initialMoves = Math.floor(Math.random() * 4) + 1;
-        for (let m = 0; m < initialMoves; m++) {
-          await db.query(
-            `INSERT INTO duel_event (duel_id, seq, type, payload, server_time_ms)
-             VALUES ($1, $2, 'ACTION', '{"simulated": true}'::jsonb, $3)
-             ON CONFLICT DO NOTHING`,
-            [duelId, m + 1, Date.now()]
-          );
-        }
-
         spawnedCount++;
       }
     }

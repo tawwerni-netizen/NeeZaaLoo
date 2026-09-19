@@ -2,7 +2,9 @@
   padding-block: var(--nz-space-10) var(--nz-space-14);
   overflow: hidden;
   position: relative;
-  background: radial-gradient(circle at 50% 15%, rgba(255, 98, 50, 0.08) 0%, transparent 60%);
+  background: linear-gradient(180deg, rgba(16, 20, 30, 0.7) 0%, rgba(16, 20, 30, 0.95) 100%), url(/images/home_hero_bg.jpg);
+  background-size: cover;
+  background-position: center;
 }
 
 .container {
