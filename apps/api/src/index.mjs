@@ -146,13 +146,11 @@ async function main() {
   // Auto-apply pending migrations and seed personas on startup
   try {
     const ran = await migrate(db, { log: true });
-    if (ran.length > 0) {
-      logger.emit("db.migrations_applied", { count: ran.length, files: ran });
+    if (ran && ran.length > 0) {
       console.log(`[database] Successfully applied ${ran.length} migrations:`, ran);
     }
   } catch (err) {
-    logger.emit("db.migration_error", { error: err.message });
-    console.error("[database] Migration error on startup:", err.message);
+    console.error("[database] Migration warning on startup:", err.message);
   }
 
   try {

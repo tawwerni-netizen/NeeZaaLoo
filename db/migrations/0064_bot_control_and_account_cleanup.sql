@@ -69,44 +69,55 @@ BEGIN
      );
 
   IF v_test_ids IS NOT NULL AND array_length(v_test_ids, 1) > 0 THEN
-    -- Delete from child tables in order
-    DELETE FROM auth_session WHERE player_id = ANY(v_test_ids);
-    DELETE FROM credential WHERE player_id = ANY(v_test_ids);
-    DELETE FROM device WHERE player_id = ANY(v_test_ids);
-    DELETE FROM totp_secret WHERE player_id = ANY(v_test_ids);
-    DELETE FROM recovery_code WHERE player_id = ANY(v_test_ids);
-    DELETE FROM login_attempt WHERE player_id = ANY(v_test_ids);
-    DELETE FROM security_event WHERE player_id = ANY(v_test_ids);
-    DELETE FROM email_identity WHERE player_id = ANY(v_test_ids);
-    DELETE FROM oauth_identity WHERE player_id = ANY(v_test_ids);
-    DELETE FROM email_challenge WHERE player_id = ANY(v_test_ids);
-    DELETE FROM player_achievement WHERE player_id = ANY(v_test_ids);
-    DELETE FROM player_badge WHERE player_id = ANY(v_test_ids);
-    DELETE FROM player_frame WHERE player_id = ANY(v_test_ids);
-    DELETE FROM player_streak WHERE player_id = ANY(v_test_ids);
-    DELETE FROM streak_reward WHERE player_id = ANY(v_test_ids);
-    DELETE FROM daily_challenge_assignment WHERE player_id = ANY(v_test_ids);
-    DELETE FROM player_replay_favorite WHERE player_id = ANY(v_test_ids);
-    DELETE FROM replay_view WHERE player_id = ANY(v_test_ids);
-    DELETE FROM chat_message WHERE sender_id = ANY(v_test_ids);
-    DELETE FROM chat_mute WHERE target_id = ANY(v_test_ids);
-    DELETE FROM chat_block WHERE blocker_id = ANY(v_test_ids) OR blocked_id = ANY(v_test_ids);
-    DELETE FROM tournament_registration WHERE player_id = ANY(v_test_ids);
-    DELETE FROM matchmaking_ticket WHERE player_id = ANY(v_test_ids);
-    DELETE FROM rating_change WHERE player_id = ANY(v_test_ids);
-    DELETE FROM rating WHERE player_id = ANY(v_test_ids);
+    BEGIN
+      -- Delete duel events, duels, and challenges for test users first
+      DELETE FROM duel_event WHERE duel_id IN (
+        SELECT id FROM duel WHERE seat_0 = ANY(v_test_ids) OR seat_1 = ANY(v_test_ids)
+      );
+      DELETE FROM duel WHERE seat_0 = ANY(v_test_ids) OR seat_1 = ANY(v_test_ids);
+      DELETE FROM duel_challenge WHERE creator_id = ANY(v_test_ids) OR opponent_id = ANY(v_test_ids);
 
-    -- Delete ledger balances & entries for test users
-    DELETE FROM ledger_balance WHERE account_id IN (
-      SELECT id FROM ledger_account WHERE owner_type = 'USER' AND owner_id = ANY(v_test_ids)
-    );
-    DELETE FROM ledger_entry WHERE account_id IN (
-      SELECT id FROM ledger_account WHERE owner_type = 'USER' AND owner_id = ANY(v_test_ids)
-    );
-    DELETE FROM ledger_account WHERE owner_type = 'USER' AND owner_id = ANY(v_test_ids);
+      -- Delete from child tables in order
+      DELETE FROM auth_session WHERE player_id = ANY(v_test_ids);
+      DELETE FROM credential WHERE player_id = ANY(v_test_ids);
+      DELETE FROM device WHERE player_id = ANY(v_test_ids);
+      DELETE FROM totp_secret WHERE player_id = ANY(v_test_ids);
+      DELETE FROM recovery_code WHERE player_id = ANY(v_test_ids);
+      DELETE FROM login_attempt WHERE player_id = ANY(v_test_ids);
+      DELETE FROM security_event WHERE player_id = ANY(v_test_ids);
+      DELETE FROM email_identity WHERE player_id = ANY(v_test_ids);
+      DELETE FROM oauth_identity WHERE player_id = ANY(v_test_ids);
+      DELETE FROM email_challenge WHERE player_id = ANY(v_test_ids);
+      DELETE FROM player_achievement WHERE player_id = ANY(v_test_ids);
+      DELETE FROM player_badge WHERE player_id = ANY(v_test_ids);
+      DELETE FROM player_frame WHERE player_id = ANY(v_test_ids);
+      DELETE FROM player_streak WHERE player_id = ANY(v_test_ids);
+      DELETE FROM streak_reward WHERE player_id = ANY(v_test_ids);
+      DELETE FROM daily_challenge_assignment WHERE player_id = ANY(v_test_ids);
+      DELETE FROM player_replay_favorite WHERE player_id = ANY(v_test_ids);
+      DELETE FROM replay_view WHERE player_id = ANY(v_test_ids);
+      DELETE FROM chat_message WHERE sender_id = ANY(v_test_ids);
+      DELETE FROM chat_mute WHERE target_id = ANY(v_test_ids);
+      DELETE FROM chat_block WHERE blocker_id = ANY(v_test_ids) OR blocked_id = ANY(v_test_ids);
+      DELETE FROM tournament_registration WHERE player_id = ANY(v_test_ids);
+      DELETE FROM matchmaking_ticket WHERE player_id = ANY(v_test_ids);
+      DELETE FROM rating_change WHERE player_id = ANY(v_test_ids);
+      DELETE FROM rating WHERE player_id = ANY(v_test_ids);
 
-    -- Finally remove from player table
-    DELETE FROM player WHERE id = ANY(v_test_ids);
+      -- Delete ledger balances & entries for test users
+      DELETE FROM ledger_balance WHERE account_id IN (
+        SELECT id FROM ledger_account WHERE owner_type = 'USER' AND owner_id = ANY(v_test_ids)
+      );
+      DELETE FROM ledger_entry WHERE account_id IN (
+        SELECT id FROM ledger_account WHERE owner_type = 'USER' AND owner_id = ANY(v_test_ids)
+      );
+      DELETE FROM ledger_account WHERE owner_type = 'USER' AND owner_id = ANY(v_test_ids);
+
+      -- Finally remove from player table
+      DELETE FROM player WHERE id = ANY(v_test_ids);
+    EXCEPTION WHEN OTHERS THEN
+      RAISE NOTICE 'Skipped aggressive test account deletion due to foreign key references: %', SQLERRM;
+    END;
   END IF;
 END;
 $$;

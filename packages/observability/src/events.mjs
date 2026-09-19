@@ -123,6 +123,10 @@ export const Events = Object.freeze({
     MISMATCH_FOUND: "reconciliation.mismatch_found",
     CASE_OPENED: "reconciliation.case_opened",
   }),
+  DB: Object.freeze({
+    MIGRATIONS_APPLIED: "db.migrations_applied",
+    MIGRATION_ERROR: "db.migration_error",
+  }),
   API: Object.freeze({
     REQUEST_COMPLETED: "api.request_completed",
     REQUEST_FAILED: "api.request_failed",

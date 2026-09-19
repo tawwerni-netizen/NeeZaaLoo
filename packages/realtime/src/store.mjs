@@ -116,8 +116,16 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
       );
       const out = new Map();
       for (const row of rows.rows) {
-        const duel = await this.hydrate(row, plugins, recoveredAtMs);
-        out.set(duel.duelId, duel);
+        try {
+          const duel = await this.hydrate(row, plugins, recoveredAtMs);
+          out.set(duel.duelId, duel);
+        } catch (err) {
+          console.error(`[realtime-recovery] Corrupted or irreplayable duel ${row.id} skipped:`, err.message);
+          await db.query(
+            `UPDATE duel SET status = 'ABORTED', termination_reason = 'RECOVERY_HYDRATE_FAILED', updated_at = now() WHERE id = $1`,
+            [row.id]
+          ).catch(() => {});
+        }
       }
       return out;
     },
