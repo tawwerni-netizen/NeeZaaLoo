@@ -337,7 +337,7 @@ export default function AdminBotsPage() {
                 <span>⚡</span> AI Intelligence & Invincibility Mode
               </h3>
               <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--nz-text-3)" }}>
-                Global difficulty engine across all 11 games (Chess, Billiards, Backgammon, etc.)
+                Global difficulty engine across all 10 games (Chess, Dominoes, Backgammon, etc.)
               </p>
             </div>
             <span className={`${styles.badge} ${aiMode === "INVINCIBLE" ? styles.badgeSuccess : styles.badgeNeutral}`}>

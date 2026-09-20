@@ -61,7 +61,6 @@ import { createRecommendationService } from "../../../packages/engagement/src/re
 import { ChessPlugin } from "../../../packages/game-chess/src/plugin.mjs";
 import { SpeedMathPlugin } from "../../../packages/game-speed-math/src/plugin.mjs";
 import { CheckersPlugin } from "../../../packages/game-checkers/src/plugin.mjs";
-import { BilliardsPlugin } from "../../../packages/game-billiards/src/plugin.mjs";
 import { ConnectFourPlugin } from "../../../packages/game-connect-four/src/plugin.mjs";
 import { XOPlugin } from "../../../packages/game-xo/src/plugin.mjs";
 import { DominoesPlugin } from "../../../packages/game-dominoes/src/plugin.mjs";
@@ -247,7 +246,7 @@ async function main() {
   const recommendations = createRecommendationService(db, masteryService);
   const gamePlugins = new Map([
     ["chess", ChessPlugin], ["speed-math", SpeedMathPlugin],
-    ["checkers", CheckersPlugin], ["billiards", BilliardsPlugin], ["connect-four", ConnectFourPlugin],
+    ["checkers", CheckersPlugin], ["connect-four", ConnectFourPlugin],
     ["xo", XOPlugin], ["dominoes", DominoesPlugin], ["backgammon", BackgammonPlugin],
     ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin],
   ]);

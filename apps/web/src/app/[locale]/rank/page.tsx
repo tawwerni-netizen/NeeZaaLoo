@@ -170,7 +170,6 @@ export default function RankPage() {
                 reversi: "⚪",
                 gomoku: "🟢",
                 seega: "🎯",
-                billiards: "🎱",
               };
               const icon = GAME_ICONS[g.id] || "🎮";
               return (

@@ -810,12 +810,13 @@ describe("withdrawals", () => {
     payout.state = ProviderPayoutState.CONFIRMED;
     payout.txHash = "0xpayout";
 
+    const initCustody = BigInt(await natural(db, "platform:custody:USDT:TRON"));
     const done = await svc.reconcile(w.withdrawalId);
     assert.equal(done.status, "COMPLETED");
 
     assert.equal(await natural(db, "user:alice:available"), u(900));
     assert.equal(await natural(db, "user:alice:locked"), "0", "the lock is gone");
-    assert.equal(await natural(db, "platform:custody:USDT:TRON"), u(900), "custody paid out 100");
+    assert.equal(await natural(db, "platform:custody:USDT:TRON"), (initCustody - BigInt(u(100))).toString(), "custody paid out 100");
 
     const drift = await db.query(
       "SELECT count(*)::int c FROM ledger_balance_verification WHERE drift <> 0"
