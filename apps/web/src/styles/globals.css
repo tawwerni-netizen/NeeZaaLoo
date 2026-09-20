@@ -93,3 +93,10 @@ button {
     padding-inline: var(--nz-space-4);
   }
 }
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 8px));
+  }
+}
+

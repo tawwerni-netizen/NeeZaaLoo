@@ -77,7 +77,7 @@ function WalletContent() {
   // Payment method: the existing crypto flow below, or the local EGP rails
   // (Vodafone Cash / InstaPay, 0062) -- a completely separate flow with its
   // own component, never threaded through the crypto network/address logic.
-  const [paymentMethod, setPaymentMethod] = useState<"crypto" | "local">("crypto");
+  const [paymentMethod, setPaymentMethod] = useState<"crypto" | "local">(isAr ? "local" : "crypto");
 
   // Selected stablecoin
   const [selectedAsset, setSelectedAsset] = useState<SupportedAsset>("USDT");
@@ -746,24 +746,72 @@ function WalletContent() {
         </button>
       </nav>
 
-      {/* Payment method: crypto (below, unchanged) vs. local EGP rails */}
+      {/* Payment method: crypto vs. local EGP rails */}
       {(activeTab === "deposit" || activeTab === "withdraw") && (
         <div className={styles.hubNav} style={{ marginBottom: 16 }}>
-          <button
-            type="button"
-            className={`${styles.hubTab} ${paymentMethod === "crypto" ? styles.hubTabActive : ""}`}
-            onClick={() => setPaymentMethod("crypto")}
-          >
-            <span className={styles.tabIcon}>🪙</span>
-            <span>{isAr ? "USDT (عملات رقمية)" : "USDT (Crypto)"}</span>
-          </button>
           <button
             type="button"
             className={`${styles.hubTab} ${paymentMethod === "local" ? styles.hubTabActive : ""}`}
             onClick={() => setPaymentMethod("local")}
           >
             <span className={styles.tabIcon}>📱</span>
-            <span>{isAr ? "فودافون كاش / إنستاباي" : "Vodafone Cash / InstaPay"}</span>
+            <span>{isAr ? "فودافون كاش / إنستاباي (مصر 🇪🇬)" : "Vodafone Cash / InstaPay (Egypt 🇪🇬)"}</span>
+            <span style={{
+              marginInlineStart: "6px",
+              padding: "2px 6px",
+              borderRadius: "6px",
+              fontSize: "11px",
+              fontWeight: 700,
+              background: paymentMethod === "local" ? "#22c55e" : "rgba(34, 197, 94, 0.2)",
+              color: paymentMethod === "local" ? "#000" : "#4ade80"
+            }}>
+              {isAr ? "فوري ⚡" : "Instant ⚡"}
+            </span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.hubTab} ${paymentMethod === "crypto" ? styles.hubTabActive : ""}`}
+            onClick={() => setPaymentMethod("crypto")}
+          >
+            <span className={styles.tabIcon}>🪙</span>
+            <span>{isAr ? "USDT (عملات رقمية / عالمي 🌐)" : "USDT (Crypto / Global 🌐)"}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Egyptian Local Payment Quick Switcher Banner when on Crypto Tab */}
+      {activeTab === "deposit" && paymentMethod === "crypto" && isAr && (
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "12px 16px",
+          marginBottom: "16px",
+          background: "rgba(34, 197, 94, 0.08)",
+          border: "1px solid rgba(34, 197, 94, 0.25)",
+          borderRadius: "10px",
+          gap: "10px",
+          flexWrap: "wrap"
+        }}>
+          <span style={{ fontSize: "13px", color: "#86efac", fontWeight: 600 }}>
+            💡 مقيم في مصر؟ يمكنك الإيداع الفوري بالجنيه المصري عبر فودافون كاش وإنستاباي بدون الحاجة لمحفظة كريبتو!
+          </span>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("local")}
+            style={{
+              padding: "6px 14px",
+              background: "#22c55e",
+              color: "#052e16",
+              border: "none",
+              borderRadius: "6px",
+              fontWeight: 700,
+              fontSize: "12px",
+              cursor: "pointer",
+              whiteSpace: "nowrap"
+            }}
+          >
+            التحويل لفودافون كاش 📱
           </button>
         </div>
       )}

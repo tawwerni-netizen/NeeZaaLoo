@@ -10,6 +10,7 @@ import { AuthPopupProvider } from "@/lib/auth-popup-context";
 import { AuthPopup, AuthPopupAutoOpen } from "@/components/auth/AuthPopup";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { PolicyReacceptanceModal } from "@/components/legal/PolicyReacceptanceModal";
+import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { I18nProvider } from "@/lib/i18n/context";
 import { SUPPORTED_LOCALE_CODES, DEFAULT_LOCALE, directionFor, isSupportedLocale } from "@/lib/i18n/locale";
@@ -259,6 +260,7 @@ export default async function LocaleLayout({
               <GoogleOneTap />
               <AuthPopup />
               <PolicyReacceptanceModal />
+              <MobileBottomNav />
             </AuthPopupProvider>
           </AuthProvider>
         </I18nProvider>

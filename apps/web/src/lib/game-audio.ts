@@ -615,6 +615,9 @@ export function playDefeatSound() {
   });
 }
 
+export const playDefeatTone = playDefeatSound;
+
+
 // -------------------------------------------------------------
 // Tactile UI & Interaction Audio (Cyber-Luxury Feel)
 // -------------------------------------------------------------
@@ -737,3 +740,4 @@ export function playCoinClinkSound() {
     osc.stop(t + 0.3);
   });
 }
+

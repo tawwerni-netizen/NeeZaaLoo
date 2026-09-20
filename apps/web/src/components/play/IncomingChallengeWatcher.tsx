@@ -46,6 +46,17 @@ function isDuelHandled(duelId: string): boolean {
   }
 }
 
+function isDuelCompleted(duelId: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = sessionStorage.getItem("nizalo_completed_duels");
+    const list = raw ? (JSON.parse(raw) as string[]) : [];
+    return list.includes(duelId);
+  } catch {
+    return false;
+  }
+}
+
 function markDuelHandled(duelId: string): void {
   if (typeof window === "undefined") return;
   try {
@@ -110,9 +121,14 @@ export function IncomingChallengeWatcher() {
   );
 
   if (!player || isAdminRoute || incoming.length === 0) return null;
-  // Already mid-game (any duel) -- do not pop a new-challenge dialog over
-  // an in-progress match; it will still be here the moment they leave.
-  if (pathname.includes("/game/")) return null;
+
+  // Mid-game check: only suppress the popup if the current match is still active.
+  // If the game has concluded (duel is in completed list), allow the challenge popup
+  // so the player can accept a rematch right on the result ceremony screen!
+  const currentGameMatch = pathname.match(/\/game\/([^/?]+)/);
+  if (currentGameMatch?.[1] && !isDuelCompleted(currentGameMatch[1])) {
+    return null;
+  }
 
   return (
     <ChallengePopup

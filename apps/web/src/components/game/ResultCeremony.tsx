@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth-context";
 import { transition, useReducedMotion } from "@/lib/motion";
 import type { ProgressionDelta } from "@/lib/use-progression-snapshot";
+import { playVictoryFanfare, playDefeatTone } from "@/lib/game-audio";
 import { MatchShareCard } from "./MatchShareCard";
 import styles from "./ResultCeremony.module.css";
 
@@ -23,10 +24,11 @@ type Props = {
   delta: ProgressionDelta | null;
   onRematch: () => void;
   rematchBusy: boolean;
+  rematchSent?: boolean;
 };
 
 export function ResultCeremony({
-  isSpectator, outcome, result, reason, vsComputer, duelId, gameId = "game", delta, onRematch, rematchBusy,
+  isSpectator, outcome, result, reason, vsComputer, duelId, gameId = "game", delta, onRematch, rematchBusy, rematchSent,
 }: Props) {
   const { t, locale } = useI18n();
   const { player } = useAuth();
@@ -37,10 +39,13 @@ export function ResultCeremony({
   const isGuest = player?.handle?.startsWith("Guest_");
 
   useEffect(() => {
-    if (outcome === "win" && !isSpectator) {
+    if (isSpectator) return;
+    if (outcome === "win") {
+      playVictoryFanfare();
       // Trigger epic confetti
       const duration = 3000;
       const end = Date.now() + duration;
+
 
       const frame = () => {
         confetti({
@@ -74,6 +79,8 @@ export function ResultCeremony({
         if (current >= target) clearInterval(interval);
       }, 50);
       return () => clearInterval(interval);
+    } else if (outcome === "loss") {
+      playDefeatTone();
     }
   }, [outcome, isSpectator]);
 
@@ -188,18 +195,32 @@ export function ResultCeremony({
           <div className={styles.actions}>
             {vsComputer ? (
               <>
-                <Button variant="primary" onClick={onRematch} disabled={rematchBusy} className={styles.actionBtn}>{t("game.rematch")}</Button>
+                <Button variant="primary" onClick={onRematch} disabled={rematchBusy} className={styles.actionBtn}>
+                  {rematchBusy ? (locale === "ar" ? "جارٍ التحضير..." : "Preparing...") : t("game.rematch")}
+                </Button>
                 <LocaleLink href="/play" style={{ width: "100%" }}>
                   <Button variant="secondary" className={styles.actionBtn}>{t("matchmaking.back_to_play")}</Button>
                 </LocaleLink>
               </>
             ) : (
               <>
-                <LocaleLink href="/play" style={{ width: "100%" }}>
-                  <Button variant="primary" className={styles.actionBtn}>{t("game.new_opponent")}</Button>
+                {rematchSent ? (
+                  <div className={styles.rematchSentNotice}>
+                    <span className={styles.pulseDot} />
+                    <span>{locale === "ar" ? "تم إرسال طلب إعادة النزال! في انتظار رد الخصم..." : "Rematch request sent! Waiting for opponent..."}</span>
+                  </div>
+                ) : (
+                  <Button variant="primary" onClick={onRematch} disabled={rematchBusy} className={styles.actionBtn}>
+                    {rematchBusy
+                      ? (locale === "ar" ? "جارٍ إرسال التحدي..." : "Sending Rematch...")
+                      : (locale === "ar" ? "طلب ثأر / إعادة النزال ⚔️" : "Request Rematch ⚔️")}
+                  </Button>
+                )}
+                <LocaleLink href={`/play?game=${gameId}`} style={{ width: "100%" }}>
+                  <Button variant="secondary" className={styles.actionBtn}>{t("game.new_opponent")}</Button>
                 </LocaleLink>
                 <LocaleLink href="/play" style={{ width: "100%" }}>
-                  <Button variant="secondary" className={styles.actionBtn}>{t("matchmaking.back_to_play")}</Button>
+                  <Button variant="ghost" className={styles.actionBtn}>{t("matchmaking.back_to_play")}</Button>
                 </LocaleLink>
               </>
             )}
@@ -207,6 +228,7 @@ export function ResultCeremony({
               <Button variant="ghost" className={styles.actionBtn}>{t("support.game_report_cta")}</Button>
             </LocaleLink>
           </div>
+
 
           <MatchShareCard
             gameId={gameId}

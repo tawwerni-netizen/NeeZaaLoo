@@ -43,6 +43,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const [players, setPlayers] = useState<string[] | null>(null);
   const [resignConfirmOpen, setResignConfirmOpen] = useState(false);
   const [rematchBusy, setRematchBusy] = useState(false);
+  const [rematchSent, setRematchSent] = useState(false);
   const [opponentNickname, setOpponentNickname] = useState<string>("");
   const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<unknown>(null);
@@ -174,15 +175,22 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const result = completedInfo.result;
   const reason = completedInfo.reason;
 
-  // Persist handled duel in sessionStorage so player is never bounced back after match finishes
+  // Persist handled and completed duel in sessionStorage so player is never bounced back after match finishes
   useEffect(() => {
     if (completed) {
       try {
-        const stored = sessionStorage.getItem("nizalo_handled_duels");
-        const list = stored ? (JSON.parse(stored) as string[]) : [];
-        if (!list.includes(duelId)) {
-          list.push(duelId);
-          sessionStorage.setItem("nizalo_handled_duels", JSON.stringify(list));
+        const storedHandled = sessionStorage.getItem("nizalo_handled_duels");
+        const listHandled = storedHandled ? (JSON.parse(storedHandled) as string[]) : [];
+        if (!listHandled.includes(duelId)) {
+          listHandled.push(duelId);
+          sessionStorage.setItem("nizalo_handled_duels", JSON.stringify(listHandled));
+        }
+
+        const storedCompleted = sessionStorage.getItem("nizalo_completed_duels");
+        const listCompleted = storedCompleted ? (JSON.parse(storedCompleted) as string[]) : [];
+        if (!listCompleted.includes(duelId)) {
+          listCompleted.push(duelId);
+          sessionStorage.setItem("nizalo_completed_duels", JSON.stringify(listCompleted));
         }
       } catch {
         // Non-fatal
@@ -238,14 +246,32 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const delta = useProgressionSnapshot(player?.handle, gameId ?? undefined, completed);
 
   async function handleRematch() {
-    if (!botId || !gameId) return;
-    setRematchBusy(true);
-    try {
-      const difficulty = BOT_DIFFICULTY[botId] ?? "MEDIUM";
-      const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", { gameId, difficulty });
-      router.push(`/${locale}/game/${r.duelId}`);
-    } finally {
-      setRematchBusy(false);
+    if (vsComputer && botId && gameId) {
+      setRematchBusy(true);
+      try {
+        const difficulty = BOT_DIFFICULTY[botId] ?? "MEDIUM";
+        const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", { gameId, difficulty });
+        router.push(`/${locale}/game/${r.duelId}`);
+      } finally {
+        setRematchBusy(false);
+      }
+      return;
+    }
+
+    if (!vsComputer && gameId) {
+      if (opponentNickname) {
+        setRematchBusy(true);
+        try {
+          await post<{ challengeId: string }>("/v1/challenges", { gameId, opponentNickname });
+          setRematchSent(true);
+        } catch {
+          router.push(`/${locale}/play?game=${gameId}`);
+        } finally {
+          setRematchBusy(false);
+        }
+      } else {
+        router.push(`/${locale}/play?game=${gameId}`);
+      }
     }
   }
 
@@ -335,6 +361,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
             delta={delta}
             onRematch={() => void handleRematch()}
             rematchBusy={rematchBusy}
+            rematchSent={rematchSent}
           />
         ) : plugin && (view || plugin.id === "billiards") ? (
           <div className={styles.duelArena}>
