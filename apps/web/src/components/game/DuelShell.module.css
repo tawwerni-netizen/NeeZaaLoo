@@ -340,6 +340,9 @@
   border-radius: var(--nz-radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.05);
   margin-bottom: var(--nz-space-2);
+  box-sizing: border-box;
+  gap: 8px;
+  min-width: 0;
 }
 
 .vsBadge {
@@ -350,6 +353,19 @@
   text-shadow: 0 0 10px rgba(255, 184, 0, 0.6);
   padding: 0 var(--nz-space-4);
   font-style: italic;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .vsHeader {
+    padding: 6px 8px;
+    gap: 4px;
+    border-radius: var(--nz-radius-lg);
+  }
+  .vsBadge {
+    font-size: 1rem;
+    padding: 0 4px;
+  }
 }
 
 .boardContainer {

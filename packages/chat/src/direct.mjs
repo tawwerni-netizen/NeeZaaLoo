@@ -268,6 +268,12 @@ export function createDirectChatService(db) {
     const senderCheck = await db.query("SELECT disabled_at FROM player WHERE id = $1", [senderId]);
     if (senderCheck.rows[0]?.disabled_at) return { ok: false, reason: "ACCOUNT_DISABLED" };
 
+    const receiverCheck = await db.query("SELECT is_ai, allow_direct_messages FROM player WHERE id = $1", [receiverId]);
+    if (!receiverCheck.rows.length) return { ok: false, reason: "RECEIVER_NOT_FOUND" };
+    if (receiverCheck.rows[0].is_ai || receiverCheck.rows[0].allow_direct_messages === false) {
+      return { ok: false, reason: "DIRECT_MESSAGES_DISABLED" };
+    }
+
     const blocked = await db.query(
       `SELECT 1 FROM chat_block WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)`,
       [senderId, receiverId]

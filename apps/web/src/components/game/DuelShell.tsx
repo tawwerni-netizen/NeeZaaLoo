@@ -339,16 +339,23 @@ export function DuelShell({ duelId }: { duelId: string }) {
         ) : plugin && (view || plugin.id === "billiards") ? (
           <div className={styles.duelArena}>
             <div className={styles.vsHeader}>
-              {players && mySeat !== null && (
+              {players && (mySeat !== null ? (
                 <PlayerStrip
                   playerId={players[mySeat] ?? ""}
                   active={isSharedClock ? true : clock?.toMove === mySeat}
                   remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[mySeat] ?? null}
                   flagged={false}
                 />
-              )}
+              ) : isSpectator && players[0] ? (
+                <PlayerStrip
+                  playerId={players[0] ?? ""}
+                  active={isSharedClock ? true : clock?.toMove === 0}
+                  remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[0] ?? null}
+                  flagged={false}
+                />
+              ) : null)}
               <div className={styles.vsBadge}>VS</div>
-              {players && opponentSeat !== null && (
+              {players && (opponentSeat !== null ? (
                 <PlayerStrip
                   playerId={players[opponentSeat] ?? ""}
                   active={isSharedClock ? true : clock?.toMove === opponentSeat}
@@ -356,7 +363,15 @@ export function DuelShell({ duelId }: { duelId: string }) {
                   flagged={false}
                   reverse={true}
                 />
-              )}
+              ) : isSpectator && players[1] ? (
+                <PlayerStrip
+                  playerId={players[1] ?? ""}
+                  active={isSharedClock ? true : clock?.toMove === 1}
+                  remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[1] ?? null}
+                  flagged={false}
+                  reverse={true}
+                />
+              ) : null)}
             </div>
 
             <div className={styles.boardContainer}>

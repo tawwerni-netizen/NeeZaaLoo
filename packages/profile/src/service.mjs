@@ -111,7 +111,7 @@ export function createProfileService(db, {
 
   async function publicProfileFor(playerId) {
     const p = await db.query(
-      "SELECT id, handle, bio, avatar_key, selected_badge_code, selected_frame_code, created_at, clan_id, (SELECT tag FROM clan WHERE id = player.clan_id) AS clan_tag FROM player WHERE id = $1", [playerId]
+      "SELECT id, handle, bio, avatar_key, selected_badge_code, selected_frame_code, allow_direct_messages, created_at, clan_id, (SELECT tag FROM clan WHERE id = player.clan_id) AS clan_tag FROM player WHERE id = $1", [playerId]
     );
     if (!p.rows.length) return null;
     const row = p.rows[0];
@@ -140,6 +140,7 @@ export function createProfileService(db, {
       avatarUrl: avatarStorage.getPublicUrl(row.avatar_key),
       selectedBadge: row.selected_badge_code,
       selectedFrame: row.selected_frame_code,
+      allowDirectMessages: row.allow_direct_messages ?? true,
       exp: expProgress(totalExp),
       globalSkill: skill.score,
       ratings,
@@ -181,11 +182,12 @@ export function createProfileService(db, {
     };
   }
 
-  /** `nickname` and `bio` are both optional -- only the fields actually
+  /**
+   * Update nickname, bio, and privacy settings. Only fields explicitly
    * present in the call are validated and changed. Nickname's own
    * cooldown/reserved-word/uniqueness rules live in nickname.mjs; this
    * only sequences them and reports the combined result. */
-  async function updateProfile(playerId, { nickname, bio } = {}, ctx = {}) {
+  async function updateProfile(playerId, { nickname, bio, allowDirectMessages } = {}, ctx = {}) {
     if (nickname !== undefined) {
       const r = await nicknameService.changeNickname(playerId, nickname, ctx);
       if (!r.ok) return r;
@@ -197,6 +199,11 @@ export function createProfileService(db, {
       const updated = await db.query("UPDATE player SET bio = $2 WHERE id = $1 RETURNING id", [playerId, sanitized]);
       if (!updated.rows.length) return { ok: false, reason: ProfileError.NOT_FOUND };
       await writeSecurityEvent(db, playerId, "PROFILE_UPDATED", { field: "bio" }, ctx);
+    }
+    if (allowDirectMessages !== undefined) {
+      const allowed = Boolean(allowDirectMessages);
+      await db.query("UPDATE player SET allow_direct_messages = $2 WHERE id = $1", [playerId, allowed]);
+      await writeSecurityEvent(db, playerId, "PROFILE_UPDATED", { field: "allow_direct_messages", value: allowed }, ctx);
     }
     return { ok: true, profile: await publicProfileFor(playerId) };
   }

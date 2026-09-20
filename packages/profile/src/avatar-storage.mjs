@@ -75,7 +75,11 @@ export function createLocalAvatarStorage({ dir, baseUrl }) {
   }
 
   function getPublicUrl(key) {
-    return key ? `${baseUrl}/${key}` : null;
+    if (!key) return null;
+    if (key.startsWith("http://") || key.startsWith("https://") || key.startsWith("/")) {
+      return key;
+    }
+    return `${baseUrl}/${key}`;
   }
 
   return { save, replace, delete: del, getPublicUrl };

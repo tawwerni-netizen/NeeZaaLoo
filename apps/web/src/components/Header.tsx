@@ -14,6 +14,7 @@ import { useAuthPopup } from "@/lib/auth-popup-context";
 import { useWalletBalance } from "@/lib/use-wallet-balance";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
+import { WealthWalletIcon } from "@/components/icons/WealthWalletIcon";
 import styles from "./Header.module.css";
 
 type NavItem = { href?: string; label: string; icon: string; items?: { href: string; label: string; icon?: string; }[] };
@@ -42,7 +43,7 @@ export function Header() {
     { href: "/tournaments", label: t("nav.tournaments"), icon: "🏆" },
     { href: "/clans", label: t("nav.clans"), icon: "🛡️" },
     { href: "/rank", label: t("nav.rank"), icon: "👑" },
-    { href: "/wallet", label: t("nav.wallet"), icon: "💎" },
+    { href: "/wallet", label: t("nav.wallet"), icon: "💰" },
   ];
 
   const isActive = (href: string) => pathname === `/${locale}${href}`;
@@ -88,13 +89,15 @@ export function Header() {
                   className={styles.walletBalanceMain}
                   title={
                     locale === "ar"
-                      ? `إجمالي الرصيد: ${totalUsd.toFixed(2)} 💎 (المتاح للعب: ${availableUsd.toFixed(2)} 💎)`
-                      : `Total Balance: ${totalUsd.toFixed(2)} N-Gems (Available to play: ${availableUsd.toFixed(2)} N-Gems)`
+                      ? `إجمالي الرصيد: ${totalUsd.toFixed(2)} $ (المتاح للعب: ${availableUsd.toFixed(2)} $)`
+                      : `Total Balance: $${totalUsd.toFixed(2)} (Available to play: $${availableUsd.toFixed(2)})`
                   }
                 >
                   <div className={styles.walletIconWrap}>
                     <span className={styles.walletLiveDot} />
-                    <span className={styles.walletIcon}>💎</span>
+                    <span className={styles.walletIcon}>
+                      <WealthWalletIcon size={19} />
+                    </span>
                   </div>
                   <div className={styles.walletAmountWrap}>
                     <span className={styles.walletAmountNum}>
@@ -104,7 +107,7 @@ export function Header() {
                         `${totalUsd.toFixed(2)}`
                       )}
                     </span>
-                    <span className={styles.walletAssetTag}>N-Gems</span>
+                    <span className={styles.walletAssetTag}>USDT</span>
                   </div>
                 </LocaleLink>
 
@@ -149,7 +152,9 @@ export function Header() {
                 aria-label={t("nav.wallet")}
                 title={locale === "ar" ? "رصيد المحفظة" : "Wallet Balance"}
               >
-                <span className={styles.walletIcon}>💎</span>
+                <span className={styles.walletIcon}>
+                  <WealthWalletIcon size={16} />
+                </span>
                 <span className={styles.mobileBalanceNum}>
                   {totalUsd.toFixed(2)}
                 </span>
@@ -212,17 +217,19 @@ export function Header() {
                 {/* Mobile Drawer Balance Showcase */}
                 <div className={styles.mobileDrawerBalanceBox}>
                   <div className={styles.mobileDrawerBalanceLabel}>
-                    <span>💎</span>
+                    <WealthWalletIcon size={16} />
                     <span>{locale === "ar" ? "رصيد المحفظة:" : "Wallet Balance:"}</span>
                   </div>
                   <div className={styles.mobileDrawerBalanceVal}>
-                    {totalUsd.toFixed(2)} <span style={{ fontSize: "11px", color: "#4ade80" }}>N-Gems</span>
+                    {totalUsd.toFixed(2)} <span style={{ fontSize: "11px", color: "#4ade80" }}>USDT</span>
                   </div>
                 </div>
 
                 <div className={styles.mobileUserActions}>
                   <LocaleLink href="/wallet" className={styles.mobileCardWalletBtn} onClick={closeMenu}>
-                    <span className={styles.walletIcon}>💎</span>
+                    <span className={styles.walletIcon}>
+                      <WealthWalletIcon size={18} />
+                    </span>
                     <span>{t("nav.wallet")}</span>
                   </LocaleLink>
                   <LocaleLink href="/profile" className={styles.mobileCardProfileBtn} onClick={closeMenu}>

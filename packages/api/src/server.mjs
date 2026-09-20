@@ -1044,7 +1044,10 @@ function buildRoutes() {
         if (body.bio !== undefined && typeof body.bio !== "string") {
           return { status: 400, body: errorBody("BAD_REQUEST", "bio must be a string") };
         }
-        const r = await profile.updateProfile(actor.id, { nickname: body.nickname, bio: body.bio }, { ip });
+        if (body.allowDirectMessages !== undefined && typeof body.allowDirectMessages !== "boolean") {
+          return { status: 400, body: errorBody("BAD_REQUEST", "allowDirectMessages must be a boolean") };
+        }
+        const r = await profile.updateProfile(actor.id, { nickname: body.nickname, bio: body.bio, allowDirectMessages: body.allowDirectMessages }, { ip });
         if (!r.ok) {
           const status = r.reason === "TAKEN" ? 409
             : r.reason === "COOLDOWN" ? 429
@@ -2972,7 +2975,23 @@ function buildRoutes() {
             `SELECT count(*)::int c FROM deposit
               WHERE status IN ('EXPIRED','UNDERPAID','OVERPAID','WRONG_ASSET','WRONG_NETWORK','QUARANTINED')`
           ),
-          () => db.query(`SELECT asset, custody_held::text AS custody, user_liabilities::text AS liabilities FROM ledger_solvency`),
+          () => db.query(
+            `SELECT
+               a.asset,
+               SUM(CASE WHEN a.owner_type = 'PLATFORM' AND a.account_type = 'ASSET'
+                        THEN ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0))
+                        ELSE 0 END)::text AS custody,
+               SUM(CASE WHEN a.owner_type = 'USER' AND p.is_ai IS NOT TRUE
+                        THEN ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0))
+                        ELSE 0 END)::text AS liabilities,
+               SUM(CASE WHEN a.owner_type = 'USER' AND p.is_ai IS TRUE
+                        THEN ledger_natural_balance(a.normal_side, COALESCE(b.balance, 0))
+                        ELSE 0 END)::text AS bot_liquidity
+             FROM ledger_account a
+             LEFT JOIN ledger_balance b ON b.account_id = a.id
+             LEFT JOIN player p ON p.id = a.owner_id
+             GROUP BY a.asset`
+          ),
           () => db.query(
             `SELECT DISTINCT ON (kind) kind, status, started_at, completed_at,
                     records_checked, mismatches_found, cases_opened
@@ -3078,7 +3097,12 @@ function buildRoutes() {
               reconciliationStatus,
             },
             finance: {
-              solvency: solvency.rows.map((r) => ({ asset: r.asset, custodyHeldMinor: r.custody, userLiabilitiesMinor: r.liabilities })),
+              solvency: solvency.rows.map((r) => ({
+                asset: r.asset,
+                custodyHeldMinor: r.custody,
+                userLiabilitiesMinor: r.liabilities,
+                botLiquidityMinor: r.bot_liquidity ?? "0",
+              })),
               pendingDeposits: pendingDeposits.rows[0].c,
               pendingWithdrawals: pendingWithdrawals.rows[0].c,
               failedDeposits: failedDeposits.rows[0].c,

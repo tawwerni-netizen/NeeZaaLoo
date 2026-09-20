@@ -54,8 +54,8 @@ export function createTournamentBotFiller(db, tournamentService, options = {}) {
                   WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS last_registered_at
            FROM tournament t
           WHERE t.status = 'REGISTRATION'
-          ORDER BY t.created_at ASC
-          LIMIT 20`
+          ORDER BY registered_count DESC, t.created_at ASC
+          LIMIT 50`
       );
 
       for (const t of openTournaments.rows) {
@@ -95,7 +95,7 @@ export function createTournamentBotFiller(db, tournamentService, options = {}) {
              LEFT JOIN rating r ON r.player_id = p.id AND r.game_id = $1
              ${isCash ? `
              JOIN ledger_account la ON la.key = 'user:' || p.id || ':available' AND la.asset = COALESCE($3, 'USDT')
-             JOIN ledger_balance lb ON lb.account_id = la.id AND lb.balance >= $4
+             JOIN ledger_balance lb ON lb.account_id = la.id AND ledger_natural_balance(la.normal_side, lb.balance) >= $4
              ` : ''}
             WHERE p.is_ai = TRUE
               AND (p.id LIKE 'bot_%' OR p.id LIKE 'top_p_%' OR p.id LIKE 'standing_by_%')

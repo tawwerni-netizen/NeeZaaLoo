@@ -41,7 +41,7 @@ type Summary = {
     reconciliationStatus: string;
   };
   finance: {
-    solvency: { asset: string; custodyHeldMinor: string; userLiabilitiesMinor: string }[];
+    solvency: { asset: string; custodyHeldMinor: string; userLiabilitiesMinor: string; botLiquidityMinor?: string }[];
     pendingDeposits: number;
     pendingWithdrawals: number;
     failedDeposits: number;
@@ -399,11 +399,21 @@ function SystemHealthPanel({ summary }: { summary: Summary }) {
         <p className={styles.empty}>No ledger activity recorded yet.</p>
       ) : (
         summary.finance.solvency.map((s) => (
-          <div key={s.asset} className={styles.metricRow}>
-            <span>{s.asset} custody vs. liabilities</span>
-            <span className={`nz-num ${styles.metricValue}`}>
-              ${formatUsd(s.custodyHeldMinor, { compact: true })} / ${formatUsd(s.userLiabilitiesMinor, { compact: true })}
-            </span>
+          <div key={s.asset} style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "8px" }}>
+            <div className={styles.metricRow}>
+              <span>{s.asset} real custody vs. user liabilities</span>
+              <span className={`nz-num ${styles.metricValue}`}>
+                ${formatUsd(s.custodyHeldMinor, { compact: true })} / ${formatUsd(s.userLiabilitiesMinor, { compact: true })}
+              </span>
+            </div>
+            {s.botLiquidityMinor && s.botLiquidityMinor !== "0" && (
+              <div className={styles.metricRow} style={{ fontSize: "11px", color: "#94a3b8", paddingInlineStart: "8px" }}>
+                <span>🤖 Bot Liquidity (Simulated / Non-Asset)</span>
+                <span className="nz-num" style={{ color: "#f59e0b", fontWeight: 700 }}>
+                  ${formatUsd(s.botLiquidityMinor, { compact: true })}
+                </span>
+              </div>
+            )}
           </div>
         ))
       )}

@@ -51,6 +51,7 @@ export type PublicProfile = {
   clanTag?: string;
   selectedBadge: string | null;
   selectedFrame: string | null;
+  allowDirectMessages?: boolean;
   exp: ExpProgress;
   globalSkill: number | null;
   ratings: GameRating[];

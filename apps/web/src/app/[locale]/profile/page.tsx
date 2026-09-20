@@ -414,9 +414,10 @@ function EditProfilePanel({
   onDone: () => Promise<void>;
   onCancel: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [nickname, setNickname] = useState(profile.nickname);
   const [bio, setBio] = useState(profile.bio);
+  const [allowDirectMessages, setAllowDirectMessages] = useState(profile.allowDirectMessages ?? true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -425,7 +426,7 @@ function EditProfilePanel({
     setError(null);
     setSubmitting(true);
     try {
-      await patch("/v1/me/profile", { nickname, bio });
+      await patch("/v1/me/profile", { nickname, bio, allowDirectMessages });
       await onDone();
     } catch (err) {
       const code = err instanceof ApiError ? err.code : undefined;
@@ -456,6 +457,22 @@ function EditProfilePanel({
           rows={3}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
+        />
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px", background: "rgba(255, 255, 255, 0.03)", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.08)", marginBlock: "12px" }}>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: "14px", color: "#fff" }}>
+            {locale === "ar" ? "السماح بالرسائل الخاصة" : "Allow Direct Messages"}
+          </div>
+          <div style={{ fontSize: "12px", color: "#94a3b8" }}>
+            {locale === "ar" ? "إلغاء التحديد لمنع استقبال الرسائل الخاصة من أي شخص" : "Turn off to block incoming private messages from other players"}
+          </div>
+        </div>
+        <input
+          type="checkbox"
+          checked={allowDirectMessages}
+          onChange={(e) => setAllowDirectMessages(e.target.checked)}
+          style={{ width: "20px", height: "20px", accentColor: "#22c55e", cursor: "pointer" }}
         />
       </div>
       <div style={{ display: "flex", gap: "var(--nz-space-3)", marginTop: "1rem" }}>
