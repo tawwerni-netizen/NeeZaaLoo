@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Nizalo - Investor Pitch Deck (600K Growth Round)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: 1920px 1080px;
+    margin: 0;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    width: 1920px;
+    background-color: #07090e;
+    color: #f1f5f9;
+    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .num {
+    font-family: 'Inter', 'Cairo', sans-serif;
+    direction: ltr;
+    display: inline-block;
+  }
+
+  .slide {
+    width: 1920px;
+    height: 1080px;
+    padding: 60px 80px;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+    background: radial-gradient(circle at 85% 15%, rgba(255, 90, 43, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 15% 85%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
+                #07090e;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Top Bar */
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+  }
+  .slide-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .brand-logo-text {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+  }
+  .brand-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff5a2b;
+    box-shadow: 0 0 12px #ff5a2b;
+  }
+  .deck-badge {
+    background: rgba(255, 90, 43, 0.15);
+    border: 1px solid #ff5a2b;
+    color: #ff7a52;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .slide-counter {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Slide Headings */
+  .slide-titles {
+    margin-bottom: 35px;
+  }
+  .slide-category {
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #ff5a2b;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+  .slide-main-title {
+    font-size: 40px;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.25;
+  }
+  .slide-subtitle {
+    font-size: 18px;
+    color: #94a3b8;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+
+  /* Content Containers */
+  .slide-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Footer */
+  .slide-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 20px;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  /* Common Components */
+  .card {
+    background: rgba(15, 20, 32, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 28px;
+    position: relative;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  }
+  .card-highlight {
+    border-color: rgba(255, 90, 43, 0.5);
+    background: linear-gradient(145deg, rgba(26, 20, 24, 0.95), rgba(15, 20, 32, 0.9));
+    box-shadow: 0 12px 30px rgba(255, 90, 43, 0.12);
+  }
+  .card-cyan {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: linear-gradient(145deg, rgba(14, 28, 44, 0.95), rgba(15, 20, 32, 0.9));
+  }
+  .card-green {
+    border-color: rgba(34, 197, 94, 0.4);
+    background: linear-gradient(145deg, rgba(14, 36, 26, 0.95), rgba(15, 20, 32, 0.9));
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+  }
+
+  .stat-val {
+    font-size: 46px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.1;
+    font-family: 'Inter', sans-serif;
+  }
+  .stat-lbl {
+    font-size: 15px;
+    font-weight: 700;
+    color: #94a3b8;
+    margin-top: 6px;
+  }
+  .stat-trend {
+    font-size: 13px;
+    font-weight: 700;
+    color: #22c55e;
+    margin-top: 4px;
+  }
+
+  /* Table styling */
+  .budget-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    font-size: 15px;
+  }
+  .budget-table th {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 14px 18px;
+    color: #94a3b8;
+    font-weight: 800;
+    text-align: right;
+    border: none;
+  }
+  .budget-table th:first-child { border-radius: 10px 0 0 10px; }
+  .budget-table th:last-child { border-radius: 0 10px 10px 0; }
+  .budget-table td {
+    background: rgba(18, 24, 38, 0.7);
+    padding: 16px 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+  .budget-table tr td:first-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px 0 0 12px;
+    font-weight: 800;
+  }
+  .budget-table tr td:last-child {
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0 12px 12px 0;
+  }
+
+  /* Bar progress */
+  .bar-container {
+    width: 100%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .tag-orange { background: rgba(255, 90, 43, 0.2); color: #ff7a52; border: 1px solid rgba(255, 90, 43, 0.4); }
+  .tag-green { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+  .tag-cyan { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+  .tag-purple { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+
+  /* Feature list */
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .check-icon {
+    min-width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid #22c55e;
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 1: COVER SLIDE                                                      -->
+<!-- ========================================================================= -->
+<section class="slide" style="justify-content: center; text-align: center; background: radial-gradient(circle at center, rgba(255, 90, 43, 0.15) 0%, rgba(7, 9, 14, 0.95) 70%);">
+  <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
+    
+    <!-- Logo SVG -->
+    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
+      <svg width="80" height="80" viewBox="0 0 512 512">
+        <rect width="512" height="512" rx="114" fill="#0B0D10"/>
+        <g transform="translate(107 107) scale(3.104)">
+          <rect x="6" y="6" width="84" height="84" fill="#F2F4F7"/>
+          <path d="M22 2.727 74 71.273v22L22 24.727z" fill="#FF5A2B"/>
+        </g>
+      </svg>
+      <div style="text-align: right;">
+        <h1 style="font-size: 64px; font-weight: 900; letter-spacing: -1px; line-height: 1; color: #fff;">NIZALO <span style="color:#ff5a2b;">.</span></h1>
+        <p style="font-size: 18px; color: #94a3b8; font-weight: 700; margin-top: 4px;">منصة ألعاب المهارة والتحديات الرقمية الأولى في الشرق الأوسط</p>
+      </div>
+    </div>
+
+    <div style="background: rgba(255, 90, 43, 0.12); border: 1.5px solid #ff5a2b; padding: 8px 24px; border-radius: 30px; margin-bottom: 30px;">
+      <span style="font-size: 17px; font-weight: 800; color: #ff5a2b; letter-spacing: 0.5px;">
+        جولة تمويل تسويقي مغلقة | 60 يوماً نمو متسارع (Growth Sprint)
+      </span>
+    </div>
+
+    <h2 style="font-size: 50px; font-weight: 900; color: #fff; line-height: 1.3; margin-bottom: 20px;">
+      الاستثمار في السيطرة على قطاع ألعاب الذكاء والمنافسات المالية
+    </h2>
+    <p style="font-size: 22px; color: #cbd5e1; max-width: 900px; line-height: 1.6; margin-bottom: 40px; font-weight: 500;">
+      فرصة استثمار بقيمة <strong style="color: #4ade80; font-size: 26px;">600,000 جنيه مصري (~$12,000 USD)</strong> تُوجّه بالكامل لإنشاء ماكينة نمو رقمية تستحوذ على 50,000+ لاعب نشط في 60 يوماً عبر فودافون كاش وإنستاباي.
+    </p>
+
+    <!-- Highlights 3 Pillars -->
+    <div style="display: flex; gap: 30px; width: 100%; justify-content: center;">
+      <div class="card" style="padding: 16px 30px; display: flex; align-items: center; gap: 14px;">
+        <span style="font-size: 28px;">⚡</span>
+        <div style="text-align: right;">
+          <div style="font-size: 13px; color: #94a3b8; font-weight: 700;">محرك ألعاب مهارة P2P</div>
+          <div style="font-size: 16px; color: #fff; font-weight: 800;">عمولة مضمونة 5-10% بدون مخاطرة</div>
+        </div>
+      </div>
+      <div class="card" style="padding: 16px 30px; display: flex; align-items: center; gap: 14px;">
+        <span style="font-size: 28px;">📱</span>
+        <div style="text-align: right;">
+          <div style="font-size: 13px; color: #94a3b8; font-weight: 700;">إيداع وسحب محلي فوري</div>
+          <div style="font-size: 16px; color: #fff; font-weight: 800;">فودافون كاش & إنستاباي في ثوانٍ</div>
+        </div>
+      </div>
+      <div class="card" style="padding: 16px 30px; display: flex; align-items: center; gap: 14px;">
+        <span style="font-size: 28px;">📈</span>
+        <div style="text-align: right;">
+          <div style="font-size: 13px; color: #94a3b8; font-weight: 700;">عائد استثمار متوقع (60 يوماً)</div>
+          <div style="font-size: 16px; color: #4ade80; font-weight: 800;">تحقيق نقطة التعادل والربحية المستدامة</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="slide-footer">
+    <span>سري وخاص للمستثمرين | Nizalo Inc. Confidential</span>
+    <span class="num">https://nizalo.com</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 2: THE MARKET OPPORTUNITY                                           -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">الفرصة السوقية والتوقيت</span>
+      </div>
+      <span class="slide-counter">02 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Market Timing & Opportunity</div>
+      <h2 class="slide-main-title">سوق ضخم غير مخدوم بقيمة مليارات، في انتظار منصة محلية موثوقة</h2>
+      <p class="slide-subtitle">الشباب العربي يقضي أكثر من 4 ساعات يومياً على ألعاب الهاتف، لكن بدون عائد وبدون وسائل دفع محلية سهلة.</p>
+    </div>
+
+    <div class="grid-3" style="margin-bottom: 24px;">
+      <div class="card">
+        <div style="font-size: 32px; margin-bottom: 10px;">🎮</div>
+        <div class="stat-val">45M+</div>
+        <div class="stat-lbl">لاعب ألعاب هاتف وكاجوال في مصر</div>
+        <p style="font-size: 14px; color: #cbd5e1; margin-top: 10px; line-height: 1.5;">
+          سوق الألعاب التنافسية ينمو بنسبة 22% سنوياً، مع رغبة متصاعدة في تحويل المهارة والذكاء إلى أرباح حقيقية.
+        </p>
+      </div>
+
+      <div class="card card-highlight">
+        <div style="font-size: 32px; margin-bottom: 10px;">💳</div>
+        <div class="stat-val">91%</div>
+        <div class="stat-lbl">محرومون من بطاقات الائتمان الدولية</div>
+        <p style="font-size: 14px; color: #cbd5e1; margin-top: 10px; line-height: 1.5;">
+          معظم منصات الألعاب العالمية تفشل في مصر بسبب شرط البطاقات البنكية الدولية التي لا يملكها 91% من الشباب.
+        </p>
+      </div>
+
+      <div class="card card-green">
+        <div style="font-size: 32px; margin-bottom: 10px;">🚀</div>
+        <div class="stat-val">45M+</div>
+        <div class="stat-lbl">محفظة فودافون كاش وإنستاباي نشطة</div>
+        <p style="font-size: 14px; color: #cbd5e1; margin-top: 10px; line-height: 1.5;">
+          إنستاباي وفودافون كاش أصبحا البنك اليومي للشارع المصري بمعاملات تجاوزت 2.6 تريليون جنيه في 2024.
+        </p>
+      </div>
+    </div>
+
+    <div class="card card-cyan" style="padding: 20px 28px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <h3 style="font-size: 20px; font-weight: 800; color: #38bdf8; margin-bottom: 4px;">الفرصة الذهبية الآن (The Sweet Spot)</h3>
+          <p style="font-size: 15px; color: #cbd5e1;">
+            منصة نيزالو جمعت بين: <strong>ألعاب الذكاء الشعبية (شطرنج، طاولة، سرعة الحساب، إكس أو)</strong> + <strong>الدفع اللحظي المصري (فودافون كاش & إنستاباي)</strong>، لتقديم تجربة لا يمكن لأي منافس عالمي مجاراتها محلياً.
+          </p>
+        </div>
+        <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; padding: 12px 20px; border-radius: 12px; text-align: center; min-width: 180px;">
+          <div style="font-size: 12px; color: #94a3b8; font-weight: 700;">حجم سوق ألعاب المهارة</div>
+          <div style="font-size: 24px; font-weight: 900; color: #38bdf8;" class="num">$4.2 Billion</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>02 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 3: THE PRODUCT                                                      -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">المنتج والابتكار التقني</span>
+      </div>
+      <span class="slide-counter">03 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Product Architecture</div>
+      <h2 class="slide-main-title">محرك ألعاب نيزالو: سرعة خيالية، نزاهة مطلقة، وبطولات لا تتوقف</h2>
+      <p class="slide-subtitle">تم بناء المنصة بأحدث تقنيات الويب والأندرويد لتعمل على أي اتصال إنترنت دون أي لاج أو تقطيع.</p>
+    </div>
+
+    <div class="grid-4" style="margin-bottom: 24px;">
+      <div class="card">
+        <div style="font-size: 28px; margin-bottom: 8px;">🧠</div>
+        <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 6px;">ألعاب مهارة خالصة 100%</h3>
+        <p style="font-size: 13.5px; color: #94a3b8; line-height: 1.5;">
+          شطرنج، سرعة الرياضيات (Speed Math)، طاولة زهر، كونكت فور، إكس أو، ضامة، جوموكو، وسيجة مصرية. لا مكان للحظ؛ الفوز للأذكى والأسرع دائماً.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 28px; margin-bottom: 8px;">⚡</div>
+        <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 6px;">محرك مباشر Sub-50ms</h3>
+        <p style="font-size: 13.5px; color: #94a3b8; line-height: 1.5;">
+          اتصال لحظي عبر WebSockets فائق السرعة مع بث مباشر للمباريات (Spectator Mode) لمشاهدة التحديات الكبرى في الوقت الفعلي.
+        </p>
+      </div>
+
+      <div class="card card-highlight">
+        <div style="font-size: 28px; margin-bottom: 8px;">🛡️</div>
+        <h3 style="font-size: 18px; font-weight: 800; color: #ff7a52; margin-bottom: 6px;">حماية ونزاهة صارمة</h3>
+        <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+          محرك مكافحة غش متطور مع إعادة تمثيل القرارات السيرفرية (Deterministic Replay)، ومراقبة فورية لأي تواطؤ أو حسابات وهمية.
+        </p>
+      </div>
+
+      <div class="card card-green">
+        <div style="font-size: 28px; margin-bottom: 8px;">🏆</div>
+        <h3 style="font-size: 18px; font-weight: 800; color: #4ade80; margin-bottom: 6px;">بطولات بجوائز ضخمة</h3>
+        <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+          نظام تصفيات براكيت (Brackets) وبطولات دورية يومية وأسبوعية تشعل الحماس وترفع مدة بقاء اللاعب لأكثر من 65 دقيقة يومياً.
+        </p>
+      </div>
+    </div>
+
+    <!-- Product Flow -->
+    <div class="card" style="padding: 22px 30px;">
+      <div style="font-size: 14px; font-weight: 800; color: #ff5a2b; margin-bottom: 12px;">دورة حياة اللاعب داخل نيزالو (The Seamless Loop):</div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; text-align: center;">
+        <div style="flex: 1; background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="font-size: 20px; margin-bottom: 4px;">1️⃣</div>
+          <div style="font-size: 15px; font-weight: 800; color: #fff;">تسجيل فوري</div>
+          <div style="font-size: 12px; color: #94a3b8;">خلال 10 ثوانٍ برقم الموبايل أو جوجل</div>
+        </div>
+        <span style="color: #ff5a2b; font-size: 22px;">◀</span>
+        <div style="flex: 1; background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="font-size: 20px; margin-bottom: 4px;">2️⃣</div>
+          <div style="font-size: 15px; font-weight: 800; color: #fff;">إيداع كاش فوري</div>
+          <div style="font-size: 12px; color: #94a3b8;">فودافون كاش / إنستاباي بنقرة واحدة</div>
+        </div>
+        <span style="color: #ff5a2b; font-size: 22px;">◀</span>
+        <div style="flex: 1; background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="font-size: 20px; margin-bottom: 4px;">3️⃣</div>
+          <div style="font-size: 15px; font-weight: 800; color: #fff;">مبارزة P2P سريعة</div>
+          <div style="font-size: 12px; color: #94a3b8;">تحديات 60 ثانية إلى 5 دقائق</div>
+        </div>
+        <span style="color: #ff5a2b; font-size: 22px;">◀</span>
+        <div style="flex: 1; background: rgba(34, 197, 94, 0.12); padding: 14px; border-radius: 12px; border: 1px solid #22c55e;">
+          <div style="font-size: 20px; margin-bottom: 4px;">4️⃣</div>
+          <div style="font-size: 15px; font-weight: 800; color: #4ade80;">سحب الأرباح فوراً</div>
+          <div style="font-size: 12px; color: #cbd5e1;">تصل المحفظة في دقائق معدودة</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>03 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 4: BUSINESS MODEL & ZERO HOUSE RISK                                 -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">نموذج العمل والربحية</span>
+      </div>
+      <span class="slide-counter">04 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Business Model & Unit Economics</div>
+      <h2 class="slide-main-title">نموذج الوساطة P2P: أرباح ثابتة بدون أي مخاطرة لرأس المال</h2>
+      <p class="slide-subtitle">نيزالو لا تراهن ضد اللاعب إطلاقاً؛ المنصة تتقاضى عمولة تنظيم ثابتة (Platform Fee) على كل مباراة.</p>
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 24px;">
+      <!-- Left: How it works -->
+      <div class="card">
+        <h3 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+          كيف تربح نيزالو؟ (Platform Rake)
+        </h3>
+        <div class="check-item">
+          <div class="check-icon">✓</div>
+          <div>
+            <strong style="color: #fff;">عمولة ثابتة 5% - 10% من قيمة كل تحدي:</strong>
+            <p style="font-size: 14px; color: #94a3b8; margin-top: 2px;">
+              مثال: لاعبان يتنافسان على 100 جنيه لكل منهما (إجمالي الوعاء 200 جنيه). الفائز يحصل على 180-190 جنيه، ونيزالو تتقاضى 10-20 جنيه عمولة تنظيم فورية.
+            </p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-icon">✓</div>
+          <div>
+            <strong style="color: #fff;">رسوم اشتراك البطولات والفعاليات (Tournament Entry):</strong>
+            <p style="font-size: 14px; color: #94a3b8; margin-top: 2px;">
+              اقتطاع 10% إلى 15% من مجموع رسوم تسجيل اللاعبين في بطولات الإقصاء الكبرى.
+            </p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-icon">✓</div>
+          <div>
+            <strong style="color: #fff;">مشتريات شكلية ومميزات VIP داخل اللعبة:</strong>
+            <p style="font-size: 14px; color: #94a3b8; margin-top: 2px;">
+              أشكال مخصصة لرقعة الشطرنج، صور رمزية نادرة، اشتراكات شارات التميز، وإحصائيات لعب متقدمة.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Velocity & Turnover -->
+      <div class="card card-highlight">
+        <h3 style="font-size: 22px; font-weight: 800; color: #ff7a52; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+          ميزة دوران رأس المال الفائق (High Capital Velocity)
+        </h3>
+        
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 6px;">
+            <span style="color: #cbd5e1;">معدل دوران الإيداع الواحد شهرياً:</span>
+            <strong style="color: #4ade80;" class="num">8x - 14x دوران</strong>
+          </div>
+          <p style="font-size: 13.5px; color: #94a3b8; line-height: 1.5;">
+            الـ 100 جنيه التي يودعها اللاعب لا تُنفق مرة واحدة! بل يدخل بها 10 إلى 20 مباراة، مما يولد لنيزالو عمولات تراكمية تفوق 70% إلى 100% من قيمة الإيداع الأصلي بمرور الوقت!
+          </p>
+        </div>
+
+        <div class="grid-2" style="gap: 16px; margin-top: 10px;">
+          <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 12px; color: #94a3b8;">متوسط رصيد اللاعب (LTV)</div>
+            <div style="font-size: 24px; font-weight: 900; color: #38bdf8;" class="num">280 ج.م</div>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 12px; color: #94a3b8;">نسبة LTV إلى تكلفة الجلب CAC</div>
+            <div style="font-size: 24px; font-weight: 900; color: #4ade80;" class="num">4.5x ضعف</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner -->
+    <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 14px; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;">
+      <span style="font-size: 16px; font-weight: 800; color: #4ade80;">
+        💡 الخلاصة للمستثمر: المنصة لا تخسر مليمًا عند فوز أي لاعب! كل مباراة تنتهي = ربح صافٍ يدخل خزينة نيزالو فوراً.
+      </span>
+      <span class="tag tag-green">Zero Capital Risk</span>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>04 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 5: 60-DAY MARKETING BLITZ STRATEGY                                  -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">استراتيجية التسويق 60 يوماً</span>
+      </div>
+      <span class="slide-counter">05 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Growth & Acquisition Engine</div>
+      <h2 class="slide-main-title">خطة الانتشار المكثف (60-Day Blitz): كيف سنستحوذ على السوق؟</h2>
+      <p class="slide-subtitle">تركيز هجومي مدروس على قنوات الفيديو القصير وصناع المحتوى والبطولات المباشرة لتحقيق أعلى انتشار بأقل تكلفة.</p>
+    </div>
+
+    <div class="grid-3" style="margin-bottom: 24px;">
+      <!-- Pillar 1 -->
+      <div class="card card-highlight">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-size: 28px;">🔥</span>
+          <span class="tag tag-orange">33.3% من الميزانية</span>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 8px;">تيك توك & الفيديوهات الفيروسية (TikTok Spark)</h3>
+        <p style="font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+          إعلانات فيديوهات تحدي حقيقية (UGC): "مين يقدر يكسبني في 60 ثانية في الماث؟" مع استعراض فوري لسحب الأرباح على فودافون كاش في الفيديو، وهي الزاوية الإعلانية الأعلى تحويلاً في مصر.
+        </p>
+      </div>
+
+      <!-- Pillar 2 -->
+      <div class="card card-cyan">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-size: 28px;">🎯</span>
+          <span class="tag tag-cyan">30.0% من الميزانية</span>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 8px;">إعلانات ميتا المستهدفة (Meta Ads)</h3>
+        <p style="font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+          حملات إعادة استهداف (Retargeting) وجمهور مشابه (Lookalike) لرواد المحافظ الرقمية وعشاق ألعاب الكاجوال في فيسبوك وإنستجرام، مع اختبار أكثر من 40 تصميم وزاوية دعائية أسبوعياً.
+        </p>
+      </div>
+
+      <!-- Pillar 3 -->
+      <div class="card card-green">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-size: 28px;">🎮</span>
+          <span class="tag tag-green">20.0% من الميزانية</span>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 8px;">صناع المحتوى وبثوث الألعاب المباشرة</h3>
+        <p style="font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+          شراكات مع 20+ صانع محتوى ستريمر (TikTok Live & YouTube Gaming) لمبارزة المتابعين على الهواء مباشرة وتحويل الجوائز للمشاهدين فوراً لإثبات مصداقية الدفع.
+        </p>
+      </div>
+    </div>
+
+    <!-- Secondary channels -->
+    <div class="grid-2">
+      <div class="card" style="padding: 18px 24px; display: flex; align-items: center; gap: 16px;">
+        <span style="font-size: 32px;">🔍</span>
+        <div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <strong style="color: #fff; font-size: 16px;">إعلانات جوجل وشورتس (8.3%):</strong>
+            <span class="tag tag-purple">Search Intent</span>
+          </div>
+          <p style="font-size: 13px; color: #94a3b8; margin-top: 4px;">
+            الاستحواذ على الكلمات المفتاحية لألعاب الذكاء والشطرنج وألعاب التحدي عبر محرك بحث Google وYouTube Bumper Ads.
+          </p>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 18px 24px; display: flex; align-items: center; gap: 16px;">
+        <span style="font-size: 32px;">🎁</span>
+        <div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <strong style="color: #fff; font-size: 16px;">حوافز الإحالة الفيروسية والبطولات (8.3%):</strong>
+            <span class="tag tag-green">Viral Loop</span>
+          </div>
+          <p style="font-size: 13px; color: #94a3b8; margin-top: 4px;">
+            مكافأة لكل لاعب يدعو أصدقاءه للمبارزة، وجوائز كاش دورية لأفضل 10 متصدرين للائحة الشرف الأسبوعية.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>05 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 6: DETAILED BUDGET ALLOCATION (THE 600K BREAKDOWN)                  -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">تفاصيل الميزانية وجدول الصرف</span>
+      </div>
+      <span class="slide-counter">06 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Budget Allocation (600,000 EGP)</div>
+      <h2 class="slide-main-title">توزيع ميزانية الـ 600 ألف جنيه بدقة متناهية على القنوات التسويقية</h2>
+      <p class="slide-subtitle">كل جنيه مصري مرصود له مستهدف واضح ومعدل تحويل متوقع وفق مؤشرات أداء دقيقة (ROI Driven).</p>
+    </div>
+
+    <!-- Table -->
+    <table class="budget-table">
+      <thead>
+        <tr>
+          <th>القناة التسويقية (Channel)</th>
+          <th>المبلغ بالجنيه (EGP)</th>
+          <th>النسبة</th>
+          <th>مرات الظهور المتوقعة</th>
+          <th>المستخدمون الجدد المتوقعون</th>
+          <th>تكلفة التسجيل (CAC)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color: #ff5a2b;">فيديوهات وإعلانات تيك توك (TikTok Spark Ads)</strong></td>
+          <td class="num" style="color: #fff; font-weight: 800;">200,000 ج.م</td>
+          <td><span class="tag tag-orange">33.3%</span></td>
+          <td class="num">4,500,000+</td>
+          <td class="num" style="color: #4ade80; font-weight: 800;">18,500 لاعب</td>
+          <td class="num">10.8 ج.م</td>
+        </tr>
+        <tr>
+          <td><strong style="color: #38bdf8;">إعلانات ميتا (Facebook & Instagram Ads)</strong></td>
+          <td class="num" style="color: #fff; font-weight: 800;">180,000 ج.م</td>
+          <td><span class="tag tag-cyan">30.0%</span></td>
+          <td class="num">3,800,000+</td>
+          <td class="num" style="color: #4ade80; font-weight: 800;">15,000 لاعب</td>
+          <td class="num">12.0 ج.م</td>
+        </tr>
+        <tr>
+          <td><strong style="color: #a855f7;">صناع المحتوى والستريمرز (Streamers & Influencers)</strong></td>
+          <td class="num" style="color: #fff; font-weight: 800;">120,000 ج.م</td>
+          <td><span class="tag tag-purple">20.0%</span></td>
+          <td class="num">2,200,000+</td>
+          <td class="num" style="color: #4ade80; font-weight: 800;">9,500 لاعب</td>
+          <td class="num">12.6 ج.م</td>
+        </tr>
+        <tr>
+          <td><strong style="color: #fbbf24;">إعلانات جوجل ويوتيوب (Google & YouTube Search/Shorts)</strong></td>
+          <td class="num" style="color: #fff; font-weight: 800;">50,000 ج.م</td>
+          <td><span class="tag tag-orange">8.3%</span></td>
+          <td class="num">850,000+</td>
+          <td class="num" style="color: #4ade80; font-weight: 800;">3,800 لاعب</td>
+          <td class="num">13.1 ج.م</td>
+        </tr>
+        <tr>
+          <td><strong style="color: #22c55e;">حوافز الإحالة الفيروسية ومجموع جوائز البطولات</strong></td>
+          <td class="num" style="color: #fff; font-weight: 800;">50,000 ج.م</td>
+          <td><span class="tag tag-green">8.3%</span></td>
+          <td class="num">مباشر (Viral)</td>
+          <td class="num" style="color: #4ade80; font-weight: 800;">5,200 لاعب</td>
+          <td class="num">9.6 ج.م</td>
+        </tr>
+        <tr style="background: rgba(255, 90, 43, 0.1);">
+          <td><strong style="color: #fff; font-size: 16px;">الإجمالي الكلي لميزانية الصرف</strong></td>
+          <td class="num" style="color: #4ade80; font-size: 18px; font-weight: 900;">600,000 ج.م</td>
+          <td><span class="tag tag-orange">100%</span></td>
+          <td class="num" style="font-weight: 900;">11,350,000+</td>
+          <td class="num" style="color: #4ade80; font-size: 18px; font-weight: 900;">52,000+ لاعب</td>
+          <td class="num" style="font-weight: 800;">~11.5 ج.م (CAC)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 15px; display: flex; gap: 20px; align-items: center;">
+      <div style="flex: 1; font-size: 13.5px; color: #94a3b8;">
+        📌 <strong>ضمان الشفافية المالية:</strong> يتم تزويد المستثمر بتقرير أداء أسبوعي مباشر من لوحات تحكم الإعلانات (TikTok Ads Manager & Meta Business) لمتابعة كل مليم يصرف وعدد المسجلين الفعليين لحظة بلحظة.
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>06 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 7: 60-DAY EXECUTION TIMELINE (4 SPRINTS)                            -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">الجدول الزمني ومراحل التنفيذ</span>
+      </div>
+      <span class="slide-counter">07 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Bi-Weekly Execution Plan</div>
+      <h2 class="slide-main-title">خطة الصرف الزمنية: 4 مراحل هجومية (Sprints) على مدار 60 يوماً</h2>
+      <p class="slide-subtitle">توزيع الصرف تدريجياً لضمان تحسين الحملات ورفع معدلات التحويل وتفادي هدر الميزانية.</p>
+    </div>
+
+    <div class="grid-4" style="margin-bottom: 24px;">
+      <!-- Sprint 1 -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span class="tag tag-orange">الأيام 1 - 15</span>
+          <span class="num" style="font-weight: 800; color: #fff;">150,000 ج.م</span>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px;">المرحلة الأولى: إطلاق الاختبار السريع</h3>
+        <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.6;">
+          <li>• إطلاق 30 زاوية إعلانية على تيك توك وميتا.</li>
+          <li>• تحديد الإعلانات الرابحة (Winning Ads).</li>
+          <li>• تسجيل أول 10,000 لاعب وتفعيل الإيداعات.</li>
+          <li>• فحص سرعة تحمل السيرفرات والأداء.</li>
+        </ul>
+      </div>
+
+      <!-- Sprint 2 -->
+      <div class="card card-highlight">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span class="tag tag-orange">الأيام 16 - 30</span>
+          <span class="num" style="font-weight: 800; color: #ff7a52;">175,000 ج.م</span>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 800; color: #ff7a52; margin-bottom: 8px;">المرحلة الثانية: مضاعفة الميزانية (Scale)</h3>
+        <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.6;">
+          <li>• ضخ الميزانية في الإعلانات الأعلى تحويلاً.</li>
+          <li>• بدء بثوث صناع المحتوى على TikTok Live.</li>
+          <li>• الوصول إلى 22,000 لاعب إجمالي.</li>
+          <li>• ارتفاع عدد المباريات اليومية إلى 15,000 مباراة.</li>
+        </ul>
+      </div>
+
+      <!-- Sprint 3 -->
+      <div class="card card-cyan">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span class="tag tag-cyan">الأيام 31 - 45</span>
+          <span class="num" style="font-weight: 800; color: #38bdf8;">150,000 ج.م</span>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 800; color: #38bdf8; margin-bottom: 8px;">المرحلة الثالثة: بطولات كبرى واحتفاظ</h3>
+        <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.6;">
+          <li>• إطلاق "بطولة مصر لألعاب الذكاء".</li>
+          <li>• تفعيل حوافز الإحالة الفيروسية (Invite & Earn).</li>
+          <li>• وصول إجمالي المستخدمين إلى 37,000 لاعب.</li>
+          <li>• إعادة تدوير الإيداعات بمعدل 10x أضعاف.</li>
+        </ul>
+      </div>
+
+      <!-- Sprint 4 -->
+      <div class="card card-green">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span class="tag tag-green">الأيام 46 - 60</span>
+          <span class="num" style="font-weight: 800; color: #4ade80;">125,000 ج.م</span>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 800; color: #4ade80; margin-bottom: 8px;">المرحلة الرابعة: الاستقرار والربحية</h3>
+        <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.6;">
+          <li>• كسر حاجز 50,000+ لاعب مسجل.</li>
+          <li>• الإيرادات الذاتية تغطي مصاريف التسويق بالكامل.</li>
+          <li>• تحقيق نقطة التعادل والتدفق النقدي الإيجابي.</li>
+          <li>• الجاهزية لجولة استثمارية كبرى (Seed Round).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Timeline Progress Bar Graphic -->
+    <div class="card" style="padding: 20px 28px;">
+      <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #94a3b8; margin-bottom: 8px;">
+        <span>بداية الحملة (اليوم 1)</span>
+        <span>منتصف الخطة (اليوم 30) - 22k لاعب</span>
+        <span>نهاية الـ 60 يوماً - 50k+ لاعب وتدفق نقدي مستقر</span>
+      </div>
+      <div class="bar-container" style="height: 16px;">
+        <div class="bar-fill" style="width: 100%; background: linear-gradient(90deg, #ff5a2b 0%, #38bdf8 50%, #22c55e 100%);"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>07 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 8: FINANCIAL PROJECTIONS & UNIT ECONOMICS                            -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">التوقعات المالية وعائد الاستثمار</span>
+      </div>
+      <span class="slide-counter">08 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Return On Investment (ROI)</div>
+      <h2 class="slide-main-title">التوقعات المالية لـ 60 يوماً: كيف تحول الـ 600 ألف إلى قيمة مضاعفة؟</h2>
+      <p class="slide-subtitle">حسابات متحفظة قائمة على أرقام الاختبار الفعلي ومعدلات الإيداع واللعب المتكرر.</p>
+    </div>
+
+    <!-- 4 Key Metrics Cards -->
+    <div class="grid-4" style="margin-bottom: 24px;">
+      <div class="card">
+        <div style="font-size: 13px; color: #94a3b8; font-weight: 700;">المستخدمون الجدد (New Signups)</div>
+        <div class="stat-val" style="color: #fff;">50,000+</div>
+        <div class="stat-trend">تكلفة التسجيل: ~11.5 ج.م</div>
+      </div>
+
+      <div class="card card-highlight">
+        <div style="font-size: 13px; color: #ff7a52; font-weight: 700;">المودعون الفعليون (Paying Users FTD)</div>
+        <div class="stat-val" style="color: #ff7a52;">10,000+</div>
+        <div class="stat-trend" style="color: #ff7a52;">نسبة تحويل 20% بفضل فودافون كاش</div>
+      </div>
+
+      <div class="card card-cyan">
+        <div style="font-size: 13px; color: #38bdf8; font-weight: 700;">حجم الرهانات المتداولة (Turnover)</div>
+        <div class="stat-val" style="color: #38bdf8;">4.2M ج.م</div>
+        <div class="stat-trend" style="color: #38bdf8;">خلال الشهر الثاني فقط</div>
+      </div>
+
+      <div class="card card-green">
+        <div style="font-size: 13px; color: #4ade80; font-weight: 700;">صافي عمولة المنصة الشهرية المتوقعة</div>
+        <div class="stat-val" style="color: #4ade80;">330k ج.م</div>
+        <div class="stat-trend">شهرياً (عمولة 8% صافية)</div>
+      </div>
+    </div>
+
+    <!-- Breakdown Scenarios -->
+    <div class="grid-3">
+      <div class="card" style="border: 1px dashed rgba(255,255,255,0.15);">
+        <h4 style="font-size: 17px; font-weight: 800; color: #94a3b8; margin-bottom: 12px;">سيناريو متحفظ (Conservative)</h4>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>اللاعبون الجدد:</span>
+          <strong class="num">35,000</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>المودعون الفعليون:</span>
+          <strong class="num">6,500</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>صافي دخل المنصة الشهري:</span>
+          <strong class="num" style="color: #4ade80;">190,000 ج.م</strong>
+        </div>
+        <div style="font-size: 12.5px; color: #64748b; margin-top: 10px;">استرداد رأس المال خلال 3.5 إلى 4 أشهر.</div>
+      </div>
+
+      <div class="card card-highlight">
+        <h4 style="font-size: 17px; font-weight: 800; color: #ff5a2b; margin-bottom: 12px;">سيناريو مستهدف (Target Base)</h4>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>اللاعبون الجدد:</span>
+          <strong class="num">52,000</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>المودعون الفعليون:</span>
+          <strong class="num">10,400</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>صافي دخل المنصة الشهري:</span>
+          <strong class="num" style="color: #4ade80;">330,000 ج.م</strong>
+        </div>
+        <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 10px;">استرداد رأس المال بالكامل خلال 60 إلى 75 يوماً فقط!</div>
+      </div>
+
+      <div class="card card-green">
+        <h4 style="font-size: 17px; font-weight: 800; color: #4ade80; margin-bottom: 12px;">سيناريو متفائل (Aggressive Viral)</h4>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>اللاعبون الجدد:</span>
+          <strong class="num">80,000+</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>المودعون الفعليون:</span>
+          <strong class="num">16,000+</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>صافي دخل المنصة الشهري:</span>
+          <strong class="num" style="color: #4ade80;">520,000+ ج.م</strong>
+        </div>
+        <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 10px;">أرباح شهرية تعادل قيمة رأس المال بالكامل شهرياً.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>08 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 9: OUR SECRET WEAPON - LOCAL RAILS AUTOMATION                       -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">سلاحنا التنافسي الحصري</span>
+      </div>
+      <span class="slide-counter">09 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Competitive Moat & Infrastructure</div>
+      <h2 class="slide-main-title">منظومة الدفع المحلي المؤتمتة: سر تفوق نيزالو على أي منافس</h2>
+      <p class="slide-subtitle">بينما يعاني المنافسون من بوابات الدفع التقليدية ورسومها المرتفعة، تمتلك نيزالو بنية تحتية محلية فائقة السرعة.</p>
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 24px;">
+      <!-- Left Box -->
+      <div class="card card-highlight">
+        <h3 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 14px;">
+          محطة الدفع الذكية (Dual-Phone Multi-SIM Gateway)
+        </h3>
+        <p style="font-size: 15px; color: #cbd5e1; line-height: 1.6; margin-bottom: 16px;">
+          تم تطوير وتجهيز نظام تشغيل خاص على هاتفين يديران 4 خطوط متزامنة (3 فودافون كاش + 1 إنستاباي) لتفادي أي حدود يومية أو شهرية للتحويلات:
+        </p>
+
+        <div class="check-item">
+          <div class="check-icon">✓</div>
+          <div>
+            <strong style="color: #fff;">استيعاب سيولة يومية تتجاوز 240,000 جنيه:</strong>
+            <p style="font-size: 13.5px; color: #94a3b8;">إدارة ذكية تحول التحويلات آلياً للمحفظة الشغالة إذا امتلأت أي محفظة أخرى.</p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-icon">✓</div>
+          <div>
+            <strong style="color: #fff;">كود الاتصال السريع USSD (*9*7*...#):</strong>
+            <p style="font-size: 13.5px; color: #94a3b8;">المشغل يحول أرباح السحب للعميل في 3 ثوانٍ بلمسة واحدة مباشرة من الهاتف دون كتابة أرقام.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Box -->
+      <div class="card card-green">
+        <h3 style="font-size: 22px; font-weight: 800; color: #4ade80; margin-bottom: 14px;">
+          تطبيق قراءة الرسائل التلقائي (Payment Receiver APK)
+        </h3>
+        <p style="font-size: 15px; color: #cbd5e1; line-height: 1.6; margin-bottom: 16px;">
+          تطبيق أندرويد خاص بالمنصة يعمل في الخلفية 24/7 دون توقف:
+        </p>
+
+        <div class="check-item">
+          <div class="check-icon">✓</div>
+          <div>
+            <strong style="color: #fff;">التقاط رسائل فودافون كاش 8080 وإشعارات إنستاباي:</strong>
+            <p style="font-size: 13.5px; color: #cbd5e1;">قراءة دقيقة لمبلغ التحويل واسم ورقم المرسل فور وصول الرسالة.</p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-icon">✓</div>
+          <div>
+            <strong style="color: #fff;">شحن رصيد العميل آلياً في ثانية واحدة:</strong>
+            <p style="font-size: 13.5px; color: #cbd5e1;">الربط الفوري مع محفظة العميل على السيرفر بدون أي انتظار أو خطأ بشري.</p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-icon">✓</div>
+          <div>
+            <strong style="color: #fff;">صفر عمولات بوابات دفع خارجية:</strong>
+            <p style="font-size: 13.5px; color: #cbd5e1;">توفير 3% إلى 5% كان سيقتطعها مزودو بوابات الدفع التقليدية، مما يزيد صافي أرباحنا مباشرة.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust banner -->
+    <div class="card" style="padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <span style="font-size: 26px;">🔒</span>
+        <span style="font-size: 15px; font-weight: 700; color: #fff;">
+          نظام محاسبي مزدوج القيد (Double-Entry Ledger): كل مليم مسجل ومدقق بالكامل وبدون أي عجز مالي.
+        </span>
+      </div>
+      <span class="tag tag-cyan">Enterprise Grade</span>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>09 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 10: ROADMAP & FUTURE EXPANSION                                      -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">خارطة الطريق والتوسع المستقبلي</span>
+      </div>
+      <span class="slide-counter">10 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Strategic Roadmap 2026 - 2027</div>
+      <h2 class="slide-main-title">ما بعد الـ 60 يوماً: خارطة التحول إلى المنصة الأولى إقليمياً</h2>
+      <p class="slide-subtitle">مصر هي نقطة الانطلاق وإثبات اقتصاديات الوحدة، يليها التوسع المباشر في الخليج وشمال أفريقيا.</p>
+    </div>
+
+    <div class="grid-4" style="margin-bottom: 24px;">
+      <!-- Q1 -->
+      <div class="card card-highlight">
+        <span class="tag tag-orange">الربع الحالي (Q3 2026)</span>
+        <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 10px 0 8px;">السيطرة على السوق المصري</h3>
+        <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.6;">
+          <li>• تنفيذ حملة الـ 600 ألف جنيه.</li>
+          <li>• الوصول إلى 50k لاعب و10k مودع.</li>
+          <li>• تفعيل تطبيق الأندرويد والـ PWA.</li>
+          <li>• رعاية بطولات جامعية وأندية إلكترونية.</li>
+        </ul>
+      </div>
+
+      <!-- Q2 -->
+      <div class="card">
+        <span class="tag tag-cyan">الربع القادم (Q4 2026)</span>
+        <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 10px 0 8px;">إطلاق ألعاب جديدة ونظام كلانات</h3>
+        <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.6;">
+          <li>• إضافة ألعاب البلوت، التريكس، والدومينو.</li>
+          <li>• إطلاق دوري الكلانات (Clan Wars).</li>
+          <li>• شراكات مع شركات اتصالات لتسهيل الدفع.</li>
+          <li>• تحقيق إيرادات شهرية تفوق 1M جنيه.</li>
+        </ul>
+      </div>
+
+      <!-- Q3 -->
+      <div class="card">
+        <span class="tag tag-purple">مطلع 2027 (Q1 2027)</span>
+        <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 10px 0 8px;">التوسع في السعودية والخليج</h3>
+        <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.6;">
+          <li>• دمج شبكات الدفع الخليجية (Mada & STC Pay).</li>
+          <li>• إطلاق ألعاب المهارة المخصصة للخليج.</li>
+          <li>• مضاعفة متوسط قيمة الإيداع بـ 5 أضعاف (بالريال).</li>
+          <li>• فتح جولة استثمارية Seed بقيمة 1.5M$.</li>
+        </ul>
+      </div>
+
+      <!-- Q4 -->
+      <div class="card card-green">
+        <span class="tag tag-green">منتصف 2027 (Q2 2027)</span>
+        <h3 style="font-size: 18px; font-weight: 800; color: #4ade80; margin: 10px 0 8px;">الريادة الإقليمية والملكية الفكرية</h3>
+        <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.6;">
+          <li>• رعاية أكبر دوري ألعاب مهارة رقمي في الشرق الأوسط.</li>
+          <li>• ترخيص محرك الألعاب (B2B Engine Licensing).</li>
+          <li>• تخطي 500,000 لاعب نشط عبر 5 دول عربية.</li>
+          <li>• تقييم سوقي مستهدف يتجاوز 15M$.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Scalability Note -->
+    <div class="card" style="padding: 16px 28px; background: rgba(255,255,255,0.03);">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 15px; color: #cbd5e1;">
+          ⚡ <strong>البنية البرمجية جاهزة للتوسع لـ 1,000,000 مستخدم:</strong> النظام مبني بهندسة سحابية مرنة بالكامل تسمح بإضافة دول وعملات جديدة خلال أيام معدودة.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>10 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 11: THE INVESTMENT ASK & DEAL STRUCTURE                             -->
+<!-- ========================================================================= -->
+<section class="slide">
+  <div>
+    <div class="slide-header">
+      <div class="slide-header-left">
+        <div class="brand-logo-text"><span class="brand-dot"></span> NIZALO</div>
+        <span class="deck-badge">طلب الاستثمار وهيكل الصفقة</span>
+      </div>
+      <span class="slide-counter">11 / 12</span>
+    </div>
+
+    <div class="slide-titles">
+      <div class="slide-category">Investment Ask & Offer</div>
+      <h2 class="slide-main-title">طلب الاستثمار: 600 ألف جنيه مصري لتشغيل أسرع ماكينة نمو</h2>
+      <p class="slide-subtitle">نقدم عروضاً استثمارية مرنة وجذابة تضمن للمستثمر عائداً سريعاً وشراكة استراتيجية في النجاح.</p>
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 24px;">
+      <!-- Option 1 -->
+      <div class="card card-highlight">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 22px; font-weight: 800; color: #fff;">الخيار الأول: حصة ملكية مباشرة (Equity)</h3>
+          <span class="tag tag-orange">حصة ملكية دائمة</span>
+        </div>
+        <p style="font-size: 14.5px; color: #cbd5e1; line-height: 1.6; margin-bottom: 16px;">
+          استثمار 600,000 جنيه مصري مقابل حصة أسهم مباشرة في الشركة الأم، مع مقعد استشاري وأولوية المشاركة في جولة التمويل القادمة (Series Seed).
+        </p>
+
+        <div style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+            <span style="color: #94a3b8;">المبلغ المطلوب:</span>
+            <strong style="color: #fff;" class="num">600,000 EGP (~$12,000 USD)</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px;">
+            <span style="color: #94a3b8;">نوع الأداة:</span>
+            <strong style="color: #ff5a2b;">Direct Equity / SAFE Agreement</strong>
+          </div>
+        </div>
+
+        <ul style="font-size: 13px; color: #94a3b8; line-height: 1.5; list-style: none;">
+          <li>✓ الاستفادة من التضاعف الهائل في قيمة المنصة عند جولة التوسع الخليجي.</li>
+          <li>✓ توزيعات أرباح نصف سنوية من صافي العمولات التشغيلية.</li>
+        </ul>
+      </div>
+
+      <!-- Option 2 -->
+      <div class="card card-green">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 22px; font-weight: 800; color: #4ade80;">الخيار الثاني: تقاسم الإيرادات السريع (Revenue Share)</h3>
+          <span class="tag tag-green">عائد سريع ومضمون</span>
+        </div>
+        <p style="font-size: 14.5px; color: #cbd5e1; line-height: 1.6; margin-bottom: 16px;">
+          استرداد رأس المال سريعاً عبر اقتطاع نسبة 25% من إجمالي صافي عمولات المنصة شهرياً حتى استرداد <strong>150% إلى 180% من قيمة الاستثمار</strong> (أي 900 ألف إلى 1.08 مليون جنيه)، مع الاحتفاظ بنسبة رمزية دائمة.
+        </p>
+
+        <div style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+            <span style="color: #94a3b8;">سقف الاسترداد المتفق عليه:</span>
+            <strong style="color: #4ade80;" class="num">1.5x - 1.8x العائد المالي</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px;">
+            <span style="color: #94a3b8;">المدة المتوقعة للاسترداد:</span>
+            <strong style="color: #38bdf8;">6 إلى 9 أشهر كحد أقصى</strong>
+          </div>
+        </div>
+
+        <ul style="font-size: 13px; color: #cbd5e1; line-height: 1.5; list-style: none;">
+          <li>✓ أمان مالي فائق وتدفقات نقدية شهرية تعود لحساب المستثمر مباشرة.</li>
+          <li>✓ نسبة أرباح متفق عليها تبقى مستمرة حتى بعد سداد كامل رأس المال.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Guarantees & Transparency -->
+    <div class="card" style="padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3);">
+      <div style="font-size: 15px; color: #fff;">
+        🛡️ <strong>حوكمة وشفافية كاملة:</strong> حساب إعلاني مشترك ومفصول، تقارير أسبوعية تفصيلية، ومتابعة حية لجميع أرقام الإيداعات والعمولات مباشرة من لوحة الإدارة.
+      </div>
+      <span class="tag tag-cyan">100% Transparent</span>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Pitch Deck | سري وخاص للمستثمرين</span>
+    <span>11 / 12</span>
+  </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- SLIDE 12: CONCLUSION & CONTACT                                            -->
+<!-- ========================================================================= -->
+<section class="slide" style="justify-content: center; text-align: center;">
+  <div style="max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
+    
+    <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(255,90,43,0.15); border: 1.5px solid #ff5a2b; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 24px;">
+      🚀
+    </div>
+
+    <h2 style="font-size: 48px; font-weight: 900; color: #fff; margin-bottom: 16px; line-height: 1.3;">
+      مستقبل ألعاب المهارة والتحديات الرقمية في الشرق الأوسط يبدأ الآن
+    </h2>
+    <p style="font-size: 20px; color: #cbd5e1; line-height: 1.6; margin-bottom: 36px;">
+      المنصة مبنية ومختبرة ومجهزة بجميع مسارات الدفع المحلي ومحرك الألعاب... نحن مستعدون للانطلاق والسيطرة على السوق بتمويلكم التسويقي.
+    </p>
+
+    <!-- Contact Cards Grid -->
+    <div style="display: flex; gap: 24px; width: 100%; justify-content: center; margin-bottom: 36px;">
+      <div class="card" style="flex: 1; padding: 20px; text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 6px;">🌐</div>
+        <div style="font-size: 13px; color: #94a3b8;">الموقع والمنصة الرسمية</div>
+        <div style="font-size: 18px; font-weight: 800; color: #38bdf8;" class="num">https://nizalo.com</div>
+      </div>
+
+      <div class="card card-highlight" style="flex: 1; padding: 20px; text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 6px;">📱</div>
+        <div style="font-size: 13px; color: #ff7a52;">تجربة التطبيق (APK)</div>
+        <div style="font-size: 18px; font-weight: 800; color: #fff;" class="num">https://nizalo.com/nizalo.apk</div>
+      </div>
+
+      <div class="card" style="flex: 1; padding: 20px; text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 6px;">🤝</div>
+        <div style="font-size: 13px; color: #94a3b8;">استفسارات الاستثمار المباشر</div>
+        <div style="font-size: 18px; font-weight: 800; color: #4ade80;">جلسة مناقشة وتوقيع الاتفاق</div>
+      </div>
+    </div>
+
+    <div style="font-size: 15px; color: #94a3b8;">
+      شكراً لوقتكم واهتمامكم | نسعد بالرد على كافة أسئلتكم ومناقشة تفاصيل الصفقة.
+    </div>
+
+  </div>
+
+  <div class="slide-footer">
+    <span>Nizalo Inc. © 2026 | All Rights Reserved</span>
+    <span>12 / 12</span>
+  </div>
+</section>
+
+</body>
+</html>

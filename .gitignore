@@ -25,3 +25,5 @@ data/
 .claude/
 *.apk
 !apps/web/public/*.apk
+*.pdf
+!apps/web/public/*.pdf
