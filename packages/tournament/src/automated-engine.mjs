@@ -122,25 +122,33 @@ export function createAutomatedTournamentEngine(db, tournamentService) {
                 AND t.tier = $2 
                 AND t.entry_fee_minor = $3 
                 AND t.capacity = 16 
-                AND t.status = 'REGISTRATION'
-              ORDER BY t.created_at DESC LIMIT 1`,
+                AND t.status IN ('DRAFT', 'REGISTRATION')
+              ORDER BY t.created_at DESC`,
             [game.id, tierType, String(tier.minor)]
           );
 
           if (existing.rows.length === 0) {
-            // No open tournament exists for this game and tier -- spawn one!
+            // No open or pending tournament exists for this game and tier -- spawn one!
             const newId = await spawnTournament(game.id, game.display_name || game.name || game.id, tier);
             if (newId) spawned.push({ gameId: game.id, tier: tier.feeUsd, tournamentId: newId });
           } else {
-            const row = existing.rows[0];
-            // If full (16/16), start it and immediately spawn the next tournament!
-            if (row.registered_count >= 16) {
-              const startRes = await tournamentService.start(row.id);
-              if (startRes.ok) {
-                started.push(row.id);
-                const nextId = await spawnTournament(game.id, game.display_name || game.name || game.id, tier);
-                if (nextId) spawned.push({ gameId: game.id, tier: tier.feeUsd, tournamentId: nextId });
+            let hasOpenRegistration = false;
+            for (const row of existing.rows) {
+              if (row.status === 'REGISTRATION' && row.registered_count >= 16) {
+                // If full (16/16), start it!
+                const startRes = await tournamentService.start(row.id);
+                if (startRes.ok) {
+                  started.push(row.id);
+                }
+              } else if (row.status === 'REGISTRATION' || row.status === 'DRAFT') {
+                hasOpenRegistration = true;
               }
+            }
+
+            // Only spawn a new one if no open tournament remains for this tier
+            if (!hasOpenRegistration) {
+              const nextId = await spawnTournament(game.id, game.display_name || game.name || game.id, tier);
+              if (nextId) spawned.push({ gameId: game.id, tier: tier.feeUsd, tournamentId: nextId });
             }
           }
         } catch {

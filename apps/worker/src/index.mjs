@@ -72,10 +72,10 @@ async function main() {
 
   const pool = new Pool({
     connectionString: databaseUrl,
-    max: Number(process.env.DB_POOL_SIZE || 1),
+    max: Number(process.env.DB_POOL_SIZE || 5),
     idleTimeoutMillis: 5000,
-    connectionTimeoutMillis: 5000,
-    statement_timeout: 6000,
+    connectionTimeoutMillis: 10000,
+    statement_timeout: 15000,
   });
   pool.on("error", (err) => console.error("[worker pg pool error]", err.message));
   const db = createPgAdapter(pool);
@@ -215,11 +215,11 @@ async function main() {
   });
 
   const tournamentBotFiller = createTournamentBotFiller(db, tournament, {
-    fillIntervalMs: Number(process.env.TOURNAMENT_BOT_FILL_INTERVAL_MS || 30000),
-    reservedSeats: Number(process.env.TOURNAMENT_BOT_RESERVED_SEATS || 2),
-    maxWaitMs: Number(process.env.TOURNAMENT_BOT_MAX_WAIT_MS || 600000),
+    fillIntervalMs: process.env.TOURNAMENT_BOT_FILL_INTERVAL_MS ? Number(process.env.TOURNAMENT_BOT_FILL_INTERVAL_MS) : undefined,
+    reservedSeats: process.env.TOURNAMENT_BOT_RESERVED_SEATS ? Number(process.env.TOURNAMENT_BOT_RESERVED_SEATS) : undefined,
+    maxWaitMs: process.env.TOURNAMENT_BOT_MAX_WAIT_MS ? Number(process.env.TOURNAMENT_BOT_MAX_WAIT_MS) : undefined,
   });
-  const tournamentBotFillerIntervalMs = Number(process.env.TOURNAMENT_BOT_FILLER_INTERVAL_MS || 15000);
+  const tournamentBotFillerIntervalMs = Number(process.env.TOURNAMENT_BOT_FILLER_INTERVAL_MS || 10000);
   const tournamentBotFillerWorker = createTickLoop(() => tournamentBotFiller.tick(), {
     intervalMs: tournamentBotFillerIntervalMs,
   });

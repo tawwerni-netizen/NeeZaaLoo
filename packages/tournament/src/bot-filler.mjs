@@ -13,9 +13,9 @@
  */
 
 export function createTournamentBotFiller(db, tournamentService, options = {}) {
-  const defaultFillIntervalMs = options.fillIntervalMs ?? 30000;
-  const defaultReservedSeats = options.reservedSeats ?? 2;
-  const defaultMaxWaitMs = options.maxWaitMs ?? 10 * 60 * 1000;
+  const defaultFillIntervalMs = 10000;
+  const defaultReservedSeats = 2;
+  const defaultMaxWaitMs = 5 * 60 * 1000;
 
   async function loadConfig() {
     let dbCfg = {};
@@ -31,9 +31,9 @@ export function createTournamentBotFiller(db, tournamentService, options = {}) {
     }
     return {
       enabled: options.enabled !== undefined ? options.enabled : (dbCfg.enabled !== false),
-      reservedSeats: options.reservedSeats !== undefined ? options.reservedSeats : Number(dbCfg.reserved_seats ?? defaultReservedSeats),
-      fillIntervalMs: options.fillIntervalMs !== undefined ? options.fillIntervalMs : (dbCfg.fill_interval_seconds != null ? Number(dbCfg.fill_interval_seconds) * 1000 : defaultFillIntervalMs),
-      maxWaitMs: options.maxWaitMs !== undefined ? options.maxWaitMs : (dbCfg.max_wait_minutes != null ? Number(dbCfg.max_wait_minutes) * 60 * 1000 : defaultMaxWaitMs),
+      reservedSeats: Number(options.reservedSeats ?? dbCfg.reserved_seats ?? defaultReservedSeats),
+      fillIntervalMs: Number(options.fillIntervalMs ?? (dbCfg.fill_interval_seconds != null ? Number(dbCfg.fill_interval_seconds) * 1000 : defaultFillIntervalMs)),
+      maxWaitMs: Number(options.maxWaitMs ?? (dbCfg.max_wait_minutes != null ? Number(dbCfg.max_wait_minutes) * 60 * 1000 : defaultMaxWaitMs)),
     };
   }
 
@@ -55,12 +55,12 @@ export function createTournamentBotFiller(db, tournamentService, options = {}) {
            FROM tournament t
           WHERE t.status = 'REGISTRATION'
           ORDER BY registered_count DESC, t.created_at ASC
-          LIMIT 50`
+          LIMIT 200`
       );
 
       for (const t of openTournaments.rows) {
         const capacity = t.capacity || 16;
-        const currentCount = t.registered_count || 0;
+        let currentCount = t.registered_count || 0;
 
         // If tournament already has enough players, ensure it starts
         if (currentCount >= capacity) {
@@ -70,7 +70,7 @@ export function createTournamentBotFiller(db, tournamentService, options = {}) {
         }
 
         // Pacing check: wait at least fillIntervalMs since last registration
-        if (t.last_registered_at) {
+        if (t.last_registered_at && config.fillIntervalMs > 0) {
           const elapsedSinceLast = now - new Date(t.last_registered_at).getTime();
           if (elapsedSinceLast < config.fillIntervalMs) {
             continue;
@@ -86,10 +86,17 @@ export function createTournamentBotFiller(db, tournamentService, options = {}) {
           continue;
         }
 
-        // Select a random eligible bot persona with rating for this game
+        // Determine how many bots to add in this tick for this tournament
+        const targetBotSeats = tournamentAgeMs >= config.maxWaitMs ? capacity : maxBotSeats;
+        const remainingBotsNeeded = targetBotSeats - currentCount;
+        if (remainingBotsNeeded <= 0) continue;
+
+        const batchLimit = options.botsPerTick ?? 1;
+
+        // Select random eligible bot personas with rating for this game
         const isCash = t.tier === "CASH";
         const fee = BigInt(t.entry_fee_minor || "0");
-        const candidateBot = await db.query(
+        const candidateBots = await db.query(
           `SELECT p.id, COALESCE(r.rating_x100, 180000) AS rating_x100
              FROM player p
              LEFT JOIN rating r ON r.player_id = p.id AND r.game_id = $1
@@ -104,26 +111,25 @@ export function createTournamentBotFiller(db, tournamentService, options = {}) {
                  WHERE tr.tournament_id = $2 AND tr.player_id = p.id
               )
             ORDER BY random()
-            LIMIT 1`,
-          isCash ? [t.game_id, t.id, t.asset || 'USDT', fee.toString()] : [t.game_id, t.id]
+            LIMIT ${isCash ? '$5' : '$3'}`,
+          isCash ? [t.game_id, t.id, t.asset || 'USDT', fee.toString(), batchLimit] : [t.game_id, t.id, batchLimit]
         );
 
-        if (candidateBot.rows.length === 0) continue;
-        const bot = candidateBot.rows[0];
+        for (const bot of candidateBots.rows) {
+          const regRes = await tournamentService.register({
+            tournamentId: t.id,
+            playerId: bot.id,
+            ratingX100: Number(bot.rating_x100),
+          });
 
-        // Register bot through official tournament registration method
-        const regRes = await tournamentService.register({
-          tournamentId: t.id,
-          playerId: bot.id,
-          ratingX100: Number(bot.rating_x100),
-        });
-
-        if (regRes.ok) {
-          registeredCount++;
-          // If this registration filled the tournament, start it immediately
-          if (currentCount + 1 >= capacity) {
-            const startRes = await tournamentService.start(t.id);
-            if (startRes.ok) startedTournaments.push(t.id);
+          if (regRes.ok) {
+            registeredCount++;
+            currentCount++;
+            if (currentCount >= capacity) {
+              const startRes = await tournamentService.start(t.id);
+              if (startRes.ok) startedTournaments.push(t.id);
+              break;
+            }
           }
         }
       }

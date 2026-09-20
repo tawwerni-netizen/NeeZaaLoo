@@ -2766,9 +2766,11 @@ function buildRoutes() {
                   (SELECT count(*)::int FROM tournament_registration tr
                     WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS registered_count
              FROM tournament t
-            WHERE t.visibility = 'PUBLIC'
-              AND ($1::text[] IS NULL OR t.status::text = ANY($1::text[]))
-            ORDER BY t.created_at DESC LIMIT 250`,
+             WHERE t.visibility = 'PUBLIC'
+               AND ($1::text[] IS NULL OR t.status::text = ANY($1::text[]))
+             ORDER BY CASE WHEN t.status = 'REGISTRATION' THEN 0 WHEN t.status = 'LIVE' THEN 1 ELSE 2 END,
+                      (SELECT count(*)::int FROM tournament_registration tr WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') DESC,
+                      t.created_at DESC LIMIT 250`,
           [statuses.length ? statuses : null]
         );
         return { body: { tournaments: r.rows } };
