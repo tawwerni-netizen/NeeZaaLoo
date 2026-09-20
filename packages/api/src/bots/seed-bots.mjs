@@ -25,7 +25,8 @@ export async function seedBotsAndFund(db) {
       return { totalBots: ALL_BOT_PERSONAS.length, createdCount: 0, fundedCount: 0, skipped: true };
     }
   } catch (err) {
-    console.warn("[bots] Could not verify existing bot count, continuing with seed:", err.message);
+    console.warn("[bots] Could not verify existing bot count, skipping seed to preserve database pool:", err.message);
+    return { totalBots: ALL_BOT_PERSONAS.length, createdCount: 0, fundedCount: 0, skipped: true };
   }
 
   let createdCount = 0;
