@@ -305,6 +305,8 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
     // =========================================================================
 
     async adminListPendingWithdrawals({ limit = 100 } = {}) {
+      const rate = await readEgpRate(db);
+      const egpPerUsd = rate?.egpPerUsd ?? 50;
       const r = await db.query(
         `SELECT id, player_id AS "playerId", asset, network, destination,
                 amount_minor::text AS "amountMinor", fee_minor::text AS "feeMinor",
@@ -314,7 +316,24 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
           ORDER BY requested_at ASC LIMIT $1`,
         [limit]
       );
-      return r.rows;
+      return r.rows.map((row) => {
+        const usdtAmount = Number(row.amountMinor) / 1_000_000;
+        const egpAmount = (usdtAmount * egpPerUsd).toFixed(2);
+        const egpRound = Math.round(usdtAmount * egpPerUsd);
+        const cleanPhone = String(row.destination || "").replace(/[^0-9]/g, "");
+        const ussdCode = row.network === "VODAFONE_CASH" && cleanPhone
+          ? `*9*7*${cleanPhone}*${egpRound}#`
+          : null;
+        return {
+          ...row,
+          amountUsdt: usdtAmount.toFixed(2),
+          amountEgp: egpAmount,
+          amountEgpRound: egpRound,
+          cleanPhone,
+          ussdCode,
+          egpPerUsd,
+        };
+      });
     },
 
     async completeWithdrawal({ withdrawalId, adminId, reference }) {

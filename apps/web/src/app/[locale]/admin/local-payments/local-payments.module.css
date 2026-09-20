@@ -1,0 +1,445 @@
+/* local-payments.module.css - Operator Console for Vodafone Cash & InstaPay */
+
+.operatorWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+/* --- Sound & Live Alert Bar --- */
+.alertBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(245, 158, 11, 0.12));
+  border: 1.5px solid #ef4444;
+  border-radius: var(--nz-radius-lg, 12px);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+  flex-wrap: wrap;
+}
+
+.alertLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.pulseDotRed {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  animation: pulseDot 1.2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.alertActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.audioToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.audioToggleBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.audioToggleBtnActive {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.autoRefreshTag {
+  font-size: 11.5px;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* --- Section Titles --- */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badgeCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+/* --- Withdrawal Cards Grid (Mobile-First) --- */
+.withdrawalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 600px) {
+  .withdrawalGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.withdrawalCard {
+  background: linear-gradient(145deg, #141822 0%, #0d1017 100%);
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(239, 68, 68, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.withdrawalCard:hover {
+  border-color: #ef4444;
+  transform: translateY(-2px);
+}
+
+.withdrawalCardInstapay {
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(168, 85, 247, 0.1);
+}
+
+.withdrawalCardInstapay:hover {
+  border-color: #a855f7;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+
+.networkPillVodafone {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: rgba(230, 0, 0, 0.18);
+  border: 1px solid #e60000;
+  color: #ff4d4d;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.networkPillInstapay {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: rgba(168, 85, 247, 0.18);
+  border: 1px solid #a855f7;
+  color: #c084fc;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.playerTag {
+  font-size: 12.5px;
+  color: #94a3b8;
+}
+
+.timeTag {
+  font-size: 11.5px;
+  color: #64748b;
+  font-family: var(--nz-font-num);
+}
+
+/* Data Box (Phone / IPA / Amount) */
+.dataBox {
+  background: rgba(10, 14, 22, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dataLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.dataRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.destinationValue {
+  font-family: var(--nz-font-num);
+  font-size: 21px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+}
+
+.amountEgpValue {
+  font-family: var(--nz-font-num);
+  font-size: 22px;
+  font-weight: 900;
+  color: #4ade80;
+}
+
+.amountUsdSub {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-inline-start: 6px;
+}
+
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.copyBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.02);
+}
+
+.copyBtnCopied {
+  background: rgba(34, 197, 94, 0.2) !important;
+  border-color: #22c55e !important;
+  color: #22c55e !important;
+}
+
+/* Magic USSD Quick Dial Button */
+.ussdDialBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #e60000 0%, #b30000 100%);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(230, 0, 0, 0.4);
+  transition: all 0.18s ease;
+}
+
+.ussdDialBtn:hover {
+  background: linear-gradient(135deg, #ff1a1a 0%, #cc0000 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(230, 0, 0, 0.6);
+}
+
+/* Card Actions */
+.cardActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.completeBtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+  transition: all 0.18s ease;
+}
+
+.completeBtn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.rejectBtn {
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.rejectBtn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fff;
+}
+
+/* --- SIMs / Wallets Grid (The 4 Lines) --- */
+.simsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.simCard {
+  background: #141720;
+  border: 1px solid #232838;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.simCardDisabled {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.simCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.simLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.simPhone {
+  font-family: var(--nz-font-num);
+  font-size: 18px;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.04em;
+}
+
+.simActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+  gap: 8px;
+}
+
+.toggleSwitchBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--nz-radius-pill, 999px);
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s ease;
+}
+
+.toggleActive {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid #22c55e;
+}
+
+.toggleDisabled {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid #ef4444;
+}
+
+/* Empty State */
+.emptyStateCard {
+  background: rgba(14, 18, 26, 0.6);
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 32px 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
