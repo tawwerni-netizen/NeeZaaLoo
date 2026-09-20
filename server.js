@@ -139,9 +139,53 @@ function getEnv(childPort) {
 }
 
 // ---------------------------------------------------------------------------
+// Single Master Instance Lock (Prevents overlapping deployments on Hostinger)
+// ---------------------------------------------------------------------------
+const pidFile = path.join(here, ".server.pid");
+try {
+  if (fs.existsSync(pidFile)) {
+    const oldPid = parseInt(fs.readFileSync(pidFile, "utf8").trim(), 10);
+    if (oldPid && oldPid !== process.pid) {
+      try {
+        process.kill(oldPid, 0); // Check if alive
+        console.log(`[master] Terminating previous master instance PID ${oldPid}...`);
+        process.kill(oldPid, "SIGTERM");
+        const start = Date.now();
+        while (Date.now() - start < 800) {
+          try {
+            process.kill(oldPid, 0);
+          } catch {
+            break;
+          }
+        }
+        try { process.kill(oldPid, "SIGKILL"); } catch {}
+      } catch {}
+    }
+  }
+  fs.writeFileSync(pidFile, String(process.pid));
+} catch {}
+
+function removePidFile() {
+  try {
+    if (fs.existsSync(pidFile)) {
+      const p = parseInt(fs.readFileSync(pidFile, "utf8").trim(), 10);
+      if (p === process.pid) fs.unlinkSync(pidFile);
+    }
+  } catch {}
+}
+process.on("exit", removePidFile);
+
+// ---------------------------------------------------------------------------
 // Process Management (Hardened for Hostinger Cloud / cGroup Process Quotas)
 // ---------------------------------------------------------------------------
 const { execSync } = require("node:child_process");
+
+const children = {};
+let isShuttingDown = false;
+
+function isChildPid(pid) {
+  return Object.values(children).some((c) => c && c.pid === pid);
+}
 
 function getInodesForPort(p) {
   const inodes = new Set();
@@ -175,7 +219,7 @@ function freePort(p) {
       for (const line of out.split("\n")) {
         const parts = line.trim().split(/\s+/);
         const pid = parts[parts.length - 1];
-        if (pid && pid !== "0" && pid !== String(process.pid)) {
+        if (pid && pid !== "0" && pid !== String(process.pid) && !isChildPid(Number(pid))) {
           try { execSync(`taskkill /F /PID ${pid} >nul 2>&1`); } catch {}
         }
       }
@@ -191,7 +235,7 @@ function freePort(p) {
       for (const entry of entries) {
         if (!/^\d+$/.test(entry)) continue;
         const pid = Number(entry);
-        if (pid === process.pid) continue;
+        if (pid === process.pid || isChildPid(pid)) continue;
 
         const fdDir = `/proc/${entry}/fd`;
         try {
@@ -201,7 +245,7 @@ function freePort(p) {
               const link = fs.readlinkSync(`${fdDir}/${fd}`);
               for (const inode of inodes) {
                 if (link.includes(`[${inode}]`)) {
-                  console.log(`[freePort] Killing PID ${pid} listening on port ${p} (inode ${inode})`);
+                  console.log(`[freePort] Killing stale PID ${pid} listening on port ${p} (inode ${inode})`);
                   try { process.kill(pid, "SIGKILL"); } catch {}
                   break;
                 }
@@ -213,11 +257,13 @@ function freePort(p) {
     }
   } catch {}
 
-  // Linux: 2. Fallback shell utilities if available in $PATH
-  try { execSync(`fuser -k -9 ${p}/tcp 2>/dev/null || true`); } catch {}
-  try { execSync(`lsof -ti :${p} 2>/dev/null | xargs -r kill -9 2>/dev/null || true`); } catch {}
-  try { execSync(`ss -lptn 'sport = :${p}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill -9 2>/dev/null || true`); } catch {}
-  try { execSync(`netstat -tlpn 2>/dev/null | grep ':${p} ' | awk '{print $7}' | cut -d/ -f1 | grep -v '^-$' | xargs -r kill -9 2>/dev/null || true`); } catch {}
+  // Linux: 2. Fallback shell utilities ONLY before children exist
+  if (Object.keys(children).length === 0) {
+    try { execSync(`fuser -k -9 ${p}/tcp 2>/dev/null || true`); } catch {}
+    try { execSync(`lsof -ti :${p} 2>/dev/null | xargs -r kill -9 2>/dev/null || true`); } catch {}
+    try { execSync(`ss -lptn 'sport = :${p}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill -9 2>/dev/null || true`); } catch {}
+    try { execSync(`netstat -tlpn 2>/dev/null | grep ':${p} ' | awk '{print $7}' | cut -d/ -f1 | grep -v '^-$' | xargs -r kill -9 2>/dev/null || true`); } catch {}
+  }
 }
 
 function cleanupZombies() {
@@ -230,7 +276,7 @@ function cleanupZombies() {
       for (const entry of entries) {
         if (!/^\d+$/.test(entry)) continue;
         const pid = Number(entry);
-        if (pid === process.pid) continue;
+        if (pid === process.pid || isChildPid(pid)) continue;
 
         try {
           const cmdline = fs.readFileSync(`/proc/${entry}/cmdline`, "utf8").replace(/\0/g, " ");
@@ -243,7 +289,7 @@ function cleanupZombies() {
              cmdline.includes("hbuilds/versions") ||
              cmdline.includes("packages/api") ||
              cmdline.includes("server.mjs") ||
-             (cmdline.includes("server.js") && pid !== process.pid));
+             (cmdline.includes("server.js") && pid !== process.pid && !cmdline.includes("hostinger") && !cmdline.includes(".next")));
 
           if (isStale) {
             console.log(`[cleanupZombies] Killing stale PID ${pid}: ${cmdline.slice(0, 80)}`);
@@ -256,17 +302,16 @@ function cleanupZombies() {
     console.warn("[cleanupZombies] /proc scan error:", e.message);
   }
 
-  // 2. Simple fallback pkill commands (no complex regex syntax)
-  const targets = ["apps/api", "apps/worker", "apps/gateway", "standalone/apps/web", "hbuilds/versions"];
-  for (const t of targets) {
-    try {
-      execSync(`pkill -9 -f "${t}" 2>/dev/null || true`);
-    } catch {}
+  // 2. Simple fallback pkill commands ONLY before children exist
+  if (Object.keys(children).length === 0) {
+    const targets = ["apps/api", "apps/worker", "apps/gateway", "standalone/apps/web", "hbuilds/versions"];
+    for (const t of targets) {
+      try {
+        execSync(`pkill -9 -f "${t}" 2>/dev/null || true`);
+      } catch {}
+    }
   }
 }
-
-const children = {};
-let isShuttingDown = false;
 
 function startProcess(name, script, childPort, customCwd) {
   let failures = 0;
@@ -275,7 +320,9 @@ function startProcess(name, script, childPort, customCwd) {
   function launch() {
     if (isShuttingDown) return;
     freePort(childPort);
-    freePort(childPort + 100);
+    if (name !== "Next.js") {
+      freePort(childPort + 100);
+    }
     console.log(`[${name}] Spawning on port ${childPort}...`);
     try {
       const baseEnv = name === "Next.js"
@@ -311,6 +358,7 @@ function startProcess(name, script, childPort, customCwd) {
 
       child.on("exit", (code, signal) => {
         if (isShuttingDown) return;
+        delete children[name];
         const now = Date.now();
         if (now - lastCrash > 60000) {
           failures = 0; // Reset count if stable for > 60s
@@ -320,7 +368,9 @@ function startProcess(name, script, childPort, customCwd) {
 
         // Free port cleanly before attempting restart
         freePort(childPort);
-        freePort(childPort + 100);
+        if (name !== "Next.js") {
+          freePort(childPort + 100);
+        }
 
         // Exponential backoff to prevent fork storms
         const delay = failures <= 2 ? 1500 : failures <= 4 ? 4000 : failures <= 6 ? 8000 : 20000;
@@ -338,7 +388,7 @@ function startProcess(name, script, childPort, customCwd) {
 
 // Clean any leftover zombie processes and ports before boot
 cleanupZombies();
-[nextPort, apiPort, gwPort, 4001, nextPort + 100, apiPort + 100, gwPort + 100, 4101].forEach(freePort);
+[nextPort, apiPort, gwPort, 4001, apiPort + 100, gwPort + 100, 4101].forEach(freePort);
 
 startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
 startProcess("API",     apiScript,    apiPort);
@@ -358,7 +408,8 @@ function shutdown() {
     } catch (e) {}
   });
   cleanupZombies();
-  [nextPort, apiPort, gwPort, 4001, nextPort + 100, apiPort + 100, gwPort + 100, 4101].forEach(freePort);
+  [nextPort, apiPort, gwPort, 4001, apiPort + 100, gwPort + 100, 4101].forEach(freePort);
+  removePidFile();
   setTimeout(() => process.exit(0), 150);
 }
 process.on("SIGINT",  shutdown);
@@ -439,8 +490,40 @@ function proxyHttp(req, res, targetPort) {
   proxyReq.on("error", (err) => {
     console.error(`[Proxy->${targetPort} Error] ${req.method} ${req.url}:`, err.message);
     if (!res.headersSent) {
-      res.writeHead(502, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: { code: "BAD_GATEWAY", message: "Service starting up, please retry" } }));
+      const acceptsHtml = req.headers["accept"] && req.headers["accept"].includes("text/html");
+      if (acceptsHtml && req.method === "GET") {
+        res.writeHead(502, {
+          "Content-Type": "text/html; charset=utf-8",
+          "Retry-After": "2",
+        });
+        res.end(`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="2">
+  <title>جاري تشغيل الخدمة - Nizalo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0b0f19; color: #f3f4f6; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .card { background: #111827; border: 1px solid #1f2937; padding: 2rem; border-radius: 1rem; text-align: center; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #10b981; border-radius: 50%; width: 44px; height: 44px; animation: spin 0.8s linear infinite; margin: 0 auto 1.5rem; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    h2 { margin: 0 0 0.5rem; font-size: 1.25rem; font-weight: 600; color: #ffffff; }
+    p { color: #9ca3af; font-size: 0.875rem; margin: 0; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h2>جاري تحضير المنصة...</h2>
+    <p>لحظات وسيقوم المتصفح بالتحويل تلقائياً</p>
+  </div>
+</body>
+</html>`);
+      } else {
+        res.writeHead(502, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: { code: "BAD_GATEWAY", message: "Service starting up, please retry" } }));
+      }
     }
   });
 
@@ -591,11 +674,13 @@ function waitForNextReady(targetPort, maxAttempts, onReady) {
   probe();
 }
 
-server.listen(port, hostname, () => {
-  console.log(`========================================`);
-  console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
-  console.log(`  -> Next.js   : ${nextPort}`);
-  console.log(`  -> API       : ${apiPort}`);
-  console.log(`  -> Gateway   : ${gwPort}`);
-  console.log(`========================================`);
+waitForNextReady(nextPort, 50, () => {
+  server.listen(port, hostname, () => {
+    console.log(`========================================`);
+    console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
+    console.log(`  -> Next.js   : ${nextPort}`);
+    console.log(`  -> API       : ${apiPort}`);
+    console.log(`  -> Gateway   : ${gwPort}`);
+    console.log(`========================================`);
+  });
 });

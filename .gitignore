@@ -20,3 +20,5 @@ coverage/
 .idea/
 *.tsbuildinfo
 data/
+.neon
+.server.pid
