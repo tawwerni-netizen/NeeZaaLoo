@@ -376,6 +376,8 @@
 @media (max-width: 640px) {
   .heroSection {
     padding: 32px 12px 24px;
+    background-position: center top;
+    background-size: cover;
   }
   .grid {
     grid-template-columns: 1fr;

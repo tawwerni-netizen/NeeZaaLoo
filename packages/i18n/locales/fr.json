@@ -20,7 +20,10 @@
     "download_app": "Télécharger l'app",
     "referrals": "Parrainages",
     "menu_aria_label": "Menu",
-    "admin": "Administration"
+    "admin": "Administration",
+    "arena": "Arène",
+    "clans": "Clans",
+    "deposit": "Dépôt"
   },
   "footer": {
     "learn": "Découvrir",
@@ -62,7 +65,14 @@
         "pillar_payout_desc": "Les gains arrivent directement sur votre portefeuille USDT sans conditions abusives.",
         "pillar_fair_title": "100% Équitable et Anti-Triche",
         "pillar_fair_desc": "Compétence déterministe pure. Vérification par serveur autoritaire pour une intégrité totale."
-      }
+      },
+      "headline_title": "Transformez vos Compétences en Vrai Cash.",
+      "headline_accent": "Retrait Immédiat en 60s.",
+      "instant_deposit": "Dépôt Immédiat",
+      "trust_payout": "Retrait Automatique < 60s",
+      "trust_skill": "100% Compétence • Zéro Hasard",
+      "trust_share": "88% du Pool au Vainqueur",
+      "trust_tournaments": "Tournois Quotidiens & Duels Cash Immédiats"
     },
     "games": {
       "heading": "10 jeux, une base équitable",
@@ -205,6 +215,21 @@
       "point_verify_body": "Toute partie terminée peut être rejouée depuis ses propres coups enregistrés et comparée au résultat annoncé.",
       "point_human": "Une personne tranche pour l'argent",
       "point_human_body": "Aucune action automatique ne restreint jamais des fonds ou un compte sur un seul signal faible — c'est toujours une personne qui décide."
+    },
+    "quick_stakes": {
+      "section_badge": "Paliers de Défi Immédiat",
+      "section_title": "Choisissez votre mise et gagnez du cash immédiatement :",
+      "section_sub": "Règlement Automatique & Retrait Immédiat ⚡",
+      "badge_safe_start": "Départ Sûr 🟢",
+      "tag_quick_trial": "🚀 Essai Rapide",
+      "badge_most_popular": "Le Plus Populaire 🔥",
+      "tag_champions_duel": "🔥 Duel des Champions",
+      "badge_pro_challenge": "Défi Pro ⚡",
+      "tag_tactical_duel": "⚡ Duel Tactique",
+      "badge_elite_table": "Table Élite 💎",
+      "tag_grand_prize": "💎 Grand Prix",
+      "badge_high_roller": "Haute Mise 👑",
+      "tag_high_roller_prize": "👑 Prix en Cash 88$"
     }
   },
   "common": {
@@ -381,20 +406,30 @@
       "heading": "Choisissez comment jouer",
       "vs_computer": {
         "title": "Contre l'ordinateur",
-        "description": "Entraînez-vous contre une IA"
+        "description": "Entraînez-vous contre une IA",
+        "badge": "IA Avancée 🤖",
+        "tag": "Départ Immédiat • Illimité"
       },
       "friend": {
         "title": "Défier un ami",
-        "description": "Défiez quelqu'un par son pseudo"
+        "description": "Défiez quelqu'un par son pseudo",
+        "badge": "Salle Privée 👥",
+        "tag": "Lien d'Invitation Rapide"
       },
       "random_opponent": {
         "title": "Adversaire aléatoire",
-        "description": "Appariement classé selon votre niveau"
+        "description": "Appariement classé selon votre niveau",
+        "badge": "Duel en Direct 🔥 Populaire",
+        "tag": "USDT Immédiat • 88% au Vainqueur"
       },
       "tournament": {
         "title": "Tournoi",
-        "description": "Affrontez-vous dans un tableau pour un prix"
-      }
+        "description": "Affrontez-vous dans un tableau pour un prix",
+        "badge": "Grandes Coupes & Cash 🏆",
+        "tag": "Tournois Continus 24/7"
+      },
+      "select_badge": "CHOISISSEZ VOTRE MODE DE COMBAT",
+      "subheading": "Choisissez votre façon préférée de concourir : entraînez vos tactiques, défiez vos amis ou disputez des coupes en cash réel."
     },
     "difficulty": {
       "heading": "Choisissez une difficulté"
@@ -411,7 +446,14 @@
       "platform_fee": "Frais d'organisation et plateforme",
       "fixed_badge": "12% FIXE",
       "net_prize_contrib": "Contribution à la cagnotte du match",
-      "winner_payout": "Prix total du vainqueur"
+      "winner_payout": "Prix total du vainqueur",
+      "currency_label": "Devise Officielle Approuvée :",
+      "balance_label": "Solde Actuel Disponible :",
+      "insufficient_title": "Solde Insuffisant dans le Portefeuille",
+      "deposit_cta": "💳 Dépôt Immédiat",
+      "insufficient_desc": "Ce match nécessite ${stake} {asset} mais votre solde est de ${balance} {asset}. Veuillez recharger votre portefeuille ou passer en mode gratuit.",
+      "switch_free": "Passer en mode gratuit",
+      "insufficient_btn": "Solde insuffisant"
     },
     "challenge": {
       "heading": "Défier un ami",
@@ -446,10 +488,24 @@
     },
     "time_control": {
       "heading": "Choisissez la durée de la partie",
-      "subheading": "Sélectionnez le rythme qui correspond à votre style de jeu",
+      "subheading": "Sélectionnez le rythme de temps qui convient à votre style",
       "blitz": "Blitz",
       "standard": "Standard",
-      "extended": "Étendu"
+      "extended": "Étendu",
+      "blitz_desc": "Partie rapide sous haute pression temporelle",
+      "standard_desc": "Temps officiel équilibré pour la profondeur stratégique",
+      "extended_desc": "Jeu tactique profond avec un temps suffisant par tour",
+      "dur_30s": "30 secondes",
+      "dur_60s": "60 secondes",
+      "dur_2m_plus2": "2 min (+2s)",
+      "dur_3m_plus2": "3 min (+2s)",
+      "dur_3m_plus3": "3 min (+3s)",
+      "dur_4m_plus3": "4 min (+3s)",
+      "dur_5m_plus3": "5 min (+3s)",
+      "dur_2m_120s": "2 min (120s)",
+      "dur_5m_plus5": "5 min (+5s)",
+      "dur_8m_plus5": "8 min (+5s)",
+      "dur_10m_plus5": "10 min (+5s)"
     },
     "prize": {
       "heading": "Choisissez votre prix",
@@ -459,6 +515,24 @@
       "free_description": "Aucun prix — juste le jeu.",
       "competitive_title": "Compétitif",
       "competitive_description": "Jouez pour un vrai prix, débloqué uniquement une fois la partie gagnée."
+    },
+    "nav": {
+      "back_step": "Retour d'une étape",
+      "all_games": "Tous les jeux",
+      "back": "Retour",
+      "step_mode": "Mode",
+      "step_difficulty": "Difficulté",
+      "step_stake": "Mise du duel",
+      "step_time_control": "Contrôle du temps",
+      "step_duel": "Partie de duel"
+    },
+    "hero_subtitle": "Jouez, affrontez-vous et gagnez de vrais prix. Prouvez votre talent maintenant !",
+    "dominoes": {
+      "variant_heading": "Variante officielle de dominos",
+      "desc_traditional": "Traditionnel (Pioche/Blocage) : Finir ses pièces ou total le plus bas au blocage.",
+      "desc_american": "Américain (All-Fives) : Marquer des multiples de 5 sur les extrémités ouvertes.",
+      "traditional": "Traditionnel",
+      "american": "Américain (All-Fives)"
     }
   },
   "dashboard": {
@@ -922,7 +996,25 @@
     "vs": "contre",
     "live_badge": "En direct",
     "tournament_badge": "Match de tournoi",
-    "move_count": "{count} coups joués"
+    "move_count": "{count} coups joués",
+    "realtime_feed": "FLUX DE L'ARÈNE EN TEMPS RÉEL (LECTURE SEULE)",
+    "live_count": "{count} matchs en direct actuellement",
+    "refresh_tooltip": "Actualiser les matchs",
+    "live_refresh": "Actualisation en direct",
+    "start_duel": "Lancer un duel",
+    "search_placeholder": "Rechercher un joueur ou un ami par pseudo...",
+    "include_bots": "Inclure les matchs contre des bots",
+    "no_matches_found": "Aucun match en direct trouvé !",
+    "no_matches_for_handle": "Aucun match actif trouvé pour \"{handle}\". Vérifiez l'orthographe ou attendez le début.",
+    "no_matches_game": "Aucun duel en cours pour ce jeu. Lancez votre propre duel et défiez de vrais adversaires !",
+    "play_challenge_cta": "Jouer et défier maintenant",
+    "explore_tournaments_cta": "Explorer les tournois",
+    "vs_bot": "VS BOT",
+    "winner_prize": "Prix du vainqueur : ${amount} USDT Cash",
+    "free_duel": "Duel tactique gratuit",
+    "share_stream_tooltip": "Partager le direct en 6 langues",
+    "copy_link_tooltip": "Copier le lien spectateur",
+    "copied": "Copié !"
   },
   "dailyChallenges": {
     "title": "Défis Quotidiens",
@@ -1263,5 +1355,122 @@
     "error_paused": "Le programme d'affiliation est temporairement en maintenance.",
     "error_failed": "Impossible de charger les données d'affiliation. Veuillez réessayer plus tard.",
     "search_placeholder": "Rechercher des amis parrainés..."
+  },
+  "lobby": {
+    "insufficient_title": "Solde de Portefeuille Insuffisant",
+    "insufficient_desc": "Vous essayez de rejoindre un duel avec une mise de {stake}, mais votre solde disponible est de {balance}. Les duels en cash nécessitent un solde suffisant.",
+    "deposit_now": "Déposer Maintenant",
+    "play_free_alt": "Jouer en Mode Gratuit (ELO)",
+    "auto_close_3s": "Fermeture automatique dans 3 secondes"
+  },
+  "ticker": {
+    "live_payouts": "PAIEMENTS EN DIRECT"
+  },
+  "play_page": {
+    "badge": "ARÈNE DE JEUX ET DE DUELS EN DIRECT",
+    "title": "Choisissez votre jeu et défiez les meilleurs",
+    "subtitle": "10 jeux de pure compétence sans aucun hasard. Duels 1v1 en direct, entraînement contre l'IA ou tournois majeurs avec gains immédiats en USDT.",
+    "trust_cashout": "Retrait instantané en 60 secondes",
+    "trust_fairplay": "Jeu 100% équitable contrôlé par serveur",
+    "trust_battles": "Batailles et tournois 24h/24 et 7j/7",
+    "catalog_title": "Catalogue officiel des jeux",
+    "games_available": "{count} jeux disponibles",
+    "cat_all": "Tous les jeux (10)",
+    "cat_strategy": "Stratégie et tactique",
+    "cat_speed": "Vitesse et réflexes",
+    "cat_classic": "Classiques et traditionnels",
+    "meta_chess": "Profond et tactique",
+    "meta_dominoes": "Dominos stratégiques",
+    "meta_backgammon": "Duel traditionnel",
+    "meta_reversi": "Renversement tactique",
+    "meta_speed_math": "Calcul mental rapide 60s",
+    "meta_xo": "Blitz 1 minute",
+    "meta_connect_four": "Puissance 4 Blitz",
+    "meta_checkers": "Dames classiques",
+    "meta_seega": "Seega traditionnel",
+    "meta_gomoku": "Cinq d'affilée",
+    "play_now": "Jouer maintenant",
+    "online": "en ligne",
+    "mode_ai": "IA",
+    "mode_duel": "Duel 1v1",
+    "mode_tournaments": "Tournois",
+    "start_game": "Lancer la partie"
+  },
+  "upcoming_tournaments": {
+    "badge": "⚔️ Grande Arène Esports • Tournois Officiels",
+    "heading": "Tournois Esports à Venir",
+    "subheading": "Où les champions de la tactique s'affrontent pour des coupes d'honneur et des récompenses instantanées garanties. Zéro hasard — pur talent.",
+    "view_all": "Voir tous les tournois",
+    "total_prizes_val": "+20 000 USDT",
+    "total_prizes_label": "Prix totaux",
+    "skill_val": "100% Compétence",
+    "skill_label": "Zéro hasard",
+    "daily_free_val": "Entrée gratuite quotidienne",
+    "daily_free_label": "Gagnez de vrais cryptos",
+    "anti_cheat_val": "Sentinel AI",
+    "anti_cheat_label": "Protection anti-triche",
+    "filter_all": "Tous les tournois",
+    "filter_registration": "Inscriptions ouvertes",
+    "filter_free": "Entrée gratuite",
+    "filter_cash": "Prix en cash",
+    "filter_live": "Matchs en direct",
+    "empty_cta": "Explorer les archives des tournois",
+    "players_suffix": "j",
+    "live_now": "EN DIRECT",
+    "spots_left": "Plus que {count} places !",
+    "guaranteed_pool": "Cagnotte garantie :",
+    "honor_cup": "Coupe d'honneur et +250 ELO",
+    "players_joined": "joueurs inscrits",
+    "hurry_spots": "⚡ Dépêchez-vous, les places partent vite !",
+    "full_capacity": "🔒 Capacité maximale atteinte",
+    "live_in_progress": "⚔️ Tournoi en direct en cours",
+    "soon": "Bientôt",
+    "join_free": "Rejoindre gratuitement",
+    "register_now": "S'inscrire maintenant",
+    "watch_live": "Regarder en direct",
+    "details": "Détails",
+    "featured_cup": "Coupe vedette",
+    "guaranteed_badge": "Cagnotte garantie",
+    "seeds_badge": "Places",
+    "instant_payout_badge": "Paiement instantané",
+    "free_badge": "Gratuit",
+    "official_tournament": "TOURNOI OFFICIEL"
+  },
+  "tournament_slides": {
+    "slide_1": {
+      "super": "GRANDS TOURNOIS NIZALO",
+      "title": "Arène Grand Prix Mondial Blitz",
+      "meta": "Élimination directe • Sentinelle anti-triche • Norme ELO officielle",
+      "badge": "TABLEAU EN DIRECT",
+      "tag": "VOIR LES TABLEAUX ↗"
+    },
+    "slide_2": {
+      "super": "GRANDS TOURNOIS NIZALO",
+      "title": "Championnat Pro à Élimination Directe",
+      "meta": "Tirage en direct • Système suisse & élimination • 100% équitable",
+      "badge": "TOUR ÉLIMINATOIRE",
+      "tag": "VOIR LES MATCHS ↗"
+    },
+    "slide_3": {
+      "super": "GRANDS TOURNOIS NIZALO",
+      "title": "Championnat de Vitesse et de Réflexes",
+      "meta": "Inscriptions ouvertes • Zéro facteur chance • Paiement instantané",
+      "badge": "INSCRIPTION OUVERTE",
+      "tag": "S'INSCRIRE ↗"
+    },
+    "slide_4": {
+      "super": "GRANDS TOURNOIS NIZALO",
+      "title": "Arène Ouverte Midnight Masters",
+      "meta": "Cadence hyper-blitz 3m • Matchmaking rapide • Haute intensité",
+      "badge": "HYPER VITESSE",
+      "tag": "ENTRER DANS L'ARÈNE ↗"
+    },
+    "slide_5": {
+      "super": "GRANDS TOURNOIS NIZALO",
+      "title": "Grandes Finales de la Ligue Pro Nizalo",
+      "meta": "Élite compétitive • Classe Diamant Glicko-2 • Mode spectateur en direct",
+      "badge": "RANG LÉGENDES",
+      "tag": "REGARDER ET JOUER ↗"
+    }
   }
 }

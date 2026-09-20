@@ -18,10 +18,8 @@ const QUICK_STAKES = [
   {
     stake: 2,
     prize: 3.52,
-    badgeAr: "بداية آمنة 🟢",
-    badgeEn: "Safe Start 🟢",
-    tagAr: "🚀 تجربة سريعة",
-    tagEn: "🚀 Quick Trial",
+    badgeKey: "home.quick_stakes.badge_safe_start",
+    tagKey: "home.quick_stakes.tag_quick_trial",
     popular: false,
     accentColor: "#10B981",
     themeClass: styles.cardEmerald,
@@ -30,10 +28,8 @@ const QUICK_STAKES = [
   {
     stake: 5,
     prize: 8.8,
-    badgeAr: "الأكثر طلباً 🔥",
-    badgeEn: "Most Popular 🔥",
-    tagAr: "🔥 نزال الأبطال",
-    tagEn: "🔥 Champions Duel",
+    badgeKey: "home.quick_stakes.badge_most_popular",
+    tagKey: "home.quick_stakes.tag_champions_duel",
     popular: true,
     accentColor: "#3B82F6",
     themeClass: styles.cardSapphire,
@@ -42,10 +38,8 @@ const QUICK_STAKES = [
   {
     stake: 10,
     prize: 17.6,
-    badgeAr: "تحدي المحترفين ⚡",
-    badgeEn: "Pro Challenge ⚡",
-    tagAr: "⚡ مبارزة تكتيكية",
-    tagEn: "⚡ Tactical Duel",
+    badgeKey: "home.quick_stakes.badge_pro_challenge",
+    tagKey: "home.quick_stakes.tag_tactical_duel",
     popular: false,
     accentColor: "#8B5CF6",
     themeClass: styles.cardViolet,
@@ -54,10 +48,8 @@ const QUICK_STAKES = [
   {
     stake: 25,
     prize: 44.0,
-    badgeAr: "طاولة النخبة 💎",
-    badgeEn: "Elite Table 💎",
-    tagAr: "💎 جائزة كبرى",
-    tagEn: "💎 Grand Prize",
+    badgeKey: "home.quick_stakes.badge_elite_table",
+    tagKey: "home.quick_stakes.tag_grand_prize",
     popular: false,
     accentColor: "#F59E0B",
     themeClass: styles.cardGold,
@@ -66,10 +58,8 @@ const QUICK_STAKES = [
   {
     stake: 50,
     prize: 88.0,
-    badgeAr: "كبار المتحدين 👑",
-    badgeEn: "High Roller 👑",
-    tagAr: "👑 جائزة $88 كاش",
-    tagEn: "👑 $88 Cash Prize",
+    badgeKey: "home.quick_stakes.badge_high_roller",
+    tagKey: "home.quick_stakes.tag_high_roller_prize",
     popular: false,
     accentColor: "#EF4444",
     themeClass: styles.cardRuby,
@@ -313,19 +303,17 @@ export function Hero() {
           <motion.div {...stage(0, reduceMotion)} className={styles.eyebrowWrap}>
             <span className={styles.eyebrowBadge}>
               <span className={styles.eyebrowBeacon} aria-hidden="true" />
-              <span>{isRtl ? "🏆 منصة الألعاب التنافسية المهارية الأولى • كاش فوري" : t("home.hero.eyebrow")}</span>
+              <span>{t("home.hero.eyebrow")}</span>
             </span>
           </motion.div>
 
           <motion.h1 {...stage(1, reduceMotion)} className={styles.headline}>
-            <span>{isRtl ? "حوّل ذكاءك ومهارتك إلى أرباح." : "Turn Skill Into Real Cash."}</span>{" "}
-            <span className={styles.headlineAccent}>{isRtl ? "سحب فوري خلال 60 ثانية." : "Instant 60s Cashout."}</span>
+            <span>{t("home.hero.headline_title")}</span>{" "}
+            <span className={styles.headlineAccent}>{t("home.hero.headline_accent")}</span>
           </motion.h1>
 
           <motion.p {...stage(2, reduceMotion)} className={styles.subhead}>
-            {isRtl
-              ? "نافس لاعبين حقيقيين 1v1 في 10 ألعاب مهارية معتمدة بدون أي عنصر حظ أو صدفة. اربح جوائز USDT كاش تُحوَّل لمحفظتك وتُسحب فوراً في أقل من دقيقة."
-              : t("home.hero.subhead")}
+            {t("home.hero.subhead")}
           </motion.p>
 
           <motion.div {...stage(3, reduceMotion)} className={styles.actions}>
@@ -336,7 +324,7 @@ export function Hero() {
             >
               <Button variant="primary" className={styles.primaryBtn}>
                 <span style={{ marginInlineEnd: "8px" }}>⚔️</span>
-                {isRtl ? "ابدأ النزال واكسب الكاش" : t("home.hero.cta_primary")}
+                {t("home.hero.cta_primary")}
               </Button>
             </LocaleLink>
             <LocaleLink
@@ -346,7 +334,7 @@ export function Hero() {
             >
               <Button variant="ghost" className={styles.secondaryBtn}>
                 <span style={{ marginInlineEnd: "8px" }}>💳</span>
-                {isRtl ? "شحن المحفظة فوراً" : "Instant Deposit"}
+                {t("home.hero.instant_deposit")}
               </Button>
             </LocaleLink>
           </motion.div>
@@ -355,19 +343,19 @@ export function Hero() {
           <div className={styles.psychologicalTrustBar}>
             <div className={styles.trustItem}>
               <span className={styles.trustIcon}>⚡</span>
-              <span>{isRtl ? "سحب فوري تلقائي < 60 ثانية" : "Instant <60s Cashout"}</span>
+              <span>{t("home.hero.trust_payout")}</span>
             </div>
             <div className={styles.trustItem}>
               <span className={styles.trustIcon}>🛡️</span>
-              <span>{isRtl ? "0% حظ • 100% مهارة وتكتيك" : "100% Skill • Zero RNG"}</span>
+              <span>{t("home.hero.trust_skill")}</span>
             </div>
             <div className={styles.trustItem}>
               <span className={styles.trustIcon}>💰</span>
-              <span>{isRtl ? "88% من وعاء النزال للفائز" : "88% Winner Share"}</span>
+              <span>{t("home.hero.trust_share")}</span>
             </div>
             <div className={styles.trustItem}>
               <span className={styles.trustIcon}>🏆</span>
-              <span>{isRtl ? "بطولات يومية ومبارزات فورية كاش" : "Daily Tournaments & Instant Cash Duels"}</span>
+              <span>{t("home.hero.trust_tournaments")}</span>
             </div>
           </div>
 
@@ -377,14 +365,14 @@ export function Hero() {
               <div className={styles.quickStakeTitle}>
                 <span className={styles.quickStakeTitleBadge}>
                   <span className={styles.quickStakePulse} />
-                  <span>{isRtl ? "باقات التحدي السريع" : "Instant Challenge Tiers"}</span>
+                  <span>{t("home.quick_stakes.section_badge")}</span>
                 </span>
                 <span className={styles.quickStakeTitleText}>
-                  {isRtl ? "اختر رهانك واربح الجائزة فوراً:" : "Select your stake and win cash immediately:"}
+                  {t("home.quick_stakes.section_title")}
                 </span>
               </div>
               <span className={styles.quickStakeSub}>
-                {isRtl ? "تسوية آلية وسحب كاش فوري ⚡" : "Automated Settlement & Instant Cashout ⚡"}
+                {t("home.quick_stakes.section_sub")}
               </span>
             </div>
 
@@ -404,7 +392,7 @@ export function Hero() {
                       className={qs.popular ? styles.popularBadge : styles.subtleBadge}
                       style={!qs.popular ? { color: qs.accentColor, borderColor: `${qs.accentColor}55` } : undefined}
                     >
-                      {isRtl ? qs.badgeAr : qs.badgeEn}
+                      {t(qs.badgeKey)}
                     </span>
                   </div>
                   <div className={styles.quickStakeTop}>
@@ -417,7 +405,7 @@ export function Hero() {
                     <span className={styles.prizeCurrency}>USDT</span>
                   </div>
                   <span className={styles.quickStakeTag}>
-                    {isRtl ? qs.tagAr : qs.tagEn}
+                    {t(qs.tagKey)}
                   </span>
                 </LocaleLink>
               ))}

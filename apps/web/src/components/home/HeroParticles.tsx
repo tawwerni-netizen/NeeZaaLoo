@@ -15,7 +15,7 @@ export function HeroParticles() {
   const particles = Array.from({ length: 20 });
 
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
+    <div dir="ltr" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
       {particles.map((_, i) => {
         const size = Math.random() * 6 + 2;
         const startX = Math.random() * 100;
@@ -46,6 +46,8 @@ export function HeroParticles() {
             }}
             style={{
               position: "absolute",
+              top: 0,
+              left: 0,
               width: size,
               height: size,
               borderRadius: "50%",

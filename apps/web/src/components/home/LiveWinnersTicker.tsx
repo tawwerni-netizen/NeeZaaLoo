@@ -133,17 +133,35 @@ const RAW_PAYOUTS: PayoutEvent[] = [
 ];
 
 export function LiveWinnersTicker() {
-  const { dir } = useI18n();
+  const { locale, dir, t } = useI18n();
   const isRtl = dir === "rtl";
 
   // Duplicate items array to create a seamless infinite loop
   const displayItems = useMemo(() => [...RAW_PAYOUTS, ...RAW_PAYOUTS], []);
 
+  const actionText = (isWithdrawal?: boolean) => {
+    if (locale === "ar") return isWithdrawal ? "سحب" : "كسب";
+    if (locale === "fr") return isWithdrawal ? "a retiré" : "a gagné";
+    if (locale === "es") return isWithdrawal ? "retiró" : "ganó";
+    if (locale === "hi") return isWithdrawal ? "निकाले" : "जीते";
+    if (locale === "zh") return isWithdrawal ? "提现" : "获胜赢得";
+    return isWithdrawal ? "withdrew" : "won";
+  };
+
+  const instantTagText = () => {
+    if (locale === "ar") return "فوري ⚡";
+    if (locale === "fr") return "Instantané ⚡";
+    if (locale === "es") return "Instantáneo ⚡";
+    if (locale === "hi") return "तत्काल ⚡";
+    if (locale === "zh") return "秒级到账 ⚡";
+    return "Instant ⚡";
+  };
+
   return (
     <div className={styles.tickerContainer} aria-label={isRtl ? "شريط الأرباح المباشرة" : "Live Winners Ticker"}>
       <div className={styles.tickerLabel}>
         <span className={styles.pulseIcon} />
-        <span>{isRtl ? "أرباح وسحوبات حية" : "LIVE PAYOUTS"}</span>
+        <span>{t("ticker.live_payouts")}</span>
       </div>
 
       <div className={styles.trackWrapper}>
@@ -152,12 +170,12 @@ export function LiveWinnersTicker() {
             <div key={`${item.id}-${idx}`} className={styles.item}>
               <span className={styles.avatar}>{item.avatarChar}</span>
               <span className={styles.winnerHandle}>@{item.handle}</span>
-              <span>{isRtl ? (item.isWithdrawal ? "سحب" : "كسب") : (item.isWithdrawal ? "withdrew" : "won")}</span>
+              <span>{actionText(item.isWithdrawal)}</span>
               <span className={styles.amount}>{item.amount}</span>
               <span className={styles.gameBadge}>
                 {item.icon} {isRtl ? item.gameAr : item.gameEn}
               </span>
-              <span className={styles.instantTag}>{isRtl ? "فوري ⚡" : "Instant ⚡"}</span>
+              <span className={styles.instantTag}>{instantTagText()}</span>
               <span className={styles.timeAgo}>{isRtl ? item.timeAr : item.timeEn}</span>
             </div>
           ))}

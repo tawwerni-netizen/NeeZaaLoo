@@ -10,45 +10,45 @@ type ProfileInfo = {
   id: TimeProfile;
   titleKey: string;
   icon: string;
-  getDuration: (gameId: string, isAr: boolean) => string;
-  getDesc: (isAr: boolean) => string;
+  descKey: string;
+  getDurationKey: (gameId: string) => string;
 };
 
 const PROFILES: ProfileInfo[] = [
   {
     id: "BLITZ",
     titleKey: "play.time_control.blitz",
+    descKey: "play.time_control.blitz_desc",
     icon: "⚡",
-    getDuration: (gameId, isAr) => {
-      if (gameId === "xo" || gameId === "speed-math") return isAr ? "30 ثانية" : "30 seconds";
-      if (gameId === "connect-four" || gameId === "dominoes") return isAr ? "دقيقتان (+2ث)" : "2 mins (+2s)";
-      return isAr ? "3 دقائق (+2ث)" : "3 mins (+2s)";
+    getDurationKey: (gameId) => {
+      if (gameId === "xo" || gameId === "speed-math") return "play.time_control.dur_30s";
+      if (gameId === "connect-four" || gameId === "dominoes") return "play.time_control.dur_2m_plus2";
+      return "play.time_control.dur_3m_plus2";
     },
-    getDesc: (isAr) => isAr ? "إيقاع سريع وتحدي حاسم تحت ضغط الوقت" : "Fast-paced match under high time pressure",
   },
   {
     id: "STANDARD",
     titleKey: "play.time_control.standard",
+    descKey: "play.time_control.standard_desc",
     icon: "⏱️",
-    getDuration: (gameId, isAr) => {
-      if (gameId === "xo" || gameId === "speed-math") return isAr ? "60 ثانية" : "60 seconds";
-      if (gameId === "connect-four" || gameId === "dominoes") return isAr ? "3 دقائق (+3ث)" : "3 mins (+3s)";
-      if (gameId === "checkers") return isAr ? "4 دقائق (+3ث)" : "4 mins (+3s)";
-      return isAr ? "5 دقائق (+3ث)" : "5 mins (+3s)";
+    getDurationKey: (gameId) => {
+      if (gameId === "xo" || gameId === "speed-math") return "play.time_control.dur_60s";
+      if (gameId === "connect-four" || gameId === "dominoes") return "play.time_control.dur_3m_plus3";
+      if (gameId === "checkers") return "play.time_control.dur_4m_plus3";
+      return "play.time_control.dur_5m_plus3";
     },
-    getDesc: (isAr) => isAr ? "الوقت الرسمي المتوازن للتفكير واتخاذ القرارات" : "Balanced official time for strategic depth",
   },
   {
     id: "EXTENDED",
     titleKey: "play.time_control.extended",
+    descKey: "play.time_control.extended_desc",
     icon: "⏳",
-    getDuration: (gameId, isAr) => {
-      if (gameId === "xo" || gameId === "speed-math") return isAr ? "دقيقتان (120ث)" : "2 mins (120s)";
-      if (gameId === "connect-four" || gameId === "dominoes") return isAr ? "5 دقائق (+5ث)" : "5 mins (+5s)";
-      if (gameId === "checkers") return isAr ? "8 دقائق (+5ث)" : "8 mins (+5s)";
-      return isAr ? "10 دقائق (+5ث)" : "10 mins (+5s)";
+    getDurationKey: (gameId) => {
+      if (gameId === "xo" || gameId === "speed-math") return "play.time_control.dur_2m_120s";
+      if (gameId === "connect-four" || gameId === "dominoes") return "play.time_control.dur_5m_plus5";
+      if (gameId === "checkers") return "play.time_control.dur_8m_plus5";
+      return "play.time_control.dur_10m_plus5";
     },
-    getDesc: (isAr) => isAr ? "مباراة هادئة مع وقت وفير للحسابات المعقدة" : "Deep tactical game with ample time per turn",
   },
 ];
 
@@ -59,13 +59,12 @@ export function TimeControlSelect({
   plugin: GamePlugin;
   onSelect: (profile: TimeProfile) => void;
 }) {
-  const { t, locale } = useI18n();
-  const isAr = locale === "ar";
+  const { t } = useI18n();
 
   return (
     <div>
-      <h1 className={styles.heading}>{t("play.time_control.heading") || (isAr ? "اختر مدة المباراة" : "Choose Match Duration")}</h1>
-      <p className={styles.subheading}>{isAr ? "حدد سرعة الوقت المناسبة لأسلوب لعبك" : "Select the time pace that fits your playstyle"}</p>
+      <h1 className={styles.heading}>{t("play.time_control.heading")}</h1>
+      <p className={styles.subheading}>{t("play.time_control.subheading")}</p>
       <div className={styles.grid}>
         {PROFILES.map((p) => (
           <button
@@ -75,9 +74,9 @@ export function TimeControlSelect({
             onClick={() => onSelect(p.id)}
           >
             <span className={styles.icon}>{p.icon}</span>
-            <span className={styles.title}>{t(p.titleKey) || p.id}</span>
-            <span className={styles.duration}>{p.getDuration(plugin.id, isAr)}</span>
-            <span className={styles.desc}>{p.getDesc(isAr)}</span>
+            <span className={styles.title}>{t(p.titleKey)}</span>
+            <span className={styles.duration}>{t(p.getDurationKey(plugin.id))}</span>
+            <span className={styles.desc}>{t(p.descKey)}</span>
           </button>
         ))}
       </div>

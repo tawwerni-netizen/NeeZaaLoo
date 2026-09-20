@@ -63,7 +63,7 @@ const formatUsdt = (num: number) =>
   num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
-  const { locale, dir } = useI18n();
+  const { locale, dir, t } = useI18n();
   const isRtl = dir === "rtl";
   const { player } = useAuth();
   const { openPopup } = useAuthPopup();
@@ -1094,17 +1094,18 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             </button>
             <div className={styles.warningIconGlow}>💳</div>
             <h3 className={styles.warningModalTitle}>
-              {isRtl ? "رصيد المحفظة غير كافٍ" : "Insufficient Wallet Balance"}
+              {t("lobby.insufficient_title")}
             </h3>
             <p className={styles.warningModalDesc}>
-              {isRtl
-                ? `أنت تحاول دخول نزال بمبلغ تحدٍّ قدره ${balanceWarningModal.requiredStake}.00 ${newAsset}، بينما رصيدك المتاح حالياً هو ${(userBalanceUSDT ?? 0).toFixed(2)} ${newAsset}. لا يمكن دخول النزالات النقدية بدون رصيد مسبق.`
-                : `You are attempting to enter a duel with a ${balanceWarningModal.requiredStake}.00 ${newAsset} stake, but your available balance is ${(userBalanceUSDT ?? 0).toFixed(2)} ${newAsset}. Cash duels require sufficient pre-funded balance.`}
+              {t("lobby.insufficient_desc", {
+                stake: `${balanceWarningModal.requiredStake}.00 ${newAsset}`,
+                balance: `${(userBalanceUSDT ?? 0).toFixed(2)} ${newAsset}`,
+              })}
             </p>
             <div className={styles.warningModalActions}>
               <LocaleLink href="/wallet" className={styles.depositCtaBtn}>
                 <span>💰</span>
-                <span>{isRtl ? "شحن المحفظة فوراً (إيداع " + newAsset + ")" : `Deposit ${newAsset} Now`}</span>
+                <span>{t("lobby.deposit_now")} ({newAsset})</span>
               </LocaleLink>
               <button
                 type="button"
@@ -1115,10 +1116,10 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
                   setIsModalOpen(true);
                 }}
               >
-                {isRtl ? "اللعب في النمط المجاني (نقاط ELO)" : "Play in Free Mode (ELO)"}
+                {t("lobby.play_free_alt")}
               </button>
             </div>
-            <div className={styles.modalCountdownWrap} title={isRtl ? "سيتم الإغلاق تلقائياً خلال 3 ثوانٍ" : "Auto-closing in 3 seconds"}>
+            <div className={styles.modalCountdownWrap} title={t("lobby.auto_close_3s")}>
               <div className={styles.modalCountdownFill} />
             </div>
           </div>

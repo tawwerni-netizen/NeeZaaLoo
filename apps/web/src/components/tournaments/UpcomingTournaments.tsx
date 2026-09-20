@@ -237,7 +237,7 @@ export function UpcomingTournaments({
                       {row.tier === "CASH" && prizePoolNum > 0 ? (
                         <span className={styles.compactPrize}>💰 ${prizePoolNum.toFixed(0)} USDT</span>
                       ) : (
-                        <span className={styles.compactFree}>{locale === "ar" ? "🎁 مجاني" : "Free"}</span>
+                        <span className={styles.compactFree}>🎁 {t("upcoming_tournaments.free_badge")}</span>
                       )}
                       {countdownTarget && nowMs !== null && (
                         <span className={styles.compactCountdown}>⏱️ {countdownFor(countdownTarget, locale, nowMs)}</span>
@@ -267,22 +267,20 @@ export function UpcomingTournaments({
             <div className={styles.badgeRow}>
               <span className={styles.esportsBadge}>
                 <span className={styles.badgePulse} />
-                <span>{locale === "ar" ? "⚔️ ساحة البطولات الكبرى • منافسات المهارة الرسمية" : "⚔️ Major Esports Arena • Official Tournaments"}</span>
+                <span>{t("upcoming_tournaments.badge")}</span>
               </span>
             </div>
             <h2 className={styles.heading}>
-              {heading ?? (locale === "ar" ? "البطولات القادمة والمواجهات الكبرى" : "Upcoming Esports Tournaments")}
+              {heading ?? t("upcoming_tournaments.heading")}
             </h2>
             <p className={styles.subHeading}>
-              {locale === "ar"
-                ? "حيث يتنافس أبطال العقل والتكتيك على كؤوس الشرف والجوائز الفورية المضمونة. صفر حظ — المهارة والسرعة تصنعان النصر."
-                : "Where tactical titans clash for prestige cups and guaranteed instant payouts. Zero luck — pure mind skill."}
+              {t("upcoming_tournaments.subheading")}
             </p>
           </div>
 
           {viewAllHref && (
             <LocaleLink href={viewAllHref} className={styles.viewAllBtn}>
-              <span>{viewAllText ?? (locale === "ar" ? "عرض كافة البطولات" : "View All Tournaments")}</span>
+              <span>{viewAllText ?? t("upcoming_tournaments.view_all")}</span>
               <span className={styles.viewAllArrow}>←</span>
             </LocaleLink>
           )}
@@ -294,31 +292,31 @@ export function UpcomingTournaments({
             <span className={styles.hypeIcon}>💰</span>
             <div className={styles.hypeTexts}>
               <span className={styles.hypeVal}>+20,000 USDT</span>
-              <span className={styles.hypeLabel}>{locale === "ar" ? "جوائز كبرى موزعة" : "Total Prizes"}</span>
+              <span className={styles.hypeLabel}>{t("upcoming_tournaments.total_prizes_label")}</span>
             </div>
           </div>
           <div className={styles.hypeDivider} />
           <div className={styles.hypeItem}>
             <span className={styles.hypeIcon}>⚡</span>
             <div className={styles.hypeTexts}>
-              <span className={styles.hypeVal}>{locale === "ar" ? "100% مهارة ذهنية" : "100% Skill"}</span>
-              <span className={styles.hypeLabel}>{locale === "ar" ? "خالية تماماً من الحظ" : "Zero Luck Required"}</span>
+              <span className={styles.hypeVal}>{t("upcoming_tournaments.skill_val")}</span>
+              <span className={styles.hypeLabel}>{t("upcoming_tournaments.skill_label")}</span>
             </div>
           </div>
           <div className={styles.hypeDivider} />
           <div className={styles.hypeItem}>
             <span className={styles.hypeIcon}>🎁</span>
             <div className={styles.hypeTexts}>
-              <span className={styles.hypeVal}>{locale === "ar" ? "دخول مجاني يومي" : "Daily Free Entry"}</span>
-              <span className={styles.hypeLabel}>{locale === "ar" ? "فرص حقيقية للجميع" : "Earn Real Crypto"}</span>
+              <span className={styles.hypeVal}>{t("upcoming_tournaments.daily_free_val")}</span>
+              <span className={styles.hypeLabel}>{t("upcoming_tournaments.daily_free_label")}</span>
             </div>
           </div>
           <div className={styles.hypeDivider} />
           <div className={styles.hypeItem}>
             <span className={styles.hypeIcon}>🛡️</span>
             <div className={styles.hypeTexts}>
-              <span className={styles.hypeVal}>{locale === "ar" ? "Sentinel AI" : "AI Sentinel"}</span>
-              <span className={styles.hypeLabel}>{locale === "ar" ? "رقابة نزاهة ومكافحة غش" : "Anti-Cheat Protected"}</span>
+              <span className={styles.hypeVal}>{t("upcoming_tournaments.anti_cheat_val")}</span>
+              <span className={styles.hypeLabel}>{t("upcoming_tournaments.anti_cheat_label")}</span>
             </div>
           </div>
         </div>
@@ -344,7 +342,7 @@ export function UpcomingTournaments({
                     <span className={styles.bannerTag}>{activeBanner.tag}</span>
                     <span className={styles.bannerLivePill}>
                       <span className={styles.bannerPulseDot} />
-                      {locale === "ar" ? "بطولة الأسبوع المميزة" : "Featured Cup"}
+                      {t("upcoming_tournaments.featured_cup")}
                     </span>
                   </div>
                   <h3 className={styles.bannerTitle}>{activeBanner.title}</h3>
@@ -352,9 +350,9 @@ export function UpcomingTournaments({
                     <bdi>{activeBanner.desc}</bdi>
                   </p>
                   <div className={styles.bannerSpecs}>
-                    <span className={styles.specBadge}>🏆 {locale === "ar" ? "جوائز مضمونة" : "Guaranteed Pool"}</span>
-                    <span className={styles.specBadge}>👥 16 {locale === "ar" ? "مقعد رسمي" : "Seeds"}</span>
-                    <span className={styles.specBadge}>⚡ {locale === "ar" ? "سحب فوري للأرباح" : "Instant Payout"}</span>
+                    <span className={styles.specBadge}>🏆 {t("upcoming_tournaments.guaranteed_badge")}</span>
+                    <span className={styles.specBadge}>👥 16 {t("upcoming_tournaments.seeds_badge")}</span>
+                    <span className={styles.specBadge}>⚡ {t("upcoming_tournaments.instant_payout_badge")}</span>
                   </div>
                   {banners.length > 1 && (
                     <div className={styles.bannerDots}>
@@ -402,7 +400,7 @@ export function UpcomingTournaments({
             onClick={() => setFilter("ALL")}
           >
             <span>🔥</span>
-            <span>{locale === "ar" ? "جميع البطولات" : "All Tournaments"}</span>
+            <span>{t("upcoming_tournaments.filter_all")}</span>
           </button>
           <button
             type="button"
@@ -410,7 +408,7 @@ export function UpcomingTournaments({
             onClick={() => setFilter("REGISTRATION")}
           >
             <span>🟢</span>
-            <span>{locale === "ar" ? "التسجيل مفتوح" : "Registration Open"}</span>
+            <span>{t("upcoming_tournaments.filter_registration")}</span>
           </button>
           <button
             type="button"
@@ -418,7 +416,7 @@ export function UpcomingTournaments({
             onClick={() => setFilter("FREE")}
           >
             <span>🎁</span>
-            <span>{locale === "ar" ? "دخول مجاني" : "Free Entry"}</span>
+            <span>{t("upcoming_tournaments.filter_free")}</span>
           </button>
           <button
             type="button"
@@ -426,7 +424,7 @@ export function UpcomingTournaments({
             onClick={() => setFilter("CASH")}
           >
             <span>💰</span>
-            <span>{locale === "ar" ? "جوائز نقدية" : "Cash Prizes"}</span>
+            <span>{t("upcoming_tournaments.filter_cash")}</span>
           </button>
           <button
             type="button"
@@ -434,7 +432,7 @@ export function UpcomingTournaments({
             onClick={() => setFilter("LIVE")}
           >
             <span>🔴</span>
-            <span>{locale === "ar" ? "مواجهات حية" : "Live Matches"}</span>
+            <span>{t("upcoming_tournaments.filter_live")}</span>
           </button>
         </div>
 
@@ -446,7 +444,7 @@ export function UpcomingTournaments({
             <span className={styles.emptyIcon}>🏆</span>
             <p className={styles.emptyText}>{emptyText}</p>
             <LocaleLink href="/tournaments" className={styles.emptyCta}>
-              {locale === "ar" ? "تصفح أرشيف البطولات والمباريات" : "Explore Tournament Archive"}
+              {t("upcoming_tournaments.empty_cta")}
             </LocaleLink>
           </div>
         ) : (
@@ -493,17 +491,17 @@ export function UpcomingTournaments({
                     <div className={styles.heroBadges}>
                       <span className={styles.formatPill}>
                         <span className={styles.formatIcon}>🏆</span>
-                        <span>{t(`tournamentsPage.format.${row.format}`)} ({row.capacity} {locale === "ar" ? "لاعب" : "p"})</span>
+                        <span>{t(`tournamentsPage.format.${row.format}`)} ({row.capacity} {t("upcoming_tournaments.players_suffix")})</span>
                       </span>
 
                       {isLive ? (
                         <span className={styles.livePulsePill}>
                           <span className={styles.pulseDot} />
-                          {locale === "ar" ? "مباشر الآن" : "LIVE"}
+                          {t("upcoming_tournaments.live_now")}
                         </span>
                       ) : isUrgent ? (
                         <span className={styles.urgentPill}>
-                          🔥 {locale === "ar" ? `متبقي ${remainingSpots} مقاعد فقط!` : `${remainingSpots} spots left!`}
+                          🔥 {t("upcoming_tournaments.spots_left", { count: String(remainingSpots) })}
                         </span>
                       ) : (
                         <span className={`${styles.statusPill} ${styles[`status_${row.status}`] ?? ""}`}>
@@ -525,13 +523,13 @@ export function UpcomingTournaments({
                       <div className={styles.prizePoolHeader}>
                         <span className={styles.prizeIcon}>💰</span>
                         <span className={styles.prizeLabel}>
-                          {locale === "ar" ? "مجموع الجوائز الفورية:" : "Guaranteed Prize Pool:"}
+                          {t("upcoming_tournaments.guaranteed_pool")}
                         </span>
                       </div>
                       <span className={styles.prizeValue}>
                         {row.tier === "CASH" && prizePoolNum > 0
                           ? `$${prizePoolStr} USDT`
-                          : (locale === "ar" ? "كأس الشرف ونقاط ELO +250" : "Honor Cup & +250 ELO")}
+                          : t("upcoming_tournaments.honor_cup")}
                       </span>
                     </div>
 
@@ -539,7 +537,7 @@ export function UpcomingTournaments({
                     <div className={styles.capacitySection}>
                       <div className={styles.capacityHeader}>
                         <span className={styles.capacityCount}>
-                          👥 <span className="nz-num">{row.registered_count}</span> / <span className="nz-num">{row.capacity}</span> {locale === "ar" ? "بطل انضموا" : "players joined"}
+                          👥 <span className="nz-num">{row.registered_count}</span> / <span className="nz-num">{row.capacity}</span> {t("upcoming_tournaments.players_joined")}
                         </span>
                         <span className={styles.capacityPct}>{registeredPct}%</span>
                       </div>
@@ -553,9 +551,9 @@ export function UpcomingTournaments({
                         <span className={styles.scarcityText}>
                           {row.status === "REGISTRATION"
                             ? (remainingSpots > 0
-                                ? (locale === "ar" ? `⚡ سارع بحجز مكانك قبل اكتمال العدد!` : `⚡ Hurry, spots are filling up fast!`)
-                                : (locale === "ar" ? `🔒 اكتملت المقاعد — انتظر بدء النزال` : `🔒 Full capacity reached`))
-                            : (locale === "ar" ? `⚔️ المنافسات جارية على الهواء مباشرة` : `⚔️ Live tournament in progress`)}
+                                ? t("upcoming_tournaments.hurry_spots")
+                                : t("upcoming_tournaments.full_capacity"))
+                            : t("upcoming_tournaments.live_in_progress")}
                         </span>
                       </div>
                     </div>
@@ -567,7 +565,7 @@ export function UpcomingTournaments({
                         <span className={styles.countdown}>
                           {countdownTarget && nowMs !== null
                             ? countdownFor(countdownTarget, locale, nowMs)
-                            : (locale === "ar" ? "قريباً" : "Soon")}
+                            : t("upcoming_tournaments.soon")}
                         </span>
                       </div>
 
@@ -575,11 +573,11 @@ export function UpcomingTournaments({
                         <span>
                           {row.status === "REGISTRATION"
                             ? (row.tier === "FREE"
-                                ? (locale === "ar" ? "احجز مقعدك مجاناً" : "Join Free")
-                                : (locale === "ar" ? "احجز مقعدك الآن" : "Register Now"))
+                                ? t("upcoming_tournaments.join_free")
+                                : t("upcoming_tournaments.register_now"))
                             : row.status === "LIVE"
-                            ? (locale === "ar" ? "شاهد البث الحي" : "Watch Live")
-                            : (locale === "ar" ? "عرض التفاصيل" : "Details")}
+                            ? t("upcoming_tournaments.watch_live")
+                            : t("upcoming_tournaments.details")}
                         </span>
                         <span className={styles.ctaArrow}>⚔️</span>
                       </span>

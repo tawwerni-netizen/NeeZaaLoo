@@ -50,7 +50,7 @@ export function createLiveArenaSimulator(db, { targetMatches = 10, emit = () => 
 
     if (!simulatorEnabled) return { spawnedCount: 0, completedCount: 0 };
 
-    // 1. Complete long-running simulated duels (> 2 minutes)
+    // 1. Complete long-running simulated duels (> 6 minutes)
     const completedRes = await db.query(
       `UPDATE duel
           SET status = 'COMPLETED'::duel_status,
@@ -59,7 +59,7 @@ export function createLiveArenaSimulator(db, { targetMatches = 10, emit = () => 
               completed_at = now()
         WHERE id LIKE 'duel_live_%'
           AND status = 'LIVE'
-          AND started_at <= now() - interval '2 minutes'
+          AND started_at <= now() - interval '6 minutes'
         RETURNING id`
     );
     const completedCount = completedRes.rowCount || 0;

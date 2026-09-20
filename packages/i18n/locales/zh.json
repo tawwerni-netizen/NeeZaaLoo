@@ -20,7 +20,10 @@
     "download_app": "下载应用",
     "referrals": "引荐返利",
     "menu_aria_label": "菜单",
-    "admin": "管理后台"
+    "admin": "管理后台",
+    "arena": "竞技场",
+    "clans": "战队",
+    "deposit": "充值"
   },
   "footer": {
     "learn": "了解",
@@ -62,7 +65,14 @@
         "pillar_payout_desc": "奖金直接以稳定币 USDT 转入您的钱包，无需漫长等待。",
         "pillar_fair_title": "100% 公平竞技与反作弊",
         "pillar_fair_desc": "纯技术对决。权威服务端校验确保每一场比赛的绝对公正。"
-      }
+      },
+      "headline_title": "将你的技术转化为真金白银。",
+      "headline_accent": "60秒极速全自动到账。",
+      "instant_deposit": "极速充值",
+      "trust_payout": "极速自动提现 < 60秒",
+      "trust_skill": "100% 纯技巧 • 零随机",
+      "trust_share": "获胜者独揽88%奖池",
+      "trust_tournaments": "每日大型锦标赛与实时现金对决"
     },
     "games": {
       "heading": "十款游戏,同一套公平机制",
@@ -205,6 +215,21 @@
       "point_verify_body": "任何一局结束后的对局都可以从记录的真实着法重新推演,并与实际结果核对。",
       "point_human": "资金决策必经人工",
       "point_human_body": "任何自动化操作都不会仅凭单一薄弱信号就限制资金或账户——决定权始终在人工审核手中。"
+    },
+    "quick_stakes": {
+      "section_badge": "即时对决专区",
+      "section_title": "选择您的参赛额，获胜立赢现金：",
+      "section_sub": "全自动结算与秒级提现 ⚡",
+      "badge_safe_start": "安全起步 🟢",
+      "tag_quick_trial": "🚀 极速体验",
+      "badge_most_popular": "最受欢迎 🔥",
+      "tag_champions_duel": "🔥 冠军对决",
+      "badge_pro_challenge": "大师挑战 ⚡",
+      "tag_tactical_duel": "⚡ 战术对决",
+      "badge_elite_table": "精英牌桌 💎",
+      "tag_grand_prize": "💎 超级大奖",
+      "badge_high_roller": "巅峰王者 👑",
+      "tag_high_roller_prize": "👑 $88 现金大奖"
     }
   },
   "common": {
@@ -381,20 +406,30 @@
       "heading": "选择对战方式",
       "vs_computer": {
         "title": "人机对战",
-        "description": "与AI对手练习"
+        "description": "与AI对手练习",
+        "badge": "高阶AI 🤖",
+        "tag": "秒级开战 • 无限练手"
       },
       "friend": {
         "title": "挑战好友",
-        "description": "通过昵称挑战某人"
+        "description": "通过昵称挑战某人",
+        "badge": "专属好友房 👥",
+        "tag": "极速一键邀请链接"
       },
       "random_opponent": {
         "title": "随机对手",
-        "description": "根据你的水平进行排位匹配"
+        "description": "根据你的水平进行排位匹配",
+        "badge": "即时对决 🔥 最火爆",
+        "tag": "USDT极速提现 • 胜者独揽88%"
       },
       "tournament": {
         "title": "锦标赛",
-        "description": "参加淘汰赛争夺奖金"
-      }
+        "description": "参加淘汰赛争夺奖金",
+        "badge": "荣耀大奖杯与高额奖金 🏆",
+        "tag": "24/7 全天候锦标赛"
+      },
+      "select_badge": "选择您的对决模式",
+      "subheading": "选择您喜爱的竞技方式——磨练战术、好友切磋，或赢取高额现金奖杯。"
     },
     "difficulty": {
       "heading": "选择难度"
@@ -411,7 +446,14 @@
       "platform_fee": "平台与赛事运营费",
       "fixed_badge": "固定 12%",
       "net_prize_contrib": "奖金池贡献份额",
-      "winner_payout": "获胜者总奖金"
+      "winner_payout": "获胜者总奖金",
+      "currency_label": "对决官方认可币种：",
+      "balance_label": "当前可用余额：",
+      "insufficient_title": "钱包余额不足以参加此对决",
+      "deposit_cta": "💳 极速钱包充值",
+      "insufficient_desc": "本场对决需要 ${stake} {asset}，但您的可用余额为 ${balance} {asset}。请充值或切换至免费对战模式。",
+      "switch_free": "切换至免费模式",
+      "insufficient_btn": "余额不足"
     },
     "challenge": {
       "heading": "挑战好友",
@@ -446,10 +488,24 @@
     },
     "time_control": {
       "heading": "选择对局时长",
-      "subheading": "选择适合你风格的时间节奏",
+      "subheading": "选择适合您对战节奏的时间配置",
       "blitz": "闪电战",
       "standard": "标准",
-      "extended": "长局"
+      "extended": "长局",
+      "blitz_desc": "快节奏对决，极限时间压力",
+      "standard_desc": "官方标准用时，兼顾思考与决策深度",
+      "extended_desc": "沉浸式深度推演，每步用时从容充裕",
+      "dur_30s": "30 秒",
+      "dur_60s": "60 秒",
+      "dur_2m_plus2": "2 分钟 (+2秒)",
+      "dur_3m_plus2": "3 分钟 (+2秒)",
+      "dur_3m_plus3": "3 分钟 (+3秒)",
+      "dur_4m_plus3": "4 分钟 (+3秒)",
+      "dur_5m_plus3": "5 分钟 (+3秒)",
+      "dur_2m_120s": "2 分钟 (120秒)",
+      "dur_5m_plus5": "5 分钟 (+5秒)",
+      "dur_8m_plus5": "8 分钟 (+5秒)",
+      "dur_10m_plus5": "10 分钟 (+5秒)"
     },
     "prize": {
       "heading": "选择你的奖金",
@@ -459,6 +515,24 @@
       "free_description": "没有奖金 — 只是游戏本身。",
       "competitive_title": "竞技",
       "competitive_description": "为真实奖金而战，赢得比赛后即可获得。"
+    },
+    "nav": {
+      "back_step": "后退一步",
+      "all_games": "全部游戏",
+      "back": "返回",
+      "step_mode": "模式",
+      "step_difficulty": "难度",
+      "step_stake": "对决赌注",
+      "step_time_control": "时间控制",
+      "step_duel": "对战比赛"
+    },
+    "hero_subtitle": "开始对战，一决高下，赢取真实奖励。现在就证明你的实力！",
+    "dominoes": {
+      "variant_heading": "多米诺官方赛制",
+      "desc_traditional": "传统（摸牌/封牌）：出完牌或封牌时点数最少者胜。",
+      "desc_american": "美式（All-Fives）：开放端点数和为5的倍数即可得分。",
+      "traditional": "传统模式",
+      "american": "美式模式 (All-Fives)"
     }
   },
   "dashboard": {
@@ -922,7 +996,25 @@
     "vs": "对",
     "live_badge": "直播",
     "tournament_badge": "锦标赛对局",
-    "move_count": "已走{count}步"
+    "move_count": "已走{count}步",
+    "realtime_feed": "实时竞技场直播（仅限观战）",
+    "live_count": "当前有 {count} 场比赛正在进行",
+    "refresh_tooltip": "刷新比赛列表",
+    "live_refresh": "实时刷新",
+    "start_duel": "发起对决",
+    "search_placeholder": "输入玩家或好友昵称搜索...",
+    "include_bots": "包含人机练习对决",
+    "no_matches_found": "未找到正在进行的比赛！",
+    "no_matches_for_handle": "未找到玩家 \"{handle}\" 的进行中比赛。请检查昵称或等待比赛开始。",
+    "no_matches_game": "当前该游戏暂无正在进行的对决。立即发起你自己的对决并向真实对手挑战！",
+    "play_challenge_cta": "立即发起挑战",
+    "explore_tournaments_cta": "浏览锦标赛",
+    "vs_bot": "人机对战",
+    "winner_prize": "获胜者奖金：${amount} USDT 现金",
+    "free_duel": "免费战术对决",
+    "share_stream_tooltip": "以 6 种语言分享直播链接",
+    "copy_link_tooltip": "复制观战链接",
+    "copied": "已复制！"
   },
   "dailyChallenges": {
     "title": "每日挑战",
@@ -1263,5 +1355,122 @@
     "error_paused": "合作伙伴推广计划目前正处于系统维护中。",
     "error_failed": "加载推荐明细失败，请稍后重试。",
     "search_placeholder": "按用户名搜索好友..."
+  },
+  "lobby": {
+    "insufficient_title": "钱包余额不足",
+    "insufficient_desc": "您正在尝试进入参赛额为 {stake} 的对决，但当前可用余额为 {balance}。现金对决需提前充值足够金额。",
+    "deposit_now": "立即充值",
+    "play_free_alt": "体验免费模式（排位分）",
+    "auto_close_3s": "3秒后自动关闭"
+  },
+  "ticker": {
+    "live_payouts": "实时提现与派奖"
+  },
+  "play_page": {
+    "badge": "在线游戏与实时对决竞技场",
+    "title": "挑选你的游戏，挑战顶级高手",
+    "subtitle": "10 款完全依靠策略与技术的确定性对决游戏。实时 1v1 较量、AI 战术演练，或参加即时 USDT 结算的大型锦标赛。",
+    "trust_cashout": "60秒内极速提现",
+    "trust_fairplay": "100% 服务端裁定公平保障",
+    "trust_battles": "24/7 全天候实时赛事",
+    "catalog_title": "官方游戏库",
+    "games_available": "已上线 {count} 款游戏",
+    "cat_all": "全部游戏 (10)",
+    "cat_strategy": "策略与战术",
+    "cat_speed": "速度与反应",
+    "cat_classic": "经典与传统",
+    "meta_chess": "深谋远虑 • 棋逢对手",
+    "meta_dominoes": "经典多米诺 • 策略博弈",
+    "meta_backgammon": "传统双陆 • 战术对决",
+    "meta_reversi": "黑白争锋 • 绝地翻盘",
+    "meta_speed_math": "极速心算 • 60秒极限",
+    "meta_xo": "快棋对弈 • 1分钟决胜",
+    "meta_connect_four": "四子棋 • 闪电快赛",
+    "meta_checkers": "传统跳棋 8x8",
+    "meta_seega": "埃及古棋 • 奇谋布局",
+    "meta_gomoku": "五子连珠 • 决胜棋局",
+    "play_now": "立即开战",
+    "online": "人在线",
+    "mode_ai": "AI 演练",
+    "mode_duel": "1v1 对决",
+    "mode_tournaments": "锦标赛",
+    "start_game": "开始游戏"
+  },
+  "upcoming_tournaments": {
+    "badge": "⚔️ 顶级电竞赛场 • 官方认证锦标赛",
+    "heading": "即将开战的顶级锦标赛",
+    "subheading": "战术大师争夺荣誉奖杯与保证即时发放的奖金池。零运气成分 — 唯有智谋与手速决胜。",
+    "view_all": "查看全部锦标赛",
+    "total_prizes_val": "+20,000 USDT",
+    "total_prizes_label": "累计奖金",
+    "skill_val": "100% 智力比拼",
+    "skill_label": "无任何运气成分",
+    "daily_free_val": "每日免费参赛",
+    "daily_free_label": "赢取真实加密资产",
+    "anti_cheat_val": "AI 哨兵系统",
+    "anti_cheat_label": "全方位防作弊监控",
+    "filter_all": "全部赛事",
+    "filter_registration": "报名开放中",
+    "filter_free": "免费参赛",
+    "filter_cash": "现金大奖",
+    "filter_live": "进行中比赛",
+    "empty_cta": "查看赛事归档",
+    "players_suffix": "人",
+    "live_now": "正在直播",
+    "spots_left": "仅剩 {count} 个席位！",
+    "guaranteed_pool": "保证总奖金池：",
+    "honor_cup": "荣誉奖杯与 +250 ELO",
+    "players_joined": "位勇士已加入",
+    "hurry_spots": "⚡ 席位正在快速减少，抢先占位！",
+    "full_capacity": "🔒 席位已满 — 等待比赛开始",
+    "live_in_progress": "⚔️ 比赛正在实时进行中",
+    "soon": "即将开始",
+    "join_free": "免费报名",
+    "register_now": "立即报名",
+    "watch_live": "观战直播",
+    "details": "查看详情",
+    "featured_cup": "本周精选杯赛",
+    "guaranteed_badge": "保证奖金池",
+    "seeds_badge": "正式席位",
+    "instant_payout_badge": "即时提现",
+    "free_badge": "免费",
+    "official_tournament": "官方认证赛事"
+  },
+  "tournament_slides": {
+    "slide_1": {
+      "super": "NIZALO 巅峰锦标赛",
+      "title": "世界快棋大奖赛竞技场",
+      "meta": "单败淘汰赛制 • AI 哨兵防作弊 • 官方 ELO 标准",
+      "badge": "实时对阵",
+      "tag": "查看对阵 ↗"
+    },
+    "slide_2": {
+      "super": "NIZALO 巅峰锦标赛",
+      "title": "职业淘汰锦标赛",
+      "meta": "实时种子排序 • 瑞士轮与淘汰制 • 100% 公平可验",
+      "badge": "淘汰赛轮次",
+      "tag": "查看比赛 ↗"
+    },
+    "slide_3": {
+      "super": "NIZALO 巅峰锦标赛",
+      "title": "极限手速与反应冠军杯",
+      "meta": "公开报名 • 无运气成分 • 即时结算",
+      "badge": "报名开放",
+      "tag": "立即报名 ↗"
+    },
+    "slide_4": {
+      "super": "NIZALO 巅峰锦标赛",
+      "title": "午夜大师公开赛",
+      "meta": "3分钟超快棋 • 极速匹配 • 高强度对抗",
+      "badge": "极速对抗",
+      "tag": "进入竞技场 ↗"
+    },
+    "slide_5": {
+      "super": "NIZALO 巅峰锦标赛",
+      "title": "Nizalo 职业联赛总决赛",
+      "meta": "顶级竞技梯队 • Glicko-2 钻石段位 • 实时观战模式",
+      "badge": "传奇段位",
+      "tag": "观战与参赛 ↗"
+    }
   }
 }

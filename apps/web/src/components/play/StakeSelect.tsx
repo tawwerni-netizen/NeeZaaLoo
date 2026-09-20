@@ -97,7 +97,7 @@ export function StakeSelect({ plugin, onContinue }: {
             value={asset}
             onChange={(c) => { setAsset(c); setAssetTouched(true); }}
             balances={balances}
-            label={isRtl ? "عملة النزال الرسمية المعتمدة:" : "Approved Official Match Currency:"}
+            label={t("play.stake.currency_label")}
           />
           <div className={styles.presetGrid}>
             {STAKE_PRESETS_USD.map((usd) => (
@@ -115,7 +115,7 @@ export function StakeSelect({ plugin, onContinue }: {
           {userBalanceUSDT !== null && (
             <div className={styles.balanceStatusRow}>
               <span className={styles.balanceLabel}>
-                {isRtl ? "رصيدك المتاح حالياً:" : "Current Available Balance:"}
+                {t("play.stake.balance_label")}
               </span>
               <span className={userBalanceUSDT >= (stakeUsd ?? 0) ? styles.balanceValueOk : styles.balanceValueLow}>
                 ${userBalanceUSDT.toFixed(2)} {asset}
@@ -128,17 +128,19 @@ export function StakeSelect({ plugin, onContinue }: {
               <div className={styles.insufficientBannerHeader}>
                 <span className={styles.warningIcon}>⚠️</span>
                 <strong>
-                  {isRtl ? "رصيد المحفظة غير كافٍ لدخول هذا النزال" : "Insufficient Wallet Balance"}
+                  {t("play.stake.insufficient_title")}
                 </strong>
               </div>
               <p className={styles.insufficientBannerDesc}>
-                {isRtl
-                  ? `النزال يتطلب رصيد $${stakeUsd} ${asset} بينما رصيدك الحالي $${userBalanceUSDT?.toFixed(2) || "0.00"} ${asset}. يرجى شحن محفظتك للمتابعة أو اختيار اللعب المجاني.`
-                  : `This match requires $${stakeUsd} ${asset} but your balance is $${userBalanceUSDT?.toFixed(2) || "0.00"} ${asset}. Please deposit to your wallet or switch to Free play.`}
+                {t("play.stake.insufficient_desc", {
+                  stake: String(stakeUsd),
+                  asset,
+                  balance: userBalanceUSDT?.toFixed(2) || "0.00",
+                })}
               </p>
               <div className={styles.insufficientActions}>
                 <Link href={`/${locale}/wallet`} className={styles.depositCtaBtn}>
-                  {isRtl ? "💳 إيداع فوري في المحفظة" : "💳 Instant Deposit"}
+                  {t("play.stake.deposit_cta")}
                 </Link>
                 <button
                   type="button"
@@ -148,7 +150,7 @@ export function StakeSelect({ plugin, onContinue }: {
                     setStakeUsd(null);
                   }}
                 >
-                  {isRtl ? "التبديل إلى اللعب المجاني" : "Switch to Free"}
+                  {t("play.stake.switch_free")}
                 </button>
               </div>
             </div>
@@ -191,7 +193,7 @@ export function StakeSelect({ plugin, onContinue }: {
         }}
       >
         {selected === "CASH" && hasInsufficientBalance
-          ? (isRtl ? "الرصيد غير كافٍ" : "Insufficient Balance")
+          ? t("play.stake.insufficient_btn")
           : t("play.continue")}
       </Button>
     </div>

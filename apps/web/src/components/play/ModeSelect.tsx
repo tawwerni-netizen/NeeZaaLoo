@@ -47,15 +47,13 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
       <div className={styles.header}>
         <div className={styles.badge}>
           <span className={styles.pulseDot} />
-          <span>{isRtl ? "اختر نمط النزال المفضل" : "SELECT YOUR BATTLE MODE"}</span>
+          <span>{t("play.mode.select_badge")}</span>
         </div>
         <h2 className={styles.heading}>
-          {isRtl ? "كيف ترغب في خوض النزال؟" : t("play.mode.heading")}
+          {t("play.mode.heading")}
         </h2>
         <p className={styles.subheading}>
-          {isRtl
-            ? "اختر طريقتك المفضلة للمنافسة، سواء لتدريب مهاراتك أو مبارزة أصدقائك أو كسب جوائز حقيقية."
-            : "Select your preferred way to compete — hone your tactics, duel friends, or battle for real cash cups."}
+          {t("play.mode.subheading")}
         </p>
       </div>
 
@@ -80,25 +78,23 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
                 </svg>
               </div>
               <span className={`${styles.pillBadge} ${styles.pillAi}`}>
-                {isRtl ? "ذكاء اصطناعي فائق 🤖" : "Advanced AI 🤖"}
+                {t("play.mode.vs_computer.badge")}
               </span>
             </div>
 
             <div className={styles.cardBody}>
               <h3 className={styles.cardTitle}>
-                {isRtl ? "ضد الذكاء الاصطناعي" : t("play.mode.vs_computer.title")}
+                {t("play.mode.vs_computer.title")}
               </h3>
               <p className={styles.cardDescription}>
-                {isRtl
-                  ? "واجه خوارزميات ذكاء اصطناعي متطورة بمستويات متفاوتة وصقل مهاراتك التكتيكية بدون أي انتظار."
-                  : t("play.mode.vs_computer.description")}
+                {t("play.mode.vs_computer.description")}
               </p>
             </div>
 
             <div className={styles.cardFooter}>
               <span className={styles.footerTag}>
                 <span className={styles.statusDot} />
-                {isRtl ? "بدء فوري • تدريب غير محدود" : "Instant Start • Unlimited"}
+                {t("play.mode.vs_computer.tag")}
               </span>
               <span className={styles.actionArrow}>
                 {isRtl ? "←" : "→"}
@@ -124,25 +120,23 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
               </svg>
             </div>
             <span className={`${styles.pillBadge} ${styles.pillFriend}`}>
-              {isRtl ? "غرفة خاصة 1v1 👥" : "Private Room 👥"}
+              {t("play.mode.friend.badge")}
             </span>
           </div>
 
           <div className={styles.cardBody}>
             <h3 className={styles.cardTitle}>
-              {isRtl ? "تحدَّ صديقك برابط مباشر" : t("play.mode.friend.title")}
+              {t("play.mode.friend.title")}
             </h3>
             <p className={styles.cardDescription}>
-              {isRtl
-                ? "أنشئ طاولة نزال مخصصة بكلمة سر وشارك الرابط بضغطة زر عبر واتساب أو تليجرام لبدء التحدي فوراً."
-                : t("play.mode.friend.description")}
+              {t("play.mode.friend.description")}
             </p>
           </div>
 
           <div className={styles.cardFooter}>
             <span className={styles.footerTag}>
               <span className={styles.statusDot} />
-              {isRtl ? "مشاركة سريعة • بدون قيود" : "Instant Invite Link"}
+              {t("play.mode.friend.tag")}
             </span>
             <span className={styles.actionArrow}>
               {isRtl ? "←" : "→"}
@@ -164,25 +158,23 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
               </svg>
             </div>
             <span className={`${styles.pillBadge} ${styles.pillMatch}`}>
-              {isRtl ? "مبارزة حية 🔥 الأكثر طلباً" : "Live Duel 🔥 Popular"}
+              {t("play.mode.random_opponent.badge")}
             </span>
           </div>
 
           <div className={styles.cardBody}>
             <h3 className={styles.cardTitle}>
-              {isRtl ? "منافس عشوائي (مبارزة سريعة)" : t("play.mode.random_opponent.title")}
+              {t("play.mode.random_opponent.title")}
             </h3>
             <p className={styles.cardDescription}>
-              {isRtl
-                ? "توفيق فوري مع لاعبين حقيقيين من نفس تصنيفك. العب مجاناً أو برهانات كاش وسحب فوري للرابح."
-                : t("play.mode.random_opponent.description")}
+              {t("play.mode.random_opponent.description")}
             </p>
           </div>
 
           <div className={styles.cardFooter}>
             <span className={styles.footerTag}>
               <span className={styles.pulseDot} />
-              {isRtl ? "سحب فوري USDT • 88% للرابح" : "Instant USDT • 88% Winner"}
+              {t("play.mode.random_opponent.tag")}
             </span>
             <span className={styles.actionArrow}>
               {isRtl ? "←" : "→"}
@@ -210,25 +202,23 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
               </svg>
             </div>
             <span className={`${styles.pillBadge} ${styles.pillTournament}`}>
-              {isRtl ? "كؤوس وجوائز ضخمة 🏆" : "Grand Cups & Cash 🏆"}
+              {t("play.mode.tournament.badge")}
             </span>
           </div>
 
           <div className={styles.cardBody}>
             <h3 className={styles.cardTitle}>
-              {isRtl ? "البطولات التنافسية الرسمية" : t("play.mode.tournament.title")}
+              {t("play.mode.tournament.title")}
             </h3>
             <p className={styles.cardDescription}>
-              {isRtl
-                ? "انضم إلى بطولات خروج المغلوب المنظمة دورياً ونافس على قمة منصات التتويج والجوائز المضمونة."
-                : t("play.mode.tournament.description")}
+              {t("play.mode.tournament.description")}
             </p>
           </div>
 
           <div className={styles.cardFooter}>
             <span className={styles.footerTag}>
               <span className={styles.statusDot} />
-              {isRtl ? "بطولات مستمرة 24/7" : "24/7 Ongoing Tournaments"}
+              {t("play.mode.tournament.tag")}
             </span>
             <span className={styles.actionArrow}>
               {isRtl ? "←" : "→"}

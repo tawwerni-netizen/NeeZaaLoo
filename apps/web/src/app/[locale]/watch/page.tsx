@@ -124,10 +124,10 @@ function WatchContent() {
         <div className={styles.heroContent}>
           <div className={styles.titleBadge}>
             <span className={styles.livePulseDot} />
-            <span>{isRtl ? "بث مباشر فوري (مشاهدة فقط)" : "REALTIME ARENA FEED (READ-ONLY)"}</span>
+            <span>{t("watch.realtime_feed")}</span>
             {matches && matches.length > 0 && (
               <span style={{ marginInlineStart: 8, color: "#ffd700", fontWeight: 800 }}>
-                • {isRtl ? `${matches.length} مباريات جارية الآن` : `${matches.length} Live Matches Now`}
+                • {t("watch.live_count", { count: String(matches.length) })}
               </span>
             )}
           </div>
@@ -140,13 +140,13 @@ function WatchContent() {
               className={`${styles.refreshBtn} ${refreshing ? styles.refreshing : ""}`}
               onClick={() => void loadMatches(true)}
               disabled={refreshing}
-              title={isRtl ? "تحديث فوري للمباريات" : "Refresh matches"}
+              title={t("watch.refresh_tooltip")}
             >
               <span className={styles.refreshIcon}>🔄</span>
-              <span>{isRtl ? "تحديث مباشر" : "Live Refresh"}</span>
+              <span>{t("watch.live_refresh")}</span>
             </button>
             <LocaleLink href="/play" className={styles.createDuelBtn}>
-              <span>⚔️ {isRtl ? "أطلق مبارزة الآن" : "Start a Duel"}</span>
+              <span>⚔️ {t("watch.start_duel")}</span>
             </LocaleLink>
           </div>
         </div>
@@ -160,7 +160,7 @@ function WatchContent() {
             <input
               type="text"
               className={styles.searchInput}
-              placeholder={isRtl ? "ابحث عن اسم لاعب أو صديق بالاسم..." : "Search player or friend handle..."}
+              placeholder={t("watch.search_placeholder")}
               value={searchHandle}
               onChange={(e) => setSearchHandle(e.target.value)}
             />
@@ -172,7 +172,7 @@ function WatchContent() {
             onClick={() => setIncludeBots(!includeBots)}
           >
             <span>🤖</span>
-            <span>{isRtl ? "يشمل مباريات البوت والتدريب" : "Include Bot Matches"}</span>
+            <span>{t("watch.include_bots")}</span>
           </button>
         </div>
 
@@ -188,7 +188,7 @@ function WatchContent() {
                 onClick={() => setSelectedGame(g.id)}
               >
                 <span>{g.icon}</span>
-                <span>{isRtl ? g.nameAr : g.nameEn}</span>
+                <span>{g.id === "all" ? t("play_page.cat_all") : t(`common.game_names.${getGame(g.id)?.nameKey ?? g.id}`)}</span>
               </button>
             );
           })}
@@ -207,7 +207,7 @@ function WatchContent() {
             <span className={styles.radarIcon}>📡</span>
           </div>
           <h3 className={styles.emptyArenaTitle}>
-            {isRtl ? "لا توجد مباريات جارية بهذه الفلاتر حالياً!" : "No Live Matches Found!"}
+            {t("watch.no_matches_found")}
           </h3>
           <p className={styles.emptyArenaDesc}>
             {searchHandle.trim()
@@ -216,10 +216,10 @@ function WatchContent() {
           </p>
           <div className={styles.emptyArenaActions}>
             <LocaleLink href="/play" className={styles.heroPlayBtn}>
-              ⚔️ {isRtl ? "ابدأ مبارزة الآن" : "Play & Challenge Now"}
+              ⚔️ {t("watch.play_challenge_cta")}
             </LocaleLink>
             <LocaleLink href="/tournaments" className={styles.heroTourneyBtn}>
-              🏆 {isRtl ? "تصفح البطولات المفتوحة" : "Explore Tournaments"}
+              🏆 {t("watch.explore_tournaments_cta")}
             </LocaleLink>
           </div>
         </div>
@@ -238,7 +238,7 @@ function WatchContent() {
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     {m.isVsComputer && (
                       <span className={styles.botBadge}>
-                        <span>🤖</span> {isRtl ? "تدريب/حاسوب" : "VS BOT"}
+                        <span>🤖</span> {t("watch.vs_bot")}
                       </span>
                     )}
                     <span className={styles.liveBadge}>
@@ -264,7 +264,7 @@ function WatchContent() {
                 ) : (
                   <div className={styles.freeBanner}>
                     <span>🎮</span>
-                    <span>{isRtl ? "نزال تدريبي وتنافسي حر" : "Free Tactical Duel"}</span>
+                    <span>{t("watch.free_duel")}</span>
                   </div>
                 )}
 
@@ -280,7 +280,7 @@ function WatchContent() {
                     <button
                       type="button"
                       className={styles.copyLinkBtn}
-                      title={isRtl ? "مشاركة رابط البث بـ 6 لغات" : "Share live stream in 6 languages"}
+                      title={t("watch.share_stream_tooltip")}
                       onClick={() => setSharingMatch(m)}
                     >
                       📡
@@ -288,7 +288,7 @@ function WatchContent() {
                     <button
                       type="button"
                       className={styles.copyLinkBtn}
-                      title={copiedId === m.duelId ? (isRtl ? "تم نسخ الرابط!" : "Copied!") : (isRtl ? "نسخ رابط المشاهدة" : "Copy spectator link")}
+                      title={copiedId === m.duelId ? t("watch.copied") : t("watch.copy_link_tooltip")}
                       onClick={() => handleCopyLink(m.duelId)}
                     >
                       {copiedId === m.duelId ? "✅" : "🔗"}

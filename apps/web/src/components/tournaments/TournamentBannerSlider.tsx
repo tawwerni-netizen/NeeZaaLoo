@@ -26,7 +26,7 @@ type TournSlide = {
 
 const TOURNAMENT_SLIDES: TournSlide[] = [
   {
-    id: "blitz_gp",
+    id: "slide_1",
     image: "/images/banners/tournament-banner-1.jpg",
     superAr: "بطولات نيزالو الكبرى · العب واكسب بجدارة",
     superEn: "GRAND NIZALO TOURNAMENTS",
@@ -41,7 +41,7 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
     href: "/tournaments",
   },
   {
-    id: "pro_bracket",
+    id: "slide_2",
     image: "/images/banners/tournament-banner-2.jpg",
     superAr: "بطولات نيزالو الكبرى · العب واكسب بجدارة",
     superEn: "GRAND NIZALO TOURNAMENTS",
@@ -56,7 +56,7 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
     href: "/tournaments",
   },
   {
-    id: "weekend_cup",
+    id: "slide_3",
     image: "/images/banners/tournament-banner-3.jpg",
     superAr: "بطولات نيزالو الكبرى · العب واكسب بجدارة",
     superEn: "GRAND NIZALO TOURNAMENTS",
@@ -71,7 +71,7 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
     href: "/tournaments",
   },
   {
-    id: "midnight_flash",
+    id: "slide_4",
     image: "/images/banners/tournament-banner-4.jpg",
     superAr: "بطولات نيزالو الكبرى · العب واكسب بجدارة",
     superEn: "GRAND NIZALO TOURNAMENTS",
@@ -86,7 +86,7 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
     href: "/tournaments",
   },
   {
-    id: "all_stars",
+    id: "slide_5",
     image: "/images/banners/tournament-banner-5.jpg",
     superAr: "بطولات نيزالو الكبرى · العب واكسب بجدارة",
     superEn: "GRAND NIZALO TOURNAMENTS",
@@ -103,7 +103,7 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
 ];
 
 export function TournamentBannerSlider() {
-  const { dir } = useI18n();
+  const { t, dir } = useI18n();
   const isRtl = dir === "rtl";
 
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -161,7 +161,7 @@ export function TournamentBannerSlider() {
         {/* Live Badge */}
         <div className={styles.badgeTopLeft}>
           <span className={styles.pulseDot} />
-          <span>{isRtl ? currentSlide.badgeAr : currentSlide.badgeEn}</span>
+          <span>{t(`tournament_slides.${currentSlide.id}.badge`)}</span>
         </div>
 
         <div className={styles.badgeTopRight}>
@@ -169,7 +169,7 @@ export function TournamentBannerSlider() {
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             <polyline points="9 12 11 14 15 10" />
           </svg>
-          <span>{isRtl ? "بطولة معتمدة رسمياً" : "OFFICIAL TOURNAMENT"}</span>
+          <span>{t("upcoming_tournaments.official_tournament")}</span>
         </div>
 
         {/* Bottom Bar */}
@@ -178,19 +178,19 @@ export function TournamentBannerSlider() {
             <div className={styles.slideSuperRow}>
               <span className={styles.trophyIcon}>🏆</span>
               <span className={styles.slideSuper}>
-                {isRtl ? currentSlide.superAr : currentSlide.superEn}
+                {t(`tournament_slides.${currentSlide.id}.super`)}
               </span>
             </div>
             <h2 className={styles.slideTitle}>
-              {isRtl ? currentSlide.titleAr : currentSlide.titleEn}
+              {t(`tournament_slides.${currentSlide.id}.title`)}
             </h2>
             <p className={styles.slideMeta}>
-              {isRtl ? currentSlide.metaAr : currentSlide.metaEn}
+              {t(`tournament_slides.${currentSlide.id}.meta`)}
             </p>
           </div>
 
           <LocaleLink href={currentSlide.href} className={styles.slideCtaBtn}>
-            {isRtl ? currentSlide.tagAr : currentSlide.tagEn}
+            {t(`tournament_slides.${currentSlide.id}.tag`)}
           </LocaleLink>
         </div>
       </div>

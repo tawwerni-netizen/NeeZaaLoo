@@ -37,12 +37,12 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const PRIMARY_NAV = [
-    { href: "/play", label: locale === "ar" ? "الميدان" : "Arena", icon: "⚔️" },
-    { href: "/games", label: locale === "ar" ? "الألعاب" : "Games", icon: "🎲" },
-    { href: "/tournaments", label: locale === "ar" ? "البطولات" : "Tournaments", icon: "🏆" },
-    { href: "/clans", label: locale === "ar" ? "العشائر" : "Clans", icon: "🛡️" },
-    { href: "/rank", label: locale === "ar" ? "التصنيف" : "Rank", icon: "👑" },
-    { href: "/wallet", label: locale === "ar" ? "المحفظة" : "Wallet", icon: "💎" },
+    { href: "/play", label: t("nav.arena"), icon: "⚔️" },
+    { href: "/games", label: t("nav.games"), icon: "🎲" },
+    { href: "/tournaments", label: t("nav.tournaments"), icon: "🏆" },
+    { href: "/clans", label: t("nav.clans"), icon: "🛡️" },
+    { href: "/rank", label: t("nav.rank"), icon: "👑" },
+    { href: "/wallet", label: t("nav.wallet"), icon: "💎" },
   ];
 
   const isActive = (href: string) => pathname === `/${locale}${href}`;

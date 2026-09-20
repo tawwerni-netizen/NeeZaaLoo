@@ -768,6 +768,8 @@
 @media (max-width: 640px) {
   .hero {
     padding-block: var(--nz-space-6) var(--nz-space-10);
+    background-position: center 15%;
+    background-size: cover;
   }
   .showcaseCard {
     aspect-ratio: 4 / 3;

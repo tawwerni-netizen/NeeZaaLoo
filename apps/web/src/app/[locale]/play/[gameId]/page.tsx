@@ -175,7 +175,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               type="button"
               className={styles.backButton}
               onClick={handleBack}
-              aria-label={isRtl ? "رجوع خطوة للخلف" : "Back one step"}
+              aria-label={t("play.nav.back_step")}
             >
               <svg
                 width="16"
@@ -192,8 +192,8 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               </svg>
               <span>
                 {step.name === "mode"
-                  ? (isRtl ? "كتالوج الألعاب" : "All Games")
-                  : (isRtl ? "رجوع خطوة للخلف" : "Back")}
+                  ? t("play.nav.all_games")
+                  : t("play.nav.back")}
               </span>
             </button>
 
@@ -224,7 +224,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               className={`${styles.stepItem} ${step.name === "mode" ? styles.stepItemActive : styles.stepItemClickable}`}
               onClick={() => setStep({ name: "mode" })}
             >
-              1. {isRtl ? "الوضع" : "Mode"}
+              1. {t("play.nav.step_mode")}
             </button>
 
             <span className={styles.stepSep}>›</span>
@@ -239,8 +239,8 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               }`}
             >
               2. {step.name === "difficulty" || step.name === "time_control"
-                  ? (isRtl ? "الصعوبة" : "Difficulty")
-                  : (isRtl ? "قيمة التحدي" : "Match Stake")}
+                  ? t("play.nav.step_difficulty")
+                  : t("play.nav.step_stake")}
             </span>
 
             <span className={styles.stepSep}>›</span>
@@ -253,8 +253,8 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               }`}
             >
               3. {step.name === "time_control"
-                  ? (isRtl ? "التحكم الزمني" : "Time Control")
-                  : (isRtl ? "المبارزة" : "Duel Match")}
+                  ? t("play.nav.step_time_control")
+                  : t("play.nav.step_duel")}
             </span>
           </div>
         </div>
@@ -266,12 +266,12 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               <span className={styles.variantIcon}>🀄</span>
               <div>
                 <div className={styles.variantHeading}>
-                  {isRtl ? "نمط لعب الدومينو المعتمد" : "Dominoes Game Variant"}
+                  {t("play.dominoes.variant_heading")}
                 </div>
                 <div className={styles.variantDesc}>
                   {dominoesVariant === "TRADITIONAL"
-                    ? (isRtl ? "العادي (التقليدي): إنهاء القطع أو أقل نقاط عند القفلة." : "Traditional (Draw/Block): Out-domino or lowest pips on block.")
-                    : (isRtl ? "الأمريكي (All-Fives): تسجيل النقاط لمضاعفات الـ 5 على الأطراف المفتوحة." : "American (All-Fives): Score multiples of 5 on open ends.")}
+                    ? t("play.dominoes.desc_traditional")
+                    : t("play.dominoes.desc_american")}
                 </div>
               </div>
             </div>
@@ -281,14 +281,14 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
                 className={dominoesVariant === "TRADITIONAL" ? styles.variantTabActive : styles.variantTab}
                 onClick={() => setDominoesVariant("TRADITIONAL")}
               >
-                {isRtl ? "الدومينو العادي" : "Traditional"}
+                {t("play.dominoes.traditional")}
               </button>
               <button
                 type="button"
                 className={dominoesVariant === "AMERICAN" ? styles.variantTabActive : styles.variantTab}
                 onClick={() => setDominoesVariant("AMERICAN")}
               >
-                {isRtl ? "الدومينو الأمريكي" : "American (All-Fives)"}
+                {t("play.dominoes.american")}
               </button>
             </div>
           </div>
@@ -316,9 +316,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               <div className={styles.heroContent}>
                 <h1 className={styles.heroTitle}>{gameName}</h1>
                 <p className={styles.heroSubtitle}>
-                  {isRtl 
-                    ? "العب، نافس، واربح جوائز حقيقية. أثبت مهارتك الآن!" 
-                    : "Play, compete, and win real prizes. Prove your skills now!"}
+                  {t("play.hero_subtitle")}
                 </p>
               </div>
             </div>

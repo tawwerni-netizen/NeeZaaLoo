@@ -2228,3 +2228,441 @@
 
 .duelGameBadgeGlass { display: flex; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.4); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); } .duelGameThumbGlass { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.5); } .duelGameNameGlass { font-size: 13px; font-weight: 800; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); } 
 
+/* ==========================================================================
+   Centered Modal Overlays & Insufficient Balance High-Converting Popup
+   ========================================================================== */
+.modalOverlay,
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 7, 13, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 16px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.insufficientModalCard {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(180deg, #151b28 0%, #0c1017 100%);
+  border: 1.5px solid rgba(239, 68, 68, 0.5);
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(239, 68, 68, 0.2);
+  animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes popInModal {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modalCloseX {
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalCloseX:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.warningIconGlow {
+  font-size: 40px;
+  margin: 0 auto 12px;
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.25) 0%, transparent 70%);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.3);
+}
+
+.warningModalTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f87171;
+  margin: 0 0 8px;
+}
+
+.warningModalDesc {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #cbd5e1;
+  margin: 0 0 20px;
+}
+
+.warningModalActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.depositCtaBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s ease;
+}
+
+.depositCtaBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(16, 185, 129, 0.5);
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+}
+
+.playFreeAltBtn {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.playFreeAltBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.modalCountdownWrap {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.modalCountdownFill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ef4444, #f59e0b);
+  animation: countdownFill 3s linear forwards;
+  transform-origin: left;
+}
+
+@keyframes countdownFill {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.modalContent {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  background: linear-gradient(180deg, #151b28 0%, #0c1017 100%);
+  border: 1px solid rgba(201, 169, 110, 0.35);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(201, 169, 110, 0.15);
+  animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+.modalGameBanner {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalGameBannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modalGameBannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(12, 16, 23, 0.9) 0%, transparent 60%);
+  display: flex;
+  align-items: flex-end;
+  padding: 12px 16px;
+}
+
+.modalGameBannerTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.challengeForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.formSelect {
+  width: 100%;
+  padding: 10px 14px;
+  background: #090c13;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.radioGroup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.radioBtn {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radioBtnActive {
+  background: rgba(201, 169, 110, 0.15);
+  border-color: #c9a96e;
+  color: #ffd88a;
+}
+
+.stakeInputRow {
+  display: flex;
+  gap: 8px;
+}
+
+.stakeInput {
+  flex: 1;
+  padding: 10px 14px;
+  background: #090c13;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.stakeChipsRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stakeChipBtn {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stakeChipBtnActive {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+.balanceWarningBanner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: #fca5a5;
+  margin-top: 10px;
+}
+
+.inlineDepositBtn {
+  align-self: flex-start;
+  padding: 6px 14px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.prizeSummaryBox {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 10px;
+}
+
+.prizeSummaryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.prizeSummaryTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #a7f3d0;
+}
+
+.prizeAmountWrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.prizeAmountNum {
+  font-size: 22px;
+  font-weight: 900;
+  color: #34d399;
+}
+
+.prizeAmountCurrency {
+  font-size: 12px;
+  font-weight: 800;
+  color: #a7f3d0;
+}
+
+.prizeMultiTag {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.prizeDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.prizeDetailItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.prizeDetailLabel {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.prizeDetailValue {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.prizeDetailValueFee {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f59e0b;
+}
+
+.prizeBreakdownFooter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+} 
+

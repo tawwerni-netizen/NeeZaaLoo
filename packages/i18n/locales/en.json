@@ -20,7 +20,10 @@
     "download_app": "Download app",
     "referrals": "Referrals",
     "menu_aria_label": "Menu",
-    "admin": "Admin"
+    "admin": "Admin",
+    "arena": "Arena",
+    "clans": "Clans",
+    "deposit": "Deposit"
   },
   "footer": {
     "learn": "Learn",
@@ -74,7 +77,14 @@
         "pillar_payout_desc": "Winnings credit directly to your wallet in USDT with zero hold times.",
         "pillar_fair_title": "100% Provably Fair & Anti-Cheat",
         "pillar_fair_desc": "Pure deterministic skill. Authoritative server verification guarantees absolute integrity."
-      }
+      },
+      "headline_title": "Turn Skill Into Real Cash.",
+      "headline_accent": "Instant 60s Cashout.",
+      "instant_deposit": "Instant Deposit",
+      "trust_payout": "Instant <60s Cashout",
+      "trust_skill": "100% Skill • Zero RNG",
+      "trust_share": "88% Winner Share",
+      "trust_tournaments": "Daily Tournaments & Instant Cash Duels"
     },
     "liveArena": {
       "heading": "Live Arena",
@@ -217,6 +227,21 @@
       "point_verify_body": "Every finished match can be re-run from its own recorded moves and checked against the result.",
       "point_human": "Human review for money",
       "point_human_body": "No automated action ever restricts funds or an account on a single weak signal — a person decides."
+    },
+    "quick_stakes": {
+      "section_badge": "Instant Challenge Tiers",
+      "section_title": "Select your stake and win cash immediately:",
+      "section_sub": "Automated Settlement & Instant Cashout ⚡",
+      "badge_safe_start": "Safe Start 🟢",
+      "tag_quick_trial": "🚀 Quick Trial",
+      "badge_most_popular": "Most Popular 🔥",
+      "tag_champions_duel": "🔥 Champions Duel",
+      "badge_pro_challenge": "Pro Challenge ⚡",
+      "tag_tactical_duel": "⚡ Tactical Duel",
+      "badge_elite_table": "Elite Table 💎",
+      "tag_grand_prize": "💎 Grand Prize",
+      "badge_high_roller": "High Roller 👑",
+      "tag_high_roller_prize": "👑 $88 Cash Prize"
     }
   },
   "common": {
@@ -393,20 +418,30 @@
       "heading": "Choose how to play",
       "vs_computer": {
         "title": "Vs Computer",
-        "description": "Practice against an AI opponent"
+        "description": "Practice against an AI opponent",
+        "badge": "Advanced AI 🤖",
+        "tag": "Instant Start • Unlimited"
       },
       "friend": {
         "title": "Play a Friend",
-        "description": "Challenge someone by nickname"
+        "description": "Challenge someone by nickname",
+        "badge": "Private Room 👥",
+        "tag": "Instant Invite Link"
       },
       "random_opponent": {
         "title": "Random Opponent",
-        "description": "Ranked matchmaking against your skill level"
+        "description": "Ranked matchmaking against your skill level",
+        "badge": "Live Duel 🔥 Popular",
+        "tag": "Instant USDT • 88% Winner"
       },
       "tournament": {
         "title": "Tournament",
-        "description": "Compete in a bracket for a prize"
-      }
+        "description": "Compete in a bracket for a prize",
+        "badge": "Grand Cups & Cash 🏆",
+        "tag": "24/7 Ongoing Tournaments"
+      },
+      "select_badge": "SELECT YOUR BATTLE MODE",
+      "subheading": "Select your preferred way to compete — hone your tactics, duel friends, or battle for real cash cups."
     },
     "difficulty": {
       "heading": "Choose a difficulty"
@@ -456,7 +491,21 @@
       "subheading": "Select the time pace that fits your playstyle",
       "blitz": "Blitz",
       "standard": "Standard",
-      "extended": "Extended"
+      "extended": "Extended",
+      "blitz_desc": "Fast-paced match under high time pressure",
+      "standard_desc": "Balanced official time for strategic depth",
+      "extended_desc": "Deep tactical game with ample time per turn",
+      "dur_30s": "30 seconds",
+      "dur_60s": "60 seconds",
+      "dur_2m_plus2": "2 mins (+2s)",
+      "dur_3m_plus2": "3 mins (+2s)",
+      "dur_3m_plus3": "3 mins (+3s)",
+      "dur_4m_plus3": "4 mins (+3s)",
+      "dur_5m_plus3": "5 mins (+3s)",
+      "dur_2m_120s": "2 mins (120s)",
+      "dur_5m_plus5": "5 mins (+5s)",
+      "dur_8m_plus5": "8 mins (+5s)",
+      "dur_10m_plus5": "10 mins (+5s)"
     },
     "stake": {
       "heading": "Choose your stake",
@@ -470,7 +519,32 @@
       "platform_fee": "Platform & Organizing Fee",
       "fixed_badge": "12% FIXED",
       "net_prize_contrib": "Prize Pool Contribution",
-      "winner_payout": "Winner's Total Prize"
+      "winner_payout": "Winner's Total Prize",
+      "currency_label": "Approved Official Match Currency:",
+      "balance_label": "Current Available Balance:",
+      "insufficient_title": "Insufficient Wallet Balance",
+      "deposit_cta": "💳 Instant Deposit",
+      "insufficient_desc": "This match requires ${stake} {asset} but your balance is ${balance} {asset}. Please deposit to your wallet or switch to Free play.",
+      "switch_free": "Switch to Free Mode",
+      "insufficient_btn": "Insufficient Balance"
+    },
+    "nav": {
+      "back_step": "Back one step",
+      "all_games": "All Games",
+      "back": "Back",
+      "step_mode": "Mode",
+      "step_difficulty": "Difficulty",
+      "step_stake": "Match Stake",
+      "step_time_control": "Time Control",
+      "step_duel": "Duel Match"
+    },
+    "hero_subtitle": "Play, compete, and win real prizes. Prove your skills now!",
+    "dominoes": {
+      "variant_heading": "Dominoes Game Variant",
+      "desc_traditional": "Traditional (Draw/Block): Out-domino or lowest pips on block.",
+      "desc_american": "American (All-Fives): Score multiples of 5 on open ends.",
+      "traditional": "Traditional",
+      "american": "American (All-Fives)"
     }
   },
   "dashboard": {
@@ -934,7 +1008,25 @@
     "vs": "vs",
     "live_badge": "Live",
     "tournament_badge": "Tournament match",
-    "move_count": "{count} moves played"
+    "move_count": "{count} moves played",
+    "realtime_feed": "REALTIME ARENA FEED (READ-ONLY)",
+    "live_count": "{count} Live Matches Now",
+    "refresh_tooltip": "Refresh matches",
+    "live_refresh": "Live Refresh",
+    "start_duel": "Start a Duel",
+    "search_placeholder": "Search player or friend handle...",
+    "include_bots": "Include Bot Matches",
+    "no_matches_found": "No Live Matches Found!",
+    "no_matches_for_handle": "No active live match found for \"{handle}\". Check handle spelling or wait for match to begin.",
+    "no_matches_game": "No live duels in progress right now. Launch a duel and challenge real opponents instantly!",
+    "play_challenge_cta": "Play & Challenge Now",
+    "explore_tournaments_cta": "Explore Tournaments",
+    "vs_bot": "VS BOT",
+    "winner_prize": "Winner Prize: ${amount} USDT Cash",
+    "free_duel": "Free Tactical Duel",
+    "share_stream_tooltip": "Share live stream in 6 languages",
+    "copy_link_tooltip": "Copy spectator link",
+    "copied": "Copied!"
   },
   "dailyChallenges": {
     "title": "Daily Challenges",
@@ -1263,5 +1355,122 @@
     "error_paused": "Referral program is temporarily paused for platform maintenance.",
     "error_failed": "Failed to load referral details. Please try again later.",
     "search_placeholder": "Search referred friends..."
+  },
+  "lobby": {
+    "insufficient_title": "Insufficient Wallet Balance",
+    "insufficient_desc": "You are attempting to enter a duel with a {stake} stake, but your available balance is {balance}. Cash duels require sufficient pre-funded balance.",
+    "deposit_now": "Deposit Now",
+    "play_free_alt": "Play Free Mode (ELO)",
+    "auto_close_3s": "Auto-closing in 3 seconds"
+  },
+  "ticker": {
+    "live_payouts": "LIVE PAYOUTS"
+  },
+  "play_page": {
+    "badge": "LIVE GAMES & DUEL ARENA",
+    "title": "Choose Your Game & Duel the Best",
+    "subtitle": "10 deterministic skill games with zero luck. Duel in live 1v1 matches, hone tactics vs AI, or enter major cash cups with instant payouts.",
+    "trust_cashout": "60-Second Instant Cashout",
+    "trust_fairplay": "100% Server-Authoritative Fair Play",
+    "trust_battles": "24/7 Continuous Battles",
+    "catalog_title": "Official Games Catalog",
+    "games_available": "{count} Games Available",
+    "cat_all": "All Games (10)",
+    "cat_strategy": "Strategy & Tactics",
+    "cat_speed": "Speed & Reflexes",
+    "cat_classic": "Classic & Heritage",
+    "meta_chess": "Deep & Tactical",
+    "meta_dominoes": "Strategic Domino",
+    "meta_backgammon": "Heritage Duel",
+    "meta_reversi": "Flank & Flip",
+    "meta_speed_math": "Rapid 60s Math",
+    "meta_xo": "Blitz 1-Min",
+    "meta_connect_four": "Connect 4 Blitz",
+    "meta_checkers": "Classic Checkers",
+    "meta_seega": "Egyptian Seega",
+    "meta_gomoku": "Five in a Row",
+    "play_now": "Play Now",
+    "online": "online",
+    "mode_ai": "AI",
+    "mode_duel": "1v1 Duel",
+    "mode_tournaments": "Tournaments",
+    "start_game": "Start Game"
+  },
+  "upcoming_tournaments": {
+    "badge": "⚔️ Major Esports Arena • Official Tournaments",
+    "heading": "Upcoming Esports Tournaments",
+    "subheading": "Where tactical titans clash for prestige cups and guaranteed instant payouts. Zero luck — pure mind skill.",
+    "view_all": "View All Tournaments",
+    "total_prizes_val": "+20,000 USDT",
+    "total_prizes_label": "Total Prizes",
+    "skill_val": "100% Skill",
+    "skill_label": "Zero Luck Required",
+    "daily_free_val": "Daily Free Entry",
+    "daily_free_label": "Earn Real Crypto",
+    "anti_cheat_val": "AI Sentinel",
+    "anti_cheat_label": "Anti-Cheat Protected",
+    "filter_all": "All Tournaments",
+    "filter_registration": "Registration Open",
+    "filter_free": "Free Entry",
+    "filter_cash": "Cash Prizes",
+    "filter_live": "Live Matches",
+    "empty_cta": "Explore Tournament Archive",
+    "players_suffix": "p",
+    "live_now": "LIVE",
+    "spots_left": "{count} spots left!",
+    "guaranteed_pool": "Guaranteed Prize Pool:",
+    "honor_cup": "Honor Cup & +250 ELO",
+    "players_joined": "players joined",
+    "hurry_spots": "⚡ Hurry, spots are filling up fast!",
+    "full_capacity": "🔒 Full capacity reached",
+    "live_in_progress": "⚔️ Live tournament in progress",
+    "soon": "Soon",
+    "join_free": "Join Free",
+    "register_now": "Register Now",
+    "watch_live": "Watch Live",
+    "details": "Details",
+    "featured_cup": "Featured Cup",
+    "guaranteed_badge": "Guaranteed Pool",
+    "seeds_badge": "Seeds",
+    "instant_payout_badge": "Instant Payout",
+    "free_badge": "Free",
+    "official_tournament": "OFFICIAL TOURNAMENT"
+  },
+  "tournament_slides": {
+    "slide_1": {
+      "super": "GRAND NIZALO TOURNAMENTS",
+      "title": "World Blitz Grand Prix Arena",
+      "meta": "Single Elimination Brackets • Anti-Cheat Sentinel • Official ELO Standard",
+      "badge": "LIVE BRACKET",
+      "tag": "VIEW BRACKETS ↗"
+    },
+    "slide_2": {
+      "super": "GRAND NIZALO TOURNAMENTS",
+      "title": "Pro Elimination Championship",
+      "meta": "Live Seeding • Swiss & Knockout Brackets • 100% Provably Fair",
+      "badge": "ELIMINATION ROUND",
+      "tag": "VIEW MATCHES ↗"
+    },
+    "slide_3": {
+      "super": "GRAND NIZALO TOURNAMENTS",
+      "title": "Speed Battle & Reflex Championship",
+      "meta": "Open Registration • Zero Luck Factor • Instant Settlement",
+      "badge": "REGISTRATION OPEN",
+      "tag": "REGISTER NOW ↗"
+    },
+    "slide_4": {
+      "super": "GRAND NIZALO TOURNAMENTS",
+      "title": "Midnight Masters Open Arena",
+      "meta": "Hyper-Blitz 3m Clocks • Rapid Matchmaking • High Velocity",
+      "badge": "HYPER SPEED",
+      "tag": "ENTER ARENA ↗"
+    },
+    "slide_5": {
+      "super": "GRAND NIZALO TOURNAMENTS",
+      "title": "Nizalo Pro League Grand Finals",
+      "meta": "Top Competitive Tiers • Glicko-2 Diamond Class • Live Spectator Mode",
+      "badge": "LEGENDS TIER",
+      "tag": "SPECTATE & PLAY ↗"
+    }
   }
 }

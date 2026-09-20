@@ -22,28 +22,27 @@ import { playCardHoverSound, playButtonClickSound } from "@/lib/game-audio";
 import styles from "./play.module.css";
 
 const CATEGORIES = [
-  { id: "all", labelEn: "All Games (10)", labelAr: "جميع الألعاب (10)" },
-  { id: "strategy", labelEn: "Strategy & Tactics", labelAr: "استراتيجية وتكتيك" },
-  { id: "speed", labelEn: "Speed & Reflexes", labelAr: "سرعة وذكاء خاطف" },
-  { id: "classic", labelEn: "Classic & Heritage", labelAr: "كلاسيكية وتراثية" },
+  { id: "all", labelKey: "play_page.cat_all" },
+  { id: "strategy", labelKey: "play_page.cat_strategy" },
+  { id: "speed", labelKey: "play_page.cat_speed" },
+  { id: "classic", labelKey: "play_page.cat_classic" },
 ];
 
 const GAME_METADATA: Record<string, {
   category: "strategy" | "speed" | "classic";
-  speedLabelAr: string;
-  speedLabelEn: string;
+  metaKey: string;
   activePlayers: number;
 }> = {
-  chess: { category: "strategy", speedLabelAr: "عميقة • مهارة حتمية", speedLabelEn: "Deep & Tactical", activePlayers: 348 },
-  dominoes: { category: "strategy", speedLabelAr: "شعبية • استراتيجية", speedLabelEn: "Strategic Domino", activePlayers: 292 },
-  backgammon: { category: "strategy", speedLabelAr: "طاولة زهر كلاسيكية", speedLabelEn: "Heritage Duel", activePlayers: 218 },
-  reversi: { category: "strategy", speedLabelAr: "دهاء • قلب الموازين", speedLabelEn: "Flank & Flip", activePlayers: 165 },
-  "speed-math": { category: "speed", speedLabelAr: "حساب ذهني • 60 ثانية", speedLabelEn: "Rapid 60s Math", activePlayers: 210 },
-  xo: { category: "speed", speedLabelAr: "خاطفة • دقيقة واحدة", speedLabelEn: "Blitz 1-Min", activePlayers: 435 },
-  "connect-four": { category: "speed", speedLabelAr: "أربعة على التوالي • 2 دقيقة", speedLabelEn: "Connect 4 Blitz", activePlayers: 280 },
-  checkers: { category: "classic", speedLabelAr: "داما كلاسيكية 8x8", speedLabelEn: "Classic Checkers", activePlayers: 194 },
-  seega: { category: "classic", speedLabelAr: "سيجة مصرية أصيلة", speedLabelEn: "Egyptian Seega", activePlayers: 146 },
-  gomoku: { category: "classic", speedLabelAr: "خمسة أحجار متتالية", speedLabelEn: "Five in a Row", activePlayers: 172 },
+  chess: { category: "strategy", metaKey: "play_page.meta_chess", activePlayers: 348 },
+  dominoes: { category: "strategy", metaKey: "play_page.meta_dominoes", activePlayers: 292 },
+  backgammon: { category: "strategy", metaKey: "play_page.meta_backgammon", activePlayers: 218 },
+  reversi: { category: "strategy", metaKey: "play_page.meta_reversi", activePlayers: 165 },
+  "speed-math": { category: "speed", metaKey: "play_page.meta_speed_math", activePlayers: 210 },
+  xo: { category: "speed", metaKey: "play_page.meta_xo", activePlayers: 435 },
+  "connect-four": { category: "speed", metaKey: "play_page.meta_connect_four", activePlayers: 280 },
+  checkers: { category: "classic", metaKey: "play_page.meta_checkers", activePlayers: 194 },
+  seega: { category: "classic", metaKey: "play_page.meta_seega", activePlayers: 146 },
+  gomoku: { category: "classic", metaKey: "play_page.meta_gomoku", activePlayers: 172 },
 };
 
 function InnerPlayCatalogPage() {
@@ -78,10 +77,10 @@ function InnerPlayCatalogPage() {
         <section className={styles.heroSection}>
           <div className={styles.heroBadge}>
             <span className={styles.heroPulse} />
-            <span>{isRtl ? "صالة الألعاب والمبارزات الحية" : "LIVE GAMES & DUEL ARENA"}</span>
+            <span>{t("play_page.badge")}</span>
           </div>
           <h1 className={styles.heroTitle}>
-            {isRtl ? "اختر لعبتك وتحدَّ أبطال العالم" : "Choose Your Game & Duel the Best"}
+            {t("play_page.title")}
           </h1>
           <p className={styles.heroSub}>
             {isRtl
@@ -93,15 +92,15 @@ function InnerPlayCatalogPage() {
           <div className={styles.trustChips}>
             <div className={styles.trustChip}>
               <span className={styles.trustIcon}>⚡</span>
-              <span>{isRtl ? "سحب فوري خلال 60 ثانية" : "60-Second Instant Cashout"}</span>
+              <span>{t("play_page.trust_cashout")}</span>
             </div>
             <div className={styles.trustChip}>
               <span className={styles.trustIcon}>🛡️</span>
-              <span>{isRtl ? "تحكيم عادل 100% خادم محمي" : "100% Server-Authoritative Fair Play"}</span>
+              <span>{t("play_page.trust_fairplay")}</span>
             </div>
             <div className={styles.trustChip}>
               <span className={styles.trustIcon}>🏆</span>
-              <span>{isRtl ? "بطولات ومبارزات 24/7" : "24/7 Continuous Battles"}</span>
+              <span>{t("play_page.trust_battles")}</span>
             </div>
           </div>
         </section>
@@ -117,10 +116,10 @@ function InnerPlayCatalogPage() {
         <div className={styles.catalogHeader}>
           <div className={styles.catalogHeadingRow}>
             <h2 className={styles.catalogTitle}>
-              {isRtl ? "كتالوج الألعاب الرسمية" : "Official Games Catalog"}
+              {t("play_page.catalog_title")}
             </h2>
             <span className={styles.gamesCountBadge}>
-              {isRtl ? `${filteredGames.length} ألعاب متاحة` : `${filteredGames.length} Games Available`}
+              {t("play_page.games_available", { count: String(filteredGames.length) })}
             </span>
           </div>
 
@@ -138,7 +137,7 @@ function InnerPlayCatalogPage() {
                   }}
                   onMouseEnter={handleHover}
                 >
-                  {isRtl ? cat.labelAr : cat.labelEn}
+                  {t(cat.labelKey)}
                 </button>
               );
             })}
@@ -146,15 +145,15 @@ function InnerPlayCatalogPage() {
         </div>
 
         {/* Visual & Intuitive Game Cards Grid */}
-        <div className={styles.grid}>
+                <div className={styles.grid}>
           {filteredGames.map((game) => {
             const meta = GAME_METADATA[game.id] ?? {
               category: "strategy" as const,
-              speedLabelAr: "لعبة مهارية",
-              speedLabelEn: "Skill Game",
+              metaKey: "play_page.meta_chess",
               activePlayers: 200,
             };
             const gameName = t(`common.game_names.${game.nameKey}`);
+            const speedLabel = t(meta.metaKey);
 
             return (
               <div
@@ -167,11 +166,11 @@ function InnerPlayCatalogPage() {
                   <GameThumbnail
                     gameId={game.id}
                     title={gameName}
-                    badge={isRtl ? meta.speedLabelAr : meta.speedLabelEn}
+                    badge={speedLabel}
                   />
                   <div className={styles.thumbOverlay}>
                     <span className={styles.playNowOverlayBtn}>
-                      ⚔️ {isRtl ? "العب الآن" : "Play Now"}
+                      ⚔️ {t("play_page.play_now")}
                     </span>
                   </div>
                 </LocaleLink>
@@ -186,18 +185,18 @@ function InnerPlayCatalogPage() {
                     </h3>
                     <span className={styles.activeChip}>
                       <span className={styles.activeDot} />
-                      {meta.activePlayers} {isRtl ? "متصل" : "online"}
+                      {meta.activePlayers} {t("play_page.online")}
                     </span>
                   </div>
 
                   <p className={styles.cardDesc}>
-                    {isRtl ? meta.speedLabelAr : meta.speedLabelEn}
+                    {speedLabel}
                   </p>
 
                   <div className={styles.cardModes}>
-                    <span className={styles.modePill}>🤖 {isRtl ? "ذكاء اصطناعي" : "AI"}</span>
-                    <span className={styles.modePill}>⚔️ {isRtl ? "مبارزة 1v1" : "1v1 Duel"}</span>
-                    <span className={styles.modePill}>🏆 {isRtl ? "بطولات" : "Tournaments"}</span>
+                    <span className={styles.modePill}>🤖 {t("play_page.mode_ai")}</span>
+                    <span className={styles.modePill}>⚔️ {t("play_page.mode_duel")}</span>
+                    <span className={styles.modePill}>🏆 {t("play_page.mode_tournaments")}</span>
                   </div>
 
                   <div className={styles.cardActions}>
@@ -206,7 +205,7 @@ function InnerPlayCatalogPage() {
                       className={styles.playBtn}
                       onClick={handleClick}
                     >
-                      <span>⚔️ {isRtl ? "اختر نمط اللعب" : "Start Game"}</span>
+                      <span>⚔️ {t("play_page.start_game")}</span>
                       <span className={styles.btnArrow}>{isRtl ? "←" : "→"}</span>
                     </LocaleLink>
                   </div>
