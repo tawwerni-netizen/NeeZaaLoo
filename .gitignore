@@ -23,5 +23,5 @@ data/
 .neon
 .server.pid
 .claude/
-skills-lock.json
 *.apk
+!apps/web/public/*.apk
