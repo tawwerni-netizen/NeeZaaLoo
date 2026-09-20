@@ -133,7 +133,7 @@ function getEnv(childPort) {
     OXAPAY_MERCHANT_API_KEY: process.env.OXAPAY_MERCHANT_API_KEY || "",
     OXAPAY_PAYOUT_API_KEY:   process.env.OXAPAY_PAYOUT_API_KEY || "",
     OXAPAY_CALLBACK_URL:     process.env.OXAPAY_CALLBACK_URL || "https://nizalo.com/v1/payments/oxapay/webhook",
-    DB_POOL_SIZE:            process.env.DB_POOL_SIZE || "2",
+    DB_POOL_SIZE:            process.env.DB_POOL_SIZE || "5",
     API_INTERNAL_URL:        process.env.API_INTERNAL_URL || ("http://127.0.0.1:" + apiPort),
   });
 }

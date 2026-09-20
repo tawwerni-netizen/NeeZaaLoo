@@ -2304,21 +2304,6 @@ function buildRoutes() {
         const handle = query.get("handle")?.trim() || null;
         const includeBots = query.get("includeBots") === "true";
 
-        // Auto-sweep stale or abandoned duels so dead games never get stuck in Live Arena
-        try {
-          await db.query(
-            `UPDATE duel
-                SET status = 'ABORTED'::duel_status,
-                    completed_at = COALESCE(completed_at, now())
-              WHERE status = 'LIVE'
-                AND (
-                  (started_at < now() - INTERVAL '10 minutes' AND (SELECT count(*) FROM duel_event de WHERE de.duel_id = duel.id) = 0)
-                  OR (started_at < now() - INTERVAL '2 hours')
-                )`
-          );
-        } catch {
-          // ignore background sweep errors
-        }
 
         const r = await db.query(
           `SELECT d.id, d.game_id, d.started_at, d.created_at, d.pairing_key, d.is_vs_computer,
@@ -2599,6 +2584,13 @@ function buildRoutes() {
         // just chess. The cross-game combination lives at /v1/leaderboard/global.
         const limit = Math.min(Number(query.get("limit") ?? 50) || 50, 200);
         const gameId = query.get("game");
+        const cacheKey = `${gameId || "all"}:${limit}`;
+        const now = Date.now();
+        if (!globalThis.__lbCache) globalThis.__lbCache = new Map();
+        const cached = globalThis.__lbCache.get(cacheKey);
+        if (cached && (now - cached.ts < 15000)) {
+          return { body: { gameId: gameId ?? "all", entries: cached.rows } };
+        }
 
         let r;
         if (gameId && gameId !== "all") {
@@ -2617,7 +2609,7 @@ function buildRoutes() {
                     COALESCE(MAX(r.rating_x100), 150000) AS rating_x100,
                     COALESCE(SUM(r.games_played), 0)::int AS games_played
                FROM player p
-               LEFT JOIN rating r ON r.player_id = p.id
+               JOIN rating r ON r.player_id = p.id
               WHERE p.handle NOT LIKE 'ai_%'
                 AND p.handle NOT LIKE 'test_%'
               GROUP BY p.id, p.handle, p.avatar_key, p.selected_badge_code
@@ -2625,6 +2617,7 @@ function buildRoutes() {
               LIMIT $1`, [limit]
           );
         }
+        globalThis.__lbCache.set(cacheKey, { ts: now, rows: r.rows });
         return { body: { gameId: gameId ?? "all", entries: r.rows } };
       } },
 
