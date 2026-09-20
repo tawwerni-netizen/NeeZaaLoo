@@ -232,3 +232,12 @@
   font-family: var(--nz-font-num);
   font-size: 11px;
 }
+
+@media (max-width: 640px) {
+  .perspective { transform: none !important; }
+  .hologramCard { padding: 18px 14px; border-radius: var(--nz-radius-xl); }
+  .equation { font-size: clamp(30px, 8vw, 42px); min-height: 52px; }
+  .answerInput { font-size: 20px; padding: 10px; }
+  .submitButton { width: 46px; height: 46px; font-size: 18px; }
+}
+

@@ -36,6 +36,11 @@ const AUTOMATED_GAMES = [
   { id: 'backgammon', name: 'Backgammon', icon: '🎲', defaultFee: '10.00' },
   { id: 'checkers', name: 'Checkers', icon: '🔴', defaultFee: '10.00' },
   { id: 'speed-math', name: 'Speed Math', icon: '⚡', defaultFee: '10.00' },
+  { id: 'connect-four', name: 'Connect Four', icon: '🟡', defaultFee: '10.00' },
+  { id: 'xo', name: 'XO', icon: '❌', defaultFee: '10.00' },
+  { id: 'seega', name: 'Seega', icon: '⚔️', defaultFee: '10.00' },
+  { id: 'reversi', name: 'Reversi', icon: '⚫', defaultFee: '10.00' },
+  { id: 'gomoku', name: 'Gomoku', icon: '⚪', defaultFee: '10.00' },
 ];
 
 export default function AdminTournamentsPage() {

@@ -150,11 +150,6 @@
         "description": "Five stones in a row — straight, diagonal, anywhere on the board — before your opponent does.",
         "duration": "10–20 min",
         "mode": "1v1 · Ranked or free"
-      },
-      "billiards": {
-        "description": "Professional 8-ball billiards with real server-run physics. Drag back from the cue ball to aim and set your power, then pot your group before your opponent.",
-        "duration": "10-20 minutes",
-        "mode": "1v1 - Ranked or Free"
       }
     },
     "how": {
@@ -255,8 +250,7 @@
       "backgammon": "Backgammon",
       "seega": "Seega",
       "reversi": "Reversi",
-      "gomoku": "Gomoku",
-      "billiards": "Billiards"
+      "gomoku": "Gomoku"
     },
     "unknown_game": "Unknown game."
   },

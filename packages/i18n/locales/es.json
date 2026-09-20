@@ -132,11 +132,6 @@
         "description": "Cinco fichas en línea — recta, diagonal, en cualquier parte del tablero — antes que tu rival.",
         "duration": "10–20 min",
         "mode": "1v1 · Clasificatoria o libre"
-      },
-      "billiards": {
-        "description": "Billar profesional de bola 8 con fisica real gestionada por el servidor. Arrastra desde la bola blanca para apuntar y ajustar la potencia, y emboca tu grupo antes que tu rival.",
-        "duration": "10-20 minutos",
-        "mode": "1 contra 1 - Clasificado o gratis"
       }
     },
     "how": {
@@ -243,8 +238,7 @@
       "backgammon": "Backgammón",
       "seega": "Seega",
       "reversi": "Reversi",
-      "gomoku": "Gomoku",
-      "billiards": "Billar"
+      "gomoku": "Gomoku"
     },
     "unknown_game": "Juego desconocido."
   },

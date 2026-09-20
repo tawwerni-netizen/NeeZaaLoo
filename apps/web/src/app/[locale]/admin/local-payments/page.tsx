@@ -264,7 +264,7 @@ export default function AdminLocalPaymentsPage() {
             <span style={{ fontSize: "13px" }}>1 USD =</span>
             <input
               type="number" min="0" step="0.01" value={newRate} onChange={(e) => setNewRate(e.target.value)}
-              placeholder="50" style={{ width: "90px", padding: "6px 10px", borderRadius: "6px", background: "var(--nz-bg-2, #0e121a)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
+              placeholder="52" style={{ width: "90px", padding: "6px 10px", borderRadius: "6px", background: "var(--nz-bg-2, #0e121a)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
             />
             <span style={{ fontSize: "13px" }}>EGP</span>
             <Button variant="primary" onClick={() => void handleSetRate()}>Update Rate</Button>

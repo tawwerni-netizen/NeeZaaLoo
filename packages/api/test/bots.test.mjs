@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { ALL_BOT_PERSONAS, ALL_GAMES, getBotById, getBotsForGame } from "../src/bots/personas.mjs";
 import { generateBotReply, getFallbackReply } from "../src/bots/bot-chat-service.mjs";
 
-test("bots: generates exactly 600 unique bot personas across 6 languages for all 11 games", () => {
+test("bots: generates exactly 600 unique bot personas across 6 languages for all 10 games", () => {
   assert.equal(ALL_BOT_PERSONAS.length, 600);
-  assert.equal(ALL_GAMES.length, 11);
+  assert.equal(ALL_GAMES.length, 10);
 
   const langCounts = {};
   for (const bot of ALL_BOT_PERSONAS) {
@@ -15,7 +15,7 @@ test("bots: generates exactly 600 unique bot personas across 6 languages for all
     assert.ok(bot.dialect.length > 0, "Has dialect description");
     assert.ok(bot.favoriteGames.length >= 2, "Has favorite games");
 
-    // Check that ratings exist for all 11 games
+    // Check that ratings exist for all 10 games
     for (const g of ALL_GAMES) {
       assert.ok(typeof bot.gameRatings[g] === "number", `Has rating for ${g}`);
       assert.ok(bot.gameRatings[g] >= 1400 && bot.gameRatings[g] <= 3000, `Valid rating for ${g}`);

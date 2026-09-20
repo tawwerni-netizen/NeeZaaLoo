@@ -264,6 +264,11 @@
 }
 
 @media (max-width: 640px) {
-  .attacheCase { padding: 10px; }
-  .feltBed { grid-template-columns: 1fr 24px 1fr; }
+  .perspective { transform: none !important; }
+  .attacheCase { padding: 8px 6px; border-radius: var(--nz-radius-lg); }
+  .feltBed { grid-template-columns: 1fr 22px 1fr; }
+  .die3d { width: 40px; height: 40px; }
+  .diceRow { min-height: 48px; gap: 8px; }
+  .offTray { padding: 4px 10px; gap: 8px; }
 }
+

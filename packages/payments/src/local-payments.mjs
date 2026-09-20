@@ -613,7 +613,7 @@ async function readEgpRate(db) {
   const row = r.rows[0];
   return {
     usdRateX1e8: row.usdRateX1e8,
-    egpPerUsd: 1e8 / Number(row.usdRateX1e8),
+    egpPerUsd: Math.round((1e8 / Number(row.usdRateX1e8)) * 100) / 100,
     status: row.status,
     effectiveAt: row.effectiveAt,
     source: row.source,

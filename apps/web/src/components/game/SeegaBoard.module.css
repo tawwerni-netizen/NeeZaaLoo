@@ -132,6 +132,8 @@
 }
 
 @media (max-width: 640px) {
-  .sandstoneSlab { padding: 10px; }
-  .board { gap: 4px; padding: 4px; width: 88vw; }
+  .perspective { transform: none !important; }
+  .sandstoneSlab { padding: 8px; }
+  .board { gap: 4px; padding: 4px; width: min(90vw, 420px); }
 }
+

@@ -1,5 +1,5 @@
 /**
- * 600 AI Personas across 6 Languages (100 per language) playing ALL 11 games on Nizalo.
+ * 600 AI Personas across 6 Languages (100 per language) playing ALL 10 games on Nizalo.
  * Pure ESM JavaScript.
  * 
  * Games:
@@ -7,13 +7,12 @@
  * 2. checkers (الداما)
  * 3. backgammon (الطاولة)
  * 4. dominoes (الدومينو)
- * 5. billiards (البلياردو)
- * 6. connect-four (أربعة على التوالي)
- * 7. gomoku (جوموكو)
- * 8. reversi (ريفيرسي)
- * 9. seega (السيجة)
- * 10. speed-math (الرياضيات السريعة)
- * 11. xo (إكس أو)
+ * 5. connect-four (أربعة على التوالي)
+ * 6. gomoku (جوموكو)
+ * 7. reversi (ريفيرسي)
+ * 8. seega (السيجة)
+ * 9. speed-math (الرياضيات السريعة)
+ * 10. xo (إكس أو)
  */
 
 export const ALL_GAMES = [
@@ -21,7 +20,6 @@ export const ALL_GAMES = [
   "checkers",
   "backgammon",
   "dominoes",
-  "billiards",
   "connect-four",
   "gomoku",
   "reversi",

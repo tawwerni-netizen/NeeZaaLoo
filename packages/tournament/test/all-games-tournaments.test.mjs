@@ -31,10 +31,7 @@ describe("All 10 Games Tournaments Activation", () => {
     }
 
     const billiards = gameMap.get("billiards");
-    assert.ok(billiards, "billiards row exists");
-    assert.equal(billiards.is_live, false, "billiards is_live must be FALSE");
-    assert.equal(billiards.cash_enabled, false, "billiards cash_enabled must be FALSE");
-    assert.equal(billiards.auto_tournaments_enabled, false, "billiards auto_tournaments_enabled must be FALSE");
+    assert.equal(billiards, undefined, "billiards row must NOT exist in game table");
 
     const trn = createTournamentService(db);
     const engine = createAutomatedTournamentEngine(db, trn);

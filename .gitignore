@@ -22,3 +22,5 @@ coverage/
 data/
 .neon
 .server.pid
+.claude/
+skills-lock.json

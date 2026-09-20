@@ -5,8 +5,7 @@
  *
  * Generates tactile, zero-latency physical acoustics using Web Audio API nodes:
  * 1. Backgammon: Realistic wooden dice cup rattle, board bounce, felt checker slide, blot capture hit, bearing-off.
- * 2. Billiards: Cue leather-chalk impact, crisp resin ball-on-ball collisions, pocket drop.
- * 3. Dominoes: Heavy ceramic/acrylic tile clack on table, shuffling wash.
+ * 2. Dominoes: Heavy ceramic/acrylic tile clack on table, shuffling wash.
  * 4. Checkers: Disc slide, jump capture double-click, crown coronation chime.
  * 5. Connect Four: Plastic token column slide & rattle drop, winning connect 4 arpeggio.
  * 6. XO (Tic-Tac-Toe): Quick chalk/pencil stroke mark, win strike-through swoosh.

@@ -136,6 +136,8 @@
 }
 
 @media (max-width: 640px) {
-  .tableBevel { padding: 10px; }
-  .board { width: 88vw; }
+  .perspective { transform: none !important; }
+  .tableBevel { padding: 8px; border-radius: var(--nz-radius-lg); }
+  .board { width: min(90vw, 420px); }
 }
+

@@ -77,26 +77,26 @@ describe("Local EGP payment rails (Vodafone Cash / InstaPay)", () => {
     const res = await req("GET", "/v1/payments/local-rails");
     assert.equal(res.status, 200);
     assert.equal(res.body.numbers.length, 4);
-    assert.equal(res.body.rate.egpPerUsd, 50);
+    assert.equal(res.body.rate.egpPerUsd, 52);
   });
 
   test("setting the EGP rate requires step-up and rail.manage capability", async () => {
     const noAuth = await req("POST", "/v1/admin/payments/local/rate", {
-      token: tokenRoot, body: { egpPerUsd: 50, reason: "launch rate" },
+      token: tokenRoot, body: { egpPerUsd: 52, reason: "launch rate" },
     });
     assert.equal(noAuth.status, 401, JSON.stringify(noAuth.body));
 
     const token = await stepUp(tokenRoot, "admin.local_rail.manage");
     const res = await req("POST", "/v1/admin/payments/local/rate", {
       token: tokenRoot, headers: { "x-step-up-token": token },
-      body: { egpPerUsd: 50, reason: "launch rate" },
+      body: { egpPerUsd: 52, reason: "launch rate" },
     });
     assert.equal(res.status, 200, JSON.stringify(res.body));
-    assert.equal(res.body.rate.usdRateX1e8, "2000000");
-    assert.equal(res.body.rate.egpPerUsd, 50);
+    assert.equal(res.body.rate.usdRateX1e8, "1923077");
+    assert.equal(res.body.rate.egpPerUsd, 52);
 
     const rails = await req("GET", "/v1/payments/local-rails");
-    assert.equal(rails.body.rate.egpPerUsd, 50);
+    assert.equal(rails.body.rate.egpPerUsd, 52);
   });
 
   let intentId;
@@ -155,12 +155,12 @@ describe("Local EGP payment rails (Vodafone Cash / InstaPay)", () => {
     });
     assert.equal(res.status, 200, JSON.stringify(res.body));
     assert.equal(res.body.intent.status, "CREDITED");
-    assert.equal(Number(res.body.intent.credited_amount_usdt_minor), 20_000_000);
+    assert.equal(Number(res.body.intent.credited_amount_usdt_minor), 19_230_770);
 
     const bal = await db.query(
       "SELECT ledger_natural_balance(normal_side, balance) AS bal FROM ledger_account a JOIN ledger_balance b ON b.account_id = a.id WHERE a.key = 'user:alice:available'"
     );
-    assert.equal(BigInt(bal.rows[0]?.bal), 20_000_000n);
+    assert.equal(BigInt(bal.rows[0]?.bal), 19_230_770n);
   });
 
   test("crediting the same intent again is a no-op, not a double credit", async () => {
@@ -174,7 +174,7 @@ describe("Local EGP payment rails (Vodafone Cash / InstaPay)", () => {
     const bal = await db.query(
       "SELECT ledger_natural_balance(normal_side, balance) AS bal FROM ledger_account a JOIN ledger_balance b ON b.account_id = a.id WHERE a.key = 'user:alice:available'"
     );
-    assert.equal(BigInt(bal.rows[0]?.bal), 20_000_000n, "no second credit");
+    assert.equal(BigInt(bal.rows[0]?.bal), 19_230_770n, "no second credit");
   });
 
   let localWithdrawalId;

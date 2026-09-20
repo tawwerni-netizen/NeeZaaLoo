@@ -132,11 +132,6 @@
         "description": "Cinq pierres alignées — droite, diagonale, n'importe où sur le plateau — avant votre adversaire.",
         "duration": "10–20 min",
         "mode": "1 contre 1 · Classé ou libre"
-      },
-      "billiards": {
-        "description": "Billard americain (8-ball) professionnel avec une vraie physique geree par le serveur. Tirez depuis la bille blanche pour viser et doser la puissance, puis rentrez vos billes avant votre adversaire.",
-        "duration": "10-20 minutes",
-        "mode": "1 contre 1 - Classe ou gratuit"
       }
     },
     "how": {
@@ -243,8 +238,7 @@
       "backgammon": "Backgammon",
       "seega": "Seega",
       "reversi": "Reversi",
-      "gomoku": "Gomoku",
-      "billiards": "Billard"
+      "gomoku": "Gomoku"
     },
     "unknown_game": "Jeu inconnu."
   },

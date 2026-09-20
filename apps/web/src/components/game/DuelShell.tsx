@@ -363,7 +363,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
             rematchBusy={rematchBusy}
             rematchSent={rematchSent}
           />
-        ) : plugin && (view || plugin.id === "billiards") ? (
+        ) : plugin && view ? (
           <div className={styles.duelArena}>
             <div className={styles.vsHeader}>
               {players && (mySeat !== null ? (

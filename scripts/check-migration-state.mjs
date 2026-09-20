@@ -70,9 +70,9 @@ const CHECKS = [
   ["0056_normalize_tron_network_label.sql", "notrc20", "withdrawal"],
   ["0057_multi_asset_cash_play.sql", "column", "matchmaking_ticket.asset"],
   ["0058_platform_fee_12_percent.sql", "row", "economy_rule.standard"],
-  ["0059_billiards.sql", "row", "game.billiards"],
   ["0060_payment_rail_limits_10_usd.sql", "min_withdrawal_10", "payment_rail"],
-  ["0061_enable_billiards_cash_and_tournaments.sql", "billiards_cash_and_tournaments", "game.billiards"],
+  ["0070_remove_billiards.sql", "no_billiards", "game.billiards"],
+  ["0071_seed_egp_valuation.sql", "egp_valuation_52", "valuation_snapshot.EGP"],
 ];
 
 async function objectExists(client, kind, name) {
@@ -122,9 +122,13 @@ async function objectExists(client, kind, name) {
       const r = await client.query("SELECT min_withdrawal_minor FROM payment_rail WHERE id = 'USDT_TRON'");
       return r.rows.length > 0 && String(r.rows[0].min_withdrawal_minor) === "10000000";
     }
-    case "billiards_cash_and_tournaments": {
-      const r = await client.query("SELECT cash_enabled, auto_tournaments_enabled FROM game WHERE id = 'billiards'");
-      return r.rows.length > 0 && r.rows[0].cash_enabled === true && r.rows[0].auto_tournaments_enabled === true;
+    case "no_billiards": {
+      const r = await client.query("SELECT count(*)::int c FROM game WHERE id = 'billiards'");
+      return r.rows[0].c === 0;
+    }
+    case "egp_valuation_52": {
+      const r = await client.query("SELECT usd_rate_x1e8 FROM valuation_current('EGP')");
+      return r.rows.length > 0 && String(r.rows[0].usd_rate_x1e8) === "1923077";
     }
     default:
       return null;

@@ -6,11 +6,11 @@ import {
 
 const ALL_TEN = [
   "chess", "checkers", "dominoes", "backgammon", "seega",
-  "connect-four", "xo", "speed-math", "reversi", "gomoku", "billiards",
+  "connect-four", "xo", "speed-math", "reversi", "gomoku",
 ];
 
 describe("per-game time controls: every launch game has a safe, real profile", () => {
-  test("the catalogue knows exactly the eleven launch games -- no more, no fewer", () => {
+  test("the catalogue knows exactly the ten launch games -- no more, no fewer", () => {
     assert.deepEqual([...PROFILED_GAMES].sort(), [...ALL_TEN].sort());
   });
 
