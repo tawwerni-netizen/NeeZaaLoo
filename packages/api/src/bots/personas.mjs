@@ -21,6 +21,7 @@ export const ALL_GAMES = [
   "checkers",
   "backgammon",
   "dominoes",
+  "billiards",
   "connect-four",
   "gomoku",
   "reversi",
@@ -28,6 +29,7 @@ export const ALL_GAMES = [
   "speed-math",
   "xo",
 ];
+
 
 const AR_CITIES = [
   { city: "القاهرة", country: "مصر", code: "EG", dialect: "لهجة مصرية قاهرية دارجة وخفيفة الظل" },

@@ -73,11 +73,11 @@ describe("Local EGP payment rails (Vodafone Cash / InstaPay)", () => {
     await db?.close?.();
   });
 
-  test("GET /v1/payments/local-rails lists the seeded numbers with no rate set yet", async () => {
+  test("GET /v1/payments/local-rails lists the seeded numbers with initial rate set", async () => {
     const res = await req("GET", "/v1/payments/local-rails");
     assert.equal(res.status, 200);
     assert.equal(res.body.numbers.length, 4);
-    assert.equal(res.body.rate, null);
+    assert.equal(res.body.rate.egpPerUsd, 50);
   });
 
   test("setting the EGP rate requires step-up and rail.manage capability", async () => {
