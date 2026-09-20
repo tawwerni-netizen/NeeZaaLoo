@@ -505,7 +505,8 @@
   border-left: 4px solid var(--nz-accent);
 }
 
-.colRank {
+.table th.colRank,
+.table td.colRank {
   width: 80px;
   font-weight: 800;
   text-align: center;
@@ -582,15 +583,17 @@
   font-weight: 500;
 }
 
-.colActions {
-  min-width: 250px;
-  text-align: end;
+.table th.colActions,
+.table td.colActions {
+  min-width: 280px;
+  text-align: center;
 }
 
 .actionGroup {
   display: inline-flex;
   gap: 8px;
   align-items: center;
+  justify-content: center;
 }
 
 .tblProfileBtn, .tblChatBtn, .tblChallengeBtn {
