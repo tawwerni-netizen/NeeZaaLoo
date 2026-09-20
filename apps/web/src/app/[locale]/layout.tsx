@@ -209,8 +209,18 @@ export default async function LocaleLayout({
   };
 
   return (
-    <html lang={locale} dir={dir} className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} ${plexArabic.variable}`}>
+    <html lang={locale} dir={dir} data-theme="dark" className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} ${plexArabic.variable}`}>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                localStorage.removeItem("nizalo-theme");
+                document.documentElement.setAttribute("data-theme", "dark");
+              } catch (e) {}
+            `,
+          }}
+        />
         <link
           rel="preload"
           as="image"

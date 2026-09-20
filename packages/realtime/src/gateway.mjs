@@ -595,10 +595,18 @@ export function createGateway({
     if (aiTimers.has(duel.duelId)) return; // already scheduled for this turn
 
     // Natural human-paced thinking delay:
-    // When not running in fast unit test mode (aiMoveDelayMs <= 100), add 0-750ms natural variance
+    // When not running in fast unit test mode (aiMoveDelayMs <= 100):
+    // For bot-vs-bot matches (live spectating), use a natural, enjoyable 1.8s - 2.8s pace.
+    // For human-vs-bot matches, use 0.9s - 1.7s for snappy yet thoughtful play.
+    const isBot0 = Boolean(getBotSeat(duel, 0));
+    const isBot1 = Boolean(getBotSeat(duel, 1));
+    const isBotVsBot = isBot0 && isBot1;
+
     const thinkDelay = aiMoveDelayMs <= 100
       ? aiMoveDelayMs
-      : aiMoveDelayMs + Math.floor(Math.random() * 750);
+      : isBotVsBot
+      ? 1800 + Math.floor(Math.random() * 1000)
+      : 900 + Math.floor(Math.random() * 800);
 
     const timer = setTimeout(async () => {
       aiTimers.delete(duel.duelId);

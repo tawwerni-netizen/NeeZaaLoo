@@ -97,7 +97,7 @@ export function createRadarSeederWorker(db, { minChallenges = 8, maxChallenges =
           const gameId = RADAR_GAMES[Math.floor(Math.random() * RADAR_GAMES.length)];
           const stakeItem = STAKE_LADDER[Math.floor(Math.random() * STAKE_LADDER.length)];
           const challengeId = `open_bot_${randomUUID().slice(0, 8)}`;
-          const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5m TTL
+          const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15m stable TTL
 
           await db.query(
             `INSERT INTO lobby_open_challenge

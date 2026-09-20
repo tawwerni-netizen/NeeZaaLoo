@@ -92,7 +92,10 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
             stakeUSDT: Number(c.stakeUSDT || 0),
             asset: String(c.asset || "USDT"),
             timeControl: c.timeControl || "Blitz",
-            createdSecondsAgo: Math.max(0, Math.floor((Date.now() - new Date(c.createdAt).getTime()) / 1000)),
+            createdSecondsAgo: (() => {
+              const diffSec = Math.floor((Date.now() - new Date(c.createdAt).getTime()) / 1000);
+              return isNaN(diffSec) ? 0 : Math.max(0, Math.min(diffSec, 180));
+            })(),
             isUserCreated: c.creator?.id === player?.id || c.creator?.handle === player?.handle,
           };
         });
@@ -147,6 +150,15 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
   // Balance in the coin being staked -- coins are never pooled or converted.
   const userBalanceUSDT = balances ? balances[newAsset] : null;
   const [balanceWarningModal, setBalanceWarningModal] = useState<{ open: boolean; requiredStake: number } | null>(null);
+
+  // Auto-dismiss the insufficient balance popup after 3 seconds as requested
+  useEffect(() => {
+    if (!balanceWarningModal?.open) return;
+    const timer = setTimeout(() => {
+      setBalanceWarningModal(null);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [balanceWarningModal]);
 
   const [copiedDuelId, setCopiedDuelId] = useState<string | null>(null);
   const [targetChallengeId, setTargetChallengeId] = useState<string | null>(null);
@@ -223,20 +235,21 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
     setIsModalOpen(true);
   };
 
-
   useEffect(() => {
     const timer = setInterval(() => {
       setDuels((prev) => {
-        const expired = prev.filter((d) => d.createdSecondsAgo + 1 >= 300);
-        if (expired.some((d) => d.isUserCreated)) {
+        const expiredUser = prev.find((d) => d.isUserCreated && d.createdSecondsAgo + 1 >= 300);
+        if (expiredUser) {
           setExpiredNotice(
             isRtl
               ? "انتهت مهلة انتظار الخصم (5 دقائق) للمبارزة وتم إلغاؤها تلقائياً."
               : "The 5-minute waiting window for your challenge expired and was closed."
           );
         }
+        // Retain all challenges and only drop expired user-created ones.
+        // Server polling (loadOpenChallenges) keeps the official open set fresh.
         return prev
-          .filter((d) => d.createdSecondsAgo + 1 < 300)
+          .filter((d) => !d.isUserCreated || d.createdSecondsAgo + 1 < 300)
           .map((d) => ({
             ...d,
             createdSecondsAgo: d.createdSecondsAgo + 1,
@@ -1071,6 +1084,14 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
       {balanceWarningModal?.open && (
         <div className={styles.modalOverlay} onClick={() => setBalanceWarningModal(null)}>
           <div className={styles.insufficientModalCard} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className={styles.modalCloseX}
+              onClick={() => setBalanceWarningModal(null)}
+              aria-label={isRtl ? "إغلاق" : "Close"}
+            >
+              ✕
+            </button>
             <div className={styles.warningIconGlow}>💳</div>
             <h3 className={styles.warningModalTitle}>
               {isRtl ? "رصيد المحفظة غير كافٍ" : "Insufficient Wallet Balance"}
@@ -1096,6 +1117,9 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
               >
                 {isRtl ? "اللعب في النمط المجاني (نقاط ELO)" : "Play in Free Mode (ELO)"}
               </button>
+            </div>
+            <div className={styles.modalCountdownWrap} title={isRtl ? "سيتم الإغلاق تلقائياً خلال 3 ثوانٍ" : "Auto-closing in 3 seconds"}>
+              <div className={styles.modalCountdownFill} />
             </div>
           </div>
         </div>

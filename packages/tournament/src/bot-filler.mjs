@@ -47,7 +47,7 @@ export function createTournamentBotFiller(db, tournamentService, options = {}) {
 
     try {
       const openTournaments = await db.query(
-        `SELECT t.id, t.game_id, t.tier, t.capacity, t.created_at,
+        `SELECT t.id, t.game_id, t.tier, t.capacity, t.created_at, t.entry_fee_minor, t.asset,
                 (SELECT count(*)::int FROM tournament_registration tr
                   WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS registered_count,
                 (SELECT max(tr.registered_at) FROM tournament_registration tr
@@ -87,19 +87,25 @@ export function createTournamentBotFiller(db, tournamentService, options = {}) {
         }
 
         // Select a random eligible bot persona with rating for this game
+        const isCash = t.tier === "CASH";
+        const fee = BigInt(t.entry_fee_minor || "0");
         const candidateBot = await db.query(
           `SELECT p.id, COALESCE(r.rating_x100, 180000) AS rating_x100
              FROM player p
              LEFT JOIN rating r ON r.player_id = p.id AND r.game_id = $1
+             ${isCash ? `
+             JOIN ledger_account la ON la.key = 'user:' || p.id || ':available' AND la.asset = COALESCE($3, 'USDT')
+             JOIN ledger_balance lb ON lb.account_id = la.id AND lb.balance >= $4
+             ` : ''}
             WHERE p.is_ai = TRUE
-              AND p.id LIKE 'bot_%'
+              AND (p.id LIKE 'bot_%' OR p.id LIKE 'top_p_%' OR p.id LIKE 'standing_by_%')
               AND NOT EXISTS (
                 SELECT 1 FROM tournament_registration tr
                  WHERE tr.tournament_id = $2 AND tr.player_id = p.id
               )
             ORDER BY random()
             LIMIT 1`,
-          [t.game_id, t.id]
+          isCash ? [t.game_id, t.id, t.asset || 'USDT', fee.toString()] : [t.game_id, t.id]
         );
 
         if (candidateBot.rows.length === 0) continue;

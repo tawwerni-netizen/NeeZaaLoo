@@ -7,7 +7,6 @@ import { Logo } from "./Logo";
 import { Button } from "./Button";
 import { LocaleLink } from "./LocaleLink";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { ThemeToggle } from "./ThemeToggle";
 import { NotificationCenter } from "./notifications/NotificationCenter";
 import { UserMenu } from "./UserMenu";
 import { useAuth } from "@/lib/auth-context";
@@ -137,7 +136,6 @@ export function Header() {
               <div className={styles.headerDivider} />
             </>
           )}
-          <ThemeToggle />
           <LanguageSwitcher />
         </div>
 
@@ -312,10 +310,9 @@ export function Header() {
               </div>
             )}
 
-            {/* Footer Bar: Theme, Language, and Logout */}
+            {/* Footer Bar: Language and Logout */}
             <div className={styles.mobileFooterBar}>
               <div className={styles.mobileControls}>
-                <ThemeToggle />
                 <LanguageSwitcher dropDirection="up" onSelect={closeMenu} />
               </div>
               {player && (

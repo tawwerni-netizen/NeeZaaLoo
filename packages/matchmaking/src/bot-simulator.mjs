@@ -6,7 +6,7 @@
  * over time without burning platform rake or straining game engines.
  */
 const SIMULATOR_GAMES = [
-  "chess", "checkers", "backgammon", "dominoes", "billiards",
+  "chess", "checkers", "backgammon", "dominoes",
   "connect-four", "gomoku", "reversi", "seega", "speed-math", "xo",
 ];
 
