@@ -17,6 +17,7 @@ dependencyResolutionManagement {
 rootProject.name = "nizalo-android"
 
 include(":app")
+include(":operator")
 include(":core:model")
 include(":core:common")
 include(":core:security")
