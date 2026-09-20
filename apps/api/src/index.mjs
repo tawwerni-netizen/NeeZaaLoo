@@ -419,13 +419,17 @@ async function main() {
   });
   logger.emit("worker.tick_started", { worker: "api", workerId: workerIdentity(), host, port });
 
-  const obs = createObservabilityServer({
-    metrics,
-    checks: [{ name: "database", check: async () => { await db.query("SELECT 1"); return true; } }],
-    port: Number(process.env.OBSERVABILITY_PORT || 3001),
-  });
-  const obsInfo = await obs.start();
-  logger.emit("worker.tick_started", { worker: "api-observability", port: obsInfo.port });
+  try {
+    const obs = createObservabilityServer({
+      metrics,
+      checks: [{ name: "database", check: async () => { await db.query("SELECT 1"); return true; } }],
+      port: Number(process.env.OBSERVABILITY_PORT || 3001),
+    });
+    const obsInfo = await obs.start();
+    logger.emit("worker.tick_started", { worker: "api-observability", port: obsInfo.port });
+  } catch (err) {
+    console.warn("[api-observability] Could not start observability server:", err.message);
+  }
 
   installGracefulShutdown({
     logger,

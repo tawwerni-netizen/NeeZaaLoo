@@ -275,6 +275,7 @@ function startProcess(name, script, childPort, customCwd) {
   function launch() {
     if (isShuttingDown) return;
     freePort(childPort);
+    freePort(childPort + 100);
     console.log(`[${name}] Spawning on port ${childPort}...`);
     try {
       const baseEnv = name === "Next.js"
@@ -319,6 +320,7 @@ function startProcess(name, script, childPort, customCwd) {
 
         // Free port cleanly before attempting restart
         freePort(childPort);
+        freePort(childPort + 100);
 
         // Exponential backoff to prevent fork storms
         const delay = failures <= 2 ? 1500 : failures <= 4 ? 4000 : failures <= 6 ? 8000 : 20000;
@@ -336,7 +338,7 @@ function startProcess(name, script, childPort, customCwd) {
 
 // Clean any leftover zombie processes and ports before boot
 cleanupZombies();
-[nextPort, apiPort, gwPort, 4001].forEach(freePort);
+[nextPort, apiPort, gwPort, 4001, nextPort + 100, apiPort + 100, gwPort + 100, 4101].forEach(freePort);
 
 startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
 startProcess("API",     apiScript,    apiPort);
@@ -356,7 +358,7 @@ function shutdown() {
     } catch (e) {}
   });
   cleanupZombies();
-  [nextPort, apiPort, gwPort, 4001].forEach(freePort);
+  [nextPort, apiPort, gwPort, 4001, nextPort + 100, apiPort + 100, gwPort + 100, 4101].forEach(freePort);
   setTimeout(() => process.exit(0), 150);
 }
 process.on("SIGINT",  shutdown);
