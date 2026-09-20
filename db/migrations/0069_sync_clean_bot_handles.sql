@@ -610,6 +610,8 @@ UPDATE player SET handle = 'Bo_Zhao' WHERE id = 'bot_zh_098';
 UPDATE player SET handle = 'Lei_Zhao' WHERE id = 'bot_zh_099';
 UPDATE player SET handle = 'Feng_Zhao' WHERE id = 'bot_zh_100';
 
--- 4. Create performance indexes for leaderboard and ratings
+-- 4. Create performance indexes for leaderboard, ratings, and duel sweeps
 CREATE INDEX IF NOT EXISTS rating_leaderboard_idx ON rating (game_id, rating_x100 DESC, games_played DESC);
 CREATE INDEX IF NOT EXISTS rating_player_idx ON rating (player_id, rating_x100 DESC);
+CREATE INDEX IF NOT EXISTS duel_claim_sweep_idx ON duel (status, lease_owner, lease_expires_at, started_at, created_at);
+CREATE INDEX IF NOT EXISTS duel_live_status_idx ON duel (status, started_at) WHERE status = 'LIVE';
