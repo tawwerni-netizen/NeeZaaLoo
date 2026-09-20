@@ -76,6 +76,24 @@ export function Header() {
               </LocaleLink>
             );
           })}
+
+          {/* Dedicated Live Stream Icon with Hover Tooltip */}
+          <div className={styles.liveStreamNavWrap}>
+            <LocaleLink
+              href="/watch"
+              className={`${styles.liveStreamNavLink} ${isActive("/watch") ? styles.liveStreamNavLinkActive : ""}`}
+              aria-label={t("nav.watch")}
+              title={`( ${t("nav.watch")} )`}
+            >
+              <span className={styles.liveStreamIconWrap}>
+                <span className={styles.liveStreamPulseDot} />
+                <span className={styles.liveStreamIcon}>📺</span>
+              </span>
+              <span className={styles.liveStreamTooltip} role="tooltip">
+                ( {t("nav.watch")} )
+              </span>
+            </LocaleLink>
+          </div>
         </nav>
 
         {/* Desktop Secondary Actions */}
@@ -144,6 +162,15 @@ export function Header() {
 
         {/* Mobile Header Actions (Visible on mobile/tablet screens) */}
         <div className={styles.mobileActions}>
+          <LocaleLink
+            href="/watch"
+            className={`${styles.mobileLiveBtn} ${isActive("/watch") ? styles.mobileLiveBtnActive : ""}`}
+            aria-label={t("nav.watch")}
+            title={`( ${t("nav.watch")} )`}
+          >
+            <span className={styles.mobileLivePulseDot} />
+            <span className={styles.mobileLiveIcon}>📺</span>
+          </LocaleLink>
           {loading ? null : player ? (
             <>
               <LocaleLink
@@ -281,6 +308,17 @@ export function Header() {
                     </LocaleLink>
                   );
                 })}
+                {/* Live Stream tile in Mobile Drawer */}
+                <LocaleLink
+                  href="/watch"
+                  className={isActive("/watch") ? styles.mobileNavTileActive : styles.mobileNavTile}
+                  onClick={closeMenu}
+                >
+                  <span className={styles.mobileNavTileIcon}>📺</span>
+                  <span className={styles.mobileNavTileLabel}>{t("nav.watch")}</span>
+                  <span className={styles.mobileNavLiveBadge}>LIVE</span>
+                  {isActive("/watch") && <span className={styles.activeGlowDot} />}
+                </LocaleLink>
               </div>
             </div>
 

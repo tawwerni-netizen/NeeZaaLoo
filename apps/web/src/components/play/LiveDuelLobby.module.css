@@ -538,19 +538,55 @@
    Live Pulse Ticker Ribbon (شريط النبض الحي)
    ========================================================================== */
 .liveTickerRibbon {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 9px 18px;
+  overflow: hidden;
+  padding: 9px 0;
   background: rgba(14, 19, 29, 0.85);
   border: 1px solid rgba(201, 169, 110, 0.22);
   border-radius: var(--nz-radius-pill, 999px);
   margin-bottom: var(--nz-space-5);
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+  user-select: none;
+}
+
+.tickerTrack {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  animation: tickerScroll 32s linear infinite;
+  will-change: transform;
+}
+
+.liveTickerRibbon:hover .tickerTrack {
+  animation-play-state: paused;
+}
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+:global([dir="rtl"]) .tickerTrack {
+  animation-name: tickerScrollRtl;
+}
+
+@keyframes tickerScrollRtl {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(50%);
+  }
 }
 
 .liveTickerRibbon::-webkit-scrollbar {

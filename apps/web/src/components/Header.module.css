@@ -909,3 +909,167 @@
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
 }
+
+/* --- Dedicated Live Stream Navigation Button & Tooltip --- */
+.liveStreamNavWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 4px;
+}
+
+.liveStreamNavLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.liveStreamNavLink:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #ef4444;
+  transform: translateY(-1px) scale(1.06);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.4);
+}
+
+.liveStreamNavLinkActive {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.28), rgba(249, 115, 22, 0.2));
+  border-color: #ef4444;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
+}
+
+.liveStreamIconWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.liveStreamIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.liveStreamPulseDot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: pulseLiveStream 1.6s infinite ease-in-out;
+}
+
+@keyframes pulseLiveStream {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.65;
+  }
+}
+
+/* Hover Tooltip */
+.liveStreamTooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 5px 10px;
+  background: #0f172a;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: var(--nz-radius-md, 6px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(239, 68, 68, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+  z-index: 1000;
+}
+
+.liveStreamTooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #0f172a transparent;
+}
+
+.liveStreamNavLink:hover .liveStreamTooltip,
+.liveStreamNavLink:focus-visible .liveStreamTooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Mobile Live Button in Top Bar */
+.mobileLiveBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.mobileLiveBtn:hover, .mobileLiveBtnActive {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+}
+
+.mobileLivePulseDot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+  animation: pulseLiveStream 1.6s infinite ease-in-out;
+}
+
+.mobileLiveIcon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.mobileNavLiveBadge {
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  background: #ef4444;
+  padding: 1px 5px;
+  border-radius: var(--nz-radius-pill, 999px);
+  letter-spacing: 0.04em;
+  margin-inline-start: auto;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+  animation: pulseLiveStream 2s infinite ease-in-out;
+}

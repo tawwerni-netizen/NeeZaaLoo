@@ -497,42 +497,83 @@ export function LiveDuelLobby({ filterGameId }: { filterGameId?: string }) {
         </div>
       </div>
 
-      {/* Live Pulse Ticker Ribbon (100% Honest Guarantees - Zero Cold-Start Vanity Counters) */}
-      <div className={styles.liveTickerRibbon}>
-        <div className={styles.tickerItem}>
-          <span className={styles.tickerDotOnline} />
-          <span>{isRtl ? "سيرفرات النزال:" : "Arena Servers:"}</span>
-          <strong className={styles.tickerHighlight}>
-            {isRtl ? "متصلة وجاهزة 24/7" : "100% Online & Ready 24/7"}
-          </strong>
-        </div>
-        <div className={styles.tickerDivider}>•</div>
-        <div className={styles.tickerItem}>
-          <span>⚡</span>
-          <span>{isRtl ? "سحب فوري:" : "Instant Cashout:"}</span>
-          <strong className={styles.tickerHighlightGold}>
-            {isRtl ? "تحويل آلي خلال 60ث بالـ USDT" : "< 60s Automated USDT"}
-          </strong>
-        </div>
-        <div className={styles.tickerDivider}>•</div>
-        <div className={styles.tickerItem}>
-          <span>💎</span>
-          <span>{isRtl ? "أرباح الفائز:" : "Winner Payout:"}</span>
-          <strong className={styles.tickerHighlightGold}>
-            {isRtl ? "88% من وعاء التحدي (عمولة 12% فقط)" : "88% Net Pool (12% Fee)"}
-          </strong>
-        </div>
-        <div className={styles.tickerDivider}>•</div>
-        <div className={styles.tickerItem}>
-          <span>🔒</span>
-          <span>{isRtl ? "تحكيم عادل 100%:" : "Provably Fair:"}</span>
-          <strong>{isRtl ? "مهارة بدون أي صدفة أو حظ" : "100% Deterministic Skill"}</strong>
-        </div>
-        <div className={styles.tickerDivider}>•</div>
-        <div className={styles.tickerItem}>
-          <span>🤖</span>
-          <span>{isRtl ? "نزال فوري:" : "Instant Play:"}</span>
-          <strong>{isRtl ? "تحدي الحاسوب متاح 24/7 دون انتظار" : "Play AI Anytime 24/7"}</strong>
+      {/* Live Pulse Ticker Ribbon (Continuous Smooth Marquee) */}
+      <div className={styles.liveTickerRibbon} aria-label="Platform guarantees">
+        <div className={styles.tickerTrack}>
+          <div className={styles.tickerItem}>
+            <span className={styles.tickerDotOnline} />
+            <span>{isRtl ? "سيرفرات النزال:" : "Arena Servers:"}</span>
+            <strong className={styles.tickerHighlight}>
+              {isRtl ? "متصلة وجاهزة 24/7" : "100% Online & Ready 24/7"}
+            </strong>
+          </div>
+          <div className={styles.tickerDivider}>•</div>
+          <div className={styles.tickerItem}>
+            <span>⚡</span>
+            <span>{isRtl ? "سحب فوري:" : "Instant Cashout:"}</span>
+            <strong className={styles.tickerHighlightGold}>
+              {isRtl ? "تحويل آلي خلال 60ث بالـ USDT" : "< 60s Automated USDT"}
+            </strong>
+          </div>
+          <div className={styles.tickerDivider}>•</div>
+          <div className={styles.tickerItem}>
+            <span>💎</span>
+            <span>{isRtl ? "أرباح الفائز:" : "Winner Payout:"}</span>
+            <strong className={styles.tickerHighlightGold}>
+              {isRtl ? "88% من وعاء التحدي (عمولة 12% فقط)" : "88% Net Pool (12% Fee)"}
+            </strong>
+          </div>
+          <div className={styles.tickerDivider}>•</div>
+          <div className={styles.tickerItem}>
+            <span>🔒</span>
+            <span>{isRtl ? "تحكيم عادل 100%:" : "Provably Fair:"}</span>
+            <strong>{isRtl ? "مهارة بدون أي صدفة أو حظ" : "100% Deterministic Skill"}</strong>
+          </div>
+          <div className={styles.tickerDivider}>•</div>
+          <div className={styles.tickerItem}>
+            <span>🤖</span>
+            <span>{isRtl ? "نزال فوري:" : "Instant Play:"}</span>
+            <strong>{isRtl ? "تحدي الحاسوب متاح 24/7 دون انتظار" : "Play AI Anytime 24/7"}</strong>
+          </div>
+
+          <div className={styles.tickerDivider}>•</div>
+
+          {/* Duplicated for seamless continuous looping */}
+          <div className={styles.tickerItem} aria-hidden="true">
+            <span className={styles.tickerDotOnline} />
+            <span>{isRtl ? "سيرفرات النزال:" : "Arena Servers:"}</span>
+            <strong className={styles.tickerHighlight}>
+              {isRtl ? "متصلة وجاهزة 24/7" : "100% Online & Ready 24/7"}
+            </strong>
+          </div>
+          <div className={styles.tickerDivider} aria-hidden="true">•</div>
+          <div className={styles.tickerItem} aria-hidden="true">
+            <span>⚡</span>
+            <span>{isRtl ? "سحب فوري:" : "Instant Cashout:"}</span>
+            <strong className={styles.tickerHighlightGold}>
+              {isRtl ? "تحويل آلي خلال 60ث بالـ USDT" : "< 60s Automated USDT"}
+            </strong>
+          </div>
+          <div className={styles.tickerDivider} aria-hidden="true">•</div>
+          <div className={styles.tickerItem} aria-hidden="true">
+            <span>💎</span>
+            <span>{isRtl ? "أرباح الفائز:" : "Winner Payout:"}</span>
+            <strong className={styles.tickerHighlightGold}>
+              {isRtl ? "88% من وعاء التحدي (عمولة 12% فقط)" : "88% Net Pool (12% Fee)"}
+            </strong>
+          </div>
+          <div className={styles.tickerDivider} aria-hidden="true">•</div>
+          <div className={styles.tickerItem} aria-hidden="true">
+            <span>🔒</span>
+            <span>{isRtl ? "تحكيم عادل 100%:" : "Provably Fair:"}</span>
+            <strong>{isRtl ? "مهارة بدون أي صدفة أو حظ" : "100% Deterministic Skill"}</strong>
+          </div>
+          <div className={styles.tickerDivider} aria-hidden="true">•</div>
+          <div className={styles.tickerItem} aria-hidden="true">
+            <span>🤖</span>
+            <span>{isRtl ? "نزال فوري:" : "Instant Play:"}</span>
+            <strong>{isRtl ? "تحدي الحاسوب متاح 24/7 دون انتظار" : "Play AI Anytime 24/7"}</strong>
+          </div>
         </div>
       </div>
 

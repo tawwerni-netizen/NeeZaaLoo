@@ -32,8 +32,12 @@ export async function sweepUnclaimableDuels(db, gw, { limit = 100 } = {}) {
         status = 'LIVE'
         OR (
           status = 'READY'
-          AND (seat_0 LIKE 'bot_%' OR seat_0 LIKE 'ai-%')
-          AND (seat_1 LIKE 'bot_%' OR seat_1 LIKE 'ai-%')
+          AND (
+            seat_0 LIKE 'bot_%' OR seat_0 LIKE 'ai-%' OR seat_0 LIKE 'ai_%' OR seat_0 LIKE 'top_p_%' OR seat_0 LIKE 'standing_by_%' OR seat_0 LIKE 'sim_%'
+          )
+          AND (
+            seat_1 LIKE 'bot_%' OR seat_1 LIKE 'ai-%' OR seat_1 LIKE 'ai_%' OR seat_1 LIKE 'top_p_%' OR seat_1 LIKE 'standing_by_%' OR seat_1 LIKE 'sim_%'
+          )
         )
       )
       AND (lease_owner IS NULL OR lease_expires_at < now())

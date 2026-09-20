@@ -793,9 +793,14 @@ export function createGateway({
       return { ok: false, reason: "NO_SUCH_DUEL" };
     }
     if (duel.status === DuelState.READY) {
-      if (duel.vsComputer) {
+      const bot0 = getBotSeat(duel, 0);
+      const bot1 = getBotSeat(duel, 1);
+      if (duel.vsComputer || (bot0 && bot1)) {
         await store.markLive(duel, now());
         duel.status = DuelState.LIVE;
+        if (duel.clock.model === "SHARED") duel.clock.startedAt = now();
+        else duel.clock.turnStartedAt = now();
+        duel.startedAt = now();
       }
     }
     duels.set(duelId, duel);
@@ -972,7 +977,13 @@ export function createGateway({
             duel.seatConns[seat].add(conn);
             const nowBothConnected = (Boolean(bot0) || (duel.seatConns[0]?.size ?? 0) > 0) &&
                                      (Boolean(bot1) || (duel.seatConns[1]?.size ?? 0) > 0);
-            if (!duel.vsComputer && duel.events.length === 0 && !wasBothConnected && nowBothConnected) {
+            if (duel.status === DuelState.READY && nowBothConnected) {
+              await store.markLive(duel, t);
+              duel.status = DuelState.LIVE;
+              if (duel.clock.model === "SHARED") duel.clock.startedAt = t;
+              else duel.clock.turnStartedAt = t;
+              duel.startedAt = t;
+            } else if (!duel.vsComputer && duel.events.length === 0 && !wasBothConnected && nowBothConnected) {
               if (duel.clock.model === "SHARED") duel.clock.startedAt = t;
               else duel.clock.turnStartedAt = t;
               duel.startedAt = t;

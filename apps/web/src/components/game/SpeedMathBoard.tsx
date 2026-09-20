@@ -24,7 +24,7 @@ type Props = {
 const OP_GLYPH: Record<Question["op"], string> = { "+": "+", "-": "−", "*": "×", "/": "÷" };
 
 export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { perspective3D } = useVisualSettings();
   const [draft, setDraft] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
@@ -66,6 +66,109 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
     if (!Number.isFinite(answer)) return;
     onMove({ answer: Math.trunc(answer) });
     setDraft("");
+  }
+
+  // Dedicated Spectator View: Real-Time Race HUD & Telemetry
+  if (mySeat === null) {
+    const p0Correct = scores.correct[0] ?? 0;
+    const p1Correct = scores.correct[1] ?? 0;
+    const p0Answered = scores.answered[0] ?? 0;
+    const p1Answered = scores.answered[1] ?? 0;
+    const total = scores.total || 60;
+    const p0Pct = Math.min(100, Math.round((p0Answered / total) * 100));
+    const p1Pct = Math.min(100, Math.round((p1Answered / total) * 100));
+    const p0Acc = p0Answered > 0 ? Math.round((p0Correct / p0Answered) * 100) : 0;
+    const p1Acc = p1Answered > 0 ? Math.round((p1Correct / p1Answered) * 100) : 0;
+
+    let leadStatus = locale === "ar" ? "تعادل حماسي 🔥" : "Tied Match 🔥";
+    if (p0Correct > p1Correct) {
+      const diff = p0Correct - p1Correct;
+      leadStatus = locale === "ar"
+        ? `اللاعب 1 متقدم (+${diff}) ⚡`
+        : `Player 1 leading (+${diff}) ⚡`;
+    } else if (p1Correct > p0Correct) {
+      const diff = p1Correct - p0Correct;
+      leadStatus = locale === "ar"
+        ? `اللاعب 2 متقدم (+${diff}) ⚡`
+        : `Player 2 leading (+${diff}) ⚡`;
+    }
+
+    return (
+      <div className={styles.wrap}>
+        {/* Spectator Telemetry HUD */}
+        <div className={styles.telemetryHud}>
+          <div className={[styles.scorePod, styles.podPlayer0].join(" ")}>
+            <span className={styles.podLabel}>{locale === "ar" ? "اللاعب 1" : "Player 1"}</span>
+            <span className={`nz-num ${styles.podValue}`}>{p0Correct}</span>
+            <span className={styles.podSubText}>
+              {p0Answered} / {total} {locale === "ar" ? "سؤال" : "answered"}
+            </span>
+          </div>
+
+          <div className={styles.vsDivider}>VS</div>
+
+          <div className={[styles.scorePod, styles.podPlayer1].join(" ")}>
+            <span className={styles.podLabel}>{locale === "ar" ? "اللاعب 2" : "Player 2"}</span>
+            <span className={`nz-num ${styles.podValue}`}>{p1Correct}</span>
+            <span className={styles.podSubText}>
+              {p1Answered} / {total} {locale === "ar" ? "سؤال" : "answered"}
+            </span>
+          </div>
+        </div>
+
+        {/* Live Race Telemetry Card */}
+        <div className={[styles.cardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
+          <div className={styles.spectatorCard}>
+            <div className={styles.spectatorHeader}>
+              <span className={styles.spectatorLiveBadge}>
+                <span className={styles.spectatorPulseDot} />
+                {locale === "ar" ? "بث مباشر • سباق الحساب السريع" : "LIVE STREAM • Speed Math"}
+              </span>
+              <span className={styles.leadStatusBadge}>{leadStatus}</span>
+            </div>
+
+            {/* Race Tracks */}
+            <div className={styles.raceTracks}>
+              {/* Player 1 Track */}
+              <div className={styles.raceRow}>
+                <div className={styles.raceMeta}>
+                  <span className={styles.raceName}>{locale === "ar" ? "اللاعب 1" : "Player 1"}</span>
+                  <span className={styles.raceStat}>
+                    <strong className="nz-num">{p0Correct}</strong> {locale === "ar" ? "صحيحة" : "correct"} • <strong className="nz-num">{p0Acc}%</strong> {locale === "ar" ? "دقة" : "acc"}
+                  </span>
+                </div>
+                <div className={styles.trackBar}>
+                  <div
+                    className={styles.trackFill0}
+                    style={{ width: `${Math.max(4, p0Pct)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Player 2 Track */}
+              <div className={styles.raceRow}>
+                <div className={styles.raceMeta}>
+                  <span className={styles.raceName}>{locale === "ar" ? "اللاعب 2" : "Player 2"}</span>
+                  <span className={styles.raceStat}>
+                    <strong className="nz-num">{p1Correct}</strong> {locale === "ar" ? "صحيحة" : "correct"} • <strong className="nz-num">{p1Acc}%</strong> {locale === "ar" ? "دقة" : "acc"}
+                  </span>
+                </div>
+                <div className={styles.trackBar}>
+                  <div
+                    className={styles.trackFill1}
+                    style={{ width: `${Math.max(4, p1Pct)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.spectatorNotice}>
+              <span>🔒 {locale === "ar" ? "الأسئلة مشفرة أثناء البث المباشر لمنع أي تسريب وضمان النزاهة التامة" : "Questions hidden during live stream to maintain competitive integrity"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const myScore = mySeat !== null ? scores.correct[mySeat] : null;
