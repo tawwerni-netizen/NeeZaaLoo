@@ -24,3 +24,4 @@ data/
 .server.pid
 .claude/
 skills-lock.json
+*.apk
