@@ -5203,13 +5203,23 @@ function buildRoutes() {
       } },
 
     { method: "POST", path: "/v1/admin/risk/resolve", action: "admin.risk.decide",
-      handler: async ({ body, db }) => {
+      handler: async ({ body, db, actor }) => {
         const id = String(body?.id ?? "");
         const type = String(body?.type ?? "risk_alert");
         if (!id) return { status: 400, body: errorBody("MISSING_ID") };
 
         if (type === "reconciliation_case") {
-          await db.query(`UPDATE reconciliation_case SET status = 'RESOLVED', resolved_at = now() WHERE id = $1`, [id]).catch(() => {});
+          const resolver = actor?.id ?? "Manar1996";
+          await db.query(
+            `UPDATE reconciliation_case
+                SET status = 'RESOLVED',
+                    resolved_by = $2,
+                    resolved_at = now(),
+                    resolution = 'RESOLVED',
+                    resolution_note = 'Investigated and resolved in risk dashboard'
+              WHERE id = $1`,
+            [id, resolver]
+          );
           return { body: { ok: true, id, status: "RESOLVED" } };
         }
 
