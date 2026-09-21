@@ -396,6 +396,7 @@ export function createReconciliationService(db, {
             WHERE tier = 'CASH' AND is_vs_computer = FALSE
               AND status IN ('COMPLETED','SETTLED')
               AND completed_at >= now() - ($1 || ' minutes')::interval
+              AND id NOT LIKE 'duel_live_%'
             ORDER BY completed_at DESC LIMIT $2`,
           [String(sinceMinutes), limit]
         );
@@ -498,6 +499,7 @@ export function createReconciliationService(db, {
         const stuck = await conn.query(
           `SELECT id, completed_at, fairplay_hold FROM duel
             WHERE status = 'COMPLETED' AND completed_at < now() - ($1 || ' minutes')::interval
+              AND id NOT LIKE 'duel_live_%'
             ORDER BY completed_at LIMIT $2`,
           [String(slaMinutes), limit]
         );

@@ -14,7 +14,8 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "tsc -b --pretty",
     "build": "npm run build --workspace=apps/web",
-    "start": "node --v8-pool-size=1 server.js"
+    "start": "node --v8-pool-size=1 server.js",
+    "maintenance:vacuum": "node scripts/periodic_vacuum_and_cleanup.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
