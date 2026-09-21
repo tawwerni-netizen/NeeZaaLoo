@@ -44,10 +44,19 @@ function ProfileContent() {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [cropperImage, setCropperImage] = useState<string | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   async function reload() {
     setProfile(await get<PublicProfile>("/v1/me/profile"));
+  }
+
+  function copyInviteLink() {
+    if (!profile?.referralCode) return;
+    const url = `${window.location.origin}/r/${profile.referralCode}`;
+    void navigator.clipboard.writeText(url);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2500);
   }
 
   useEffect(() => { void reload(); }, []);
@@ -151,6 +160,21 @@ function ProfileContent() {
               <span className={styles.expTag}>
                 ⭐ {profile.exp.totalExp} {t("profile.exp_label")}
               </span>
+              {profile.referredBy ? (
+                <span className={styles.referredByTag}>
+                  🤝 {locale === "ar" ? "تمت الدعوة بواسطة:" : "Invited by:"}{" "}
+                  <LocaleLink
+                    href={`/players/${encodeURIComponent(profile.referredBy.nickname)}`}
+                    className={styles.referrerLink}
+                  >
+                    {profile.referredBy.nickname}
+                  </LocaleLink>
+                </span>
+              ) : (
+                <span className={styles.directJoinTag}>
+                  ✨ {locale === "ar" ? "انضمام مباشر" : "Direct Join"}
+                </span>
+              )}
             </div>
 
             <div className={styles.expContainer}>
@@ -299,6 +323,73 @@ function ProfileContent() {
                       <p className={styles.streakAtRisk}>{t("profile.streak_at_risk")}</p>
                     )}
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Referrals / Invited Players Card */}
+            <div className={styles.card}>
+              <div className={styles.cardHeaderWithAction}>
+                <h2 className={styles.cardTitle} style={{ margin: 0 }}>
+                  <span>👥</span> {locale === "ar" ? "اللاعبون المدعوون عبر رابطك" : "Invited Players"}
+                  <span className={styles.countBadge}>{profile.referralsCount ?? profile.referrals?.length ?? 0}</span>
+                </h2>
+                {profile.referralCode && (
+                  <button
+                    type="button"
+                    className={styles.copyInviteBtn}
+                    onClick={copyInviteLink}
+                  >
+                    {copiedCode
+                      ? (locale === "ar" ? "✅ تم نسخ رابط الدعوة!" : "✅ Link Copied!")
+                      : (locale === "ar" ? "🔗 نسخ رابط الدعوة" : "🔗 Copy Invite Link")}
+                  </button>
+                )}
+              </div>
+
+              {profile.referralCode && (
+                <div style={{ marginBottom: "14px" }}>
+                  <div className={styles.referralCodeBox}>
+                    <span className={styles.referralCodeLabel}>
+                      {locale === "ar" ? "كود الإحالة الخاص بك:" : "Your Referral Code:"}
+                    </span>
+                    <span className={styles.referralCodeVal}>{profile.referralCode}</span>
+                  </div>
+                </div>
+              )}
+
+              {(!profile.referrals || profile.referrals.length === 0) ? (
+                <div className={styles.emptyReferrals}>
+                  <p className={styles.empty}>
+                    {locale === "ar"
+                      ? "لم يقم أي لاعب بالانضمام عبر رابطك بعد. شارك رابطك مع أصدقائك واكسب المكافآت!"
+                      : "No players have joined using your referral link yet. Share your link with friends to earn rewards!"}
+                  </p>
+                </div>
+              ) : (
+                <div className={styles.referralsList}>
+                  {profile.referrals.map((ref) => (
+                    <div key={ref.id} className={styles.referralRow}>
+                      <div className={styles.referralPlayerInfo}>
+                        <Avatar nickname={ref.nickname} avatarUrl={ref.avatarUrl} size={36} />
+                        <div>
+                          <LocaleLink
+                            href={`/players/${encodeURIComponent(ref.nickname)}`}
+                            className={styles.referralNickname}
+                          >
+                            {ref.nickname}
+                          </LocaleLink>
+                          <div className={styles.referralDate}>
+                            {locale === "ar" ? "انضم في: " : "Joined: "}
+                            {new Date(ref.attributedAt || ref.memberSince).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US")}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={styles.referralStatusPill}>
+                        {locale === "ar" ? "✅ مسجل ونشط" : "✅ Active"}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

@@ -43,6 +43,23 @@ export type StreakStatus = { current: number; longest: number; activeToday: bool
 
 export type TournamentStats = { played: number; won: number };
 
+export type ReferredBy = {
+  id: string;
+  nickname: string;
+  avatarUrl: string | null;
+  code: string;
+  joinedAt: string;
+};
+
+export type ReferredPlayer = {
+  id: string;
+  nickname: string;
+  avatarUrl: string | null;
+  memberSince: string;
+  attributedAt: string;
+  rewardState?: string;
+};
+
 export type PublicProfile = {
   id: string;
   nickname: string;
@@ -64,6 +81,10 @@ export type PublicProfile = {
   badges: PlayerBadge[];
   frames: string[];
   memberSince: string;
+  referredBy?: ReferredBy | null;
+  referrals?: ReferredPlayer[];
+  referralsCount?: number;
+  referralCode?: string | null;
 };
 
 /** The small, fast shape for chat/leaderboard/spectator previews. */

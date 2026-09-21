@@ -109,6 +109,57 @@ export function createProfileService(db, {
     return id ? previewFor(id) : null;
   }
 
+  async function referralInfo(playerId) {
+    try {
+      const [refByRes, refsRes, codeRes] = await Promise.all([
+        db.query(`
+          SELECT ra.referrer_player_id, p.handle AS referrer_handle, p.avatar_key AS referrer_avatar_key,
+                 ra.referral_code, ra.attributed_at
+            FROM referral_attribution ra
+            JOIN player p ON p.id = ra.referrer_player_id
+           WHERE ra.referred_player_id = $1
+        `, [playerId]),
+        db.query(`
+          SELECT ra.referred_player_id, p.handle AS referred_handle, p.avatar_key AS referred_avatar_key,
+                 p.created_at AS member_since, ra.attributed_at,
+                 COALESCE(rr.state, 'PENDING') AS reward_state
+            FROM referral_attribution ra
+            JOIN player p ON p.id = ra.referred_player_id
+            LEFT JOIN referral_reward rr ON rr.attribution_id = ra.id
+           WHERE ra.referrer_player_id = $1
+           ORDER BY ra.attributed_at DESC
+           LIMIT 50
+        `, [playerId]),
+        db.query(`
+          SELECT code FROM referral_code WHERE player_id = $1
+        `, [playerId]),
+      ]);
+
+      const refByRow = refByRes.rows[0];
+      const referredBy = refByRow ? {
+        id: refByRow.referrer_player_id,
+        nickname: refByRow.referrer_handle,
+        avatarUrl: avatarStorage.getPublicUrl(refByRow.referrer_avatar_key),
+        code: refByRow.referral_code,
+        joinedAt: refByRow.attributed_at,
+      } : null;
+
+      const referrals = refsRes.rows.map((r) => ({
+        id: r.referred_player_id,
+        nickname: r.referred_handle,
+        avatarUrl: avatarStorage.getPublicUrl(r.referred_avatar_key),
+        memberSince: r.member_since,
+        attributedAt: r.attributed_at,
+        rewardState: r.reward_state,
+      }));
+
+      const referralCode = codeRes.rows[0]?.code ?? null;
+      return { referredBy, referrals, referralCode };
+    } catch {
+      return { referredBy: null, referrals: [], referralCode: null };
+    }
+  }
+
   async function publicProfileFor(playerId) {
     const p = await db.query(
       "SELECT id, handle, bio, avatar_key, selected_badge_code, selected_frame_code, allow_direct_messages, created_at, clan_id, (SELECT tag FROM clan WHERE id = player.clan_id) AS clan_tag FROM player WHERE id = $1", [playerId]
@@ -118,7 +169,7 @@ export function createProfileService(db, {
 
     const [
       totalExp, achievements, badges, frames, stats, ratings, skill,
-      mastery, streak, peakRatings, tournaments,
+      mastery, streak, peakRatings, tournaments, refData,
     ] = await Promise.all([
       expService.totalFor(playerId),
       achievementService.listFor(playerId),
@@ -131,6 +182,7 @@ export function createProfileService(db, {
       streakService.streakFor(playerId),
       highestRatings(playerId),
       tournamentStats(playerId),
+      referralInfo(playerId),
     ]);
 
     return {
@@ -138,6 +190,7 @@ export function createProfileService(db, {
       nickname: row.handle,
       bio: row.bio,
       avatarUrl: avatarStorage.getPublicUrl(row.avatar_key),
+      clanTag: row.clan_tag,
       selectedBadge: row.selected_badge_code,
       selectedFrame: row.selected_frame_code,
       allowDirectMessages: row.allow_direct_messages ?? true,
@@ -153,6 +206,10 @@ export function createProfileService(db, {
       badges: badges.map((b) => ({ code: b.badge_code, source: b.source })),
       frames: frames.map((f) => f.frame_code),
       memberSince: row.created_at,
+      referredBy: refData.referredBy,
+      referrals: refData.referrals,
+      referralsCount: refData.referrals.length,
+      referralCode: refData.referralCode,
     };
   }
 

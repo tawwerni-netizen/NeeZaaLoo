@@ -21,7 +21,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ nickna
 }
 
 function PublicProfileContent({ nickname }: { nickname: string }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -55,6 +55,21 @@ function PublicProfileContent({ nickname }: { nickname: string }) {
               <span>{t("profile.level_label")} {profile.exp.level}</span>
               <span>{t("profile.exp_label")} {profile.exp.totalExp}</span>
               {profile.globalSkill != null && <span>{t("profile.global_skill_label")} {profile.globalSkill}</span>}
+              {profile.referredBy ? (
+                <span className={styles.referredByTag}>
+                  🤝 {locale === "ar" ? "تمت الدعوة بواسطة:" : "Invited by:"}{" "}
+                  <LocaleLink
+                    href={`/players/${encodeURIComponent(profile.referredBy.nickname)}`}
+                    className={styles.referrerLink}
+                  >
+                    {profile.referredBy.nickname}
+                  </LocaleLink>
+                </span>
+              ) : (
+                <span className={styles.directJoinTag}>
+                  ✨ {locale === "ar" ? "انضمام مباشر" : "Direct Join"}
+                </span>
+              )}
             </div>
           </div>
           <Button variant="ghost" onClick={() => setReporting(true)}>{t("profile.report_cta")}</Button>
@@ -133,6 +148,41 @@ function PublicProfileContent({ nickname }: { nickname: string }) {
             </div>
           )}
         </div>
+
+        {profile.referrals && profile.referrals.length > 0 && (
+          <div className={styles.card}>
+            <div className={styles.cardHeaderWithAction}>
+              <h2 className={styles.cardTitle} style={{ margin: 0 }}>
+                <span>👥</span> {locale === "ar" ? "اللاعبون المدعوون عبر هذا اللاعب" : "Players Invited by this Player"}
+                <span className={styles.countBadge}>{profile.referralsCount ?? profile.referrals.length}</span>
+              </h2>
+            </div>
+            <div className={styles.referralsList}>
+              {profile.referrals.map((ref) => (
+                <div key={ref.id} className={styles.referralRow}>
+                  <div className={styles.referralPlayerInfo}>
+                    <Avatar nickname={ref.nickname} avatarUrl={ref.avatarUrl} size={36} />
+                    <div>
+                      <LocaleLink
+                        href={`/players/${encodeURIComponent(ref.nickname)}`}
+                        className={styles.referralNickname}
+                      >
+                        {ref.nickname}
+                      </LocaleLink>
+                      <div className={styles.referralDate}>
+                        {locale === "ar" ? "انضم في: " : "Joined: "}
+                        {new Date(ref.attributedAt || ref.memberSince).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US")}
+                      </div>
+                    </div>
+                  </div>
+                  <span className={styles.referralStatusPill}>
+                    {locale === "ar" ? "✅ مسجل ونشط" : "✅ Active"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <p className={styles.memberSince}>
           {t("profile.member_since_label")} {new Date(profile.memberSince).toLocaleDateString()}
