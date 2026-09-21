@@ -123,6 +123,9 @@ export const Events = Object.freeze({
     MISMATCH_FOUND: "reconciliation.mismatch_found",
     CASE_OPENED: "reconciliation.case_opened",
   }),
+  EVIDENCE: Object.freeze({
+    CLEANUP_PURGED: "evidence.cleanup_purged",
+  }),
   DB: Object.freeze({
     MIGRATIONS_APPLIED: "db.migrations_applied",
     MIGRATION_ERROR: "db.migration_error",

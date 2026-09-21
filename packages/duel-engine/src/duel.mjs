@@ -499,7 +499,7 @@ export function verifyReplay(replay, plugin) {
   // A simultaneous game has no turn order to check and no per-player clock to
   // charge; its only temporal rule is the shared deadline.
   const clock = simultaneous
-    ? createSharedClock({ durationMs: replay.timeControl.durationMs }, 0)
+    ? createSharedClock({ durationMs: replay.timeControl.durationMs ?? replay.timeControl.initialMs }, 0)
     : createClock(replay.timeControl, 0);
 
   // Errors are reported by ply — the number a human auditor counts — rather
