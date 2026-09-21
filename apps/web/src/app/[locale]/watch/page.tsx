@@ -24,7 +24,7 @@ import { getGame } from "@/lib/games";
 import { LiveMatchShareModal } from "@/components/game/LiveMatchShareModal";
 import styles from "./watch.module.css";
 
-type LiveMatchPlayer = { handle: string; badge: string | null; ratingX100: number | null };
+type LiveMatchPlayer = { handle: string; badge: string | null; ratingX100: number | null; avatarUrl?: string | null };
 type LiveMatch = {
   duelId: string;
   gameId: string;
@@ -333,7 +333,7 @@ function WatchContent() {
 function PlayerChip({ player }: { player: LiveMatchPlayer | undefined }) {
   if (!player) return null;
   const isBot = player.handle === 'Computer AI';
-  const avatarUrl = isBot ? `https://api.dicebear.com/7.x/bottts/svg?seed=${player.handle}&backgroundColor=1e293b` : null;
+  const avatarUrl = player.avatarUrl || (isBot ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" : null);
   const rating = player.ratingX100 != null ? Math.round(player.ratingX100 / 100) : 1200;
   
   // Rank color mapping

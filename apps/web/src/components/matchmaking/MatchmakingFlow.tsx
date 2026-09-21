@@ -36,7 +36,7 @@ import styles from "./MatchmakingFlow.module.css";
 
 type Ticket = { id: string; game_id: string; status: string; duel_id: string | null; enqueued_at: string } | null;
 type Duel = { id: string; game_id: string; seat_0: string; seat_1: string };
-type OpponentInfo = { id: string; handle: string };
+type OpponentInfo = { id: string; handle: string; avatarUrl?: string | null };
 
 const GAME_NAME_KEY: Record<string, string> = { chess: "chess", "speed-math": "speed_math" };
 
@@ -179,7 +179,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", damping: 12 }}
             >
-              <Avatar nickname={player?.handle || "You"} avatarUrl={null} size={100} />
+              <Avatar nickname={player?.handle || "You"} avatarUrl={(player as any)?.avatarUrl ?? null} size={100} />
               <span className={styles.vsHandleDramatic}>{player?.handle}</span>
             </motion.div>
             
@@ -198,7 +198,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", damping: 12 }}
             >
-              <Avatar nickname={opponent.handle} avatarUrl={null} size={100} />
+              <Avatar nickname={opponent.handle} avatarUrl={opponent.avatarUrl ?? null} size={100} />
               <span className={styles.vsHandleDramatic}>{opponent.handle}</span>
             </motion.div>
           </motion.div>

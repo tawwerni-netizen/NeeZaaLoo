@@ -157,6 +157,10 @@ export function generate600Personas() {
       const matchesWon = Math.round(totalMatches * winRate);
       const matchesLost = totalMatches - matchesWon;
 
+      const gender = (i % 2 === 0) ? "men" : "women";
+      const portraitNum = ((i * 7 + 13) % 95) + 1;
+      const avatarUrl = `https://randomuser.me/api/portraits/${gender}/${portraitNum}.jpg`;
+
       personas.push({
         id: `bot_${lang}_${String(i).padStart(3, "0")}`,
         handle,
@@ -175,6 +179,8 @@ export function generate600Personas() {
         personality,
         playStyle,
         avatarSeed: `${lang}-${i}`,
+        avatar_key: avatarUrl,
+        avatarUrl,
       });
     }
   }

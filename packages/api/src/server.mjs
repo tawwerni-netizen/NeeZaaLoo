@@ -2311,9 +2311,9 @@ function buildRoutes() {
         const r = await db.query(
           `SELECT d.id, d.game_id, d.status, d.started_at, d.created_at, d.pairing_key, d.is_vs_computer,
                   d.tier, d.stake_minor, d.asset,
-                  pa.handle AS handle_0, pa.selected_badge_code AS badge_0,
+                  pa.handle AS handle_0, pa.selected_badge_code AS badge_0, pa.avatar_key AS avatar_0,
                   COALESCE(pb.handle, CASE WHEN d.is_vs_computer THEN 'Computer AI' ELSE 'Player 2' END) AS handle_1,
-                  pb.selected_badge_code AS badge_1,
+                  pb.selected_badge_code AS badge_1, pb.avatar_key AS avatar_1,
                   ra.rating_x100 AS rating_0, rb.rating_x100 AS rating_1,
                   (SELECT count(*)::int FROM duel_event de WHERE de.duel_id = d.id) AS move_count
              FROM duel d
@@ -2359,11 +2359,12 @@ function buildRoutes() {
                 isTournamentMatch: row.pairing_key?.startsWith("tournament:") ?? false,
                 moveCount: row.move_count,
                 players: [
-                  { handle: row.handle_0, badge: row.badge_0, ratingX100: row.rating_0 ?? null },
+                  { handle: row.handle_0, badge: row.badge_0, ratingX100: row.rating_0 ?? null, avatarUrl: row.avatar_0 ?? null },
                   {
                     handle: row.handle_1,
                     badge: row.badge_1,
                     ratingX100: row.is_vs_computer ? 160000 : (row.rating_1 ?? null),
+                    avatarUrl: row.avatar_1 ?? null,
                   },
                 ],
               };
@@ -4093,7 +4094,7 @@ function buildRoutes() {
         const offsetParam = queryParams.length;
 
         const botsRes = await db.query(
-          `SELECT p.id, p.handle, p.bio, p.created_at,
+          `SELECT p.id, p.handle, p.bio, p.avatar_key, p.created_at,
                   COALESCE(lb.balance, 0)::text AS balance_minor,
                   ROUND(COALESCE(AVG(r.rating_x100), 150000) / 100.0) AS avg_rating,
                   COUNT(r.game_id)::int AS games_count
@@ -4102,7 +4103,7 @@ function buildRoutes() {
              LEFT JOIN ledger_balance lb ON lb.account_id = la.id
              LEFT JOIN rating r ON r.player_id = p.id
             ${whereSql}
-            GROUP BY p.id, p.handle, p.bio, p.created_at, lb.balance
+            GROUP BY p.id, p.handle, p.bio, p.avatar_key, p.created_at, lb.balance
             ORDER BY p.id ASC
             LIMIT $${limitParam} OFFSET $${offsetParam}`,
           queryParams
@@ -4113,6 +4114,7 @@ function buildRoutes() {
           id: row.id,
           handle: row.handle,
           bio: row.bio,
+          avatar_url: row.avatar_key,
           balance_usdt: (Number(BigInt(row.balance_minor || "0")) / 1_000_000).toFixed(2),
           avg_rating: Math.round(Number(row.avg_rating || 1500)),
           is_standing_by: standingBySet.has(row.id),

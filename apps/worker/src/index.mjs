@@ -63,6 +63,7 @@ import {
 import {
   createWorkerRuntime, createTickLoop, installGracefulShutdown, workerIdentity,
 } from "../../../packages/bootstrap/src/index.mjs";
+import { runMaintenance } from "../../../scripts/periodic_vacuum_and_cleanup.mjs";
 
 const { Pool } = pg;
 
@@ -293,6 +294,21 @@ async function main() {
     { intervalMs: liveArenaSimulatorIntervalMs }
   );
 
+  // Periodic Safe Database Maintenance & VACUUM (Every 6 Hours):
+  // Keeps database storage lean, purges transient events/notifications,
+  // reclaims dead tuples, and verifies ongoing system solvency.
+  const maintenanceIntervalMs = Number(process.env.MAINTENANCE_INTERVAL_MS || (6 * 3600 * 1000));
+  const maintenanceWorker = createTickLoop(
+    async () => {
+      try {
+        await runMaintenance();
+      } catch (err) {
+        logger.emit("maintenance.error", { severity: "error", error: err.message });
+      }
+    },
+    { intervalMs: maintenanceIntervalMs }
+  );
+
   const runtime = createWorkerRuntime({
     workers: [
       { name: "matchmaking_dispatch", worker: dispatchWorker },
@@ -300,6 +316,7 @@ async function main() {
       { name: "bot_match_simulator", worker: botSimulatorWorker, intervalMs: botSimulatorIntervalMs },
       { name: "radar_seeder", worker: radarSeederWorker, intervalMs: radarSeederIntervalMs },
       { name: "live_arena_simulator", worker: liveArenaSimulatorWorker, intervalMs: liveArenaSimulatorIntervalMs },
+      { name: "periodic_maintenance", worker: maintenanceWorker, intervalMs: maintenanceIntervalMs },
       // Reconciliation runs far less often than matchmaking dispatch --
       // minutes, not milliseconds -- so it declares its OWN interval here
       // rather than inheriting runtime.start()'s shared cadence. Absent

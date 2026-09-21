@@ -119,7 +119,7 @@ export default function RankPage() {
           <div className={styles.personalCard}>
             <div className={styles.personalInfo}>
               <div className={styles.personalAvatar}>
-                <Avatar nickname={player.handle} avatarUrl={null} size={48} />
+                <Avatar nickname={player.handle} avatarUrl={(player as any)?.avatarUrl ?? null} size={48} />
               </div>
               <div>
                 <span className={styles.personalLabel}>
@@ -216,7 +216,7 @@ export default function RankPage() {
                   <div className={`${styles.podiumCard} ${styles.rank2}`}>
                     <div className={styles.podiumCrown}>🥈</div>
                     <div className={styles.avatarWrap}>
-                      <Avatar nickname={top3[1].handle} avatarUrl={null} size={72} />
+                      <Avatar nickname={top3[1].handle} avatarUrl={top3[1].avatar_key ?? null} size={72} />
                       <span className={styles.rankBadge}>#2</span>
                     </div>
                     <h3 className={styles.podiumHandle}>
@@ -259,7 +259,7 @@ export default function RankPage() {
                   <div className={`${styles.podiumCard} ${styles.rank1}`}>
                     <div className={styles.podiumCrown}>👑 🥇</div>
                     <div className={styles.avatarWrap}>
-                      <Avatar nickname={top3[0].handle} avatarUrl={null} size={88} />
+                      <Avatar nickname={top3[0].handle} avatarUrl={top3[0].avatar_key ?? null} size={88} />
                       <span className={styles.rankBadgeGold}>#1</span>
                     </div>
                     <h3 className={styles.podiumHandle}>
@@ -302,7 +302,7 @@ export default function RankPage() {
                   <div className={`${styles.podiumCard} ${styles.rank3}`}>
                     <div className={styles.podiumCrown}>🥉</div>
                     <div className={styles.avatarWrap}>
-                      <Avatar nickname={top3[2].handle} avatarUrl={null} size={72} />
+                      <Avatar nickname={top3[2].handle} avatarUrl={top3[2].avatar_key ?? null} size={72} />
                       <span className={styles.rankBadge}>#3</span>
                     </div>
                     <h3 className={styles.podiumHandle}>
@@ -374,7 +374,7 @@ export default function RankPage() {
                           </td>
                           <td className={styles.colPlayer}>
                             <div className={styles.playerMeta}>
-                              <Avatar nickname={row.handle} avatarUrl={null} size={36} />
+                              <Avatar nickname={row.handle} avatarUrl={row.avatar_key ?? null} size={36} />
                               <div>
                                 <LocaleLink href={`/players/${row.handle}`} className={styles.playerNameLink}>
                                   {row.handle}

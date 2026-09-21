@@ -33,6 +33,7 @@ interface BotItem {
   id: string;
   handle: string;
   bio: string;
+  avatar_url?: string | null;
   balance_usdt: string;
   avg_rating: number;
   is_standing_by: boolean;
@@ -651,18 +652,33 @@ export default function AdminBotsPage() {
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <div
                             style={{
-                              width: "32px",
-                              height: "32px",
+                              width: "36px",
+                              height: "36px",
                               borderRadius: "50%",
                               background: "#1e2433",
+                              overflow: "hidden",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              fontSize: "15px",
+                              fontSize: "13px",
+                              fontWeight: 700,
+                              color: "#fff",
                               border: "1px solid #2d3748",
+                              flexShrink: 0,
                             }}
                           >
-                            🤖
+                            {bot.avatar_url ? (
+                              <img
+                                src={bot.avatar_url}
+                                alt={bot.handle}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              bot.handle.charAt(0).toUpperCase()
+                            )}
                           </div>
                           <div>
                             <div style={{ fontWeight: 700, color: "#fff", fontSize: "13px" }}>{bot.handle}</div>
