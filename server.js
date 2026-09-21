@@ -557,8 +557,7 @@ const server = createServer((req, res) => {
   }
 
   if (url.startsWith("/gateway")) {
-    res.writeHead(426, { "Content-Type": "text/plain", Upgrade: "WebSocket" });
-    res.end("Upgrade Required");
+    proxyHttp(req, res, gwPort);
     return;
   }
 

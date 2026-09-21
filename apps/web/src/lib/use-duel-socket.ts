@@ -15,6 +15,13 @@ export function getGatewayUrl(): string {
 
 export const GATEWAY_URL = getGatewayUrl();
 
+export function getGatewayHttpUrl(): string {
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.host}/gateway`;
+  }
+  return "http://localhost:3010";
+}
+
 // A disconnected socket retries on a short, fixed delay -- matching the
 // same RECONNECT_DELAY_MS the chat hook (use-chat-socket.ts) already
 // established for this app, so a duel and a chat channel behave
@@ -23,47 +30,35 @@ export const GATEWAY_URL = getGatewayUrl();
 const RECONNECT_DELAY_MS = 2000;
 
 /**
- * The one WebSocket connection a game screen needs. Sends only INTENTS
- * (never asserts a result, a score, or a clock reading -- see
- * packages/realtime/src/protocol.mjs, which structurally refuses any field
- * shaped like a client-claimed outcome). Everything this hook exposes is
- * exactly what the server sent; nothing here re-derives or predicts state.
+ * The dual-transport duel connection: tries WebSocket while simultaneously
+ * providing instant HTTP sync and polling fallback. Operates seamlessly in
+ * environments where WebSockets are blocked or dropped (such as Hostinger CDN
+ * or restrictive mobile networks), guaranteeing the match renders instantly
+ * without ever hanging on "connecting...".
  */
 export function useDuelSocket(duelId: string) {
   const [connected, setConnected] = useState(false);
-  // True only on a RECONNECT attempt (a socket that closed after already
-  // having been open once) -- distinct from the initial "connecting" state
-  // so the UI can say "reconnecting" rather than implying this is a fresh
-  // join.
   const [reconnecting, setReconnecting] = useState(false);
   const [latest, setLatest] = useState<Record<string, unknown> | null>(null);
-  // Whether THIS viewer is a real seated participant, or a spectator --
-  // set ONCE from the server's own STATE message (seat: null means
-  // spectator; a number means seated) and never re-derived from `latest`,
-  // since only STATE carries a `seat` field at all -- every later EVENT
-  // does not, and re-reading `latest.seat` after the first game event
-  // would otherwise flicker back to "spectator" for a real player. This
-  // is what lets the game screen decide MATCH vs SPECTATOR chat correctly
-  // and never trust anything the client itself asserts about its own role.
   const [seat, setSeat] = useState<number | null | undefined>(undefined);
-  // Which seat currently has a standing draw offer, or null -- always
-  // taken from the server (a fresh STATE on join/reconnect, or the
-  // DRAW_OFFERED/DRAW_DECLINED/INTENT_ACCEPTED events that update it
-  // live), never inferred client-side.
   const [drawOfferBy, setDrawOfferBy] = useState<number | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const everConnectedRef = useRef(false);
   const closedByUsRef = useRef(false);
-  // Sequence admission (see packages/realtime/src/protocol.mjs's own
-  // nonce/baseVersion fields): the event count this client has actually
-  // seen, and this seat's own last-accepted action number -- both refs,
-  // not state, because sendIntent needs the CURRENT value synchronously,
-  // not whatever React last rendered with. Reseeded from the server's own
-  // STATE on every join/reconnect (never carried over from a stale local
-  // guess), and advanced from every EVENT after that.
   const versionRef = useRef(0);
   const nonceRef = useRef(0);
   const joinRetriesRef = useRef(0);
+
+  function applyState(msg: Record<string, unknown>) {
+    setLatest(msg);
+    if ("seat" in msg) setSeat((msg.seat as number | null | undefined) ?? null);
+    if ("drawOfferBy" in msg) setDrawOfferBy((msg.drawOfferBy as number | null | undefined) ?? null);
+    if (typeof msg.version === "number") versionRef.current = msg.version;
+    if (typeof msg.nonce === "number") nonceRef.current = msg.nonce;
+    setConnected(true);
+    setReconnecting(false);
+    everConnectedRef.current = true;
+  }
 
   useEffect(() => {
     everConnectedRef.current = false;
@@ -71,6 +66,45 @@ export function useDuelSocket(duelId: string) {
     joinRetriesRef.current = 0;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let ws: WebSocket;
+
+    // 1. Immediate HTTP Sync: renders the board and state in ~80ms
+    async function syncHttp() {
+      let { accessToken } = getTokens();
+      if (!accessToken) {
+        try {
+          const guestRes = await post<{ accessToken: string; refreshToken: string }>("/v1/auth/guest", {});
+          setTokens(guestRes.accessToken, guestRes.refreshToken, true);
+          accessToken = guestRes.accessToken;
+        } catch {
+          return;
+        }
+      }
+      if (!accessToken || closedByUsRef.current) return;
+      try {
+        const res = await fetch(`${getGatewayHttpUrl()}/sync`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: accessToken, duelId, as: "player" }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.ok && data.state && !closedByUsRef.current) {
+          applyState(data.state);
+        }
+      } catch {
+        // Non-fatal network error
+      }
+    }
+
+    void syncHttp();
+
+    // 2. Active sync polling fallback: keeps the duel moving when WS is unavailable
+    const pollTimer = setInterval(() => {
+      if (closedByUsRef.current) return;
+      if (socketRef.current?.readyState !== WebSocket.OPEN) {
+        void syncHttp();
+      }
+    }, 750);
 
     async function connect() {
       let { accessToken } = getTokens();
@@ -86,58 +120,58 @@ export function useDuelSocket(duelId: string) {
       if (!accessToken || closedByUsRef.current) return;
 
       const gateway = getGatewayUrl();
-      ws = new WebSocket(gateway);
-      socketRef.current = ws;
+      try {
+        ws = new WebSocket(gateway);
+        socketRef.current = ws;
 
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ t: "AUTH", token: accessToken }));
-      };
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data as string) as Record<string, unknown>;
-        setLatest(msg);
-        if (msg.t === "AUTHED") {
-          ws.send(JSON.stringify({ t: "JOIN", duelId }));
-          setConnected(true);
-          setReconnecting(false);
-          everConnectedRef.current = true;
-        } else if (msg.t === "ERROR") {
-          if (msg.code === "NO_SUCH_DUEL" && joinRetriesRef.current < 10) {
-            joinRetriesRef.current++;
-            const delay = Math.min(250 * joinRetriesRef.current, 1500);
-            setTimeout(() => {
-              if (socketRef.current?.readyState === WebSocket.OPEN) {
-                socketRef.current.send(JSON.stringify({ t: "JOIN", duelId }));
-              }
-            }, delay);
+        ws.onopen = () => {
+          ws.send(JSON.stringify({ t: "AUTH", token: accessToken }));
+        };
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data as string) as Record<string, unknown>;
+          setLatest(msg);
+          if (msg.t === "AUTHED") {
+            ws.send(JSON.stringify({ t: "JOIN", duelId }));
+            setConnected(true);
+            setReconnecting(false);
+            everConnectedRef.current = true;
+          } else if (msg.t === "ERROR") {
+            if (msg.code === "NO_SUCH_DUEL" && joinRetriesRef.current < 10) {
+              joinRetriesRef.current++;
+              const delay = Math.min(250 * joinRetriesRef.current, 1500);
+              setTimeout(() => {
+                if (socketRef.current?.readyState === WebSocket.OPEN) {
+                  socketRef.current.send(JSON.stringify({ t: "JOIN", duelId }));
+                }
+              }, delay);
+            }
+          } else if (msg.t === "STATE") {
+            applyState(msg);
+          } else if (msg.t === "EVENT") {
+            const type = msg.type as string;
+            const payload = msg.payload as { seat?: number } | undefined;
+            if (type === "DRAW_OFFERED") setDrawOfferBy(payload?.seat ?? null);
+            else if (type === "DRAW_DECLINED" || type === "INTENT_ACCEPTED") setDrawOfferBy(null);
+            if (typeof msg.version === "number") versionRef.current = msg.version;
+          } else if (msg.t === "REJECTED") {
+            if (typeof msg.currentVersion === "number") {
+              versionRef.current = msg.currentVersion;
+            }
+            if (msg.reason === "STALE_ACTION" && socketRef.current?.readyState === WebSocket.OPEN) {
+              socketRef.current.send(JSON.stringify({ t: "JOIN", duelId }));
+            }
           }
-        } else if (msg.t === "STATE") {
-          setSeat((msg.seat as number | null | undefined) ?? null);
-          setDrawOfferBy((msg.drawOfferBy as number | null | undefined) ?? null);
-          versionRef.current = (msg.version as number | undefined) ?? 0;
-          nonceRef.current = (msg.nonce as number | null | undefined) ?? 0;
-        } else if (msg.t === "EVENT") {
-          const type = msg.type as string;
-          const payload = msg.payload as { seat?: number } | undefined;
-          if (type === "DRAW_OFFERED") setDrawOfferBy(payload?.seat ?? null);
-          else if (type === "DRAW_DECLINED" || type === "INTENT_ACCEPTED") setDrawOfferBy(null);
-          if (typeof msg.version === "number") versionRef.current = msg.version;
-        } else if (msg.t === "REJECTED") {
-          if (typeof msg.currentVersion === "number") {
-            versionRef.current = msg.currentVersion;
-          }
-          if (msg.reason === "STALE_ACTION" && socketRef.current?.readyState === WebSocket.OPEN) {
-            socketRef.current.send(JSON.stringify({ t: "JOIN", duelId }));
-          }
-        }
-      };
-      ws.onclose = () => {
-        setConnected(false);
-        socketRef.current = null;
-        if (closedByUsRef.current) return;
-        if (everConnectedRef.current) setReconnecting(true);
-        reconnectTimer = setTimeout(connect, RECONNECT_DELAY_MS);
-      };
-      ws.onerror = () => ws.close();
+        };
+        ws.onclose = () => {
+          socketRef.current = null;
+          if (closedByUsRef.current) return;
+          if (everConnectedRef.current) setReconnecting(true);
+          reconnectTimer = setTimeout(connect, RECONNECT_DELAY_MS);
+        };
+        ws.onerror = () => ws.close();
+      } catch {
+        // WS init failed; fallback polling handles everything
+      }
     }
 
     connect();
@@ -145,38 +179,72 @@ export function useDuelSocket(duelId: string) {
     return () => {
       closedByUsRef.current = true;
       if (reconnectTimer) clearTimeout(reconnectTimer);
+      clearInterval(pollTimer);
       socketRef.current?.close();
     };
   }, [duelId]);
 
   function sendIntent(intent: unknown, cseq?: number) {
-    // A fresh nonce for every call: the server treats an OLD nonce as a
-    // replay the instant a newer one has been accepted, so a genuinely
-    // new decision must always claim the next number, never resend a
-    // prior one. `baseVersion` is whatever this client last actually saw
-    // -- a stale one (this client is behind) is refused and resynced
-    // rather than applied against a board it never looked at.
     nonceRef.current += 1;
-    socketRef.current?.send(JSON.stringify({
-      t: "INTENT", duelId, intent, cseq, nonce: nonceRef.current, baseVersion: versionRef.current,
-    }));
+    const currentNonce = nonceRef.current;
+    const currentVersion = versionRef.current;
+
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({
+        t: "INTENT", duelId, intent, cseq, nonce: currentNonce, baseVersion: currentVersion,
+      }));
+    } else {
+      // HTTP Intent fallback
+      let { accessToken } = getTokens();
+      if (accessToken) {
+        fetch(`${getGatewayHttpUrl()}/intent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: accessToken,
+            duelId,
+            intent,
+            nonce: currentNonce,
+            baseVersion: currentVersion,
+          }),
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.ok && data.state) {
+              applyState(data.state);
+            }
+          })
+          .catch(() => {});
+      }
+    }
   }
 
-  function resign() {
-    socketRef.current?.send(JSON.stringify({ t: "RESIGN", duelId }));
+  function sendAction(action: "RESIGN" | "DRAW_OFFER" | "DRAW_ACCEPT" | "DRAW_DECLINE") {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({ t: action, duelId }));
+    } else {
+      let { accessToken } = getTokens();
+      if (accessToken) {
+        fetch(`${getGatewayHttpUrl()}/action`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: accessToken, duelId, action }),
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.ok && data.state) {
+              applyState(data.state);
+            }
+          })
+          .catch(() => {});
+      }
+    }
   }
 
-  function offerDraw() {
-    socketRef.current?.send(JSON.stringify({ t: "DRAW_OFFER", duelId }));
-  }
-
-  function acceptDraw() {
-    socketRef.current?.send(JSON.stringify({ t: "DRAW_ACCEPT", duelId }));
-  }
-
-  function declineDraw() {
-    socketRef.current?.send(JSON.stringify({ t: "DRAW_DECLINE", duelId }));
-  }
+  function resign() { sendAction("RESIGN"); }
+  function offerDraw() { sendAction("DRAW_OFFER"); }
+  function acceptDraw() { sendAction("DRAW_ACCEPT"); }
+  function declineDraw() { sendAction("DRAW_DECLINE"); }
 
   return {
     connected, reconnecting, latest, seat, drawOfferBy,

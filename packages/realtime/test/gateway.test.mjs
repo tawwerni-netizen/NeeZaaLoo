@@ -743,3 +743,68 @@ describe("VS_COMPUTER against a SIMULTANEOUS game -- the bot paces itself indepe
     await alice.close();
   });
 });
+
+describe("HTTP fallback endpoints", () => {
+  test("GET /health returns gateway health and CORS headers", async () => {
+    const res = await fetch(`http://127.0.0.1:${gw.port}/health`);
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.ok, true);
+    assert.equal(data.service, "gateway");
+    assert.equal(res.headers.get("access-control-allow-origin"), "*");
+  });
+
+  test("POST /sync returns authoritative state for player", async () => {
+    newDuel("d-http-sync");
+    const res = await fetch(`http://127.0.0.1:${gw.port}/sync`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: "tok-alice", duelId: "d-http-sync", as: "player" }),
+    });
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.ok, true);
+    assert.equal(data.state.duelId, "d-http-sync");
+    assert.equal(data.state.gameId, "chess");
+    assert.equal(data.state.seat, 0);
+    assert.ok(data.state.view);
+  });
+
+  test("POST /intent applies move and updates state", async () => {
+    newDuel("d-http-intent");
+    // Alice moves e2e4
+    const res = await fetch(`http://127.0.0.1:${gw.port}/intent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token: "tok-alice",
+        duelId: "d-http-intent",
+        intent: "e2e4",
+        nonce: 1,
+        baseVersion: 0,
+      }),
+    });
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.ok, true);
+    assert.equal(data.state.version, 2);
+  });
+
+  test("POST /action with RESIGN completes the match", async () => {
+    newDuel("d-http-action");
+    const res = await fetch(`http://127.0.0.1:${gw.port}/action`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token: "tok-alice",
+        duelId: "d-http-action",
+        action: "RESIGN",
+      }),
+    });
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.ok, true);
+    assert.equal(data.state.status, "COMPLETED");
+    assert.equal(data.state.outcome.result, "0-1");
+  });
+});

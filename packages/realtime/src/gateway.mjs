@@ -11,6 +11,7 @@
  * result. Reconnection is therefore trivial and safe: the server simply states
  * the truth again.
  */
+import http from "node:http";
 import { WebSocketServer } from "ws";
 import {
   ClientMsg, ServerMsg, ErrorCode, parseClientFrame,
@@ -197,8 +198,159 @@ export function createGateway({
     return originAllowlist.has(origin);
   }
 
+  const httpServer = http.createServer(async (req, res) => {
+    const origin = req.headers.origin || "";
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+
+    if (req.method === "OPTIONS") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    const rawUrl = req.url || "/";
+    const pathname = rawUrl.split("?")[0].replace(/^\/gateway/, "") || "/";
+
+    if (pathname === "/health" || pathname === "/") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, service: "gateway", duels: duels.size }));
+      return;
+    }
+
+    if (req.method === "POST" && (pathname === "/sync" || pathname === "/intent" || pathname === "/action")) {
+      let bodyStr = "";
+      req.on("data", (chunk) => {
+        bodyStr += chunk;
+        if (bodyStr.length > 65536) req.destroy();
+      });
+      req.on("end", async () => {
+        try {
+          const body = JSON.parse(bodyStr || "{}");
+          const t = now();
+          const token = body.token || (req.headers.authorization?.replace(/^Bearer\s+/i, ""));
+          const playerId = await resolveIdentity(token);
+          if (!playerId) {
+            res.writeHead(401, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: false, error: "UNAUTHORIZED" }));
+            return;
+          }
+
+          const duelId = body.duelId;
+          if (!duelId || typeof duelId !== "string") {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: false, error: "MISSING_DUEL_ID" }));
+            return;
+          }
+
+          let duel = duels.get(duelId);
+          if (!duel && lease && store) {
+            const claimRes = await claimDuel(duelId);
+            if (claimRes.ok) duel = duels.get(duelId);
+          }
+          if (!duel) {
+            res.writeHead(404, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: false, error: "NO_SUCH_DUEL" }));
+            return;
+          }
+
+          const plugin = plugins.get(duel.gameId);
+          if (!plugin) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: false, error: "NO_PLUGIN" }));
+            return;
+          }
+
+          if (pathname === "/sync") {
+            const seat = seatFor(duel, playerId);
+            const isSeated = seat >= 0;
+            if (isSeated) {
+              duel.seatConns ??= [new Set(), new Set()];
+              const bot0 = getBotSeat(duel, 0);
+              const bot1 = getBotSeat(duel, 1);
+              const has0 = Boolean(bot0) || (duel.seatConns[0]?.size ?? 0) > 0 || seat === 0;
+              const has1 = Boolean(bot1) || (duel.seatConns[1]?.size ?? 0) > 0 || seat === 1;
+              if (duel.status === DuelState.READY && has0 && has1) {
+                await store.markLive(duel, t);
+                duel.status = DuelState.LIVE;
+                if (duel.clock.model === "SHARED") duel.clock.startedAt = t;
+                else duel.clock.turnStartedAt = t;
+                duel.startedAt = t;
+              }
+            }
+            scheduleBotMoveIfNeeded(duel, plugin);
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: true, state: stateFor(duel, plugin, { playerId }, t) }));
+            return;
+          }
+
+          if (pathname === "/intent") {
+            if (seatFor(duel, playerId) < 0) {
+              res.writeHead(403, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ ok: false, error: "NOT_A_PARTICIPANT" }));
+              return;
+            }
+            const before = duel.events.length;
+            const resIntent = runIntent(duel, plugin, {
+              playerId,
+              intent: body.intent,
+              nonce: body.nonce,
+              baseVersion: body.baseVersion,
+            }, t);
+
+            if (!resIntent.ok) {
+              res.writeHead(200, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({
+                ok: false,
+                reason: resIntent.reason,
+                detail: resIntent.detail,
+                state: stateFor(duel, plugin, { playerId }, t),
+              }));
+              return;
+            }
+
+            await publishNewEvents(duel, plugin, before);
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: true, state: stateFor(duel, plugin, { playerId }, t) }));
+            return;
+          }
+
+          if (pathname === "/action") {
+            const before = duel.events.length;
+            let actionRes = { ok: false };
+            if (body.action === "RESIGN") {
+              actionRes = resign(duel, playerId, t);
+            } else if (body.action === "DRAW_OFFER") {
+              actionRes = offerDraw(duel, plugin, playerId, t);
+            } else if (body.action === "DRAW_ACCEPT") {
+              actionRes = acceptDraw(duel, playerId, t);
+            } else if (body.action === "DRAW_DECLINE") {
+              actionRes = declineDraw(duel, playerId, t);
+            }
+            if (actionRes.ok) {
+              await publishNewEvents(duel, plugin, before);
+            }
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: actionRes.ok, state: stateFor(duel, plugin, { playerId }, t) }));
+            return;
+          }
+        } catch (err) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: false, error: err.message }));
+        }
+      });
+      return;
+    }
+
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "NOT_FOUND" }));
+  });
+
   const wss = new WebSocketServer({
-    ...(host ? { port, host } : { port }),
+    server: httpServer,
     verifyClient: ({ origin }, done) => {
       if (originAllowed(origin)) return done(true);
       // 403, not a silent drop: a misconfigured allowlist should be obvious
@@ -206,6 +358,11 @@ export function createGateway({
       done(false, 403, "origin not allowed");
     },
   });
+
+  if (port != null) {
+    if (host) httpServer.listen(port, host);
+    else httpServer.listen(port);
+  }
   /** duelId -> Set<connection> */
   const rooms = new Map();
   /** chat channelId -> Set<connection> -- deliberately separate from `rooms`
@@ -1183,8 +1340,9 @@ export function createGateway({
 
   return {
     wss,
-    get port() { return wss.address().port; },
-    get url() { return `ws://127.0.0.1:${wss.address().port}`; },
+    httpServer,
+    get port() { return httpServer.address()?.port ?? (wss.address()?.port || 0); },
+    get url() { return `ws://127.0.0.1:${httpServer.address()?.port ?? wss.address()?.port}`; },
     rooms,
     connections,
     sweepTimeouts,
@@ -1196,11 +1354,13 @@ export function createGateway({
       for (const timer of aiTimers.values()) clearTimeout(timer);
       aiTimers.clear();
       for (const conn of connections) conn.socket.terminate();
-      wss.close(async () => {
-        // Only close a bus this instance created itself -- a caller-supplied
-        // bus may be shared with other code the caller still owns.
-        if (ownsChatBus) await bus.close();
-        resolve();
+      wss.close(() => {
+        httpServer.close(async () => {
+          // Only close a bus this instance created itself -- a caller-supplied
+          // bus may be shared with other code the caller still owns.
+          if (ownsChatBus) await bus.close();
+          resolve();
+        });
       });
     }),
   };

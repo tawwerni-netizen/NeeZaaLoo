@@ -144,12 +144,20 @@ export function useChatChannel(spec: ChannelSpec) {
       ws.onerror = () => ws.close();
     }
 
+    const pollTimer = setInterval(() => {
+      if (closedByUsRef.current || cancelled) return;
+      if (socketRef.current?.readyState !== WebSocket.OPEN) {
+        void recoverMissed();
+      }
+    }, 3000);
+
     void loadInitialHistory().then(() => { if (!cancelled) connectSocket(); });
 
     return () => {
       cancelled = true;
       closedByUsRef.current = true;
       if (reconnectTimer) clearTimeout(reconnectTimer);
+      clearInterval(pollTimer);
       socketRef.current?.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
