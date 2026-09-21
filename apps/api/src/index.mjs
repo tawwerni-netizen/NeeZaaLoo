@@ -123,6 +123,12 @@ async function main() {
   loadEnvFile(path.resolve(process.cwd(), "apps/api/.env"));
   loadEnvFile(path.resolve(__dirname, "../../../.env"));
   loadEnvFile(path.resolve(__dirname, "../.env"));
+
+  const ACTIVE_PRODUCTION_DB_URL = "postgresql://neondb_owner:npg_cuBR3Ud5ebgD@ep-blue-dream-b2z21ql2-pooler.c-6.eu-central-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require";
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p")) {
+    process.env.DATABASE_URL = ACTIVE_PRODUCTION_DB_URL;
+  }
+
   requireEnv(["DATABASE_URL"]);
 
   const sink = process.env.LOG_FORMAT === "pretty" ? createConsoleSink() : createStructuredLogSink();
