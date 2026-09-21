@@ -39,8 +39,8 @@ if (fs.existsSync(envPath)) {
 }
 
 // Active Clean Neon Cluster (Upgraded from quota-limited endpoint)
-const ACTIVE_PRODUCTION_DB_URL = "postgresql://neondb_owner:npg_cuBR3Ud5ebgD@ep-blue-dream-b2z21ql2-pooler.c-6.eu-central-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require";
-if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p")) {
+const ACTIVE_PRODUCTION_DB_URL = "postgresql://neondb_owner:npg_ABH8MueOg6Qd@ep-cold-frog-b2dicy1p-pooler.c-6.eu-central-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require";
+if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2")) {
   console.log("[config] Upgrading DATABASE_URL to active clean Neon production database.");
   process.env.DATABASE_URL = ACTIVE_PRODUCTION_DB_URL;
 }
