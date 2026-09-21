@@ -140,12 +140,16 @@ async function main() {
 
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: Number(process.env.DB_POOL_SIZE || 3),
+    max: Number(process.env.DB_POOL_SIZE || 5),
     idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 15000,
-    statement_timeout: 20000,
+    connectionTimeoutMillis: 5000,
+    statement_timeout: 5000,
+    options: "-c statement_timeout=5000 -c lock_timeout=3000 -c idle_in_transaction_session_timeout=10000",
     ssl: { rejectUnauthorized: false },
     keepAlive: true,
+  });
+  pool.on("connect", (client) => {
+    client.query("SET statement_timeout = 5000; SET lock_timeout = 3000; SET idle_in_transaction_session_timeout = 10000;").catch(() => {});
   });
   pool.on("error", (err) => console.error("[api pg pool error]", err.message));
   const db = createPgAdapter(pool);

@@ -543,15 +543,135 @@ function proxyHttp(req, res, targetPort) {
 }
 
 // ---------------------------------------------------------------------------
+// Layer 2: High-Performance In-Memory DDoS & IP Rate Limiting Guard
+// ---------------------------------------------------------------------------
+function getClientIp(req) {
+  const cf = req.headers["cf-connecting-ip"];
+  if (cf) return typeof cf === "string" ? cf.trim() : cf[0].trim();
+  const real = req.headers["x-real-ip"];
+  if (real) return typeof real === "string" ? real.trim() : real[0].trim();
+  const fwd = req.headers["x-forwarded-for"];
+  if (fwd) {
+    const list = typeof fwd === "string" ? fwd.split(",") : fwd;
+    if (list.length > 0 && list[0].trim()) return list[0].trim();
+  }
+  return req.socket.remoteAddress || "unknown";
+}
+
+// IP Tracking Buckets:
+// ip -> { count: number, windowStart: number, violations: number, jailedUntil: number }
+const ipTracker = new Map();
+const IP_WINDOW_MS = 10000; // 10s sliding window
+const MAX_GENERAL_REQ_PER_WINDOW = 120; // 120 reqs / 10s for static & Next.js pages
+const MAX_API_REQ_PER_WINDOW = 50;     // 50 reqs / 10s for /v1/* endpoints
+const MAX_WS_UPGRADES_PER_WINDOW = 10; // 10 WS upgrades / 10s
+const MAX_VIOLATIONS_BEFORE_JAIL = 15;  // 15 rate limit hits within window -> Jail
+const JAIL_DURATION_MS = 10 * 60 * 1000; // 10 minutes temporary ban
+
+// Periodically clean up expired entries every 60 seconds
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of ipTracker.entries()) {
+    if (entry.jailedUntil && entry.jailedUntil > now) continue;
+    if (now - entry.windowStart > IP_WINDOW_MS * 2) {
+      ipTracker.delete(ip);
+    }
+  }
+}, 60000).unref();
+
+function checkRateLimit(ip, isApi, isWs) {
+  const now = Date.now();
+  let entry = ipTracker.get(ip);
+  if (!entry) {
+    entry = { count: 1, windowStart: now, violations: 0, jailedUntil: 0 };
+    ipTracker.set(ip, entry);
+    return { allowed: true };
+  }
+
+  // Check if IP is currently in Jail (auto-banned)
+  if (entry.jailedUntil > now) {
+    const remainingSec = Math.ceil((entry.jailedUntil - now) / 1000);
+    return { allowed: false, jailed: true, retryAfter: remainingSec };
+  }
+
+  // Reset window if expired
+  if (now - entry.windowStart >= IP_WINDOW_MS) {
+    entry.count = 1;
+    entry.windowStart = now;
+    return { allowed: true };
+  }
+
+  entry.count++;
+  const limit = isWs ? MAX_WS_UPGRADES_PER_WINDOW : (isApi ? MAX_API_REQ_PER_WINDOW : MAX_GENERAL_REQ_PER_WINDOW);
+
+  if (entry.count > limit) {
+    entry.violations++;
+    if (entry.violations >= MAX_VIOLATIONS_BEFORE_JAIL) {
+      entry.jailedUntil = now + JAIL_DURATION_MS;
+      console.warn(`[DDoS Guard] IP ${ip} JAILED for 10 minutes due to excessive requests (${entry.count} reqs, ${entry.violations} violations).`);
+      return { allowed: false, jailed: true, retryAfter: Math.ceil(JAIL_DURATION_MS / 1000) };
+    }
+    return { allowed: false, jailed: false, retryAfter: Math.ceil((entry.windowStart + IP_WINDOW_MS - now) / 1000) };
+  }
+
+  return { allowed: true };
+}
+
+// ---------------------------------------------------------------------------
 // Main Server Creation & WebSocket Proxy
 // ---------------------------------------------------------------------------
 const server = createServer((req, res) => {
+  const ip = getClientIp(req);
   const url = req.url || "/";
+  const isApi = url.startsWith("/v1/") || url === "/v1" || url.startsWith("/api/");
+
   if (process.env.DEBUG_PROXY === "1") {
-    console.log(`[REQ] ${req.method} ${url}`);
+    console.log(`[REQ] ${req.method} ${url} (ip: ${ip})`);
   }
 
-  if (url.startsWith("/v1/") || url === "/v1" || url.startsWith("/api/oxapay-webhook")) {
+  // Health and readiness checks are always allowed without rate limits
+  if (url === "/health" || url === "/ready" || url === "/ping") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", timestamp: Date.now() }));
+    return;
+  }
+
+  // Anti-DDoS Rate Limiting Guard
+  const check = checkRateLimit(ip, isApi, false);
+  if (!check.allowed) {
+    if (check.jailed) {
+      res.writeHead(403, {
+        "Content-Type": "application/json",
+        "Retry-After": String(check.retryAfter || 600),
+        "Connection": "close",
+      });
+      res.end(JSON.stringify({
+        error: { code: "FORBIDDEN_TEMPORARY_BLOCK", message: "Too many malicious or excessive requests. Access temporarily restricted." }
+      }));
+      return;
+    }
+
+    res.writeHead(429, {
+      "Content-Type": "application/json",
+      "Retry-After": String(check.retryAfter || 5),
+      "Connection": "close",
+    });
+    res.end(JSON.stringify({
+      error: { code: "RATE_LIMITED", message: "Too many requests. Please slow down.", retryAfter: check.retryAfter }
+    }));
+    return;
+  }
+
+  // Check payload size to prevent payload flood / memory exhaustion
+  const contentLength = Number(req.headers["content-length"] || 0);
+  const maxPayload = url.startsWith("/avatars/") ? 2 * 1024 * 1024 : 10 * 1024 * 1024;
+  if (contentLength > maxPayload) {
+    res.writeHead(413, { "Content-Type": "application/json", "Connection": "close" });
+    res.end(JSON.stringify({ error: { code: "PAYLOAD_TOO_LARGE", message: "Payload exceeds size limit." } }));
+    return;
+  }
+
+  if (isApi || url.startsWith("/api/oxapay-webhook")) {
     proxyHttp(req, res, apiPort);
     return;
   }
@@ -595,7 +715,22 @@ const server = createServer((req, res) => {
   proxyHttp(req, res, nextPort);
 });
 
+// Slowloris & Resource Exhaustion Protection
+server.headersTimeout = 8000;    // 8s: max time allowed to receive HTTP headers
+server.requestTimeout = 25000;   // 25s: max time allowed for entire request
+server.keepAliveTimeout = 5000;  // 5s: close idle keep-alive connections promptly
+server.maxHeadersCount = 80;     // 80 headers max: prevent header flood
+server.maxConnections = 1000;    // 1000 concurrent sockets max
+
 server.on("upgrade", (req, socket, head) => {
+  const ip = getClientIp(req);
+  const check = checkRateLimit(ip, false, true);
+  if (!check.allowed) {
+    socket.write("HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+
   const url = req.url || "/";
   if (url.startsWith("/gateway")) {
     const newPath = url.replace(/^\/gateway/, "") || "/";
