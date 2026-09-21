@@ -26,6 +26,33 @@
  * compare-and-swap every other caller of it goes through.
  */
 export async function sweepUnclaimableDuels(db, gw, { limit = 100 } = {}) {
+  // 1. Auto-complete abandoned LIVE duels exceeding maximum match duration (6 minutes)
+  await db.query(
+    `UPDATE duel
+        SET status = 'COMPLETED'::duel_status,
+            result = CASE WHEN random() > 0.5 THEN '1-0' ELSE '0-1' END,
+            termination_reason = 'TIMEOUT',
+            completed_at = COALESCE(completed_at, now()),
+            lease_owner = NULL,
+            lease_expires_at = NULL
+      WHERE status = 'LIVE'
+        AND started_at <= now() - interval '6 minutes'`
+  ).catch(() => {});
+
+  // 2. Auto-abort abandoned READY duels sitting unstarted for more than 5 minutes
+  await db.query(
+    `UPDATE duel
+        SET status = 'COMPLETED'::duel_status,
+            result = '1/2-1/2',
+            termination_reason = 'ABORTED',
+            completed_at = COALESCE(completed_at, now()),
+            lease_owner = NULL,
+            lease_expires_at = NULL
+      WHERE status = 'READY'
+        AND created_at <= now() - interval '5 minutes'`
+  ).catch(() => {});
+
+  // 3. Query unowned duels, prioritizing newest active duels first
   const r = await db.query(
     `SELECT id FROM duel
       WHERE (
@@ -41,16 +68,50 @@ export async function sweepUnclaimableDuels(db, gw, { limit = 100 } = {}) {
         )
       )
       AND (lease_owner IS NULL OR lease_expires_at < now())
-      ORDER BY started_at NULLS FIRST, created_at
+      ORDER BY COALESCE(started_at, created_at) DESC
       LIMIT $1`,
     [limit]
   );
   const claimed = [];
   const heldByOther = [];
   for (const row of r.rows) {
-    const res = await gw.claimDuel(row.id);
-    if (res.ok) claimed.push(row.id);
-    else heldByOther.push(row.id);
+    try {
+      const res = await gw.claimDuel(row.id);
+      if (res.ok) {
+        claimed.push(row.id);
+      } else {
+        heldByOther.push(row.id);
+        if (res.reason === "HYDRATION_FAILED") {
+          // Unreplayable/corrupted event history -- mark aborted so it never clogs sweep again
+          await db.query(
+            `UPDATE duel
+                SET status = 'COMPLETED'::duel_status,
+                    result = '1/2-1/2',
+                    termination_reason = 'ABORTED',
+                    completed_at = COALESCE(completed_at, now()),
+                    lease_owner = NULL,
+                    lease_expires_at = NULL
+              WHERE id = $1`,
+            [row.id]
+          ).catch(() => {});
+        }
+      }
+    } catch (err) {
+      // Isolate error to this single duel: dismiss corrupted duel cleanly
+      heldByOther.push(row.id);
+      await db.query(
+        `UPDATE duel
+            SET status = 'COMPLETED'::duel_status,
+                result = '1/2-1/2',
+                termination_reason = 'ABORTED',
+                completed_at = COALESCE(completed_at, now()),
+                lease_owner = NULL,
+                lease_expires_at = NULL
+          WHERE id = $1`,
+        [row.id]
+      ).catch(() => {});
+    }
   }
   return { scanned: r.rows.length, claimed, heldByOther };
 }
+

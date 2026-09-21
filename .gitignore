@@ -27,3 +27,4 @@ data/
 !apps/web/public/*.apk
 *.pdf
 !apps/web/public/*.pdf
+skills-lock.json

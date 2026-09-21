@@ -349,6 +349,21 @@
   backdrop-filter: blur(4px);
 }
 
+.readyBadge {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fde047;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+}
+
+
 .liveDot {
   width: 6px;
   height: 6px;

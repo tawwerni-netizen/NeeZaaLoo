@@ -2309,7 +2309,7 @@ function buildRoutes() {
 
 
         const r = await db.query(
-          `SELECT d.id, d.game_id, d.started_at, d.created_at, d.pairing_key, d.is_vs_computer,
+          `SELECT d.id, d.game_id, d.status, d.started_at, d.created_at, d.pairing_key, d.is_vs_computer,
                   d.tier, d.stake_minor, d.asset,
                   pa.handle AS handle_0, pa.selected_badge_code AS badge_0,
                   COALESCE(pb.handle, CASE WHEN d.is_vs_computer THEN 'Computer AI' ELSE 'Player 2' END) AS handle_1,
@@ -2326,7 +2326,11 @@ function buildRoutes() {
               AND ($2::text IS NULL OR d.game_id = $2)
               AND ($3::text IS NULL OR pa.handle ILIKE '%' || $3 || '%' OR pb.handle ILIKE '%' || $3 || '%')
               AND ($4::boolean IS TRUE OR d.is_vs_computer = FALSE OR ($3::text IS NOT NULL AND pa.handle ILIKE '%' || $3 || '%'))
-            ORDER BY COALESCE(d.started_at, d.created_at) DESC
+            ORDER BY 
+              CASE WHEN d.status = 'LIVE' AND (SELECT count(*) FROM duel_event de WHERE de.duel_id = d.id) > 0 THEN 0
+                   WHEN d.status = 'LIVE' THEN 1
+                   ELSE 2 END,
+              COALESCE(d.started_at, d.created_at) DESC
             LIMIT $1`,
           [limit, gameId, handle, includeBots]
         );
@@ -2341,6 +2345,7 @@ function buildRoutes() {
               return {
                 duelId: row.id,
                 gameId: row.game_id,
+                status: row.status,
                 startedAt: row.started_at || row.created_at,
                 isVsComputer: Boolean(row.is_vs_computer),
                 tier: row.tier || "FREE",

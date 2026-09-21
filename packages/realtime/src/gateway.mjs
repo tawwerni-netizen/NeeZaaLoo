@@ -765,6 +765,12 @@ export function createGateway({
       if (fairPlay) {
         fairPlay.recordFromCompletedDuel(duel, plugin).catch(() => {});
       }
+
+      // Auto-release completed duel from memory and lease after 5 seconds
+      const finishTimer = setTimeout(() => {
+        releaseDuel(duel.duelId).catch(() => {});
+      }, 5000);
+      if (typeof finishTimer.unref === "function") finishTimer.unref();
     }
     // If this event just handed the move to a bot, schedule it. A no-op
     // for every ordinary human-vs-human duel (botSeat() returns null
@@ -787,7 +793,15 @@ export function createGateway({
     if (!store) throw new Error("claimDuel requires a duel store");
     const res = await lease.acquire(duelId, ownerId);
     if (!res.ok) return { ok: false, reason: res.reason };
-    const duel = await store.load(duelId, plugins, now());
+
+    let duel;
+    try {
+      duel = await store.load(duelId, plugins, now());
+    } catch (err) {
+      if (lease) await lease.release(duelId, ownerId).catch(() => {});
+      return { ok: false, reason: "HYDRATION_FAILED", error: err.message };
+    }
+
     if (!duel) {
       await lease.release(duelId, ownerId);
       return { ok: false, reason: "NO_SUCH_DUEL" };

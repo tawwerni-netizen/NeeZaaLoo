@@ -28,6 +28,7 @@ type LiveMatchPlayer = { handle: string; badge: string | null; ratingX100: numbe
 type LiveMatch = {
   duelId: string;
   gameId: string;
+  status?: "LIVE" | "READY" | "COMPLETED" | "SETTLED";
   startedAt: string;
   isTournamentMatch: boolean;
   isVsComputer?: boolean;
@@ -241,10 +242,16 @@ function WatchContent() {
                         <span>🤖</span> {t("watch.vs_bot")}
                       </span>
                     )}
-                    <span className={styles.liveBadge}>
-                      <span className={styles.liveDot} aria-hidden="true" />
-                      {t("watch.live_badge")}
-                    </span>
+                    {m.status === "READY" ? (
+                      <span className={styles.readyBadge}>
+                        <span>⏳</span> {t("watch.starting_soon")}
+                      </span>
+                    ) : (
+                      <span className={styles.liveBadge}>
+                        <span className={styles.liveDot} aria-hidden="true" />
+                        {t("watch.live_badge")}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -275,7 +282,13 @@ function WatchContent() {
                 </div>
 
                 <div className={styles.cardBottom}>
-                  <span className={styles.moveCount}>{t("watch.move_count", { count: m.moveCount })}</span>
+                  <span className={styles.moveCount}>
+                    {m.status === "READY"
+                      ? t("watch.preparing_match")
+                      : m.moveCount > 0
+                      ? t("watch.move_count", { count: m.moveCount })
+                      : t("watch.first_move")}
+                  </span>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <button
                       type="button"

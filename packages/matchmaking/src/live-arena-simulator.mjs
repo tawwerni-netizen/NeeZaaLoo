@@ -64,12 +64,12 @@ export function createLiveArenaSimulator(db, { targetMatches = 10, emit = () => 
     );
     const completedCount = completedRes.rowCount || 0;
 
-    // 2. Count current live duels
+    // 2. Count current live simulated duels (ensures target matches in Live Arena independently of background tournaments)
     const countRes = await db.query(
       `SELECT count(*)::int AS count
          FROM duel
-        WHERE status IN ('LIVE', 'READY')
-          AND spectator_policy = 'OPEN'`
+        WHERE status = 'LIVE'
+          AND id LIKE 'duel_live_%'`
     );
     const currentLive = countRes.rows[0]?.count || 0;
 
