@@ -48,9 +48,9 @@ async function main() {
     // 3. Ensure admin_user exists
     await client.query(`
       INSERT INTO admin_user (id, email, display_name, mfa_enrolled, disabled_at)
-      VALUES ($1, $2, $3, FALSE, NULL)
+      VALUES ($1, $2, $3, TRUE, NULL)
       ON CONFLICT (id) DO UPDATE
-      SET email = $2, display_name = $3, disabled_at = NULL
+      SET email = $2, display_name = $3, mfa_enrolled = TRUE, disabled_at = NULL
     `, [u.id, u.email, u.name]);
     console.log(`- Updated admin_user for ${u.id}`);
 
