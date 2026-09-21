@@ -119,22 +119,24 @@ export function ActiveMatchBanner() {
 import { useDuelSocket } from "@/lib/use-duel-socket";
 
 function ResignButton({ duelId, isAr, onResigned }: { duelId: string; isAr: boolean; onResigned: () => void }) {
-  const { resign, connected } = useDuelSocket(duelId);
+  const { resign } = useDuelSocket(duelId);
   const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   if (confirming) {
     return (
       <button
-        onClick={() => {
-          if (connected && resign) {
-            resign();
-            onResigned();
-          }
+        onClick={async () => {
+          setBusy(true);
+          try {
+            resign?.();
+          } catch {}
+          onResigned();
         }}
         className={styles.resignBtnConfirm}
-        disabled={!connected}
+        disabled={busy}
       >
-        {isAr ? "تأكيد الإستسلام" : "Confirm Resign"}
+        {busy ? (isAr ? "جارٍ الإستسلام..." : "Resigning...") : (isAr ? "تأكيد الإستسلام" : "Confirm Resign")}
       </button>
     );
   }

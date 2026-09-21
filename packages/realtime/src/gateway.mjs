@@ -265,6 +265,7 @@ export function createGateway({
           }
 
           if (pathname === "/sync") {
+            duel.lastActivityMs = t;
             const seat = seatFor(duel, playerId);
             const isSeated = seat >= 0;
             if (isSeated) {
@@ -288,6 +289,7 @@ export function createGateway({
           }
 
           if (pathname === "/intent") {
+            duel.lastActivityMs = t;
             if (seatFor(duel, playerId) < 0) {
               res.writeHead(403, { "Content-Type": "application/json" });
               res.end(JSON.stringify({ ok: false, error: "NOT_A_PARTICIPANT" }));
@@ -312,13 +314,14 @@ export function createGateway({
               return;
             }
 
-            await publishNewEvents(duel, plugin, before);
+            await publishNewEvents(duel, plugin, before, t);
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ ok: true, state: stateFor(duel, plugin, { playerId }, t) }));
             return;
           }
 
           if (pathname === "/action") {
+            duel.lastActivityMs = t;
             const before = duel.events.length;
             let actionRes = { ok: false };
             if (body.action === "RESIGN") {
@@ -331,7 +334,7 @@ export function createGateway({
               actionRes = declineDraw(duel, playerId, t);
             }
             if (actionRes.ok) {
-              await publishNewEvents(duel, plugin, before);
+              await publishNewEvents(duel, plugin, before, t);
             }
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ ok: actionRes.ok, state: stateFor(duel, plugin, { playerId }, t) }));
@@ -762,8 +765,8 @@ export function createGateway({
     const thinkDelay = aiMoveDelayMs <= 100
       ? aiMoveDelayMs
       : isBotVsBot
-      ? 1800 + Math.floor(Math.random() * 1000)
-      : 900 + Math.floor(Math.random() * 800);
+      ? 500 + Math.floor(Math.random() * 300)
+      : 250 + Math.floor(Math.random() * 200);
 
     const timer = setTimeout(async () => {
       aiTimers.delete(duel.duelId);
@@ -974,6 +977,7 @@ export function createGateway({
         duel.startedAt = now();
       }
     }
+    duel.lastActivityMs = now();
     duels.set(duelId, duel);
     leaseTokens.set(duelId, res.token);
     // Claiming is exactly the moment a VS_COMPUTER duel first becomes
@@ -1004,16 +1008,51 @@ export function createGateway({
    */
   async function sweepLeaseRenewals() {
     if (!lease) return 0;
+    const allIds = [...leaseTokens.keys()];
+    if (allIds.length === 0) return 0;
+
     let lost = 0;
-    for (const duelId of [...leaseTokens.keys()]) {
-      const res = await lease.renew(duelId, ownerId);
-      if (!res.ok) {
-        duels.delete(duelId);
-        leaseTokens.delete(duelId);
-        lost++;
+    if (typeof lease.renewMany === "function") {
+      const renewed = await lease.renewMany(allIds, ownerId);
+      for (const duelId of allIds) {
+        if (!renewed.has(duelId)) {
+          duels.delete(duelId);
+          leaseTokens.delete(duelId);
+          lost++;
+        }
+      }
+    } else {
+      for (const duelId of allIds) {
+        const res = await lease.renew(duelId, ownerId);
+        if (!res.ok) {
+          duels.delete(duelId);
+          leaseTokens.delete(duelId);
+          lost++;
+        }
       }
     }
     return lost;
+  }
+
+  /**
+   * Evict duels that have 0 connected sockets and no HTTP activity for > 20 seconds.
+   * This prevents memory leaks and guarantees gateway only holds actively-played games.
+   */
+  async function sweepInactiveDuels() {
+    const t = now();
+    let evicted = 0;
+    for (const [duelId, duel] of [...duels.entries()]) {
+      const roomSize = rooms.get(duelId)?.size ?? 0;
+      const hasAiTimer = aiTimers.has(duelId) || aiTimers.has(`${duelId}:0`) || aiTimers.has(`${duelId}:1`);
+      const isCompleted = duel.status === DuelState.COMPLETED;
+      const isIdle = (t - (duel.lastActivityMs ?? t)) > 20000;
+
+      if (isCompleted || (roomSize === 0 && !hasAiTimer && isIdle)) {
+        await releaseDuel(duelId);
+        evicted++;
+      }
+    }
+    return evicted;
   }
 
   // --- Connection lifecycle --------------------------------------------------
@@ -1350,6 +1389,7 @@ export function createGateway({
     claimDuel,
     releaseDuel,
     sweepLeaseRenewals,
+    sweepInactiveDuels,
     close: () => new Promise((resolve) => {
       for (const timer of aiTimers.values()) clearTimeout(timer);
       aiTimers.clear();

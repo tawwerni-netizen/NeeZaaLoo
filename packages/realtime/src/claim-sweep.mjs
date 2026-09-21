@@ -25,7 +25,7 @@
  * whether a claim actually succeeds, via the SAME unowned-or-expired
  * compare-and-swap every other caller of it goes through.
  */
-export async function sweepUnclaimableDuels(db, gw, { limit = 100 } = {}) {
+export async function sweepUnclaimableDuels(db, gw, { limit = 20 } = {}) {
   // 1. Auto-complete abandoned LIVE duels exceeding maximum match duration (6 minutes)
   await db.query(
     `UPDATE duel
@@ -36,7 +36,7 @@ export async function sweepUnclaimableDuels(db, gw, { limit = 100 } = {}) {
             lease_owner = NULL,
             lease_expires_at = NULL
       WHERE status = 'LIVE'
-        AND started_at <= now() - interval '6 minutes'`
+        AND (started_at <= now() - interval '6 minutes' OR (started_at IS NULL AND created_at <= now() - interval '6 minutes'))`
   ).catch(() => {});
 
   // 2. Auto-abort abandoned READY duels sitting unstarted for more than 5 minutes
@@ -52,22 +52,12 @@ export async function sweepUnclaimableDuels(db, gw, { limit = 100 } = {}) {
         AND created_at <= now() - interval '5 minutes'`
   ).catch(() => {});
 
-  // 3. Query unowned duels, prioritizing newest active duels first
+  // 3. Query unowned recent LIVE duels only (do not drag ancient/abandoned matches into memory)
   const r = await db.query(
     `SELECT id FROM duel
-      WHERE (
-        status = 'LIVE'
-        OR (
-          status = 'READY'
-          AND (
-            seat_0 LIKE 'bot_%' OR seat_0 LIKE 'ai-%' OR seat_0 LIKE 'ai_%' OR seat_0 LIKE 'top_p_%' OR seat_0 LIKE 'standing_by_%' OR seat_0 LIKE 'sim_%'
-          )
-          AND (
-            seat_1 LIKE 'bot_%' OR seat_1 LIKE 'ai-%' OR seat_1 LIKE 'ai_%' OR seat_1 LIKE 'top_p_%' OR seat_1 LIKE 'standing_by_%' OR seat_1 LIKE 'sim_%'
-          )
-        )
-      )
-      AND (lease_owner IS NULL OR lease_expires_at < now())
+      WHERE status = 'LIVE'
+        AND (started_at > now() - interval '6 minutes' OR created_at > now() - interval '6 minutes')
+        AND (lease_owner IS NULL OR lease_expires_at < now())
       ORDER BY COALESCE(started_at, created_at) DESC
       LIMIT $1`,
     [limit]

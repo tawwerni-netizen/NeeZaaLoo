@@ -148,10 +148,10 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
       </div>
 
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
-        {/* Outer 3D Table Bevel Frame */}
-        <div className={styles.tableBevel}>
+        {/* Outer 3D Table Bevel Frame - strictly LTR for universal chess notation alignment */}
+        <div className={styles.tableBevel} dir="ltr">
           {/* Rank notations on left rim */}
-          <div className={styles.rankNotations} aria-hidden="true">
+          <div className={styles.rankNotations} dir="ltr" aria-hidden="true">
             {displayRanks.map((r) => (
               <span key={r}>{r}</span>
             ))}
@@ -214,7 +214,7 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
           </div>
 
           {/* File notations on bottom rim */}
-          <div className={styles.fileNotations} aria-hidden="true">
+          <div className={styles.fileNotations} dir="ltr" aria-hidden="true">
             {displayFiles.map((f) => (
               <span key={f}>{f}</span>
             ))}

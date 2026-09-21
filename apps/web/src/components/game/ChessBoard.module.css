@@ -88,7 +88,15 @@
   padding: 0;
   cursor: pointer;
   font: inherit;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.square:focus-visible {
+  outline: 2px solid #06b6d4;
+  outline-offset: -2px;
+  z-index: 3;
 }
 
 .square:disabled { cursor: default; }

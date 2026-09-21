@@ -89,6 +89,28 @@ export function createLeaseManager(db, { leaseMs = 15000, emit = () => {} } = {}
       return { ok: true, reason: LeaseResult.ACQUIRED, token };
     },
 
+    /**
+     * Batch extend multiple leases in one single SQL query instead of N serial queries.
+     * Returns the Set of duelIds that successfully renewed.
+     */
+    async renewMany(duelIds, ownerId) {
+      if (!duelIds || duelIds.length === 0) return new Set();
+      const r = await db.query(
+        `UPDATE duel SET lease_expires_at = now() + ($3 || ' milliseconds')::interval
+          WHERE id = ANY($1) AND lease_owner = $2
+          RETURNING id, lease_token`,
+        [duelIds, ownerId, String(leaseMs)]
+      );
+      const renewed = new Set(r.rows.map((row) => row.id));
+      for (const id of renewed) {
+        emit("lease.renewed", { duelId: id, ownerId });
+      }
+      for (const id of duelIds) {
+        if (!renewed.has(id)) emit("lease.lost", { duelId: id, ownerId });
+      }
+      return renewed;
+    },
+
     /** Relinquish cleanly (graceful shutdown, duel finished). Idempotent. */
     async release(duelId, ownerId) {
       await db.query(

@@ -214,6 +214,9 @@ async function main() {
   const deadConnectionSweepWorker = createTickLoop(async () => gw.sweepDeadConnections(), {
     intervalMs: Number(process.env.DEAD_CONNECTION_SWEEP_INTERVAL_MS || 30000),
   });
+  const inactiveSweepWorker = createTickLoop(async () => gw.sweepInactiveDuels(), {
+    intervalMs: Number(process.env.INACTIVE_SWEEP_INTERVAL_MS || 10000),
+  });
 
   const runtime = createWorkerRuntime({
     workers: [
@@ -221,6 +224,7 @@ async function main() {
       { name: "lease_renewal", worker: leaseRenewalWorker, intervalMs: Number(process.env.LEASE_RENEWAL_INTERVAL_MS || 5000) },
       { name: "timeout_sweep", worker: timeoutSweepWorker, intervalMs: Number(process.env.TIMEOUT_SWEEP_INTERVAL_MS || 1000) },
       { name: "dead_connection_sweep", worker: deadConnectionSweepWorker, intervalMs: Number(process.env.DEAD_CONNECTION_SWEEP_INTERVAL_MS || 30000) },
+      { name: "inactive_duel_sweep", worker: inactiveSweepWorker, intervalMs: Number(process.env.INACTIVE_SWEEP_INTERVAL_MS || 10000) },
     ],
     logger,
     metrics,

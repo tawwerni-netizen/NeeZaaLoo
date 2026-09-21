@@ -69,6 +69,12 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
     }
     (async () => {
       try {
+        const activeRes = await get<{ active: boolean; duel?: { id: string; gameId: string } }>("/v1/me/active-duel").catch(() => null);
+        if (activeRes?.active && activeRes.duel && activeRes.duel.gameId === gameId) {
+          router.replace(`/${locale}/game/${activeRes.duel.id}`);
+          return;
+        }
+
         const res = await post<{ ticketId?: string }>("/v1/matchmaking/tickets", {
           gameId,
           ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor, asset: stake.asset } : {}),
