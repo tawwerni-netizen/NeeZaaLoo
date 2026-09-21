@@ -84,15 +84,23 @@ async function execHttp(queries) {
   return data;
 }
 
-export async function runMaintenance() {
+export async function runMaintenance(externalDb = null) {
   const startedAt = Date.now();
   console.log(`\n======================================================`);
   console.log(`[Maintenance] Starting Safe Database Cleanup & VACUUM`);
   console.log(`[Time] ${new Date().toISOString()}`);
   console.log(`======================================================`);
 
+  const runQuery = async (sql) => {
+    if (externalDb) {
+      const res = await externalDb.query(sql);
+      return res.rows || [];
+    }
+    return queryHttp(sql);
+  };
+
   // 0. Auto-resolve any simulated duel variance in reconciliation_case and clear failed runs
-  await queryHttp(`
+  await runQuery(`
     UPDATE reconciliation_case
        SET status = 'RESOLVED',
            resolved_by = 'tawwerni',
@@ -102,15 +110,15 @@ export async function runMaintenance() {
      WHERE status IN ('OPEN', 'UNDER_REVIEW')
        AND (subject_id LIKE 'duel_live_%' OR detail->>'error' LIKE '%clock flagged%');
   `);
-  await queryHttp(`
+  await runQuery(`
     UPDATE reconciliation_run
        SET status = 'COMPLETED', error = NULL, mismatches_found = 0, cases_opened = 0
      WHERE status = 'FAILED' OR mismatches_found > 0;
   `);
 
   // 1. Purge raw duel event stream for completed duels (older than 24h, no active fairplay hold/signal)
-  console.log("\n[1/4] Purging completed duel move events older than 24 hours...");
-  const purgedEvents = await queryHttp(`
+  console.log("\n[1/4] Purging completed duel move events older than 24 hours & old simulated duels...");
+  const purgedEvents = await runQuery(`
     WITH target_duels AS (
       SELECT d.id FROM duel d
        WHERE d.status IN ('COMPLETED', 'SETTLED')
@@ -125,22 +133,52 @@ export async function runMaintenance() {
     )
     SELECT count(*)::int AS count FROM deleted;
   `);
+
+  // Also purge completed simulated duels older than 6 hours
+  const purgedSimDuels = await runQuery(`
+    WITH target_sim AS (
+      SELECT id FROM duel
+       WHERE id LIKE 'duel_live_%'
+         AND status IN ('COMPLETED', 'SETTLED', 'CANCELLED', 'EXPIRED')
+         AND completed_at < now() - interval '6 hours'
+    ),
+    del_sim_events AS (
+      DELETE FROM duel_event WHERE duel_id IN (SELECT id FROM target_sim)
+    ),
+    del_sim_duels AS (
+      DELETE FROM duel WHERE id IN (SELECT id FROM target_sim)
+      RETURNING 1
+    )
+    SELECT count(*)::int AS count FROM del_sim_duels;
+  `);
   console.log(`  ✓ Purged ${purgedEvents[0]?.count || 0} old duel_event rows.`);
+  console.log(`  ✓ Purged ${purgedSimDuels[0]?.count || 0} old simulated duel_live rows.`);
 
   // 2. Purge ephemeral user records (old notifications, login attempts, expired tickets, expired OTPs)
   console.log("\n[2/4] Purging expired & transient records...");
 
-  const purgedNotifs = await queryHttp(`
+  const purgedNotifs = await runQuery(`
     WITH deleted AS (
       DELETE FROM notification
-       WHERE (read_at IS NOT NULL AND read_at < now() - interval '7 days')
-          OR (created_at < now() - interval '30 days')
+       WHERE player_id LIKE 'bot_%'
+          OR (read_at IS NOT NULL AND read_at < now() - interval '2 days')
+          OR (created_at < now() - interval '7 days')
       RETURNING 1
     )
     SELECT count(*)::int AS count FROM deleted;
   `);
 
-  const purgedLoginAttempts = await queryHttp(`
+  const purgedExpEvents = await runQuery(`
+    WITH deleted AS (
+      DELETE FROM exp_event
+       WHERE player_id LIKE 'bot_%'
+          OR created_at < now() - interval '7 days'
+      RETURNING 1
+    )
+    SELECT count(*)::int AS count FROM deleted;
+  `);
+
+  const purgedLoginAttempts = await runQuery(`
     WITH deleted AS (
       DELETE FROM login_attempt
        WHERE at < now() - interval '3 days'
@@ -149,7 +187,7 @@ export async function runMaintenance() {
     SELECT count(*)::int AS count FROM deleted;
   `);
 
-  const purgedTickets = await queryHttp(`
+  const purgedTickets = await runQuery(`
     WITH deleted AS (
       DELETE FROM matchmaking_ticket
        WHERE status IN ('EXPIRED', 'CANCELLED')
@@ -159,7 +197,7 @@ export async function runMaintenance() {
     SELECT count(*)::int AS count FROM deleted;
   `);
 
-  const purgedHandoffs = await queryHttp(`
+  const purgedHandoffs = await runQuery(`
     WITH deleted AS (
       DELETE FROM oauth_handoff
        WHERE expires_at < now()
@@ -168,7 +206,7 @@ export async function runMaintenance() {
     SELECT count(*)::int AS count FROM deleted;
   `);
 
-  const purgedEmailChallenges = await queryHttp(`
+  const purgedEmailChallenges = await runQuery(`
     WITH deleted AS (
       DELETE FROM email_challenge
        WHERE expires_at < now()
@@ -177,7 +215,7 @@ export async function runMaintenance() {
     SELECT count(*)::int AS count FROM deleted;
   `);
 
-  const purgedSessions = await queryHttp(`
+  const purgedSessions = await runQuery(`
     WITH deleted AS (
       DELETE FROM auth_session
        WHERE revoked_at IS NOT NULL
@@ -187,11 +225,11 @@ export async function runMaintenance() {
     SELECT count(*)::int AS count FROM deleted;
   `);
 
-  const purgedReconRuns = await queryHttp(`
+  const purgedReconRuns = await runQuery(`
     WITH deleted AS (
       DELETE FROM reconciliation_run
        WHERE status = 'COMPLETED'
-         AND started_at < now() - interval '14 days'
+         AND started_at < now() - interval '3 days'
       RETURNING 1
     )
     SELECT count(*)::int AS count FROM deleted;
@@ -221,7 +259,7 @@ export async function runMaintenance() {
 
   for (const table of vacuumTables) {
     try {
-      await queryHttp(`VACUUM (ANALYZE) ${table};`);
+      await runQuery(`VACUUM (ANALYZE) ${table};`);
       console.log(`  ✓ VACUUM (ANALYZE) ${table}`);
     } catch (e) {
       console.warn(`  ⚠️ Could not vacuum ${table}: ${e.message}`);
@@ -231,13 +269,13 @@ export async function runMaintenance() {
   // 4. System Health & Invariant Verification
   console.log("\n[4/4] Verifying System Health & Safety Invariants...");
 
-  const reconRuns = await queryHttp(`
+  const reconRuns = await runQuery(`
     SELECT DISTINCT ON (kind) kind, status, started_at, completed_at,
            records_checked, mismatches_found, cases_opened
     FROM reconciliation_run ORDER BY kind, started_at DESC;
   `);
-  const openCritical = await queryHttp("SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW') AND severity = 'CRITICAL';");
-  const openCases = await queryHttp("SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW');");
+  const openCritical = await runQuery("SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW') AND severity = 'CRITICAL';");
+  const openCases = await runQuery("SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW');");
 
   let reconStatus = reconRuns.length ? "HEALTHY" : "UNKNOWN";
   for (const run of reconRuns) {
@@ -246,13 +284,13 @@ export async function runMaintenance() {
   }
   if (openCritical[0]?.c > 0) reconStatus = "CRITICAL";
 
-  const drift = await queryHttp("SELECT * FROM ledger_balance_verification WHERE drift != 0;");
-  const solvency = await queryHttp("SELECT * FROM ledger_solvency;");
-  const rake = await queryHttp("SELECT a.asset, COALESCE(b.balance, 0) as balance FROM ledger_account a LEFT JOIN ledger_balance b ON b.account_id = a.id WHERE a.key = 'platform:rake';");
-  const duelsCount = await queryHttp("SELECT count(*)::int c FROM duel;");
-  const tournamentsCount = await queryHttp("SELECT count(*)::int c FROM tournament;");
-  const ratingsCount = await queryHttp("SELECT count(*)::int c FROM rating;");
-  const playersCount = await queryHttp("SELECT count(*)::int c FROM player;");
+  const drift = await runQuery("SELECT * FROM ledger_balance_verification WHERE drift != 0;");
+  const solvency = await runQuery("SELECT * FROM ledger_solvency;");
+  const rake = await runQuery("SELECT a.asset, COALESCE(b.balance, 0) as balance FROM ledger_account a LEFT JOIN ledger_balance b ON b.account_id = a.id WHERE a.key = 'platform:rake';");
+  const duelsCount = await runQuery("SELECT count(*)::int c FROM duel;");
+  const tournamentsCount = await runQuery("SELECT count(*)::int c FROM tournament;");
+  const ratingsCount = await runQuery("SELECT count(*)::int c FROM rating;");
+  const playersCount = await runQuery("SELECT count(*)::int c FROM player;");
 
   console.log(`\n--- Verification Report ---`);
   console.log(`• Reconciliation Status: ${reconStatus} (Open cases: ${openCases[0]?.c || 0})`);

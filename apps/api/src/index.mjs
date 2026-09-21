@@ -124,8 +124,8 @@ async function main() {
   loadEnvFile(path.resolve(__dirname, "../../../.env"));
   loadEnvFile(path.resolve(__dirname, "../.env"));
 
-  const ACTIVE_PRODUCTION_DB_URL = "postgresql://neondb_owner:npg_ABH8MueOg6Qd@ep-cold-frog-b2dicy1p-pooler.c-6.eu-central-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require";
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2")) {
+  const ACTIVE_PRODUCTION_DB_URL = "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=no-verify";
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("neon.tech") || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2") || process.env.DATABASE_URL.includes("ep-cold-frog-b2dicy1p")) {
     process.env.DATABASE_URL = ACTIVE_PRODUCTION_DB_URL;
   }
 

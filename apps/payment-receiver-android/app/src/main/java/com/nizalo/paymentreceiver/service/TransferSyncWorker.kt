@@ -44,6 +44,7 @@ class TransferSyncWorker(
                 rawSenderPhone = transfer.rawSenderPhone,
                 amountEgpMinor = transfer.amountEgpMinor,
                 rawMessage = transfer.rawMessage,
+                transactionRef = transfer.transactionRef,
                 observedAt = sdf.format(Date(transfer.observedAt))
             )
 

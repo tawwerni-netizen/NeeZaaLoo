@@ -249,7 +249,7 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
      * call, so a deposit credited this way is indistinguishable in the
      * ledger from one the app will credit later.
      */
-    async observeAndCredit({ intentId, adminId, rawSenderName, rawSenderPhone, amountEgpMinor, rawMessage, observedAt }) {
+    async observeAndCredit({ intentId, adminId, rawSenderName, rawSenderPhone, amountEgpMinor, rawMessage, observedAt, transactionRef }) {
       const intentRes = await db.query(`SELECT * FROM local_deposit_intent WHERE id = $1`, [intentId]);
       if (!intentRes.rows.length) return { ok: false, reason: LocalPaymentError.NOT_FOUND };
       const intent = intentRes.rows[0];
@@ -268,13 +268,13 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
       await db.query(
         `INSERT INTO local_transfer_observed
            (id, network, received_number_id, raw_sender_name, raw_sender_phone, amount_egp_minor,
-            raw_message, device_id, observed_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+            raw_message, device_id, observed_at, transaction_ref)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
         [
           transferId, intent.network, intent.receiving_number_id,
           rawSenderName ? String(rawSenderName) : null, rawSenderPhone ? String(rawSenderPhone) : null,
           amount.toString(), rawMessage ? String(rawMessage) : `Manually logged by admin ${adminId}`,
-          MANUAL_DEVICE_ID, observedAt ? new Date(observedAt) : new Date(),
+          MANUAL_DEVICE_ID, observedAt ? new Date(observedAt) : new Date(), transactionRef ? String(transactionRef) : null
         ]
       );
 
@@ -412,7 +412,7 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
     // =========================================================================
 
     async reportDeviceTransfer({
-      deviceId, network, receivingNumberId, rawSenderName, rawSenderPhone, amountEgpMinor, rawMessage, observedAt
+      deviceId, network, receivingNumberId, rawSenderName, rawSenderPhone, amountEgpMinor, rawMessage, observedAt, transactionRef
     }) {
       const net = String(network ?? "").trim().toUpperCase();
       if (!LOCAL_NETWORKS.has(net)) return { ok: false, reason: LocalPaymentError.INVALID_NETWORK };
@@ -423,6 +423,7 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
 
       let senderName = rawSenderName ? String(rawSenderName) : null;
       let senderPhone = rawSenderPhone ? String(rawSenderPhone) : null;
+      let ref = transactionRef ? String(transactionRef) : null;
 
       /*
        * Re-parse the raw SMS/notification text here and let the server's
@@ -438,6 +439,7 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
         amount = reparsed.amountEgpMinor;
         senderName = reparsed.senderName ?? senderName;
         senderPhone = reparsed.senderPhone ?? senderPhone;
+        ref = reparsed.transactionRef ?? ref;
       }
 
       const possibleNumbers = String(receivingNumberId).split(',').map(s => s.trim()).filter(Boolean);
@@ -456,15 +458,15 @@ export function createLocalPaymentsService(db, { intentTtlMinutes = 30 } = {}) {
         await db.query(`
           INSERT INTO local_transfer_observed
             (id, network, received_number_id, raw_sender_name, raw_sender_phone, amount_egp_minor,
-             raw_message, device_id, observed_at, status)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'UNMATCHED')
+             raw_message, device_id, observed_at, status, transaction_ref)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'UNMATCHED', $10)
         `, [
           transferId, net, primaryNumber,
           senderName, senderPhone,
-          amount.toString(), String(rawMessage), deviceId, observed
+          amount.toString(), String(rawMessage), deviceId, observed, ref
         ]);
       } catch (e) {
-        if (/local_transfer_dedupe/.test(e.message)) {
+        if (/local_transfer_dedupe/.test(e.message) || /local_transfer_observed_network_transaction_ref_key/.test(e.message) || /unique/.test(e.message)) {
           return { ok: true, status: "IGNORED", reason: "DUPLICATE" };
         }
         throw e;

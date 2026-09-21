@@ -30,10 +30,10 @@ class PaymentNotificationListener : NotificationListenerService() {
         // matching on those would drop every real transfer. The message body is
         // the only reliable signal.
         val (network, parsed) = SmsParser.parseAny(fullMessage) ?: return
-        saveAndSync(network, parsed, fullMessage)
+        saveAndSync(network, parsed, fullMessage, sbn.postTime)
     }
 
-    private fun saveAndSync(network: String, parsed: SmsParser.ParsedTransfer, body: String) {
+    private fun saveAndSync(network: String, parsed: SmsParser.ParsedTransfer, body: String, postTime: Long) {
         val prefs = getSharedPreferences("nizalo_prefs", Context.MODE_PRIVATE)
         val receivingNumberId = prefs.getString("receiving_number_id", "default_num") ?: "default_num"
 
@@ -44,7 +44,8 @@ class PaymentNotificationListener : NotificationListenerService() {
             rawSenderPhone = parsed.senderPhone,
             amountEgpMinor = parsed.amountEgpMinor,
             rawMessage = body,
-            observedAt = System.currentTimeMillis()
+            transactionRef = parsed.transactionRef,
+            observedAt = postTime
         )
 
         CoroutineScope(Dispatchers.IO).launch {

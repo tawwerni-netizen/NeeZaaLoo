@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { parseFenBoard, squareAt, sideToMoveFromFen, FILES } from "./fen";
+import { parseFenBoard, squareAt, sideToMoveFromFen, FILES, applyMoveOptimistic, type Piece } from "./fen";
 import { ChessPieceSvg } from "./ChessPieceSvg";
 import { useI18n } from "@/lib/i18n/context";
 import { useVisualSettings } from "./TableEnvironment";
@@ -25,12 +25,27 @@ const PROMO_PIECES = ["q", "r", "b", "n"] as const;
 export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove, onMove }: Props) {
   const { t } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
-  const board = useMemo(() => parseFenBoard(fen), [fen]);
+  const serverBoard = useMemo(() => parseFenBoard(fen), [fen]);
   const sideToMove = useMemo(() => sideToMoveFromFen(fen), [fen]);
   const [selected, setSelected] = useState<string | null>(null);
   const [pendingPromo, setPendingPromo] = useState<{ from: string; to: string } | null>(null);
   const [theme, setTheme] = useState<ChessBoardTheme>("emerald");
   const lastSoundMoveRef = useRef<string | null>(null);
+
+  // Optimistic UI state: updates the board with 0ms latency when the user plays
+  const [optimisticState, setOptimisticState] = useState<{
+    board: (Piece | null)[][];
+    lastMove: { from: string; to: string };
+  } | null>(null);
+
+  // Whenever authoritative server FEN arrives, clear optimistic state
+  useEffect(() => {
+    setOptimisticState(null);
+  }, [fen]);
+
+  const activeBoard = optimisticState?.board ?? serverBoard;
+  const activeLastMove = optimisticState?.lastMove ?? lastMove;
+  const effectiveCanMove = canMove && !optimisticState;
 
   useEffect(() => {
     try {
@@ -55,9 +70,9 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
 
     const destFile = FILES.indexOf(lastMove.to[0] || "");
     const destRank = parseInt(lastMove.to[1] || "1", 10) - 1;
-    const piece = squareAt(board, destFile, destRank);
+    const piece = squareAt(serverBoard, destFile, destRank);
     playPieceSound(piece?.type || "p", false, inCheck);
-  }, [lastMove, board, inCheck]);
+  }, [lastMove, serverBoard, inCheck]);
 
   const flipped = mySeat === 1;
   const displayFiles = flipped ? [...FILES].reverse() : FILES;
@@ -77,22 +92,28 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
   }
 
   function handleSquareClick(file: number, rank: number) {
-    if (!canMove || pendingPromo) return;
+    if (!effectiveCanMove || pendingPromo) return;
     const sq = squareLabel(file, rank);
-    const piece = squareAt(board, file, rank);
+    const piece = squareAt(activeBoard, file, rank);
 
     if (selected && destinationsFromSelected.has(sq)) {
       const matching = legalMoves.filter((m) => m.startsWith(selected) && m.slice(2, 4) === sq);
       const fromFile = FILES.indexOf(selected[0] || "");
       const fromRank = parseInt(selected[1] || "1", 10) - 1;
-      const movingPiece = squareAt(board, fromFile, fromRank);
-      const destPiece = squareAt(board, file, rank);
+      const movingPiece = squareAt(activeBoard, fromFile, fromRank);
+      const destPiece = squareAt(activeBoard, file, rank);
 
       if (matching.length > 1) {
         setPendingPromo({ from: selected, to: sq });
       } else if (matching[0]) {
         playPieceSound(movingPiece?.type || "p", Boolean(destPiece), inCheck);
         lastSoundMoveRef.current = `${selected}-${sq}`;
+        // Apply move immediately to local board for 0ms visual feedback
+        const nextBoard = applyMoveOptimistic(activeBoard, selected, sq);
+        setOptimisticState({
+          board: nextBoard,
+          lastMove: { from: selected, to: sq },
+        });
         onMove(matching[0]);
       }
       setSelected(null);
@@ -110,9 +131,16 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
     if (!pendingPromo) return;
     playPieceSound(promoPiece, false, inCheck);
     lastSoundMoveRef.current = `${pendingPromo.from}-${pendingPromo.to}`;
+    // Apply promotion immediately to local board for 0ms visual feedback
+    const nextBoard = applyMoveOptimistic(activeBoard, pendingPromo.from, pendingPromo.to, promoPiece);
+    setOptimisticState({
+      board: nextBoard,
+      lastMove: { from: pendingPromo.from, to: pendingPromo.to },
+    });
     onMove(`${pendingPromo.from}${pendingPromo.to}${promoPiece}`);
     setPendingPromo(null);
   }
+
 
   const currentColors = CHESS_THEMES[theme] || CHESS_THEMES.emerald;
 
@@ -162,12 +190,12 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
               displayFiles.map((fileLetter) => {
                 const file = FILES.indexOf(fileLetter);
                 const r = rank - 1;
-                const piece = squareAt(board, file, r);
+                const piece = squareAt(activeBoard, file, r);
                 const sq = squareLabel(file, r);
                 const isLight = (file + r) % 2 === 1;
                 const isSelected = selected === sq;
                 const isDest = destinationsFromSelected.has(sq);
-                const isLast = lastMove && (lastMove.from === sq || lastMove.to === sq);
+                const isLast = activeLastMove && (activeLastMove.from === sq || activeLastMove.to === sq);
                 const isKingInCheck = inCheck && piece?.type === "k" && piece.colour === sideToMove;
 
                 return (
@@ -184,13 +212,13 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
                       isKingInCheck ? styles.inCheck : "",
                     ].join(" ")}
                     onClick={() => handleSquareClick(file, r)}
-                    disabled={!canMove}
+                    disabled={!effectiveCanMove}
                   >
                     {piece && (
                       <motion.div
                         className={styles.pieceContainer}
                         {...(quality !== "low" ? { layoutId: `chess-piece-${sq}` } : {})}
-                        initial={isLast && lastMove?.to === sq ? { scale: 1.15, y: -10 } : false}
+                        initial={isLast && activeLastMove?.to === sq ? { scale: 1.15, y: -10 } : false}
                         animate={{
                           scale: isSelected ? 1.14 : 1,
                           y: isSelected ? -8 : 0,

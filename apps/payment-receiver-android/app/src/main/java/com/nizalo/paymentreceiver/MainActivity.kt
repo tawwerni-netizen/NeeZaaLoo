@@ -203,6 +203,19 @@ fun MainScreen(initialTab: Int = 0, onStartService: () -> Unit, onStopService: (
                         unselectedTextColor = NizaloTextMuted
                     )
                 )
+                NavigationBarItem(
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 },
+                    icon = { Text("🧪") },
+                    label = { Text("اختبار") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = NizaloAccent,
+                        selectedTextColor = NizaloAccent,
+                        indicatorColor = NizaloBg,
+                        unselectedIconColor = NizaloTextMuted,
+                        unselectedTextColor = NizaloTextMuted
+                    )
+                )
             }
         },
         topBar = {
@@ -218,6 +231,7 @@ fun MainScreen(initialTab: Int = 0, onStartService: () -> Unit, onStopService: (
                 1 -> DepositsTab()
                 2 -> WithdrawalsTab()
                 3 -> SettingsTab()
+                4 -> TestModeTab()
             }
         }
     }
@@ -605,3 +619,71 @@ fun SettingsTab() {
         }
     }
 }
+
+@Composable
+fun TestModeTab() {
+    val context = LocalContext.current
+    var smsText by remember { mutableStateOf("") }
+    var resultText by remember { mutableStateOf("") }
+
+    Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+        Text("وضع اختبار الرسائل (Regex Testing)", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(bottom = 16.dp))
+
+        OutlinedTextField(
+            value = smsText,
+            onValueChange = { smsText = it },
+            label = { Text("نص الرسالة (SMS)") },
+            modifier = Modifier.fillMaxWidth().height(150.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = NizaloAccent,
+                focusedLabelColor = NizaloAccent,
+                unfocusedBorderColor = NizaloTextMuted
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Button(
+            onClick = {
+                if (smsText.isBlank()) {
+                    resultText = "الرجاء إدخال نص الرسالة"
+                    return@Button
+                }
+                val parsed = com.nizalo.paymentreceiver.sms.SmsParser.parseAny(smsText)
+                if (parsed != null) {
+                    val (network, data) = parsed
+                    resultText = """
+                        الشبكة: $network
+                        المبلغ (قروش): ${data.amountEgpMinor}
+                        رقم المرسل: ${data.senderPhone ?: "غير متوفر"}
+                        اسم المرسل: ${data.senderName ?: "غير متوفر"}
+                        المرجع (Transaction Ref): ${data.transactionRef ?: "غير متوفر"}
+                    """.trimIndent()
+                } else {
+                    resultText = "لم يتم التعرف على الرسالة كإيصال دفع (Vodafone Cash / InstaPay)."
+                }
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = NizaloAccent, contentColor = NizaloAccentContrast),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("اختبار")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (resultText.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = NizaloSurface),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = resultText,
+                    color = Color.White,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        }
+    }
+}
+

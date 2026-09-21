@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
+            val slotIndex = intent.getIntExtra("android.telephony.extra.SLOT_INDEX", intent.getIntExtra("slot", 0))
+            
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
             for (sms in messages) {
                 val body = sms.messageBody ?: ""
@@ -26,14 +28,21 @@ class SmsReceiver : BroadcastReceiver() {
                 // "InstaPay" address. Gating on the sender here would silently drop
                 // every real transfer.
                 val (network, parsed) = SmsParser.parseAny(body) ?: continue
-                saveAndSync(context, network, parsed, body)
+                saveAndSync(context, network, parsed, body, sms.timestampMillis, slotIndex)
             }
         }
     }
 
-    private fun saveAndSync(context: Context, network: String, parsed: SmsParser.ParsedTransfer, body: String) {
+    private fun saveAndSync(context: Context, network: String, parsed: SmsParser.ParsedTransfer, body: String, smsTimestampMillis: Long, slotIndex: Int) {
         val prefs = context.getSharedPreferences("nizalo_prefs", Context.MODE_PRIVATE)
-        val receivingNumberId = prefs.getString("receiving_number_id", "default_num") ?: "default_num"
+        val rawIds = prefs.getString("receiving_number_id", "default_num") ?: "default_num"
+        val idList = rawIds.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        
+        val receivingNumberId = if (slotIndex in idList.indices) {
+            idList[slotIndex]
+        } else {
+            idList.firstOrNull() ?: "default_num"
+        }
 
         val transfer = LocalTransfer(
             network = network,
@@ -42,7 +51,8 @@ class SmsReceiver : BroadcastReceiver() {
             rawSenderPhone = parsed.senderPhone,
             amountEgpMinor = parsed.amountEgpMinor,
             rawMessage = body,
-            observedAt = System.currentTimeMillis()
+            transactionRef = parsed.transactionRef,
+            observedAt = smsTimestampMillis
         )
 
         CoroutineScope(Dispatchers.IO).launch {

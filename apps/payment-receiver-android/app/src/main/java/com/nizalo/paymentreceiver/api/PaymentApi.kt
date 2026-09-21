@@ -14,6 +14,7 @@ data class TransferReportRequest(
     val rawSenderPhone: String?,
     val amountEgpMinor: Long,
     val rawMessage: String,
+    val transactionRef: String?,
     val observedAt: String
 )
 

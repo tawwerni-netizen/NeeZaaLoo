@@ -68,8 +68,8 @@ import { runMaintenance } from "../../../scripts/periodic_vacuum_and_cleanup.mjs
 const { Pool } = pg;
 
 async function main() {
-  const ACTIVE_PRODUCTION_DB_URL = "postgresql://neondb_owner:npg_ABH8MueOg6Qd@ep-cold-frog-b2dicy1p-pooler.c-6.eu-central-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require";
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2")) {
+  const ACTIVE_PRODUCTION_DB_URL = "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=no-verify";
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("neon.tech") || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2") || process.env.DATABASE_URL.includes("ep-cold-frog-b2dicy1p")) {
     process.env.DATABASE_URL = ACTIVE_PRODUCTION_DB_URL;
   }
   const databaseUrl = process.env.DATABASE_URL;
@@ -81,6 +81,7 @@ async function main() {
     idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 10000,
     statement_timeout: 15000,
+    ssl: { rejectUnauthorized: false },
   });
   pool.on("error", (err) => console.error("[worker pg pool error]", err.message));
   const db = createPgAdapter(pool);
@@ -282,26 +283,26 @@ async function main() {
     { intervalMs: botSimulatorIntervalMs }
   );
 
-  const radarSeederIntervalMs = Number(process.env.RADAR_SEEDER_INTERVAL_MS || 10000);
+  const radarSeederIntervalMs = Number(process.env.RADAR_SEEDER_INTERVAL_MS || 35000);
   const radarSeederWorker = createTickLoop(
     createRadarSeederWorker(db, { emit: logger.emit }),
     { intervalMs: radarSeederIntervalMs }
   );
 
-  const liveArenaSimulatorIntervalMs = Number(process.env.LIVE_ARENA_SIMULATOR_INTERVAL_MS || 10000);
+  const liveArenaSimulatorIntervalMs = Number(process.env.LIVE_ARENA_SIMULATOR_INTERVAL_MS || 35000);
   const liveArenaSimulatorWorker = createTickLoop(
     createLiveArenaSimulator(db, { emit: logger.emit }),
     { intervalMs: liveArenaSimulatorIntervalMs }
   );
 
-  // Periodic Safe Database Maintenance & VACUUM (Every 6 Hours):
+  // Periodic Safe Database Maintenance & VACUUM (Every 2 Hours):
   // Keeps database storage lean, purges transient events/notifications,
   // reclaims dead tuples, and verifies ongoing system solvency.
-  const maintenanceIntervalMs = Number(process.env.MAINTENANCE_INTERVAL_MS || (6 * 3600 * 1000));
+  const maintenanceIntervalMs = Number(process.env.MAINTENANCE_INTERVAL_MS || (2 * 3600 * 1000));
   const maintenanceWorker = createTickLoop(
     async () => {
       try {
-        await runMaintenance();
+        await runMaintenance(db);
       } catch (err) {
         logger.emit("maintenance.error", { severity: "error", error: err.message });
       }

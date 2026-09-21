@@ -60,8 +60,8 @@ import {
 const { Pool } = pg;
 
 async function main() {
-  const ACTIVE_PRODUCTION_DB_URL = "postgresql://neondb_owner:npg_ABH8MueOg6Qd@ep-cold-frog-b2dicy1p-pooler.c-6.eu-central-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require";
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2")) {
+  const ACTIVE_PRODUCTION_DB_URL = "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=no-verify";
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("neon.tech") || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2") || process.env.DATABASE_URL.includes("ep-cold-frog-b2dicy1p")) {
     process.env.DATABASE_URL = ACTIVE_PRODUCTION_DB_URL;
   }
   requireEnv(["DATABASE_URL"]);
@@ -82,6 +82,7 @@ async function main() {
     idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 5000,
     statement_timeout: 6000,
+    ssl: { rejectUnauthorized: false },
   });
   pool.on("error", (err) => console.error("[gw pg pool error]", err.message));
   const db = createPgAdapter(pool);

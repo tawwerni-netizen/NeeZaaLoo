@@ -2630,6 +2630,20 @@ function buildRoutes() {
         return { body: { gameId: gameId ?? "all", entries: r.rows } };
       } },
 
+    // --- Clans & Guilds --------------------------------------------------------
+    { method: "GET", path: "/v1/clans", action: "player.profile.read", anonymous: true,
+      handler: async ({ db }) => {
+        const r = await db.query(`
+          SELECT c.id, c.name, c.tag, c.logo, c.description, c.global_elo,
+                 COUNT(cm.player_id)::int AS members_count
+            FROM clan c
+            LEFT JOIN clan_member cm ON cm.clan_id = c.id
+           GROUP BY c.id, c.name, c.tag, c.logo, c.description, c.global_elo
+           ORDER BY c.global_elo DESC
+        `);
+        return { body: { clans: r.rows } };
+      } },
+
     // --- Global Skill Score ----------------------------------------------------
     // Percentiles, tiers and the weighting breakdown are all read-only
     // projections of ratings the player already earned by playing. Nothing
@@ -5813,6 +5827,7 @@ function buildRoutes() {
           amountEgpMinor: body?.amountEgpMinor,
           rawMessage: body?.rawMessage,
           observedAt: body?.observedAt,
+          transactionRef: body?.transactionRef,
         });
 
         if (!r.ok) return { status: 400, body: errorBody(r.reason) };

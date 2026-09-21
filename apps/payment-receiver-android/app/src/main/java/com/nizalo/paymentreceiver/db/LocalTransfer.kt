@@ -12,6 +12,7 @@ data class LocalTransfer(
     val rawSenderPhone: String?,
     val amountEgpMinor: Long,
     val rawMessage: String,
+    val transactionRef: String?,
     val observedAt: Long,
     val status: String = "QUEUED", // QUEUED, SYNCED, FAILED
     val errorMessage: String? = null

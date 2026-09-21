@@ -229,13 +229,16 @@ function searchBestMove(pos, maxDepth, deadlineAt) {
     let bestAtDepth = null;
     let bestScore = -Infinity;
     let cutOff = false;
+    let alpha = -Infinity;
+    const beta = Infinity;
     for (const m of orderMoves(pos, rootMoves)) {
       makeMove(pos, m);
-      const child = negamax(pos, depth - 1, -Infinity, Infinity, deadlineAt);
+      const child = negamax(pos, depth - 1, -beta, -alpha, deadlineAt);
       unmakeMove(pos);
       if (child.timedOut) { cutOff = true; break; }
       const score = -child.score;
       if (score > bestScore) { bestScore = score; bestAtDepth = m; }
+      if (score > alpha) alpha = score;
     }
     if (cutOff || bestAtDepth === null) break;
     best = bestAtDepth;

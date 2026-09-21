@@ -52,3 +52,70 @@ const GLYPH: Record<string, string> = {
 export function pieceGlyph(piece: Piece): string {
   return GLYPH[`${piece.colour}${piece.type}`] ?? "";
 }
+
+/**
+ * Optimistically apply a move to a parsed board grid so the UI updates
+ * with 0ms latency while awaiting the server's authoritative state.
+ */
+export function applyMoveOptimistic(
+  board: (Piece | null)[][],
+  from: string,
+  to: string,
+  promoPiece?: Piece["type"]
+): (Piece | null)[][] {
+  const fromCoord = algebraicToCoord(from);
+  const toCoord = algebraicToCoord(to);
+  if (
+    fromCoord.file < 0 || fromCoord.file > 7 || fromCoord.rank < 0 || fromCoord.rank > 7 ||
+    toCoord.file < 0 || toCoord.file > 7 || toCoord.rank < 0 || toCoord.rank > 7
+  ) {
+    return board;
+  }
+
+  // Deep clone rows
+  const nextBoard: (Piece | null)[][] = board.map((row) => [...row]);
+  const movingPiece = squareAt(board, fromCoord.file, fromCoord.rank);
+  if (!movingPiece) return board;
+
+  const fromRow = nextBoard[7 - fromCoord.rank];
+  const toRow = nextBoard[7 - toCoord.rank];
+  if (!fromRow || !toRow) return board;
+
+  // Clear source square
+  fromRow[fromCoord.file] = null;
+
+  // Check promotion
+  const destPiece: Piece = promoPiece
+    ? { type: promoPiece, colour: movingPiece.colour }
+    : { ...movingPiece };
+
+  // Check en passant: pawn moves diagonally to an empty square
+  if (movingPiece.type === "p" && fromCoord.file !== toCoord.file) {
+    const targetSquare = squareAt(board, toCoord.file, toCoord.rank);
+    if (!targetSquare) {
+      // Captured pawn is at (toCoord.file, fromCoord.rank)
+      fromRow[toCoord.file] = null;
+    }
+  }
+
+  // Check castling: king moves 2 squares horizontally
+  if (movingPiece.type === "k" && Math.abs(toCoord.file - fromCoord.file) === 2) {
+    if (toCoord.file === 6) {
+      // Kingside castling: h-file rook moves to f-file
+      const rook = squareAt(board, 7, fromCoord.rank);
+      fromRow[7] = null;
+      fromRow[5] = rook;
+    } else if (toCoord.file === 2) {
+      // Queenside castling: a-file rook moves to d-file
+      const rook = squareAt(board, 0, fromCoord.rank);
+      fromRow[0] = null;
+      fromRow[3] = rook;
+    }
+  }
+
+  // Place moving piece on destination square
+  toRow[toCoord.file] = destPiece;
+
+  return nextBoard;
+}
+
