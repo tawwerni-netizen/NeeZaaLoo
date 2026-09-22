@@ -34,6 +34,8 @@
  *    - Asserts zero ledger drift.
  */
 
+import { pathToFileURL } from "node:url";
+
 const SQL_ENDPOINT = process.env.SQL_ENDPOINT || "https://ep-cold-frog-b2dicy1p-pooler.c-6.eu-central-1.aws.neon.tech/sql";
 const NEON_CONN_STRING = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_ABH8MueOg6Qd@ep-cold-frog-b2dicy1p-pooler.c-6.eu-central-1.aws.neon.tech/neondb";
 
@@ -318,20 +320,24 @@ function parseInterval(arg) {
   return parseInt(val, 10) || 6 * 3600 * 1000;
 }
 
-if (isDaemon) {
-  const intervalMs = parseInterval(intervalArg);
-  console.log(`[Daemon Mode] Running periodic maintenance every ${(intervalMs / 3600000).toFixed(1)} hours...`);
-  
-  // Run immediately once
-  runMaintenance().catch(console.error);
+const isEntryPoint = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 
-  // Then schedule periodically
-  setInterval(() => {
+if (isEntryPoint) {
+  if (isDaemon) {
+    const intervalMs = parseInterval(intervalArg);
+    console.log(`[Daemon Mode] Running periodic maintenance every ${(intervalMs / 3600000).toFixed(1)} hours...`);
+    
+    // Run immediately once
     runMaintenance().catch(console.error);
-  }, intervalMs);
-} else {
-  runMaintenance().catch((err) => {
-    console.error("[Maintenance Error]", err);
-    process.exit(1);
-  });
+
+    // Then schedule periodically
+    setInterval(() => {
+      runMaintenance().catch(console.error);
+    }, intervalMs);
+  } else {
+    runMaintenance().catch((err) => {
+      console.error("[Maintenance Error]", err);
+      process.exit(1);
+    });
+  }
 }

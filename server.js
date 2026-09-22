@@ -770,58 +770,11 @@ server.on("upgrade", (req, socket, head) => {
   socket.end();
 });
 
-// ---------------------------------------------------------------------------
-// Readiness Probe: Only listen on public port AFTER Next.js is ready!
-// ---------------------------------------------------------------------------
-function waitForNextReady(targetPort, maxAttempts, onReady) {
-  let attempts = 0;
-  let done = false;
-  function trigger() {
-    if (done) return;
-    done = true;
-    onReady();
-  }
-
-  function probe() {
-    if (done) return;
-    attempts++;
-    const req = http.request(
-      { hostname: "127.0.0.1", port: targetPort, path: "/", method: "GET", timeout: 800 },
-      (res) => {
-        console.log(`[Readiness] Next.js on port ${targetPort} is READY (status=${res.statusCode}).`);
-        trigger();
-      }
-    );
-    req.on("error", () => {
-      if (done) return;
-      if (attempts < maxAttempts) {
-        setTimeout(probe, 150);
-      } else {
-        console.warn(`[Readiness] Next.js probe reached max attempts. Starting server anyway...`);
-        trigger();
-      }
-    });
-    req.on("timeout", () => {
-      req.destroy();
-      if (done) return;
-      if (attempts < maxAttempts) {
-        setTimeout(probe, 150);
-      } else {
-        trigger();
-      }
-    });
-    req.end();
-  }
-  probe();
-}
-
-waitForNextReady(nextPort, 50, () => {
-  server.listen(port, hostname, () => {
-    console.log(`========================================`);
-    console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
-    console.log(`  -> Next.js   : ${nextPort}`);
-    console.log(`  -> API       : ${apiPort}`);
-    console.log(`  -> Gateway   : ${gwPort}`);
-    console.log(`========================================`);
-  });
+server.listen(port, hostname, () => {
+  console.log(`========================================`);
+  console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
+  console.log(`  -> Next.js   : ${nextPort}`);
+  console.log(`  -> API       : ${apiPort}`);
+  console.log(`  -> Gateway   : ${gwPort}`);
+  console.log(`========================================`);
 });
