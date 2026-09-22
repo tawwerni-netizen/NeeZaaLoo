@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node scripts/package-standalone.mjs",
+    "build": "next build --webpack && node scripts/package-standalone.mjs",
     "start": "next start",
     "lint": "next lint",
     "test": "node --test"
