@@ -671,7 +671,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (isApi || url.startsWith("/api/oxapay-webhook")) {
+  if (url.startsWith("/v1/") || url === "/v1" || url.startsWith("/api/oxapay-webhook")) {
     proxyHttp(req, res, apiPort);
     return;
   }
