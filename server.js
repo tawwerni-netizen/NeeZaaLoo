@@ -558,15 +558,53 @@ function getClientIp(req) {
   return req.socket.remoteAddress || "unknown";
 }
 
+function isWhitelistedIp(ip) {
+  if (!ip || ip === "unknown") return false;
+  if (ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1" || ip === "localhost") return true;
+  if (ip.startsWith("10.") || ip.startsWith("192.168.") || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip)) return true;
+  return false;
+}
+
+function isStaticAsset(url) {
+  if (!url) return false;
+  if (
+    url.startsWith("/_next/") ||
+    url.startsWith("/images/") ||
+    url.startsWith("/avatars/") ||
+    url.startsWith("/sounds/") ||
+    url.startsWith("/favicon.ico") ||
+    url.startsWith("/robots.txt") ||
+    url.startsWith("/sitemap.xml")
+  ) {
+    return true;
+  }
+  const clean = url.split("?")[0].toLowerCase();
+  return /\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|map|json|txt)$/.test(clean);
+}
+
+function isMaliciousProbe(url) {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return (
+    lower.includes("..") ||
+    lower.includes("/wp-") ||
+    lower.includes("phpmyadmin") ||
+    lower.includes(".env") ||
+    lower.includes("/etc/passwd") ||
+    lower.includes("/actuator/") ||
+    lower.includes(".git/")
+  );
+}
+
 // IP Tracking Buckets:
 // ip -> { count: number, windowStart: number, violations: number, jailedUntil: number }
 const ipTracker = new Map();
-const IP_WINDOW_MS = 10000; // 10s sliding window
-const MAX_GENERAL_REQ_PER_WINDOW = 120; // 120 reqs / 10s for static & Next.js pages
-const MAX_API_REQ_PER_WINDOW = 50;     // 50 reqs / 10s for /v1/* endpoints
-const MAX_WS_UPGRADES_PER_WINDOW = 10; // 10 WS upgrades / 10s
-const MAX_VIOLATIONS_BEFORE_JAIL = 15;  // 15 rate limit hits within window -> Jail
-const JAIL_DURATION_MS = 10 * 60 * 1000; // 10 minutes temporary ban
+const IP_WINDOW_MS = 10000;              // 10s sliding window
+const MAX_GENERAL_REQ_PER_WINDOW = 400;  // 400 requests / 10s for HTML pages & navigation
+const MAX_API_REQ_PER_WINDOW = 150;      // 150 requests / 10s for API endpoints (/v1/*)
+const MAX_WS_UPGRADES_PER_WINDOW = 40;   // 40 WS upgrades / 10s
+const VOLUMETRIC_ATTACK_THRESHOLD = 600; // 600+ reqs in 10s (60 req/s) = genuine flood
+const JAIL_DURATION_MS = 3 * 60 * 1000;  // 3 minutes temporary ban for actual flooders
 
 // Periodically clean up expired entries every 60 seconds
 setInterval(() => {
@@ -579,8 +617,21 @@ setInterval(() => {
   }
 }, 60000).unref();
 
-function checkRateLimit(ip, isApi, isWs) {
+function checkRateLimit(ip, isApi, isWs, url = "") {
+  if (isWhitelistedIp(ip)) return { allowed: true };
+  if (url && isStaticAsset(url)) return { allowed: true };
+
   const now = Date.now();
+
+  // Instant jail for malicious exploit probing
+  if (url && isMaliciousProbe(url)) {
+    const entry = ipTracker.get(ip) || { count: 1, windowStart: now, violations: 1, jailedUntil: 0 };
+    entry.jailedUntil = now + JAIL_DURATION_MS;
+    ipTracker.set(ip, entry);
+    console.warn(`[DDoS Guard] IP ${ip} JAILED for malicious probe: ${url}`);
+    return { allowed: false, jailed: true, retryAfter: Math.ceil(JAIL_DURATION_MS / 1000) };
+  }
+
   let entry = ipTracker.get(ip);
   if (!entry) {
     entry = { count: 1, windowStart: now, violations: 0, jailedUntil: 0 };
@@ -606,12 +657,14 @@ function checkRateLimit(ip, isApi, isWs) {
 
   if (entry.count > limit) {
     entry.violations++;
-    if (entry.violations >= MAX_VIOLATIONS_BEFORE_JAIL) {
+    // Only jail if generating massive volumetric flood (60+ req/sec)
+    if (entry.count >= VOLUMETRIC_ATTACK_THRESHOLD) {
       entry.jailedUntil = now + JAIL_DURATION_MS;
-      console.warn(`[DDoS Guard] IP ${ip} JAILED for 10 minutes due to excessive requests (${entry.count} reqs, ${entry.violations} violations).`);
+      console.warn(`[DDoS Guard] IP ${ip} JAILED for volumetric flood (${entry.count} reqs in 10s).`);
       return { allowed: false, jailed: true, retryAfter: Math.ceil(JAIL_DURATION_MS / 1000) };
     }
-    return { allowed: false, jailed: false, retryAfter: Math.ceil((entry.windowStart + IP_WINDOW_MS - now) / 1000) };
+    // Standard rate limit: brief 2-second 429 response, never a full jail
+    return { allowed: false, jailed: false, retryAfter: 2 };
   }
 
   return { allowed: true };
@@ -636,30 +689,32 @@ const server = createServer((req, res) => {
     return;
   }
 
-  // Anti-DDoS Rate Limiting Guard
-  const check = checkRateLimit(ip, isApi, false);
-  if (!check.allowed) {
-    if (check.jailed) {
-      res.writeHead(403, {
+  // Static assets (CSS, JS chunks, images, avatars, fonts) bypass rate limits entirely
+  if (!isStaticAsset(url)) {
+    const check = checkRateLimit(ip, isApi, false, url);
+    if (!check.allowed) {
+      if (check.jailed) {
+        res.writeHead(403, {
+          "Content-Type": "application/json",
+          "Retry-After": String(check.retryAfter || 180),
+          "Connection": "close",
+        });
+        res.end(JSON.stringify({
+          error: { code: "FORBIDDEN_TEMPORARY_BLOCK", message: "Too many excessive requests. Access temporarily restricted." }
+        }));
+        return;
+      }
+
+      res.writeHead(429, {
         "Content-Type": "application/json",
-        "Retry-After": String(check.retryAfter || 600),
+        "Retry-After": String(check.retryAfter || 2),
         "Connection": "close",
       });
       res.end(JSON.stringify({
-        error: { code: "FORBIDDEN_TEMPORARY_BLOCK", message: "Too many malicious or excessive requests. Access temporarily restricted." }
+        error: { code: "RATE_LIMITED", message: "Too many requests. Please slow down.", retryAfter: check.retryAfter || 2 }
       }));
       return;
     }
-
-    res.writeHead(429, {
-      "Content-Type": "application/json",
-      "Retry-After": String(check.retryAfter || 5),
-      "Connection": "close",
-    });
-    res.end(JSON.stringify({
-      error: { code: "RATE_LIMITED", message: "Too many requests. Please slow down.", retryAfter: check.retryAfter }
-    }));
-    return;
   }
 
   // Check payload size to prevent payload flood / memory exhaustion
@@ -724,14 +779,14 @@ server.maxConnections = 1000;    // 1000 concurrent sockets max
 
 server.on("upgrade", (req, socket, head) => {
   const ip = getClientIp(req);
-  const check = checkRateLimit(ip, false, true);
+  const url = req.url || "/";
+  const check = checkRateLimit(ip, false, true, url);
   if (!check.allowed) {
     socket.write("HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\n\r\n");
     socket.destroy();
     return;
   }
 
-  const url = req.url || "/";
   if (url.startsWith("/gateway")) {
     const newPath = url.replace(/^\/gateway/, "") || "/";
     const proxyReq = http.request({

@@ -41,7 +41,7 @@ type LiveMatch = {
 };
 type LiveMatchesResponse = { matches: LiveMatch[] };
 
-const POLL_MS = 3000;
+const POLL_MS = 5000;
 
 const WATCH_GAMES = [
   { id: "all", nameEn: "All Games", nameAr: "جميع الألعاب", icon: "🌐" },
@@ -87,7 +87,9 @@ function WatchContent() {
       if (includeBots) params.set("includeBots", "true");
 
       const r = await get<LiveMatchesResponse>(`/v1/duels/live?${params.toString()}`);
-      setMatches(r.matches || []);
+      if (r && Array.isArray(r.matches)) {
+        setMatches(r.matches);
+      }
     } catch {
       setMatches((prev) => prev ?? []);
     } finally {
