@@ -99,3 +99,33 @@ describe("parseLocalPaymentSms — variations the Android parser also accepts", 
     assert.equal(p.transactionRef, "022857190374");
   });
 });
+
+describe("parseLocalPaymentSms — more real captured receipts (2026-09)", () => {
+  // InstaPay via Mashreq, Latin sender name truncated by the bank at 20 characters.
+  const IPN_2 = "لقد استقبلت تحويل لحظي على  0540 بمبلغ 7,000.00 جم عبر IPN من EMAD RAGAB HASSAN TA يوم  02-09-2026 الساعة  00:19 رقم المعاملة c12a257e للمساعدة www.mashreq.com/mashreqipn";
+  // Vodafone Cash, "من 01…؛" + name on its own line.
+  const VF_3 = `تم استلام مبلغ 200.00 جنيه من 01503360771؛
+المسجل بإسم امنيه محمد امين عبدالمقصود شقره
+على رقم محفظتك 01067558133 بتاريخ 02:50 26-09-11.
+رصيدك الحالي: 236.90 جنيه
+رقم العملية: 023590234989
+ تقدر تتابع كل مصروفاتك من تاريخ المعاملات على أبلكيشن أنا فودافون http://vf.eg/vfcash`;
+
+  test("InstaPay with a Latin, bank-truncated sender name", () => {
+    const p = parseLocalPaymentSms(IPN_2);
+    assert.equal(p.network, "INSTAPAY");
+    assert.equal(p.amountEgpMinor, 700000n);
+    assert.equal(p.senderName, "EMAD RAGAB HASSAN TA");
+    assert.equal(p.senderPhone, null);
+    assert.equal(p.transactionRef, "c12a257e");
+  });
+
+  test("Vodafone Cash: the 236.90 balance is not the 200.00 amount", () => {
+    const p = parseLocalPaymentSms(VF_3);
+    assert.equal(p.network, "VODAFONE_CASH");
+    assert.equal(p.amountEgpMinor, 20000n);
+    assert.equal(p.senderPhone, "01503360771");
+    assert.equal(p.senderName, "امنيه محمد امين عبدالمقصود شقره");
+    assert.equal(p.transactionRef, "023590234989");
+  });
+});

@@ -340,6 +340,34 @@ describe("Payment Receiver device API integrity", () => {
       assert.equal(r.body.outcome, "SUCCESS", JSON.stringify(r.body));
     });
 
+    test("InstaPay: a sender name the bank cut at 20 characters still matches the full declared name", async () => {
+      await newPlayer("p_ipn_trunc");
+      await intent("p_ipn_trunc", {
+        amountEgp: 7000, name: "Emad Ragab Hassan Taha", phone: "01011110030", network: "INSTAPAY", numberId: ipnNumberId,
+      });
+      const r = await report(device, {
+        clientTransactionId: newKey(), network: "INSTAPAY", receivingNumberId: ipnNumberId, smsSender: "Mashreq",
+        rawMessage: "لقد استقبلت تحويل لحظي على  0540 بمبلغ 7,000.00 جم عبر IPN من EMAD RAGAB HASSAN TA يوم  02-09-2026 الساعة  00:19 رقم المعاملة c12a257e للمساعدة www.mashreq.com/mashreqipn",
+      });
+      assert.equal(r.status, 200, JSON.stringify(r.body));
+      assert.equal(r.body.outcome, "SUCCESS", JSON.stringify(r.body));
+      assert.equal(r.body.transaction.playerHandle, "p_ipn_trunc");
+    });
+
+    test("InstaPay: a SHORT sender name is never treated as truncated, so no prefix match", async () => {
+      await newPlayer("p_ipn_short");
+      await intent("p_ipn_short", {
+        amountEgp: 7100, name: "Emad Ragab Hassan", phone: "01011110031", network: "INSTAPAY", numberId: ipnNumberId,
+      });
+      const r = await report(device, {
+        clientTransactionId: newKey(), network: "INSTAPAY", receivingNumberId: ipnNumberId, smsSender: "Mashreq",
+        rawMessage: "لقد استقبلت تحويل لحظي على  0540 بمبلغ 7,100.00 جم عبر IPN من EMAD RAGAB يوم  02-09-2026 الساعة  00:20 رقم المعاملة d34b567f للمساعدة www.mashreq.com/mashreqipn",
+      });
+      assert.equal(r.body.outcome, "NEEDS_REVIEW");
+      assert.equal(r.body.transaction.reviewReason, "NO_MATCHING_INTENT");
+      assert.equal(await available("p_ipn_short"), 0n);
+    });
+
     test("no fitting intent: recorded as NEEDS_REVIEW with a reason", async () => {
       const r = await report(device, {
         clientTransactionId: newKey(),
@@ -515,15 +543,23 @@ describe("Payment Receiver device API integrity", () => {
 
   describe("rate limiting", () => {
     test("each device has its own budget, and exhausting one never blocks another", async () => {
-      const noisy = await issueDevice("Noisy");
-      let limited = 0;
-      for (let i = 0; i < 150; i++) {
-        const r = await req("GET", "/v1/payment-receiver/health", { headers: { "x-device-api-key": noisy.apiKey } });
-        if (r.status === 429) limited++;
+      // A frozen clock: no refill during the test, so the outcome does not
+      // depend on how fast this machine happens to be.
+      const frozen = createApi({
+        db, auth, localPayments, rateLimit: { capacity: 5000, refillPerSecond: 5000 }, now: () => 1_700_000_000_000,
+      });
+      await frozen.listen();
+      const health = (key) => fetch(new URL("/v1/payment-receiver/health", frozen.url), { headers: { "x-device-api-key": key } });
+      try {
+        const noisy = await issueDevice("Noisy");
+        const statuses = [];
+        for (let i = 0; i < 125; i++) statuses.push((await health(noisy.apiKey)).status);
+        assert.equal(statuses.filter((s) => s === 200).length, 120, "exactly the device's burst budget is served");
+        assert.ok(statuses.slice(120).every((s) => s === 429), "then the device is refused");
+        assert.equal((await health(device.apiKey)).status, 200, "another device is unaffected");
+      } finally {
+        await frozen.close();
       }
-      assert.ok(limited > 0, "a device hammering the API is eventually refused");
-      const calm = await req("GET", "/v1/payment-receiver/health", { headers: { "x-device-api-key": device.apiKey } });
-      assert.equal(calm.status, 200);
     });
   });
 

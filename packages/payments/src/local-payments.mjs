@@ -52,6 +52,9 @@ export const DeviceOutcome = {
 export const LOCAL_NETWORKS = new Set(["VODAFONE_CASH", "INSTAPAY"]);
 
 const CLIENT_KEY_SHAPE = /^[A-Za-z0-9_-]{16,80}$/;
+// Every captured InstaPay receipt so far carries a sender name of exactly
+// this length: the bank truncates longer names.
+const IPN_NAME_LIMIT = 20;
 const MAX_RECEIPT_CHARS = 2000;
 // observedAt is the phone's SMS timestamp; a phone clock a few minutes
 // fast is ordinary, one far in the future is not a real receipt.
@@ -859,6 +862,12 @@ async function tryAutoCredit(db, { transferId, net, possibleNumbers, primaryNumb
           ($5 <> '' AND right(regexp_replace(declared_sender_phone, '\\D', '', 'g'), 10) = $5)
           OR ($6 <> '' AND regexp_replace(lower(trim(declared_sender_name)), '\\s+', ' ', 'g')
                          = regexp_replace(lower(trim($6)), '\\s+', ' ', 'g'))
+          -- InstaPay receipts cut the sender name at ${IPN_NAME_LIMIT} characters
+          -- ("EMAD RAGAB HASSAN TA" for "... TAHA"): a name exactly that long
+          -- may be the start of the declared one.
+          OR ($6 <> '' AND char_length(regexp_replace(trim($6), '\\s+', ' ', 'g')) = ${IPN_NAME_LIMIT}
+              AND left(regexp_replace(lower(trim(declared_sender_name)), '\\s+', ' ', 'g'), ${IPN_NAME_LIMIT})
+                = regexp_replace(lower(trim($6)), '\\s+', ' ', 'g'))
         )`,
     [net, possibleNumbers, amount.toString(), observed, phoneTail.length === 10 ? phoneTail : "", String(senderName)]
   );

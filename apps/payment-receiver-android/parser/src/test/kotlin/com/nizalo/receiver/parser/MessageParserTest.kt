@@ -152,6 +152,31 @@ class MessageParserTest {
     }
 
     @Nested
+    inner class RealReceipts2026 {
+        @Test
+        fun `InstaPay - Latin, bank-truncated sender name`() {
+            val r = MessageParser.parse(Fixtures.IPN_2, senderAddress = "Mashreq")
+            assertEquals(Provider.INSTAPAY, r.provider)
+            assertEquals(700_000L, r.amountPiastres)
+            assertEquals("EMAD RAGAB HASSAN TA", r.senderName)
+            assertNull(r.senderPhone)
+            assertEquals("c12a257e", r.reference)
+            assertEquals(Confidence.VALID, r.confidence)
+        }
+
+        @Test
+        fun `Vodafone Cash - name on its own line, balance never read as the amount`() {
+            val r = MessageParser.parse(Fixtures.VF_3, senderAddress = "VF-Cash")
+            assertEquals(Provider.VODAFONE_CASH, r.provider)
+            assertEquals(20_000L, r.amountPiastres)
+            assertEquals("01503360771", r.senderPhone)
+            assertEquals("امنيه محمد امين عبدالمقصود شقره", r.senderName)
+            assertEquals("023590234989", r.reference)
+            assertEquals(Confidence.VALID, r.confidence)
+        }
+    }
+
+    @Nested
     inner class NotReceipts {
         @ParameterizedTest
         @ValueSource(strings = [
