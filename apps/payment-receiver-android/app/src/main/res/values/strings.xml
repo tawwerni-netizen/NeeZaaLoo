@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- app_name is set per build flavor in app/build.gradle.kts -->
+    <string name="brand_name">NIZALO</string>
+    <string name="brand_tagline">Payment Receiver</string>
+    <string name="app_title">Nizalo Payment Receiver</string>
+
+    <!-- Startup -->
+    <string name="init_starting">جارٍ تجهيز التطبيق…</string>
+    <string name="init_failed_title">تعذّر تشغيل التطبيق</string>
+    <string name="init_failed_body">لم نتمكن من فتح التخزين المشفّر على هذا الجهاز. لم يُفقد أي تحويل: الرسائل تبقى في صندوق الرسائل وسيقرؤها التطبيق عند تشغيله بنجاح.</string>
+    <string name="init_failed_detail">التفاصيل التقنية: %1$s</string>
+    <string name="retry">إعادة المحاولة</string>
+
+    <!-- Connection -->
+    <string name="conn_online">متصل</string>
+    <string name="conn_offline">غير متصل</string>
+    <string name="conn_checking">جارٍ الفحص</string>
+    <string name="conn_unknown">لم يُفحص بعد</string>
+    <string name="conn_mock">وضع المحاكاة</string>
+
+    <!-- Dashboard -->
+    <string name="today">اليوم</string>
+    <string name="stat_received">الرسائل المستلمة</string>
+    <string name="stat_activated">الحسابات المُفعّلة</string>
+    <string name="stat_pending">قيد الانتظار</string>
+    <string name="send_now">إرسال الآن</string>
+    <string name="sending">جارٍ الإرسال…</string>
+    <string name="test_connection">اختبار الاتصال</string>
+    <string name="testing_connection">اختبار الاتصال…</string>
+    <string name="nav_history">السجل</string>
+    <string name="nav_withdrawals">طلبات السحب</string>
+    <string name="nav_test_mode">وضع التجربة</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="nav_audit">سجل الأحداث</string>
+    <string name="recent_transfers">آخر التحويلات</string>
+    <string name="view_all">عرض الكل</string>
+    <string name="empty_transfers">لا توجد تحويلات حتى الآن.</string>
+    <string name="empty_transfers_hint">ستظهر هنا رسائل فودافون كاش وإنستاباي فور وصولها.</string>
+    <string name="withdrawals_waiting">%1$d طلب سحب بانتظار التنفيذ</string>
+    <string name="errors_today">%1$d خطأ اليوم</string>
+    <string name="no_errors">لا توجد أخطاء.</string>
+
+    <!-- Send-now results -->
+    <string name="sync_result_sent">تم إرسال %1$d عملية بنجاح.</string>
+    <string name="sync_result_failed">فشل إرسال %1$d عملية.</string>
+    <string name="sync_result_reason">السبب: %1$s</string>
+    <string name="sync_result_nothing">لا توجد عمليات بانتظار الإرسال.</string>
+    <string name="sync_result_remaining">متبقٍ في قائمة الانتظار: %1$d</string>
+    <string name="sync_result_blocked">لم يتم إرسال أي عملية.</string>
+
+    <!-- Connection test results -->
+    <string name="conn_ok_title">✓ الاتصال يعمل</string>
+    <string name="conn_ok_server">Server: Online</string>
+    <string name="conn_ok_api">API: Available</string>
+    <string name="conn_ok_latency">Latency: %1$d ms</string>
+    <string name="conn_ok_device">الجهاز: %1$s</string>
+    <string name="conn_fail_title">✕ الاتصال غير متاح</string>
+
+    <!-- Error reasons (shown to the operator) -->
+    <string name="err_not_configured">أكمل إعداد الاتصال: رابط الموقع ورمز الاتصال مطلوبان.</string>
+    <string name="err_no_internet">لا يوجد اتصال بالإنترنت (No Internet).</string>
+    <string name="err_timeout">انتهت مهلة الاتصال (Timeout).</string>
+    <string name="err_server_unavailable">الخادم غير متاح (Server Unavailable).</string>
+    <string name="err_ssl">خطأ في شهادة الأمان (SSL Error).</string>
+    <string name="err_unauthorized">رمز الاتصال غير صحيح أو ملغى (Unauthorized).</string>
+    <string name="err_device_disabled">تم تعطيل هذا الجهاز من لوحة التحكم.</string>
+    <string name="err_rate_limited">طلبات كثيرة، ستتم المحاولة بعد قليل.</string>
+    <string name="err_endpoint_missing">الخادم لا يدعم هذا الإصدار من التطبيق بعد (API not available).</string>
+    <string name="err_invalid_response">استجابة غير متوقعة من الخادم.</string>
+    <string name="err_server">خطأ في الخادم (HTTP %1$d).</string>
+    <string name="err_rejected">رفض الخادم الطلب: %1$s</string>
+    <string name="err_wifi_required">الإرسال عبر Wi-Fi فقط مفعّل، والجهاز غير متصل بشبكة Wi-Fi.</string>
+    <string name="err_no_receiving_number">لم يتم اختيار رقم الاستقبال في الإعدادات.</string>
+
+    <!-- Banners -->
+    <string name="banner_setup_title">الاتصال غير مُعَد</string>
+    <string name="banner_setup_body">أدخل رابط موقع Nizalo ورمز الاتصال لبدء إرسال التحويلات.</string>
+    <string name="banner_open_settings">فتح الإعدادات</string>
+    <string name="banner_numbers_title">لم يتم اختيار أرقام الاستقبال</string>
+    <string name="banner_numbers_body">اختر الأرقام التي يستقبل عليها هذا الهاتف التحويلات، وإلا ستبقى العمليات في الانتظار.</string>
+    <string name="banner_integrity">تنبيه أمني: يبدو أن هذا الجهاز معدَّل (Root). يُنصح باستخدام جهاز غير معدَّل لهذه الأداة المالية.</string>
+    <string name="banner_mock">وضع المحاكاة مفعّل: لا يتم الاتصال بأي خادم حقيقي.</string>
+    <string name="banner_wifi_only">الإرسال عبر Wi-Fi فقط مفعّل.</string>
+
+    <!-- Permissions -->
+    <string name="perm_title">صلاحيات مطلوبة</string>
+    <string name="perm_sms_reason">استقبال الرسائل: لقراءة رسائل تأكيد فودافون كاش وإنستاباي فور وصولها. لا تُخزَّن أي رسالة أخرى.</string>
+    <string name="perm_read_sms_reason">قراءة الرسائل: لاسترجاع أي تحويل وصل خلال آخر 48 ساعة أثناء إغلاق التطبيق.</string>
+    <string name="perm_notif_reason">الإشعارات: للتنبيه بطلبات السحب الجديدة.</string>
+    <string name="perm_grant">منح الصلاحيات</string>
+    <string name="perm_open_settings">فتح الإعدادات</string>
+    <string name="perm_denied">تم رفض الصلاحية. يمكنك منحها من إعدادات التطبيق.</string>
+
+    <!-- Status labels -->
+    <string name="status_pending">Pending</string>
+    <string name="status_processing">Processing</string>
+    <string name="status_confirmed">Confirmed</string>
+    <string name="status_needs_review">Needs Review</string>
+    <string name="status_duplicate">Duplicate</string>
+    <string name="status_rejected">Rejected</string>
+    <string name="status_failed">Failed</string>
+    <string name="sync_not_sent">لم يُرسل</string>
+    <string name="sync_pending">بانتظار الإرسال</string>
+    <string name="sync_syncing">جارٍ الإرسال</string>
+    <string name="sync_synced">تم الإرسال</string>
+    <string name="sync_failed">فشل الإرسال</string>
+    <string name="provider_vodafone">Vodafone Cash</string>
+    <string name="provider_instapay">InstaPay</string>
+
+    <!-- Transaction details -->
+    <string name="details_title">تفاصيل التحويل</string>
+    <string name="f_provider">مزوّد الخدمة</string>
+    <string name="f_sender_name">اسم المرسل</string>
+    <string name="f_sender_phone">رقم المرسل</string>
+    <string name="f_reference">رقم العملية</string>
+    <string name="f_sms_sender">مصدر الرسالة</string>
+    <string name="f_received_at">وقت الاستلام</string>
+    <string name="f_processed_at">وقت المعالجة</string>
+    <string name="f_backend_status">حالة الخادم</string>
+    <string name="f_sync_status">حالة الإرسال</string>
+    <string name="f_sync_attempts">محاولات الإرسال</string>
+    <string name="f_last_error">آخر خطأ</string>
+    <string name="f_player">حساب اللاعب</string>
+    <string name="f_credited">المبلغ المُضاف</string>
+    <string name="f_original_message">نص الرسالة الأصلي</string>
+    <string name="f_parsed_data">البيانات المستخرجة</string>
+    <string name="f_confidence">الثقة</string>
+    <string name="f_source">المصدر</string>
+    <string name="f_backend_reference">مرجع الخادم</string>
+    <string name="dup_explained">هذه الرسالة مسجّلة مسبقًا لدى الخادم، ولم تُضَف أي أموال مرة ثانية.</string>
+    <string name="review_explained">لم تُرسَل هذه الرسالة تلقائيًا لأن بياناتها غير مكتملة أو غير مؤكدة. يمكنك إرسالها للمراجعة اليدوية، ولن يضيف الخادم الرصيد إلا بعد مراجعة المسؤول.</string>
+    <string name="rejected_explained">وصلت هذه الرسالة من رقم هاتف عادي، وشركات الدفع لا ترسل التأكيدات من أرقام عادية. قد تكون رسالة مزيفة، لذا لم تُرسَل.</string>
+    <string name="backend_review_explained">سجّلها الخادم بانتظار مراجعة المسؤول لمطابقتها مع طلب الإيداع.</string>
+    <string name="send_for_review">إرسال للمراجعة اليدوية</string>
+    <string name="send_for_review_done">✓ أُضيفت إلى قائمة الإرسال</string>
+    <string name="send_for_review_unavailable">لا يمكن الإرسال: لم يُستخرج مبلغ من الرسالة.</string>
+    <string name="retry_send">إعادة الإرسال</string>
+    <string name="not_found">العنصر غير موجود.</string>
+    <string name="copy">نسخ</string>
+
+    <!-- Review reasons from the backend -->
+    <string name="rr_UNTRUSTED_SENDER">مصدر الرسالة غير موثوق</string>
+    <string name="rr_UNPARSEABLE">لم يتمكن الخادم من قراءة الرسالة</string>
+    <string name="rr_NETWORK_MISMATCH">الرسالة لا تطابق مزوّد الخدمة</string>
+    <string name="rr_NO_MATCHING_INTENT">لا يوجد طلب إيداع مطابق</string>
+    <string name="rr_AMBIGUOUS_MATCH">أكثر من طلب إيداع مطابق</string>
+    <string name="rr_INTENT_ALREADY_CREDITED">طلب الإيداع أُضيف رصيده مسبقًا</string>
+    <string name="rr_NO_RATE_SET">لم يُحدَّد سعر الصرف</string>
+
+    <!-- History -->
+    <string name="history_title">السجل</string>
+    <string name="search_hint">ابحث برقم العملية أو الهاتف أو الاسم أو المبلغ</string>
+    <string name="filter_all">الكل</string>
+    <string name="filter_vodafone">Vodafone Cash</string>
+    <string name="filter_instapay">InstaPay</string>
+    <string name="filter_pending">Pending</string>
+    <string name="filter_synced">Synced</string>
+    <string name="filter_failed">Failed</string>
+    <string name="filter_duplicate">Duplicate</string>
+    <string name="filter_rejected">Rejected</string>
+    <string name="filter_today">اليوم</string>
+    <string name="filter_week">هذا الأسبوع</string>
+    <string name="filter_month">هذا الشهر</string>
+    <string name="history_empty_filtered">لا توجد نتائج مطابقة.</string>
+    <string name="results_count">%1$d نتيجة</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="s_section_connection">الاتصال</string>
+    <string name="s_website">رابط موقع Nizalo</string>
+    <string name="s_website_hint">https://your-nizalo-domain.com</string>
+    <string name="s_token">رمز الاتصال (Connection Token)</string>
+    <string name="s_token_hint">الصق الرمز الصادر من لوحة التحكم</string>
+    <string name="s_token_saved">رمز محفوظ — اتركه فارغًا للإبقاء عليه</string>
+    <string name="s_show">إظهار</string>
+    <string name="s_hide">إخفاء</string>
+    <string name="s_section_receiving">الاستقبال</string>
+    <string name="s_vodafone">استقبال Vodafone Cash</string>
+    <string name="s_instapay">استقبال InstaPay</string>
+    <string name="s_numbers_vodafone">أرقام Vodafone Cash على هذا الهاتف</string>
+    <string name="s_numbers_instapay">حسابات InstaPay على هذا الهاتف</string>
+    <string name="s_numbers_load">تحميل الأرقام من الخادم</string>
+    <string name="s_numbers_loading">جارٍ التحميل…</string>
+    <string name="s_numbers_none">لا توجد أرقام نشطة لهذا المزوّد في الخادم.</string>
+    <string name="s_numbers_failed">تعذّر تحميل الأرقام: %1$s</string>
+    <string name="s_section_sync">الإرسال</string>
+    <string name="s_auto_sync">الإرسال التلقائي</string>
+    <string name="s_wifi_only">الإرسال عبر Wi-Fi فقط</string>
+    <string name="s_section_notifications">الإشعارات</string>
+    <string name="s_notify_withdrawals">طلبات السحب الجديدة</string>
+    <string name="s_notify_payments">معالجة التحويلات</string>
+    <string name="s_section_advanced">متقدم</string>
+    <string name="s_detailed_log">تسجيل السجل التفصيلي</string>
+    <string name="s_detailed_log_hint">لا يُسجَّل أبدًا رمز الاتصال أو أي بيانات دخول.</string>
+    <string name="s_mock">استخدام الخادم الوهمي (Dev فقط)</string>
+    <string name="s_environment">البيئة: %1$s</string>
+    <string name="s_version">الإصدار: %1$s</string>
+    <string name="save">حفظ</string>
+    <string name="saving">جارٍ الحفظ…</string>
+    <string name="back">رجوع</string>
+    <string name="settings_saved">✓ تم حفظ الإعدادات</string>
+    <string name="settings_invalid">راجع الحقول المظلّلة.</string>
+    <string name="v_url_required">رابط الموقع مطلوب.</string>
+    <string name="v_url_invalid">الرابط غير صحيح.</string>
+    <string name="v_url_https">يجب أن يبدأ الرابط بـ https://</string>
+    <string name="v_token_required">Token مطلوب.</string>
+    <string name="v_token_short">الرمز قصير جدًا.</string>
+    <string name="unsaved_title">لديك تغييرات غير محفوظة.</string>
+    <string name="unsaved_save">حفظ</string>
+    <string name="unsaved_discard">تجاهل</string>
+    <string name="cancel">إلغاء</string>
+
+    <!-- Test Mode -->
+    <string name="test_title">وضع التجربة</string>
+    <string name="test_heading">اختبر قراءة رسالة التحويل</string>
+    <string name="test_note">نفس القارئ المستخدم فعليًا. لا يُحفظ شيء ولا يُرسل أي شيء إلى الخادم.</string>
+    <string name="test_hint">الصق نص رسالة التحويل هنا…</string>
+    <string name="test_sender_hint">مصدر الرسالة (اختياري)، مثل VF-Cash</string>
+    <string name="test_read">اقرأ الرسالة</string>
+    <string name="test_clear">مسح</string>
+    <string name="test_empty">الصق نص رسالة أولًا.</string>
+    <string name="test_parsed_ok">Parsed Successfully</string>
+    <string name="test_parse_failed">Unable to parse message</string>
+    <string name="test_confidence_valid">Valid</string>
+    <string name="test_confidence_review">Needs Review</string>
+    <string name="test_confidence_invalid">Invalid</string>
+    <string name="test_issues">ملاحظات القراءة</string>
+
+    <!-- Parse issues -->
+    <string name="pi_NOT_A_RECEIPT">ليست رسالة استلام تحويل</string>
+    <string name="pi_MISSING_AMOUNT">المبلغ غير موجود</string>
+    <string name="pi_INVALID_AMOUNT">المبلغ غير صالح</string>
+    <string name="pi_AMOUNT_OUT_OF_RANGE">المبلغ أكبر من المعقول</string>
+    <string name="pi_UNVERIFIED_FORMAT">صيغة غير موثّقة (إنجليزية)</string>
+    <string name="pi_UNTRUSTED_SENDER">مرسل غير موثوق (رقم هاتف عادي)</string>
+    <string name="pi_MISSING_REFERENCE">رقم العملية غير موجود</string>
+    <string name="pi_MISSING_SENDER">بيانات المرسل غير موجودة</string>
+
+    <!-- Withdrawals -->
+    <string name="w_title">طلبات السحب</string>
+    <string name="w_empty">لا توجد طلبات سحب معلقة.</string>
+    <string name="w_refresh">تحديث</string>
+    <string name="w_refreshing">جارٍ التحديث…</string>
+    <string name="w_refresh_failed">تعذّر التحديث: %1$s</string>
+    <string name="w_offline_copy">تُعرض آخر نسخة محفوظة.</string>
+    <string name="w_player">اسم اللاعب</string>
+    <string name="w_amount_to_send">المبلغ المطلوب تحويله</string>
+    <string name="w_amount_usdt">قيمة السحب</string>
+    <string name="w_method">طريقة السحب</string>
+    <string name="w_destination">الوجهة</string>
+    <string name="w_request_id">Request ID</string>
+    <string name="w_requested_at">تاريخ الطلب</string>
+    <string name="w_completed_at">تاريخ التنفيذ</string>
+    <string name="w_reference">مرجع التحويل</string>
+    <string name="w_details_title">تفاصيل طلب السحب</string>
+    <string name="w_copy_number">نسخ الرقم</string>
+    <string name="w_number_copied">✓ تم نسخ الرقم</string>
+    <string name="w_done">تم التحويل</string>
+    <string name="w_confirm_title">هل تم بالفعل تحويل المبلغ إلى المستفيد؟</string>
+    <string name="w_confirm_amount">المبلغ: %1$s</string>
+    <string name="w_confirm_destination">الوجهة: %1$s</string>
+    <string name="w_confirm_request">Request ID: %1$s</string>
+    <string name="w_confirm_reference_hint">رقم عملية التحويل من رسالتك (اختياري)</string>
+    <string name="w_confirm_button">تأكيد التحويل</string>
+    <string name="w_confirming">جارٍ التأكيد…</string>
+    <string name="w_confirmed">✓ تم تأكيد التحويل وخصم المبلغ من محفظة اللاعب.</string>
+    <string name="w_already_processed">هذا الطلب مكتمل مسبقًا. لم يتم خصم أي مبلغ مرة أخرى.</string>
+    <string name="w_confirm_failed">✕ فشل تأكيد التحويل.</string>
+    <string name="w_confirm_failed_hint">لم يتغير شيء في رصيد اللاعب. يمكنك إعادة المحاولة بأمان؛ لن يُخصم المبلغ مرتين.</string>
+    <string name="w_not_actionable">لا يمكن تنفيذ هذا الطلب في حالته الحالية.</string>
+    <string name="w_status_PENDING">Pending</string>
+    <string name="w_status_PROCESSING">Processing</string>
+    <string name="w_status_COMPLETED">Completed</string>
+    <string name="w_status_REJECTED">Rejected</string>
+    <string name="w_status_AWAITING_APPROVAL">بانتظار الموافقة</string>
+
+    <!-- Audit -->
+    <string name="audit_title">سجل الأحداث</string>
+    <string name="audit_empty">لا توجد أحداث بعد.</string>
+
+    <!-- Notifications -->
+    <string name="channel_withdrawals">طلبات السحب</string>
+    <string name="channel_payments">التحويلات</string>
+    <string name="notif_new_withdrawal_title">طلب سحب جديد</string>
+    <string name="notif_new_withdrawal_text">المبلغ: %1$s — اضغط لعرض التفاصيل.</string>
+    <string name="notif_payments_title">تمت معالجة تحويلات</string>
+    <string name="notif_payments_text">تم إرسال %1$d عملية إلى الخادم.</string>
+</resources>

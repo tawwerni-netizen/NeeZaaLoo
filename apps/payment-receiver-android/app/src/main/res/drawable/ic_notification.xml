@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- brand/logo/nizalo-mark-mono.svg: status-bar icons must be a single-colour silhouette -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M8,8h18l44,58V8h18v80H70L26,30v58H8z" />
+</vector>

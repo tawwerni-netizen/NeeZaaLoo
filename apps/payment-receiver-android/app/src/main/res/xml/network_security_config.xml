@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Staging and production: HTTPS only, and only system-installed certificate
+  authorities. A user-installed CA (the usual way to intercept an app's
+  traffic) is not trusted. The backend address is configured on the device,
+  so certificate pinning to a fixed host is not possible here.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

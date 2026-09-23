@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Looked up by name at runtime (ui/components/Labels.kt codeText); keep them through resource shrinking. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/rr_*,@string/pi_*,@string/w_status_*" />

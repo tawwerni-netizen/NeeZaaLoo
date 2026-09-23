@@ -1,0 +1,6 @@
+keystore.properties
+.gradle/
+/app/schemas/*.json.tmp
+# The root .gitignore ignores every "data/" directory (runtime data); here
+# data/ is source code: the app's data layer and its tests.
+!data/

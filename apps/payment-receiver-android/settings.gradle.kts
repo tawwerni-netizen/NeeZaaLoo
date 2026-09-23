@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "payment-receiver-android"
 
 include(":app")
+include(":parser")
