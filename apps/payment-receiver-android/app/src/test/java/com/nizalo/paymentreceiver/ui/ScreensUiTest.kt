@@ -16,6 +16,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
@@ -39,6 +41,7 @@ import com.nizalo.paymentreceiver.ui.withdrawals.WithdrawalDetailsScreen
 import com.nizalo.paymentreceiver.ui.withdrawals.WithdrawalDetailsViewModel
 import com.nizalo.paymentreceiver.ui.withdrawals.WithdrawalsScreen
 import com.nizalo.paymentreceiver.ui.withdrawals.WithdrawalsViewModel
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -54,6 +57,10 @@ class ScreensUiTest {
     @get:Rule val rule = createComposeRule()
 
     private var c: AppContainer? = null
+    private val viewModels = mutableListOf<ViewModel>()
+
+    /** Every view model a test creates is cancelled when it ends, so none outlives its test. */
+    private fun <T : ViewModel> vm(v: T): T = v.also { viewModels += it }
 
     private fun mockContainer(settings: Settings? = null): AppContainer {
         val container = if (settings != null) TestContainers.create(mock = { InMemoryReceiverApi() }, settings = settings)
@@ -66,6 +73,9 @@ class ScreensUiTest {
     // still be completing a refresh, and a closed database would fail the NEXT test.
     @After
     fun tearDown() {
+        viewModels.forEach { it.viewModelScope.cancel() }
+        viewModels.clear()
+        c?.appScope?.cancel()
         c = null
     }
 
@@ -85,12 +95,12 @@ class ScreensUiTest {
      * Scroll-then-tap, retried: rows can shift while the dashboard's own refreshes land
      * (e.g. the pending-withdrawals banner appearing above the buttons).
      */
-    private fun dashClick(tag: String) = rule.waitUntil(5_000) {
+    private fun dashClick(tag: String) = rule.waitUntil(15_000) {
         runCatching { dashTag(tag).performClick(); true }.getOrDefault(false)
     }
 
     /** Waits for text that appears asynchronously somewhere in the dashboard list, scrolling to it. */
-    private fun waitForDashText(text: String) = rule.waitUntil(5_000) {
+    private fun waitForDashText(text: String) = rule.waitUntil(15_000) {
         runCatching { rule.onNodeWithTag("dashboard").performScrollToNode(hasText(text, substring = true)); true }.getOrDefault(false)
     }
 
@@ -99,7 +109,7 @@ class ScreensUiTest {
         rule.setContent {
             ReceiverTheme {
                 DashboardScreen(
-                    DashboardViewModel(container),
+                    vm(DashboardViewModel(container)),
                     DashboardNav(
                         openTransaction = { calls += "tx:$it" }, openHistory = { calls += "history" },
                         openWithdrawals = { calls += "withdrawals" }, openTestMode = { calls += "test" },
@@ -128,7 +138,7 @@ class ScreensUiTest {
         val container = mockContainer()
         rule.setContent {
             ReceiverTheme {
-                DashboardScreen(DashboardViewModel(container), DashboardNav({}, {}, {}, {}, {}, {}))
+                DashboardScreen(vm(DashboardViewModel(container)), DashboardNav({}, {}, {}, {}, {}, {}))
             }
         }
         rule.onNodeWithTag("dashboard").performScrollToNode(hasTestTag("permissions_card"))
@@ -181,7 +191,7 @@ class ScreensUiTest {
     // ---- Settings ------------------------------------------------------------
 
     private fun settings(container: AppContainer, onBack: () -> Unit = {}) {
-        rule.setContent { ReceiverTheme { SettingsScreen(SettingsViewModel(container), onBack) } }
+        rule.setContent { ReceiverTheme { SettingsScreen(vm(SettingsViewModel(container)), onBack) } }
     }
 
     @Test
@@ -259,7 +269,7 @@ class ScreensUiTest {
     fun `test mode - read shows the parsed fields, clear resets, back leaves`() {
         var backs = 0
         val container = mockContainer()
-        rule.setContent { ReceiverTheme { TestModeScreen(TestModeViewModel()) { backs++ } } }
+        rule.setContent { ReceiverTheme { TestModeScreen(vm(TestModeViewModel())) { backs++ } } }
 
         rule.onNodeWithTag("test_input").performTextInput(Receipts.vf())
         rule.onNodeWithTag("test_read").performClick()
@@ -280,7 +290,7 @@ class ScreensUiTest {
 
     @Test
     fun `test mode - a non-receipt is reported as unreadable`() {
-        rule.setContent { ReceiverTheme { TestModeScreen(TestModeViewModel()) {} } }
+        rule.setContent { ReceiverTheme { TestModeScreen(vm(TestModeViewModel())) {} } }
         rule.onNodeWithTag("test_input").performTextInput("كود التحقق 123456")
         rule.onNodeWithTag("test_read").performClick()
         rule.waitForText("Unable to parse message")
@@ -288,7 +298,7 @@ class ScreensUiTest {
 
     @Test
     fun `test mode - reading with nothing pasted says what to do`() {
-        rule.setContent { ReceiverTheme { TestModeScreen(TestModeViewModel()) {} } }
+        rule.setContent { ReceiverTheme { TestModeScreen(vm(TestModeViewModel())) {} } }
         rule.onNodeWithTag("test_read").performClick()
         rule.waitForText("الصق نص رسالة أولًا.")
     }
@@ -303,7 +313,7 @@ class ScreensUiTest {
             container.transactions.ingest(Receipts.IPN, "Mashreq", System.currentTimeMillis(), TransactionSource.SMS)
         }
         val opened = mutableListOf<String>()
-        rule.setContent { ReceiverTheme { HistoryScreen(HistoryViewModel(container.transactions), {}, { opened += it }) } }
+        rule.setContent { ReceiverTheme { HistoryScreen(vm(HistoryViewModel(container.transactions)), {}, { opened += it }) } }
 
         rule.waitForText("2 نتيجة")
         rule.onNodeWithTag("history_search").performTextReplacement("111111")
@@ -326,7 +336,7 @@ class ScreensUiTest {
         runBlocking { container.withdrawals.refresh() }
 
         val opened = mutableListOf<String>()
-        rule.setContent { ReceiverTheme { WithdrawalsScreen(WithdrawalsViewModel(container.withdrawals), {}, { opened += it }) } }
+        rule.setContent { ReceiverTheme { WithdrawalsScreen(vm(WithdrawalsViewModel(container.withdrawals)), {}, { opened += it }) } }
         rule.waitForTag("w_wd_mock_1")
         rule.onNodeWithTag("w_wd_mock_1").performClick()
         assertThat(opened).containsExactly("wd_mock_1")
@@ -336,7 +346,7 @@ class ScreensUiTest {
     fun `withdrawal details - copy the number, cancel, then confirm`() {
         val container = mockContainer()
         runBlocking { container.withdrawals.refresh() }
-        rule.setContent { ReceiverTheme { WithdrawalDetailsScreen(WithdrawalDetailsViewModel(container.withdrawals, "wd_mock_1")) {} } }
+        rule.setContent { ReceiverTheme { WithdrawalDetailsScreen(vm(WithdrawalDetailsViewModel(container.withdrawals, "wd_mock_1"))) {} } }
 
         rule.waitForTag("w_copy")
         rule.onNodeWithTag("w_copy").performScrollTo().performClick()

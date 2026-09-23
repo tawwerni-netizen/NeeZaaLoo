@@ -201,6 +201,7 @@
     <string name="back">رجوع</string>
     <string name="settings_saved">✓ تم حفظ الإعدادات</string>
     <string name="settings_invalid">راجع الحقول المظلّلة.</string>
+    <string name="settings_save_failed">✕ تعذّر حفظ الإعدادات على الجهاز. لم يتغير شيء؛ حاول مرة أخرى.</string>
     <string name="v_url_required">رابط الموقع مطلوب.</string>
     <string name="v_url_invalid">الرابط غير صحيح.</string>
     <string name="v_url_https">يجب أن يبدأ الرابط بـ https://</string>

@@ -41,6 +41,8 @@ sealed interface SaveState {
     data object Saving : SaveState
     data object Saved : SaveState
     data object Invalid : SaveState
+    /** Validated, but the device could not store it (e.g. storage full). Nothing was changed. */
+    data object Failed : SaveState
 }
 
 class SettingsViewModel(private val c: AppContainer) : ViewModel() {
@@ -146,21 +148,30 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
         }
         save.value = SaveState.Saving
         viewModelScope.launch {
-            val toSave = f.settings.copy(baseUrl = SettingsRepository.normalizeBaseUrl(f.settings.baseUrl))
-            c.settings.save(toSave)
-            if (f.tokenInput.isNotEmpty()) {
-                c.secureStore.setToken(f.tokenInput)
-                c.audit.record(AuditType.TOKEN_CHANGED, "connection token replaced")
+            try {
+                persist(f, onSaved)
+            } catch (e: Exception) {
+                save.value = SaveState.Failed
             }
-            c.audit.record(AuditType.SETTINGS_CHANGED, describeChanges(original, toSave))
-            original = toSave
-            _form.value = SettingsForm(settings = toSave, hasSavedToken = c.secureStore.hasToken())
-            save.value = SaveState.Saved
-            runCatching { c.scheduler.syncSoon() }
-            runCatching { c.scheduler.schedulePeriodic() }
-            c.connection.check()
-            onSaved()
         }
+    }
+
+    private suspend fun persist(f: SettingsForm, onSaved: () -> Unit) {
+        val toSave = f.settings.copy(baseUrl = SettingsRepository.normalizeBaseUrl(f.settings.baseUrl))
+        c.settings.save(toSave)
+        if (f.tokenInput.isNotEmpty()) {
+            c.secureStore.setToken(f.tokenInput)
+            c.audit.record(AuditType.TOKEN_CHANGED, "connection token replaced")
+        }
+        c.audit.record(AuditType.SETTINGS_CHANGED, describeChanges(original, toSave))
+        original = toSave
+        _form.value = SettingsForm(settings = toSave, hasSavedToken = c.secureStore.hasToken())
+        save.value = SaveState.Saved
+        // Saved from here on: follow-up work failing must not turn this into a "failed" save.
+        runCatching { c.scheduler.syncSoon() }
+        runCatching { c.scheduler.schedulePeriodic() }
+        runCatching { c.connection.check() }
+        onSaved()
     }
 
     fun discard() {

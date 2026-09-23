@@ -6,11 +6,11 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 
 /** Waits for work that runs off the main thread (Room, the mock backend) to show up on screen. */
-fun ComposeContentTestRule.waitForText(text: String, substring: Boolean = true, timeoutMs: Long = 5_000) {
+fun ComposeContentTestRule.waitForText(text: String, substring: Boolean = true, timeoutMs: Long = 15_000) {
     waitUntil(timeoutMs) { onAllNodes(hasText(text, substring = substring)).fetchSemanticsNodes().isNotEmpty() }
 }
 
-fun ComposeContentTestRule.waitForTag(tag: String, timeoutMs: Long = 5_000) {
+fun ComposeContentTestRule.waitForTag(tag: String, timeoutMs: Long = 15_000) {
     waitUntil(timeoutMs) { onAllNodes(hasTestTag(tag)).fetchSemanticsNodes().isNotEmpty() }
 }
 

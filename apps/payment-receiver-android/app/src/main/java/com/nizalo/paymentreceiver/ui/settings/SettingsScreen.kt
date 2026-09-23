@@ -177,6 +177,7 @@ fun SettingsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
             when (save) {
                 SaveState.Saved -> ResultCard(Tone.SUCCESS, stringResource(R.string.settings_saved), emptyList())
                 SaveState.Invalid -> ResultCard(Tone.DANGER, stringResource(R.string.settings_invalid), emptyList())
+                SaveState.Failed -> ResultCard(Tone.DANGER, stringResource(R.string.settings_save_failed), emptyList())
                 else -> Unit
             }
 

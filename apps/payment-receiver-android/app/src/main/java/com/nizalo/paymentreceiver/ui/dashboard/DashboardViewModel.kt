@@ -80,7 +80,8 @@ class DashboardViewModel(private val c: AppContainer) : ViewModel() {
                 delay(60_000)
             }
         }
-        viewModelScope.launch { c.withdrawals.refresh() }
+        // Background refreshes: a failure here (e.g. storage full) must never take the app down.
+        viewModelScope.launch { runCatching { c.withdrawals.refresh() } }
         viewModelScope.launch { runCatching { c.inboxScanner.scan() } }
     }
 
@@ -113,7 +114,8 @@ class DashboardViewModel(private val c: AppContainer) : ViewModel() {
         if (_connTest.value is ConnTestState.Testing) return
         _connTest.value = ConnTestState.Testing
         viewModelScope.launch {
-            _connTest.value = ConnTestState.Done(c.connection.check(manual = true))
+            val result = runCatching { c.connection.check(manual = true) }.getOrElse { ConnectionState.Offline(ApiError.InvalidResponse) }
+            _connTest.value = ConnTestState.Done(result)
         }
     }
 

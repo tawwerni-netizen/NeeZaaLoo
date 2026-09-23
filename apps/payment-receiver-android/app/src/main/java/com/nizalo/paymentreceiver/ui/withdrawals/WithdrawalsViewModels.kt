@@ -29,7 +29,7 @@ class WithdrawalsViewModel(private val repo: WithdrawalRepository) : ViewModel()
         if (refresh.value is RefreshState.Refreshing) return
         refresh.value = RefreshState.Refreshing
         viewModelScope.launch {
-            refresh.value = when (val r = repo.refresh()) {
+            refresh.value = when (val r = runCatching { repo.refresh() }.getOrElse { RefreshResult.Failed(ApiError.InvalidResponse) }) {
                 is RefreshResult.Ok -> RefreshState.Idle
                 is RefreshResult.Failed -> RefreshState.Failed(r.error)
             }
@@ -49,8 +49,8 @@ class WithdrawalDetailsViewModel(private val repo: WithdrawalRepository, private
 
     init {
         viewModelScope.launch {
-            repo.recordViewed(id)
-            repo.refreshOne(id)
+            runCatching { repo.recordViewed(id) }
+            runCatching { repo.refreshOne(id) }
         }
     }
 
@@ -62,7 +62,10 @@ class WithdrawalDetailsViewModel(private val repo: WithdrawalRepository, private
     fun confirm(reference: String?) {
         if (confirm.value is ConfirmUiState.Confirming) return
         confirm.value = ConfirmUiState.Confirming
-        viewModelScope.launch { confirm.value = ConfirmUiState.Finished(repo.confirm(id, reference)) }
+        viewModelScope.launch {
+            val result = runCatching { repo.confirm(id, reference) }.getOrElse { ConfirmResult.Failed(ApiError.InvalidResponse) }
+            confirm.value = ConfirmUiState.Finished(result)
+        }
     }
 
     fun dismissResult() {
