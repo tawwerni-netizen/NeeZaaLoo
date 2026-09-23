@@ -388,6 +388,14 @@ export function LocalDepositSection({ isAr, playerId, onCredited }: { isAr: bool
         <div className={styles.formLabel}>{isAr ? "الاسم صاحب المحفظة" : "Wallet owner's name"}</div>
         <input className={styles.formInput} value={senderName} onChange={(e) => setSenderName(e.target.value)}
           placeholder={isAr ? "الاسم كما يظهر في المحفظة أو الحساب" : "Name as it appears on the wallet"} />
+        {network === "INSTAPAY" && (
+          // InstaPay receipts identify the sender only by the bank account's
+          // name (usually in English); a name typed differently cannot be
+          // matched automatically.
+          <div style={{ fontSize: 13, color: "#fbbf24", fontWeight: 600, marginTop: 6 }}>
+            {isAr ? "اكتب اسمك كما يظهر في تطبيق البنك (بالإنجليزية غالبًا)" : "Enter your name exactly as it appears in your bank app (usually in English)"}
+          </div>
+        )}
       </div>
       <div className={styles.formGroup}>
         <div className={styles.formLabel}>{isAr ? "رقم الهاتف الذي ستحول منه" : "The phone number you'll send from"}</div>
