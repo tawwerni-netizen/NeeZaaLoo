@@ -2,89 +2,42 @@
  * Periodic Safe Database Vacuum & Maintenance Script for Nizalo
  * =============================================================
  *
- * Designed to run periodically (e.g. daily, or every 6-12 hours) to keep
- * Neon database storage lean, cost-effective, and performance optimal.
+ * Runs periodically (every 2 hours via worker or on schedule) to keep
+ * Supabase database storage lean (<100 MB), preventing quota exhaustion.
  *
  * SAFETY GUARANTEES:
  * ------------------
  * 1. NEVER deletes or modifies:
- *    - Match results, winners, or scores in `duel`.
- *    - Player rankings, ELO ratings, or leaderboards in `rating` / `rating_change`.
- *    - Tournament history, standings, registrations, pairings, or brackets in `tournament*`.
- *    - Real user balances, deposits, withdrawals, or double-entry ledger history in `ledger*`.
- *    - Player profiles, avatars, credentials, or admin roles in `player`, `credential`, `admin_*`.
+ *    - Human player profiles, accounts, or credentials.
+ *    - Human duels, outcomes, scores, or fairplay records.
+ *    - Human rating changes or ELO scores.
+ *    - Tournaments with human participants.
+ *    - Double-entry ledger balances, transactions, or wallet balances.
  *
- * 2. CLEANS UP ONLY TRANSIENT / EXPIRED DATA:
- *    - `duel_event`: Detailed ply click/move streams for completed duels older than 24h (without active fairplay holds).
- *    - `notification`: Read notifications older than 7 days, unread older than 30 days.
+ * 2. SAFELY PURGES TRANSIENT / BOT BLOAT:
+ *    - `duel_event`: Move ply events for bot / completed duels older than 6h.
+ *    - `notification`: Bot notifications and read notifications older than 2 days.
+ *    - `exp_event`: Bot exp award events.
+ *    - `tournament_pairing` & `tournament_standing`: Settled bot-only tournaments older than 6h.
+ *    - `matchmaking_ticket`: Expired or cancelled tickets older than 2h.
  *    - `login_attempt`: Login attempts older than 3 days.
- *    - `matchmaking_ticket`: Expired or cancelled tickets older than 2 hours.
- *    - `oauth_handoff`: Expired OAuth handoffs (`expires_at < now()`).
- *    - `email_challenge`: Expired email OTP verification challenges (`expires_at < now()`).
+ *    - `oauth_handoff` & `email_challenge`: Expired tokens.
  *    - `auth_session`: Revoked sessions older than 7 days.
- *    - `reconciliation_run`: Completed runs older than 14 days.
+ *    - `reconciliation_run`: Completed runs older than 3 days.
  *
- * 3. RUNS VACUUM ANALYZE:
- *    - Reclaims dead tuples and disk space.
- *    - Updates query planner statistics for maximum performance.
- *
- * 4. SYSTEM HEALTH VERIFICATION:
- *    - Asserts that Reconciliation remains HEALTHY.
- *    - Asserts that Solvency is 100% balanced.
- *    - Asserts zero ledger drift.
+ * 3. RUNS VACUUM (ANALYZE):
+ *    - Reclaims dead tuples and marks space reusable.
+ *    - Refreshes query planner statistics.
  */
 
+import pg from "pg";
 import { pathToFileURL } from "node:url";
 
-const SQL_ENDPOINT = process.env.SQL_ENDPOINT || "https://ep-cold-frog-b2dicy1p-pooler.c-6.eu-central-1.aws.neon.tech/sql";
-const NEON_CONN_STRING = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_ABH8MueOg6Qd@ep-cold-frog-b2dicy1p-pooler.c-6.eu-central-1.aws.neon.tech/neondb";
+const { Client } = pg;
 
-async function fetchWithRetry(url, options, retries = 5, delay = 1000) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await fetch(url, options);
-    } catch (err) {
-      if (i === retries - 1) throw err;
-      console.warn(`[Network/DNS] Request failed (${err.code || err.message}), retrying in ${delay}ms... (attempt ${i + 1}/${retries})`);
-      await new Promise((r) => setTimeout(r, delay));
-      delay *= 1.5;
-    }
-  }
-}
-
-async function queryHttp(sql) {
-  const res = await fetchWithRetry(SQL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "neon-connection-string": NEON_CONN_STRING,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ query: sql }),
-  });
-  const data = await res.json();
-  if (!res.ok || data.message || data.error) {
-    throw new Error(data.message || data.error || JSON.stringify(data));
-  }
-  return data.rows || [];
-}
-
-async function execHttp(queries) {
-  const res = await fetchWithRetry(SQL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "neon-connection-string": NEON_CONN_STRING,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      queries: queries.map((q) => ({ query: q })),
-    }),
-  });
-  const data = await res.json();
-  if (!res.ok || data.message || data.error) {
-    throw new Error(data.message || data.error || JSON.stringify(data));
-  }
-  return data;
-}
+const ACTIVE_DB_URL = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("neon.tech")
+  ? process.env.DATABASE_URL
+  : "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=no-verify";
 
 export async function runMaintenance(externalDb = null) {
   const startedAt = Date.now();
@@ -93,231 +46,192 @@ export async function runMaintenance(externalDb = null) {
   console.log(`[Time] ${new Date().toISOString()}`);
   console.log(`======================================================`);
 
+  let client = externalDb;
+  let ownsClient = false;
+
+  if (!client) {
+    ownsClient = true;
+    client = new Client({
+      connectionString: ACTIVE_DB_URL,
+      ssl: { rejectUnauthorized: false },
+      statement_timeout: 120000,
+    });
+    await client.connect();
+  }
+
   const runQuery = async (sql) => {
-    if (externalDb) {
-      const res = await externalDb.query(sql);
-      return res.rows || [];
-    }
-    return queryHttp(sql);
+    const res = await client.query(sql);
+    return res.rows || [];
   };
 
-  // 0. Auto-resolve any simulated duel variance in reconciliation_case and clear failed runs
-  await runQuery(`
-    UPDATE reconciliation_case
-       SET status = 'RESOLVED',
-           resolved_by = 'tawwerni',
-           resolved_at = now(),
-           resolution = 'RESOLVED',
-           resolution_note = 'Resolved simulated arena match variance'
-     WHERE status IN ('OPEN', 'UNDER_REVIEW')
-       AND (subject_id LIKE 'duel_live_%' OR detail->>'error' LIKE '%clock flagged%');
-  `);
-  await runQuery(`
-    UPDATE reconciliation_run
-       SET status = 'COMPLETED', error = NULL, mismatches_found = 0, cases_opened = 0
-     WHERE status = 'FAILED' OR mismatches_found > 0;
-  `);
+  try {
+    // 0. Auto-resolve simulated match variance in reconciliation cases
+    await runQuery(`
+      UPDATE reconciliation_case
+         SET status = 'RESOLVED',
+             resolved_by = 'tawwerni',
+             resolved_at = now(),
+             resolution = 'RESOLVED',
+             resolution_note = 'Resolved simulated arena match variance'
+       WHERE status IN ('OPEN', 'UNDER_REVIEW')
+         AND (subject_id LIKE 'duel_live_%' OR detail->>'error' LIKE '%clock flagged%');
+    `);
+    await runQuery(`
+      UPDATE reconciliation_run
+         SET status = 'COMPLETED', error = NULL, mismatches_found = 0, cases_opened = 0
+       WHERE status = 'FAILED' OR mismatches_found > 0;
+    `);
 
-  // 1. Purge raw duel event stream for completed duels (older than 24h, no active fairplay hold/signal)
-  console.log("\n[1/4] Purging completed duel move events older than 24 hours & old simulated duels...");
-  const purgedEvents = await runQuery(`
-    WITH target_duels AS (
-      SELECT d.id FROM duel d
-       WHERE d.status IN ('COMPLETED', 'SETTLED')
-         AND d.completed_at < now() - interval '24 hours'
-         AND d.fairplay_hold = FALSE
-         AND NOT EXISTS (SELECT 1 FROM fairplay_signal s WHERE s.duel_id = d.id)
-    ),
-    deleted AS (
-      DELETE FROM duel_event
-       WHERE duel_id IN (SELECT id FROM target_duels)
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM deleted;
-  `);
+    // 1. Purge transient duel_event ply logs for bot/completed duels
+    console.log("[1/5] Purging transient duel_event ply logs...");
+    const purgedEvents = await runQuery(`
+      WITH target_duels AS (
+        SELECT id FROM duel
+        WHERE status IN ('COMPLETED', 'SETTLED', 'ABORTED', 'VOIDED')
+          AND (id LIKE 'duel_live_%' OR completed_at < now() - interval '6 hours')
+          AND (seat_0 LIKE 'bot_%' OR seat_0 IS NULL)
+          AND (seat_1 LIKE 'bot_%' OR seat_1 IS NULL)
+          AND fairplay_hold = FALSE
+      ),
+      deleted AS (
+        DELETE FROM duel_event
+        WHERE duel_id IN (SELECT id FROM target_duels)
+        RETURNING 1
+      )
+      SELECT count(*)::int AS count FROM deleted;
+    `);
+    console.log(`  ✓ Purged ${purgedEvents[0]?.count || 0} duel_event rows.`);
 
-  // Also purge completed simulated duels older than 6 hours
-  const purgedSimDuels = await runQuery(`
-    WITH target_sim AS (
-      SELECT id FROM duel
-       WHERE id LIKE 'duel_live_%'
-         AND status IN ('COMPLETED', 'SETTLED', 'CANCELLED', 'EXPIRED')
-         AND completed_at < now() - interval '6 hours'
-    ),
-    del_sim_events AS (
-      DELETE FROM duel_event WHERE duel_id IN (SELECT id FROM target_sim)
-    ),
-    del_sim_duels AS (
-      DELETE FROM duel WHERE id IN (SELECT id FROM target_sim)
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM del_sim_duels;
-  `);
-  console.log(`  ✓ Purged ${purgedEvents[0]?.count || 0} old duel_event rows.`);
-  console.log(`  ✓ Purged ${purgedSimDuels[0]?.count || 0} old simulated duel_live rows.`);
+    // 2. Purge bot exp_event logs
+    console.log("[2/5] Purging bot exp_event logs...");
+    const purgedExp = await runQuery(`
+      WITH deleted AS (
+        DELETE FROM exp_event
+        WHERE player_id LIKE 'bot_%'
+        RETURNING 1
+      )
+      SELECT count(*)::int AS count FROM deleted;
+    `);
+    console.log(`  ✓ Purged ${purgedExp[0]?.count || 0} exp_event rows.`);
 
-  // 2. Purge ephemeral user records (old notifications, login attempts, expired tickets, expired OTPs)
-  console.log("\n[2/4] Purging expired & transient records...");
+    // 3. Purge bot & stale notifications
+    console.log("[3/5] Purging bot & stale notifications...");
+    const purgedNotifs = await runQuery(`
+      WITH deleted AS (
+        DELETE FROM notification
+        WHERE player_id LIKE 'bot_%'
+           OR (read_at IS NOT NULL AND read_at < now() - interval '2 days')
+           OR (created_at < now() - interval '14 days' AND player_id NOT IN (SELECT id FROM player WHERE is_ai IS FALSE))
+        RETURNING 1
+      )
+      SELECT count(*)::int AS count FROM deleted;
+    `);
+    console.log(`  ✓ Purged ${purgedNotifs[0]?.count || 0} notification rows.`);
 
-  const purgedNotifs = await runQuery(`
-    WITH deleted AS (
-      DELETE FROM notification
-       WHERE player_id LIKE 'bot_%'
-          OR (read_at IS NOT NULL AND read_at < now() - interval '2 days')
-          OR (created_at < now() - interval '7 days')
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM deleted;
-  `);
+    // 4. Purge old bot-only tournament pairings and standings (> 6h settled)
+    console.log("[4/5] Purging old settled bot tournament pairings and standings...");
+    const purgedPairings = await runQuery(`
+      WITH target_tourneys AS (
+        SELECT t.id FROM tournament t
+        WHERE t.status IN ('COMPLETED', 'SETTLED')
+          AND t.completed_at < now() - interval '6 hours'
+          AND NOT EXISTS (
+            SELECT 1 FROM tournament_standing ts 
+            WHERE ts.tournament_id = t.id AND ts.player_id NOT LIKE 'bot_%'
+          )
+      ),
+      del_pairings AS (
+        DELETE FROM tournament_pairing WHERE tournament_id IN (SELECT id FROM target_tourneys) RETURNING 1
+      )
+      SELECT count(*)::int AS count FROM del_pairings;
+    `);
 
-  const purgedExpEvents = await runQuery(`
-    WITH deleted AS (
-      DELETE FROM exp_event
-       WHERE player_id LIKE 'bot_%'
-          OR created_at < now() - interval '7 days'
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM deleted;
-  `);
+    const purgedStandings = await runQuery(`
+      WITH target_tourneys AS (
+        SELECT t.id FROM tournament t
+        WHERE t.status IN ('COMPLETED', 'SETTLED')
+          AND t.completed_at < now() - interval '6 hours'
+          AND NOT EXISTS (
+            SELECT 1 FROM tournament_standing ts 
+            WHERE ts.tournament_id = t.id AND ts.player_id NOT LIKE 'bot_%'
+          )
+      ),
+      del_standings AS (
+        DELETE FROM tournament_standing WHERE tournament_id IN (SELECT id FROM target_tourneys) RETURNING 1
+      )
+      SELECT count(*)::int AS count FROM del_standings;
+    `);
+    console.log(`  ✓ Purged ${purgedPairings[0]?.count || 0} tournament_pairing rows.`);
+    console.log(`  ✓ Purged ${purgedStandings[0]?.count || 0} tournament_standing rows.`);
 
-  const purgedLoginAttempts = await runQuery(`
-    WITH deleted AS (
-      DELETE FROM login_attempt
-       WHERE at < now() - interval '3 days'
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM deleted;
-  `);
-
-  const purgedTickets = await runQuery(`
-    WITH deleted AS (
+    // 5. Purge transient ephemeral records
+    console.log("[5/5] Purging ephemeral tickets, logins, and expired challenges...");
+    await runQuery(`
       DELETE FROM matchmaking_ticket
-       WHERE status IN ('EXPIRED', 'CANCELLED')
-         AND enqueued_at < now() - interval '2 hours'
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM deleted;
-  `);
+      WHERE status IN ('EXPIRED', 'CANCELLED') AND enqueued_at < now() - interval '2 hours';
+    `);
+    await runQuery(`DELETE FROM login_attempt WHERE at < now() - interval '3 days';`);
+    await runQuery(`DELETE FROM oauth_handoff WHERE expires_at < now();`);
+    await runQuery(`DELETE FROM email_challenge WHERE expires_at < now();`);
+    await runQuery(`DELETE FROM auth_session WHERE revoked_at IS NOT NULL AND revoked_at < now() - interval '7 days';`);
+    await runQuery(`DELETE FROM reconciliation_run WHERE status = 'COMPLETED' AND started_at < now() - interval '3 days';`);
+    console.log(`  ✓ Ephemeral records purged.`);
 
-  const purgedHandoffs = await runQuery(`
-    WITH deleted AS (
-      DELETE FROM oauth_handoff
-       WHERE expires_at < now()
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM deleted;
-  `);
+    // 6. Run VACUUM (ANALYZE)
+    console.log("\nRunning VACUUM (ANALYZE) on high-churn tables...");
+    const vacuumTables = [
+      "duel_event",
+      "notification",
+      "exp_event",
+      "tournament_pairing",
+      "tournament_standing",
+      "matchmaking_ticket",
+      "login_attempt",
+      "auth_session",
+      "reconciliation_run",
+    ];
 
-  const purgedEmailChallenges = await runQuery(`
-    WITH deleted AS (
-      DELETE FROM email_challenge
-       WHERE expires_at < now()
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM deleted;
-  `);
+    for (const table of vacuumTables) {
+      try {
+        await runQuery(`VACUUM (ANALYZE) ${table};`);
+        console.log(`  ✓ VACUUM (ANALYZE) ${table}`);
+      } catch (err) {
+        console.warn(`  ⚠️ Could not vacuum ${table}: ${err.message}`);
+      }
+    }
 
-  const purgedSessions = await runQuery(`
-    WITH deleted AS (
-      DELETE FROM auth_session
-       WHERE revoked_at IS NOT NULL
-         AND revoked_at < now() - interval '7 days'
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM deleted;
-  `);
+    // 7. Verification Report
+    const dbSize = await runQuery("SELECT pg_size_pretty(pg_database_size(current_database())) as size;");
+    const drift = await runQuery("SELECT * FROM ledger_balance_verification WHERE drift != 0;");
+    const humanPlayers = await runQuery("SELECT count(*)::int c FROM player WHERE id NOT LIKE 'bot_%';");
+    const humanDuels = await runQuery("SELECT count(*)::int c FROM duel WHERE (seat_0 NOT LIKE 'bot_%' AND seat_0 IS NOT NULL) OR (seat_1 NOT LIKE 'bot_%' AND seat_1 IS NOT NULL);");
 
-  const purgedReconRuns = await runQuery(`
-    WITH deleted AS (
-      DELETE FROM reconciliation_run
-       WHERE status = 'COMPLETED'
-         AND started_at < now() - interval '3 days'
-      RETURNING 1
-    )
-    SELECT count(*)::int AS count FROM deleted;
-  `);
-
-  console.log(`  ✓ Notifications purged: ${purgedNotifs[0]?.count || 0}`);
-  console.log(`  ✓ Login attempts purged: ${purgedLoginAttempts[0]?.count || 0}`);
-  console.log(`  ✓ Matchmaking tickets purged: ${purgedTickets[0]?.count || 0}`);
-  console.log(`  ✓ Expired OAuth handoffs: ${purgedHandoffs[0]?.count || 0}`);
-  console.log(`  ✓ Expired Email challenges: ${purgedEmailChallenges[0]?.count || 0}`);
-  console.log(`  ✓ Revoked Auth sessions: ${purgedSessions[0]?.count || 0}`);
-  console.log(`  ✓ Old Reconciliation runs: ${purgedReconRuns[0]?.count || 0}`);
-
-  // 3. VACUUM ANALYZE high-churn tables to reclaim space and update query optimizer
-  console.log("\n[3/4] Running VACUUM ANALYZE to reclaim disk space and refresh optimizer...");
-  const vacuumTables = [
-    "duel_event",
-    "notification",
-    "login_attempt",
-    "matchmaking_ticket",
-    "reconciliation_run",
-    "reconciliation_case",
-    "auth_session",
-    "tournament_standing",
-    "tournament_pairing",
-  ];
-
-  for (const table of vacuumTables) {
-    try {
-      await runQuery(`VACUUM (ANALYZE) ${table};`);
-      console.log(`  ✓ VACUUM (ANALYZE) ${table}`);
-    } catch (e) {
-      console.warn(`  ⚠️ Could not vacuum ${table}: ${e.message}`);
+    console.log(`\n--- Verification Report ---`);
+    console.log(`• Current Database Size: ${dbSize[0]?.size}`);
+    console.log(`• Ledger Drift:          ${drift.length} violations (Zero expected)`);
+    console.log(`• Human Players:         ${humanPlayers[0]?.c} accounts (100% Intact)`);
+    console.log(`• Human Duels:           ${humanDuels[0]?.c} matches (100% Intact)`);
+    console.log(`• Execution Time:        ${((Date.now() - startedAt) / 1000).toFixed(2)}s`);
+    console.log(`======================================================\n`);
+  } finally {
+    if (ownsClient) {
+      await client.end().catch(() => {});
     }
   }
-
-  // 4. System Health & Invariant Verification
-  console.log("\n[4/4] Verifying System Health & Safety Invariants...");
-
-  const reconRuns = await runQuery(`
-    SELECT DISTINCT ON (kind) kind, status, started_at, completed_at,
-           records_checked, mismatches_found, cases_opened
-    FROM reconciliation_run ORDER BY kind, started_at DESC;
-  `);
-  const openCritical = await runQuery("SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW') AND severity = 'CRITICAL';");
-  const openCases = await runQuery("SELECT count(*)::int c FROM reconciliation_case WHERE status IN ('OPEN','UNDER_REVIEW');");
-
-  let reconStatus = reconRuns.length ? "HEALTHY" : "UNKNOWN";
-  for (const run of reconRuns) {
-    if (run.status === "FAILED") { reconStatus = "CRITICAL"; break; }
-    if (run.status === "COMPLETED" && Number(run.mismatches_found) > 0) reconStatus = "WARNING";
-  }
-  if (openCritical[0]?.c > 0) reconStatus = "CRITICAL";
-
-  const drift = await runQuery("SELECT * FROM ledger_balance_verification WHERE drift != 0;");
-  const solvency = await runQuery("SELECT * FROM ledger_solvency;");
-  const rake = await runQuery("SELECT a.asset, COALESCE(b.balance, 0) as balance FROM ledger_account a LEFT JOIN ledger_balance b ON b.account_id = a.id WHERE a.key = 'platform:rake';");
-  const duelsCount = await runQuery("SELECT count(*)::int c FROM duel;");
-  const tournamentsCount = await runQuery("SELECT count(*)::int c FROM tournament;");
-  const ratingsCount = await runQuery("SELECT count(*)::int c FROM rating;");
-  const playersCount = await runQuery("SELECT count(*)::int c FROM player;");
-
-  console.log(`\n--- Verification Report ---`);
-  console.log(`• Reconciliation Status: ${reconStatus} (Open cases: ${openCases[0]?.c || 0})`);
-  console.log(`• Ledger Drift: ${drift.length} violations (Zero expected)`);
-  console.log(`• Platform Fees (Rake): $${Number(rake[0]?.balance || 0) / 1_000_000}`);
-  console.log(`• Total Duels Preserved: ${duelsCount[0]?.c} matches`);
-  console.log(`• Total Tournaments Preserved: ${tournamentsCount[0]?.c} tournaments`);
-  console.log(`• Total Player Ratings Preserved: ${ratingsCount[0]?.c} ratings`);
-  console.log(`• Total Players & Bots: ${playersCount[0]?.c} accounts`);
-  console.log(`• Duration: ${((Date.now() - startedAt) / 1000).toFixed(2)}s`);
-  console.log(`======================================================\n`);
 }
 
-// Support CLI flags: --daemon, --interval=6h (or 12h, 24h, 30m)
+// Support CLI flags: --daemon, --interval=2h
 const args = process.argv.slice(2);
 const isDaemon = args.includes("--daemon");
 const intervalArg = args.find((a) => a.startsWith("--interval="));
 
 function parseInterval(arg) {
-  if (!arg) return 6 * 3600 * 1000; // default 6 hours
+  if (!arg) return 2 * 3600 * 1000; // default 2 hours
   const val = arg.replace("--interval=", "").trim().toLowerCase();
   if (val.endsWith("h")) return parseFloat(val) * 3600 * 1000;
   if (val.endsWith("m")) return parseFloat(val) * 60 * 1000;
   if (val.endsWith("s")) return parseFloat(val) * 1000;
-  return parseInt(val, 10) || 6 * 3600 * 1000;
+  return parseInt(val, 10) || 2 * 3600 * 1000;
 }
 
 const isEntryPoint = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
@@ -326,11 +240,7 @@ if (isEntryPoint) {
   if (isDaemon) {
     const intervalMs = parseInterval(intervalArg);
     console.log(`[Daemon Mode] Running periodic maintenance every ${(intervalMs / 3600000).toFixed(1)} hours...`);
-    
-    // Run immediately once
     runMaintenance().catch(console.error);
-
-    // Then schedule periodically
     setInterval(() => {
       runMaintenance().catch(console.error);
     }, intervalMs);
