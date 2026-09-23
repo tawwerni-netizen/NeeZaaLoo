@@ -26,6 +26,67 @@ export const ProfileError = Object.freeze({
   CANNOT_REPORT_SELF: "CANNOT_REPORT_SELF",
 });
 
+function hashString(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+  }
+  return Math.abs(h);
+}
+
+function deriveBotStats(botId, handle, ratings = []) {
+  const seed = hashString(`${botId}:${handle}`);
+  
+  // Rating influence on win rate
+  let ratingNorm = 1800;
+  if (ratings && ratings.length > 0) {
+    const sum = ratings.reduce((acc, r) => acc + (r.rating || 1800), 0);
+    ratingNorm = Math.round(sum / ratings.length);
+  }
+  ratingNorm = Math.max(1200, Math.min(2800, ratingNorm));
+
+  // Realistic Win Rate based on rating (e.g. 2500 rating -> 68% win rate)
+  const baseWinRate = 0.45 + ((ratingNorm - 1200) / 1600) * 0.26;
+  const variance = ((seed % 7) - 3) * 0.01;
+  const targetWinRate = Math.max(0.42, Math.min(0.76, baseWinRate + variance));
+
+  // Games count: realistic active player count (between 80 and 260 games)
+  const games = 80 + (seed % 181);
+  const wins = Math.round(games * targetWinRate);
+  const losses = games - wins;
+
+  // Tournaments: played between 14% and 24% of total games
+  const tourneyRatio = 0.14 + ((seed % 11) * 0.01);
+  const tourneysPlayed = Math.max(5, Math.round(games * tourneyRatio));
+
+  // Titles (tournaments won):
+  const titleRatio = Math.max(0.06, (targetWinRate - 0.38) * 0.38);
+  const tourneysWon = Math.max(1, Math.min(tourneysPlayed, Math.round(tourneysPlayed * titleRatio)));
+
+  // Peak ratings per game (if missing or lower than current rating)
+  const peaks = {};
+  if (ratings && ratings.length > 0) {
+    for (const r of ratings) {
+      const offset = 15 + (seed % 35);
+      peaks[r.gameId] = Math.round(r.rating + offset);
+    }
+  }
+
+  return {
+    stats: {
+      games,
+      wins,
+      losses,
+      draws: 0,
+    },
+    tournaments: {
+      played: tourneysPlayed,
+      won: tourneysWon,
+    },
+    peakRatings: peaks,
+  };
+}
+
 export function createProfileService(db, {
   nicknameService, expService, achievementService, badgeService, avatarStorage, globalSkill,
   masteryService, streakService, frameService,
@@ -162,28 +223,48 @@ export function createProfileService(db, {
 
   async function publicProfileFor(playerId) {
     const p = await db.query(
-      "SELECT id, handle, bio, avatar_key, selected_badge_code, selected_frame_code, allow_direct_messages, created_at, clan_id, (SELECT tag FROM clan WHERE id = player.clan_id) AS clan_tag FROM player WHERE id = $1", [playerId]
+      "SELECT id, handle, bio, avatar_key, is_ai, selected_badge_code, selected_frame_code, allow_direct_messages, created_at, clan_id, (SELECT tag FROM clan WHERE id = player.clan_id) AS clan_tag FROM player WHERE id = $1", [playerId]
     );
     if (!p.rows.length) return null;
     const row = p.rows[0];
 
+    const isBot = Boolean(row.is_ai) || row.id.startsWith("bot_") || row.id.startsWith("top_p_") || row.id.startsWith("ai-");
+
     const [
-      totalExp, achievements, badges, frames, stats, ratings, skill,
-      mastery, streak, peakRatings, tournaments, refData,
+      totalExp, achievements, badges, frames, rawStats, ratings, skill,
+      mastery, streak, rawPeakRatings, rawTournaments, refData,
     ] = await Promise.all([
       expService.totalFor(playerId),
       achievementService.listFor(playerId),
       badgeService.listFor(playerId),
       frameService.listFor(playerId),
-      computeStats(playerId),
+      isBot ? null : computeStats(playerId),
       gameRatings(playerId),
       globalSkill.scoreFor(playerId),
       masteryService.masteryFor(playerId),
       streakService.streakFor(playerId),
-      highestRatings(playerId),
-      tournamentStats(playerId),
+      isBot ? null : highestRatings(playerId),
+      isBot ? null : tournamentStats(playerId),
       referralInfo(playerId),
     ]);
+
+    let stats = rawStats ?? { games: 0, wins: 0, losses: 0, draws: 0 };
+    let tournaments = rawTournaments ?? { played: 0, won: 0 };
+    let peakRatings = rawPeakRatings ?? {};
+
+    if (isBot) {
+      const botData = deriveBotStats(row.id, row.handle, ratings);
+      stats = botData.stats;
+      tournaments = botData.tournaments;
+      peakRatings = { ...botData.peakRatings };
+      if (ratings && ratings.length > 0) {
+        for (const r of ratings) {
+          if (!peakRatings[r.gameId] || peakRatings[r.gameId] <= r.rating) {
+            peakRatings[r.gameId] = Math.round(r.rating + 25);
+          }
+        }
+      }
+    }
 
     return {
       id: row.id,

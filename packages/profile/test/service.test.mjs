@@ -261,3 +261,30 @@ describe("reportContent", () => {
     assert.equal(r.reason, ProfileError.CANNOT_REPORT_SELF);
   });
 });
+
+describe("bot profile stats", () => {
+  test("derives coherent, realistic and deterministic stats for AI bots", async () => {
+    await db.query("INSERT INTO player (id, handle, is_ai) VALUES ('bot_grandmaster', 'GrandmasterBot', TRUE)");
+    await db.query(
+      "INSERT INTO rating (player_id, game_id, rating_x100, games_played, last_played_at) VALUES ('bot_grandmaster', 'chess', 245000, 150, now())"
+    );
+
+    const p1 = await profile.publicProfileFor("bot_grandmaster");
+    assert.ok(p1);
+    assert.ok(p1.stats.games >= 80);
+    assert.equal(p1.stats.wins + p1.stats.losses, p1.stats.games);
+    assert.equal(p1.stats.draws, 0);
+    const winRate = p1.stats.wins / p1.stats.games;
+    assert.ok(winRate >= 0.55 && winRate <= 0.80);
+
+    assert.ok(p1.tournaments.played >= 5);
+    assert.ok(p1.tournaments.won >= 1 && p1.tournaments.won <= p1.tournaments.played);
+
+    assert.ok(p1.highestRatings.chess >= 2450);
+
+    const p2 = await profile.publicProfileFor("bot_grandmaster");
+    assert.deepEqual(p1.stats, p2.stats);
+    assert.deepEqual(p1.tournaments, p2.tournaments);
+    assert.deepEqual(p1.highestRatings, p2.highestRatings);
+  });
+});
