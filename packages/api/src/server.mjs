@@ -602,7 +602,43 @@ function chatErrorStatus(reason) {
   return 400;
 }
 
+// Per-device budget for Payment Receiver routes. Keyed by device, not IP:
+// behind the production proxy every request arrives from 127.0.0.1, and a
+// phone on mobile data changes address anyway. Sized for a phone that was
+// offline for hours coming back with a backlog: one request per receipt.
+const DEVICE_RATE_LIMIT = { capacity: 120, refillPerSecond: 5 };
+
+const DEVICE_ERROR_STATUS = {
+  NOT_FOUND: 404,
+  WRONG_STATE: 409,
+  DEVICE_DISABLED: 403,
+  INVALID_RECEIVING_NUMBER: 422,
+  NO_RATE_SET: 409,
+};
+
+function deviceErrorStatus(reason) {
+  return DEVICE_ERROR_STATUS[reason] ?? 400;
+}
+
 function buildRoutes() {
+  const deviceLimiters = new Map();
+
+  /** Wraps a handler so it only runs for an enabled device within its rate budget; the device lands on ctx.device. */
+  function deviceRoute(handler) {
+    return async (ctx) => {
+      if (!ctx.localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
+      const device = await ctx.localPayments.authenticateDevice(ctx.headers["x-device-api-key"]);
+      if (!device) return { status: 401, body: errorBody("UNAUTHENTICATED") };
+      let limiter = deviceLimiters.get(device.id);
+      if (!limiter) {
+        limiter = createRateLimiter(DEVICE_RATE_LIMIT);
+        deviceLimiters.set(device.id, limiter);
+      }
+      if (!takeToken(limiter, ctx.now())) return { status: 429, body: errorBody("RATE_LIMITED") };
+      return handler({ ...ctx, device });
+    };
+  }
+
   const routes = [
     { method: "GET", path: "/v1/health", action: "player.login", anonymous: true,
       // `payments` reports whether THIS RUNNING PROCESS has a real payment
@@ -5796,40 +5832,71 @@ function buildRoutes() {
         return { body: r };
       } },
 
+    // ---- Payment Receiver device routes -------------------------------------
+    // Authenticated by the device api key (x-device-api-key), never by a
+    // player or admin session; see deviceRoute() below.
+
+    { method: "GET", path: "/v1/payment-receiver/health", action: "payment.local_receiver.read", anonymous: true,
+      handler: deviceRoute(async ({ device, now }) => ({
+        body: { ok: true, server: "ONLINE", serverTime: new Date(now()).toISOString(), device: { id: device.id, label: device.label } },
+      })) },
+
+    { method: "GET", path: "/v1/payment-receiver/statistics", action: "payment.local_receiver.read", anonymous: true,
+      handler: deviceRoute(async ({ device, localPayments }) => ({
+        body: { ok: true, statistics: await localPayments.deviceStatistics({ deviceId: device.id }) },
+      })) },
+
     { method: "GET", path: "/v1/payment-receiver/deposits", action: "payment.local_transfer.report", anonymous: true,
-      handler: async ({ headers, localPayments }) => {
-        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
-        const apiKey = headers["x-device-api-key"];
-        if (!apiKey) return { status: 401, body: errorBody("UNAUTHENTICATED") };
-        const r = await localPayments.deviceListPendingDeposits({ apiKey });
-        if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 401 : 400, body: errorBody(r.reason) };
+      handler: deviceRoute(async ({ device, localPayments }) => {
+        const r = await localPayments.deviceListPendingDeposits({ deviceId: device.id });
         return { body: r };
-      } },
+      }) },
 
     { method: "GET", path: "/v1/payment-receiver/withdrawals", action: "payment.local_transfer.report", anonymous: true,
-      handler: async ({ headers, localPayments }) => {
-        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
-        const apiKey = headers["x-device-api-key"];
-        if (!apiKey) return { status: 401, body: errorBody("UNAUTHENTICATED") };
-        const r = await localPayments.deviceListPendingWithdrawals({ apiKey });
-        if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 401 : 400, body: errorBody(r.reason) };
+      handler: deviceRoute(async ({ device, localPayments }) => {
+        const r = await localPayments.deviceListPendingWithdrawals({ deviceId: device.id });
         return { body: r };
-      } },
+      }) },
+
+    { method: "GET", path: "/v1/payment-receiver/withdrawals/:id", action: "payment.local_receiver.read", anonymous: true,
+      handler: deviceRoute(async ({ params, localPayments }) => {
+        const r = await localPayments.deviceGetWithdrawal({ withdrawalId: params.id });
+        if (!r.ok) return { status: 404, body: errorBody(r.reason) };
+        return { body: r };
+      }) },
+
+    // The typed report route. Same ingest as the legacy /transfers route
+    // below, plus the device's own idempotency key and an explicit outcome.
+    { method: "POST", path: "/v1/payment-receiver/transactions", action: "payment.local_transfer.report", anonymous: true,
+      handler: deviceRoute(async ({ device, body, localPayments }) => {
+        const r = await localPayments.ingestDeviceTransfer({
+          deviceId: device.id,
+          clientTransactionId: body?.clientTransactionId,
+          network: body?.network,
+          receivingNumberId: body?.receivingNumberId,
+          rawSenderName: body?.senderName,
+          rawSenderPhone: body?.senderPhone,
+          amountEgpMinor: body?.amountEgpMinor,
+          rawMessage: body?.rawMessage,
+          observedAt: body?.observedAt,
+          transactionRef: body?.transactionRef,
+          smsSender: body?.smsSender,
+        });
+        if (!r.ok) return { status: deviceErrorStatus(r.reason), body: errorBody(r.reason) };
+        return { body: r };
+      }) },
+
+    { method: "GET", path: "/v1/payment-receiver/transactions", action: "payment.local_receiver.read", anonymous: true,
+      handler: deviceRoute(async ({ device, query, localPayments }) => {
+        const ids = String(query.get("ids") ?? "").split(",").filter(Boolean);
+        const transactions = await localPayments.deviceTransactionStatuses({ deviceId: device.id, ids });
+        return { body: { ok: true, transactions } };
+      }) },
 
     { method: "POST", path: "/v1/payment-receiver/transfers", action: "payment.local_transfer.report", anonymous: true,
-      handler: async ({ body, headers, localPayments, db }) => {
-        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
-        
-        const apiKey = headers["x-device-api-key"];
-        if (!apiKey) return { status: 401, body: errorBody("UNAUTHENTICATED") };
-
-        const hash = createHash("sha256").update(apiKey).digest("hex");
-        const deviceRes = await db.query(`SELECT id FROM payment_receiver_device WHERE api_key_hash = $1 AND enabled = TRUE`, [hash]);
-        if (!deviceRes.rows.length) return { status: 401, body: errorBody("UNAUTHENTICATED") };
-        
-        const deviceId = deviceRes.rows[0].id;
+      handler: deviceRoute(async ({ device, body, localPayments }) => {
         const r = await localPayments.reportDeviceTransfer({
-          deviceId,
+          deviceId: device.id,
           network: body?.network,
           receivingNumberId: body?.receivingNumberId,
           rawSenderName: body?.rawSenderName,
@@ -5839,41 +5906,33 @@ function buildRoutes() {
           observedAt: body?.observedAt,
           transactionRef: body?.transactionRef,
         });
-
         if (!r.ok) return { status: 400, body: errorBody(r.reason) };
         return { body: r };
-      } },
+      }) },
 
+    { method: "POST", path: "/v1/payment-receiver/withdrawals/:id/confirm", action: "payment.local_withdrawal.device_complete", anonymous: true,
+      handler: deviceRoute(async ({ device, params, body, localPayments }) => {
+        const r = await localPayments.deviceConfirmWithdrawal({
+          deviceId: device.id, withdrawalId: params.id,
+          idempotencyKey: body?.idempotencyKey, reference: body?.reference,
+        });
+        if (!r.ok) return { status: deviceErrorStatus(r.reason), body: errorBody(r.reason, r.detail) };
+        return { body: r };
+      }) },
+
+    // Legacy completion route for APKs already installed. No request key, so
+    // a retry is only as idempotent as complete_manual_withdrawal() itself.
     { method: "POST", path: "/v1/payment-receiver/withdrawals/:id/complete", action: "payment.local_withdrawal.device_complete", anonymous: true,
-      handler: async ({ params, body, headers, localPayments, db }) => {
-        if (!localPayments) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE") };
-
-        const apiKey = headers["x-device-api-key"];
-        if (!apiKey) return { status: 401, body: errorBody("UNAUTHENTICATED") };
-
-        // Same device-auth shape as POST /v1/payment-receiver/transfers above:
-        // the api key resolves to the device row here, in the route, so a bad
-        // key is unambiguously 401 and a missing withdrawal is unambiguously
-        // 404 -- completeWithdrawal()'s own NOT_FOUND only ever means the
-        // latter once a real device id reaches it.
-        const hash = createHash("sha256").update(apiKey).digest("hex");
-        const deviceRes = await db.query(
-          `SELECT id, created_by AS "createdBy" FROM payment_receiver_device WHERE api_key_hash = $1 AND enabled = TRUE`,
-          [hash]
-        );
-        if (!deviceRes.rows.length) return { status: 401, body: errorBody("UNAUTHENTICATED") };
-        await db.query(`UPDATE payment_receiver_device SET last_seen_at = now() WHERE id = $1`, [deviceRes.rows[0].id]);
-
+      handler: deviceRoute(async ({ device, params, body, localPayments }) => {
         // The admin attributed on the ledger posting is whoever issued this
-        // device's key -- the same actor.id complete_manual_withdrawal()
-        // already requires "the admin who actually sent the money", sourced
-        // from device identity since this call carries no admin session.
+        // device's key -- sourced from device identity since this call
+        // carries no admin session.
         const r = await localPayments.completeWithdrawal({
-          withdrawalId: params.id, adminId: deviceRes.rows[0].createdBy, reference: body?.reference,
+          withdrawalId: params.id, adminId: device.createdBy, reference: body?.reference,
         });
         if (!r.ok) return { status: r.reason === "NOT_FOUND" ? 404 : 400, body: errorBody(r.reason, r.detail) };
         return { body: { ok: true, withdrawal: r.withdrawal } };
-      } },
+      }) },
   ];
   registerBotRoutes(routes);
   return routes;

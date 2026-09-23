@@ -77,3 +77,25 @@ describe("parseLocalPaymentSms — rejects everything that isn't an incoming rec
     });
   }
 });
+
+describe("parseLocalPaymentSms — variations the Android parser also accepts", () => {
+  const toArabicIndic = (s) => s.replace(/[0-9]/g, (d) => String.fromCharCode(0x0660 + Number(d)));
+
+  test("Arabic-Indic digits read the same as Western digits", () => {
+    const p = parseLocalPaymentSms(toArabicIndic(VF_1));
+    assert.ok(p);
+    assert.equal(p.amountEgpMinor, 50000n);
+    assert.equal(p.senderPhone, "01515339319");
+    assert.equal(p.transactionRef, "022857190374");
+  });
+
+  test("an international +20 sender number normalizes to 01 form", () => {
+    const p = parseLocalPaymentSms(VF_1.replace("من رقم 01515339319", "من رقم +201515339319"));
+    assert.equal(p.senderPhone, "01515339319");
+  });
+
+  test("invisible bidi marks do not break the reference", () => {
+    const p = parseLocalPaymentSms("\u200F" + VF_1.replace("رقم العملية", "رقم\u200E العملية"));
+    assert.equal(p.transactionRef, "022857190374");
+  });
+});

@@ -73,6 +73,7 @@ const CHECKS = [
   ["0060_payment_rail_limits_10_usd.sql", "min_withdrawal_10", "payment_rail"],
   ["0070_remove_billiards.sql", "no_billiards", "game.billiards"],
   ["0071_seed_egp_valuation.sql", "egp_valuation_52", "valuation_snapshot.EGP"],
+  ["0072_payment_receiver_integrity.sql", "table", "payment_receiver_withdrawal_confirmation"],
 ];
 
 async function objectExists(client, kind, name) {

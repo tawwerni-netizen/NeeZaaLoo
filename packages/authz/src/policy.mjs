@@ -84,6 +84,10 @@ export const ACTIONS = {
   "support.config.read":         { capability: null },
   "payment.webhook":             { capability: null },
   "payment.local_transfer.report": { capability: null },
+  // Payment Receiver device reads (health, statistics, withdrawal detail,
+  // transfer status). Device-key auth happens in the route, like the two
+  // device actions around it.
+  "payment.local_receiver.read": { capability: null },
   "payment.local_withdrawal.device_complete": { capability: null },
 
   // --- Read surfaces ---------------------------------------------------------

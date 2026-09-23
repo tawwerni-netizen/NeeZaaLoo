@@ -15,12 +15,29 @@
 
 export const LOCAL_SMS_NETWORKS = { VODAFONE_CASH: "VODAFONE_CASH", INSTAPAY: "INSTAPAY" };
 
-const EG_MOBILE = /(?:\+?20)?(01\d{9})/;
-
+/** Any Egyptian mobile notation -> "01XXXXXXXXX", or null. Same rule as the Android parser's normalizeMobile. */
 function normalizeMobile(raw) {
   if (!raw) return null;
-  const m = raw.match(EG_MOBILE);
-  return m ? m[1] : null;
+  let digits = String(raw).replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("20") && digits.length === 12) digits = "0" + digits.slice(2);
+  if (digits.length === 10 && digits.startsWith("1")) digits = "0" + digits;
+  return /^01\d{9}$/.test(digits) ? digits : null;
+}
+
+/**
+ * What the patterns below run on: Arabic-Indic digits as ASCII, invisible
+ * bidi marks dropped, exotic spaces as plain spaces. Line breaks are kept --
+ * some patterns end a field at one. Mirrors TextNormalizer.forParsing in the
+ * Android app.
+ */
+export function prepareReceiptText(text) {
+  return String(text)
+    .normalize("NFKC")
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06F0))
+    .replace(/[​-‏‪-‮⁦-⁩﻿]/g, "")
+    .replace(/[   -   　]/g, " ");
 }
 
 /** "5,000.00" -> 500000n piastres. String-based so float rounding never touches money. */
@@ -40,14 +57,14 @@ const VF = {
   isReceipt: /تم\s+استلام\s+مبلغ/,
   /** Anchored to the receipt phrase so "رصيدك الحالي: ..." can never be read as the amount. */
   amount: /تم\s+استلام\s+مبلغ\s*([\d,]+(?:\.\d{1,2})?)\s*جنيه/,
-  /** Both "من رقم 015…" and "من 010…؛" appear in the wild. */
-  sender: /من\s+(?:رقم\s+)?((?:\+?20)?01\d{9})/,
+  /** Both "من رقم 015…" and "من 010…؛" appear in the wild; also accepts international "+201…" / "00201…". */
+  sender: /من\s+(?:رقم\s+)?((?:(?:\+|00)?20)?0?1\d{9})/,
   senderName: /المسجل\s+بإسم\s+([^\n؛.]+?)\s*(?:على\s+رقم|\n|؛|$)/,
   reference: /رقم\s+العملية:?\s*(\d+)/,
 };
 
 function parseVodafoneCash(sms) {
-  const text = sms.replace(/ /g, " ");
+  const text = prepareReceiptText(sms);
   if (!VF.isReceipt.test(text)) return null;
 
   const amountMatch = text.match(VF.amount);
@@ -73,7 +90,7 @@ const IPN = {
 };
 
 function parseInstaPay(sms) {
-  const text = sms.replace(/ /g, " ");
+  const text = prepareReceiptText(sms);
   if (!IPN.isReceipt.test(text)) return null;
 
   const amountMatch = text.match(IPN.amount);

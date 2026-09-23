@@ -64,10 +64,17 @@ describe(
       });
       assert.equal(intent.ok, true);
 
+      // A real receipt (sms-parsers.test.mjs's VF_1): the server credits what
+      // IT reads from the text. The wallet-registered name differs from the
+      // declared one, so this can only have matched on the phone.
       const report = await local.reportDeviceTransfer({
         deviceId: "manual_admin", network: "VODAFONE_CASH", receivingNumberId: VF_NUMBER,
         rawSenderName: "أحمد محمد", rawSenderPhone: "01515339319", amountEgpMinor: "50000",
-        rawMessage: "test vf message", observedAt: new Date().toISOString(),
+        rawMessage: `تم استلام مبلغ 500.00 جنيه من رقم 01515339319 المسجل بإسم أمنيه محمد شقره على رقم محفظتك  01069999557.
+رصيدك الحالي: 3909.52 جنيه
+تاريخ العملية: 21:50 26-08-19
+رقم العملية: ${Date.now()}`,
+        observedAt: new Date().toISOString(),
       });
       assert.equal(report.ok, true);
       assert.equal(report.status, "MATCHED");
@@ -75,6 +82,22 @@ describe(
       const row = await db.query(`SELECT status, credited_amount_usdt_minor::text u FROM local_deposit_intent WHERE id=$1`, [intent.intent.id]);
       assert.equal(row.rows[0].status, "CREDITED");
       assert.equal(row.rows[0].u, "10000000", "500 EGP at 50 EGP/USD = 10 USDT = 10_000_000 minor units");
+    });
+
+    test("text the server cannot read is never credited on the device's word alone", async () => {
+      const intent = await local.createDepositIntent({
+        playerId, network: "VODAFONE_CASH", receivingNumberId: VF_NUMBER,
+        senderName: "أحمد محمد", senderPhone: "01515339319", amountEgpMinor: "50000",
+      });
+      const report = await local.reportDeviceTransfer({
+        deviceId: "manual_admin", network: "VODAFONE_CASH", receivingNumberId: VF_NUMBER,
+        rawSenderName: "أحمد محمد", rawSenderPhone: "01515339319", amountEgpMinor: "50000",
+        rawMessage: `test vf message ${Date.now()}`, observedAt: new Date().toISOString(),
+      });
+      assert.equal(report.ok, true);
+      assert.equal(report.status, "UNMATCHED");
+      const row = await db.query(`SELECT status FROM local_deposit_intent WHERE id=$1`, [intent.intent.id]);
+      assert.equal(row.rows[0].status, "PENDING");
     });
 
     test("InstaPay: matched by NAME when no phone is present -- the actual fix", async () => {
