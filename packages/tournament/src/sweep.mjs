@@ -34,14 +34,19 @@ export function createTournamentSweep(db, tournamentService, settlementService) 
     );
     const results = [];
     for (const row of due.rows) {
-      const count = await db.query(
-        `SELECT count(*)::int c FROM tournament_registration WHERE tournament_id=$1 AND status='REGISTERED'`,
-        [row.id]
-      );
-      const r = count.rows[0].c >= row.min_players
-        ? await tournamentService.start(row.id)
-        : await tournamentService.cancel(row.id, { reason: "NOT_ENOUGH_PLAYERS" });
-      results.push({ tournamentId: row.id, ...r });
+      try {
+        const count = await db.query(
+          `SELECT count(*)::int c FROM tournament_registration WHERE tournament_id=$1 AND status='REGISTERED'`,
+          [row.id]
+        );
+        const r = count.rows[0].c >= row.min_players
+          ? await tournamentService.start(row.id)
+          : await tournamentService.cancel(row.id, { reason: "NOT_ENOUGH_PLAYERS" });
+        results.push({ tournamentId: row.id, ...r });
+      } catch (e) {
+        results.push({ tournamentId: row.id, ok: false, error: e.message });
+        console.error(`closeDueRegistrations failed for ${row.id}: ${e.message}`);
+      }
     }
     return results;
   }
@@ -65,11 +70,16 @@ export function createTournamentSweep(db, tournamentService, settlementService) 
     );
     const results = [];
     for (const row of rows.rows) {
-      const r = await tournamentService.reportResult(
-        { pairingId: row.pairing_id, result: row.result, reason: row.termination_reason ?? "REPORTED" },
-        settlementService
-      );
-      results.push({ pairingId: row.pairing_id, ...r });
+      try {
+        const r = await tournamentService.reportResult(
+          { pairingId: row.pairing_id, result: row.result, reason: row.termination_reason ?? "REPORTED" },
+          settlementService
+        );
+        results.push({ pairingId: row.pairing_id, ...r });
+      } catch (e) {
+        results.push({ pairingId: row.pairing_id, ok: false, error: e.message });
+        console.error(`bridgeCompletedPairings failed for ${row.pairing_id}: ${e.message}`);
+      }
     }
     return results;
   }
@@ -93,7 +103,12 @@ export function createTournamentSweep(db, tournamentService, settlementService) 
     );
     const results = [];
     for (const row of rows.rows) {
-      results.push({ tournamentId: row.id, ...(await tournamentService.advance(row.id)) });
+      try {
+        results.push({ tournamentId: row.id, ...(await tournamentService.advance(row.id)) });
+      } catch (e) {
+        results.push({ tournamentId: row.id, ok: false, error: e.message });
+        console.error(`advanceCompleteRounds failed for ${row.id}: ${e.message}`);
+      }
     }
     return results;
   }
@@ -113,7 +128,12 @@ export function createTournamentSweep(db, tournamentService, settlementService) 
     );
     const results = [];
     for (const row of rows.rows) {
-      results.push({ tournamentId: row.id, ...(await tournamentService.settlePrizes(row.id)) });
+      try {
+        results.push({ tournamentId: row.id, ...(await tournamentService.settlePrizes(row.id)) });
+      } catch (e) {
+        results.push({ tournamentId: row.id, ok: false, error: e.message });
+        console.error(`settleFreeTournaments failed for ${row.id}: ${e.message}`);
+      }
     }
     return results;
   }

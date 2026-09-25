@@ -148,15 +148,17 @@ function ProfileContent() {
               )}
             </h1>
 
+            {profile.globalSkill != null && (
+              <div className={styles.heroSkillBadge}>
+                <span className={styles.heroSkillBadgeLabel}>{t("profile.global_skill_label")} (GSS)</span>
+                <span className={styles.heroSkillBadgeValue}>{profile.globalSkill}</span>
+              </div>
+            )}
+
             <div className={styles.levelRow}>
               <span className={styles.levelTag}>
                 🏆 {t("profile.level_label")} {profile.exp.level}
               </span>
-              {profile.globalSkill != null && (
-                <span className={styles.skillTag}>
-                  ⚡ {t("profile.global_skill_label")}: {profile.globalSkill}
-                </span>
-              )}
               <span className={styles.expTag}>
                 ⭐ {profile.exp.totalExp} {t("profile.exp_label")}
               </span>

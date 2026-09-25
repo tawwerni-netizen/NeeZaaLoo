@@ -850,7 +850,7 @@ function winnerOf(pairing, ratingOf) {
   // A draw cannot advance two players in an elimination bracket. The
   // documented, server-determined tiebreak is the higher seed -- avoiding a
   // requirement for sudden-death infrastructure at this stage. This is a
-  // disclosed limitation, not a silent one; see KNOWN ISSUES.
+  // disclosed limitation, not a silent one.
   const a = ratingOf.get(pairing.seat_0) ?? 0;
   const b = ratingOf.get(pairing.seat_1) ?? 0;
   return a >= b ? pairing.seat_0 : pairing.seat_1;

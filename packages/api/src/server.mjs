@@ -58,6 +58,45 @@ async function poolBatch(tasks, concurrency = 3) {
   return results;
 }
 
+// The only peer allowed to tell us who the client is: the reverse proxy in
+// the repo-root server.js, which runs on the same host and connects over
+// loopback for every request.
+const TRUSTED_PROXY_ADDRESSES = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
+
+/**
+ * The client address used for rate limiting and audit (`ctx.ip`).
+ *
+ * Behind the proxy every request's socket peer is 127.0.0.1, so keying on it
+ * would put every user in one shared bucket. The proxy appends its own peer
+ * to x-forwarded-for, so the RIGHT-MOST entry is the one it vouches for;
+ * anything to the left of it was supplied by the client and is ignored.
+ * x-forwarded-for from any peer other than the trusted proxy is ignored
+ * entirely -- a direct caller could put anything in it.
+ */
+export function resolveClientIp(req) {
+  const peer = req.socket?.remoteAddress;
+  if (peer && TRUSTED_PROXY_ADDRESSES.has(peer)) {
+    const fwd = req.headers["x-forwarded-for"];
+    const joined = Array.isArray(fwd) ? fwd.join(",") : fwd;
+    if (typeof joined === "string") {
+      const last = joined.split(",").map((s) => s.trim()).filter(Boolean).pop();
+      if (last) return last;
+    }
+  }
+  return peer;
+}
+
+/**
+ * Extracts the alpha-2 country code from the cf-ipcountry header injected by Cloudflare.
+ */
+export function resolveClientCountry(req) {
+  const country = req.headers["cf-ipcountry"];
+  if (typeof country === "string" && country.length === 2 && country !== "XX" && country !== "T1") {
+    return country.toUpperCase();
+  }
+  return null;
+}
+
 /**
  * Calculates a player's Anti-Money Laundering (AML) playthrough summary and withdrawable balance.
  *
@@ -252,6 +291,7 @@ export function createApi({
   // if a route names a key with no explicit config).
   const sensitiveLimiters = new Map();
   let controlCache = { at: 0, value: null };
+  let blockedCountriesCache = { at: 0, value: null };
 
   async function loadControls() {
     const t = now();
@@ -264,6 +304,21 @@ export function createApi({
     } catch (err) {
       if (controlCache.value) return controlCache.value;
       return {};
+    }
+  }
+
+  async function loadBlockedCountries() {
+    if (!db) return new Set();
+    const t = now();
+    if (blockedCountriesCache.value && t - blockedCountriesCache.at < controlCacheMs) return blockedCountriesCache.value;
+    try {
+      const r = await db.query("SELECT country_code FROM market WHERE geo_rule = 'BLOCK'");
+      const value = new Set(r.rows.map((x) => x.country_code));
+      blockedCountriesCache = { at: t, value };
+      return value;
+    } catch (err) {
+      if (blockedCountriesCache.value) return blockedCountriesCache.value;
+      return new Set();
     }
   }
 
@@ -353,6 +408,14 @@ export function createApi({
   async function handle(req, res) {
     const allowed = applyCors(req, res);
 
+    const clientCountry = resolveClientCountry(req);
+    if (clientCountry) {
+      const blockedCountries = await loadBlockedCountries();
+      if (blockedCountries.has(clientCountry)) {
+        return sendJson(res, 403, errorBody("GEO_BLOCKED", "Service is not available in your jurisdiction"));
+      }
+    }
+
     // A preflight is never a real route and carries no body or auth of its
     // own -- answer it before rate limiting, body parsing or routing ever
     // see it. An origin that didn't pass applyCors gets a plain 204 with no
@@ -376,8 +439,10 @@ export function createApi({
 
     const { route, params } = matched;
 
-    // Rate limiting before any work, keyed by client address.
-    const key = req.socket.remoteAddress ?? "unknown";
+    // Rate limiting before any work, keyed by client address (resolved
+    // through the trusted proxy, see resolveClientIp).
+    const clientIp = resolveClientIp(req);
+    const key = clientIp ?? "unknown";
     if (!limiters.has(key)) limiters.set(key, createRateLimiter(rateLimit));
     if (!takeToken(limiters.get(key), now())) {
       return sendJson(res, 429, errorBody("RATE_LIMITED"), { "retry-after": "1" });
@@ -393,8 +458,8 @@ export function createApi({
       // row, since each token is bound to exactly one. It still needs a
       // hard ceiling -- it is a password check -- just a workable one.
       const fallbackBudget = route.rateLimitKey === "step-up"
-        ? { capacity: 15, refillRatePerSecond: 15 / 300 }
-        : { capacity: 5, refillRatePerSecond: 5 / 300 };
+        ? { capacity: 15, refillPerSecond: 15 / 300 }
+        : { capacity: 5, refillPerSecond: 5 / 300 };
       const perIpBudget = sensitiveRateLimits[route.rateLimitKey] ?? fallbackBudget;
       if (!sensitiveLimiters.has(route.rateLimitKey)) {
         sensitiveLimiters.set(route.rateLimitKey, new Map());
@@ -431,7 +496,7 @@ export function createApi({
     const directChat = createDirectChatService(db);
     const ctx = {
       params, body: parsed.body, rawBody: parsed.rawBody, headers: req.headers, query: url.searchParams, actor,
-      ip: req.socket.remoteAddress, userAgent: req.headers["user-agent"],
+      ip: clientIp, userAgent: req.headers["user-agent"],
       db, auth, settlement, tournament, globalSkill, reconciliation, rbac,
       emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
       googleOAuth, googleFrontendOrigin, profile, support, ticketNotifications, chat, progression, now,

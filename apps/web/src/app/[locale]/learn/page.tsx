@@ -38,7 +38,7 @@ export default function LearnPage() {
                 {isRtl ? "أكاديمية نزالو للمحترفين" : "NIZALO PRO ACADEMY"}
               </span>
               <span className={styles.heroVerifiedBadge}>
-                {isRtl ? "⚡ 100% مهارة ذهنية حرة من الحظ" : "⚡ 100% PURE SKILL • ZERO LUCK"}
+                {isRtl ? "⚡ 100% مهارة ذهنية حرة" : "⚡ 100% PURE SKILL • DETERMINISTIC"}
               </span>
             </div>
 
@@ -78,7 +78,7 @@ export default function LearnPage() {
               <div className={styles.statDivider} />
               <div className={styles.statItem}>
                 <span className={styles.statVal}>0%</span>
-                <span className={styles.statDesc}>{isRtl ? "عناصر حظ (مهارة 100%)" : "Luck or RNG (100% Pure Skill)"}</span>
+                <span className={styles.statDesc}>{isRtl ? "خوارزميات عشوائية (مهارة 100%)" : "RNG Mechanics (100% Pure Skill)"}</span>
               </div>
               <div className={styles.statDivider} />
               <div className={styles.statItem}>

@@ -75,8 +75,13 @@ export function createReferralSweep(db, { defaultRewardMinor = 1_000_000n, defau
 
         // If clean / eligible, settle immediately via double-entry ledger_post
         if (initialState === "ELIGIBLE") {
-          const settled = await this.settleReward(rewardId);
-          if (settled) settledCount++;
+          try {
+            const settled = await this.settleReward(rewardId);
+            if (settled) settledCount++;
+          } catch (e) {
+            // Log but don't crash the sweep
+            console.error(`Referral sweep failed for ${rewardId}: ${e.message}`);
+          }
         }
       }
 
@@ -86,8 +91,12 @@ export function createReferralSweep(db, { defaultRewardMinor = 1_000_000n, defau
       );
 
       for (const row of eligibleRewards.rows) {
-        const settled = await this.settleReward(row.id);
-        if (settled) settledCount++;
+        try {
+          const settled = await this.settleReward(row.id);
+          if (settled) settledCount++;
+        } catch (e) {
+          console.error(`Referral sweep failed for ${row.id}: ${e.message}`);
+        }
       }
 
       return { processed: processedCount, settled: settledCount };

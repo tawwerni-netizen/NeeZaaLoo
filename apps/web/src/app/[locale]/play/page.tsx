@@ -85,7 +85,7 @@ function InnerPlayCatalogPage() {
           <p className={styles.heroSub}>
             {isRtl
               ? "10 ألعاب مهارية عادلة 100% بدون أي حظ. نافس مباشرة في مبارزات 1v1، صقل تكتيكاتك، أو انضم للبطولات الكبرى بجوائز USDT كاش."
-              : "10 deterministic skill games with zero luck. Duel in live 1v1 matches, hone tactics vs AI, or enter major cash cups with instant payouts."}
+              : "10 deterministic skill games. Duel in live 1v1 matches, hone tactics vs AI, or enter major cash cups with instant payouts."}
           </p>
 
           {/* Quick Trust Chips */}

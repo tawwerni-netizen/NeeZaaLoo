@@ -361,7 +361,7 @@ export const FAQ_DATA: LocalizedFAQ = {
       id: "games-2",
       category: "games",
       question: "Are Nizalo game outcomes purely based on skill?",
-      answer: "Yes. All Nizalo games are strictly skill competitions. The outcome depends entirely on player choices, calculation, tactical strategy, speed, and precision. No randomized house advantages or gambling mechanics exist.",
+      answer: "Yes. All Nizalo games are strictly skill competitions. The outcome depends entirely on player choices, calculation, tactical strategy, speed, and precision. We are a pure esports arena with completely deterministic outcomes.",
       tags: ["skill", "fairness", "mechanics", "no gambling"]
     },
 

@@ -14,7 +14,7 @@ import http from "node:http";
 import { PGlite } from "@electric-sql/pglite";
 import { migrate } from "../../ledger/src/migrate.mjs";
 import { createAuthService } from "../../auth/src/service.mjs";
-import { createApi } from "../src/server.mjs";
+import { createApi, resolveClientIp } from "../src/server.mjs";
 import { compileRoutes, matchRoute } from "../src/router.mjs";
 import { ACTIONS } from "../../authz/src/policy.mjs";
 import { createRbacService } from "../../authz/src/rbac.mjs";
@@ -106,6 +106,7 @@ before(async () => {
       "password-reset-request": { capacity: 5000, refillPerSecond: 5000 },
       "password-reset-confirm": { capacity: 5000, refillPerSecond: 5000 },
       "google-finalize": { capacity: 5000, refillPerSecond: 5000 },
+      "step-up": { capacity: 5000, refillPerSecond: 5000 },
     },
   });
   await api.listen();
@@ -1899,6 +1900,145 @@ describe("step-up rate limiting: the gate in front of every privileged admin act
     assert.ok(results.includes(429), `expected a 429 in ${results}`);
     assert.equal(results[0], 401, "a wrong password is refused before the budget runs out");
     await own.close();
+  });
+});
+
+// In production the API only ever sees the repo-root server.js proxy as its
+// socket peer (127.0.0.1), which appends the real client to x-forwarded-for.
+// Keying the limiters on the socket address put every user in one shared
+// bucket -- a handful of wrong step-up guesses from one attacker locked
+// step-up for every admin and player.
+describe("rate limiting keys on the client behind the trusted proxy", () => {
+  // Drives a request straight into the API's http.Server with an arbitrary
+  // socket peer -- the only way to present a non-loopback peer from a test,
+  // since a real connection to the test server always arrives from 127.0.0.1.
+  function injectRequest(own, { method = "GET", url, headers = {}, remoteAddress }) {
+    return new Promise((resolve) => {
+      const fakeReq = { method, url, headers, socket: { remoteAddress } };
+      const fakeRes = {
+        headersSent: false,
+        statusCode: 0,
+        setHeader() {},
+        writeHead(status) { this.statusCode = status; this.headersSent = true; return this; },
+        end() { resolve(this.statusCode); },
+      };
+      own.server.emit("request", fakeReq, fakeRes);
+    });
+  }
+
+  const reqFrom = (remoteAddress, xff) => ({
+    socket: { remoteAddress },
+    headers: xff === undefined ? {} : { "x-forwarded-for": xff },
+  });
+
+  test("from the trusted loopback proxy, the right-most x-forwarded-for entry is the client", () => {
+    assert.equal(resolveClientIp(reqFrom("127.0.0.1", "198.51.100.7")), "198.51.100.7");
+    assert.equal(resolveClientIp(reqFrom("::1", "198.51.100.7")), "198.51.100.7");
+    assert.equal(resolveClientIp(reqFrom("::ffff:127.0.0.1", "198.51.100.7")), "198.51.100.7");
+    // Anything left of the proxy-appended entry came from the client itself.
+    assert.equal(resolveClientIp(reqFrom("127.0.0.1", "6.6.6.6, 198.51.100.7")), "198.51.100.7");
+    assert.equal(resolveClientIp(reqFrom("127.0.0.1", ["6.6.6.6", "198.51.100.7"])), "198.51.100.7");
+    // No usable header: fall back to the socket address.
+    assert.equal(resolveClientIp(reqFrom("127.0.0.1")), "127.0.0.1");
+    assert.equal(resolveClientIp(reqFrom("127.0.0.1", " , ")), "127.0.0.1");
+  });
+
+  test("x-forwarded-for from an untrusted peer is ignored by resolveClientIp", () => {
+    assert.equal(resolveClientIp(reqFrom("203.0.113.9", "198.51.100.7")), "203.0.113.9");
+    assert.equal(resolveClientIp(reqFrom("127.0.0.2", "198.51.100.7")), "127.0.0.2");
+    assert.equal(resolveClientIp(reqFrom("10.0.0.5", "127.0.0.1")), "10.0.0.5");
+  });
+
+  test("two x-forwarded-for clients arriving from 127.0.0.1 get independent general budgets", async () => {
+    const own = createApi({ db, auth, rateLimit: { capacity: 2, refillPerSecond: 0 } });
+    await own.listen();
+    try {
+      const get = (xff) => fetch(`${own.url}/v1/health`, { headers: { "x-forwarded-for": xff } }).then((r) => r.status);
+      assert.deepEqual([await get("198.51.100.1"), await get("198.51.100.1"), await get("198.51.100.1")], [200, 200, 429]);
+      // A different client, same proxy peer: untouched by the first one's burst.
+      assert.deepEqual([await get("198.51.100.2"), await get("198.51.100.2")], [200, 200]);
+      // A spoofed left-most entry does not buy the first client a fresh bucket.
+      assert.equal(await get("192.0.2.99, 198.51.100.1"), 429);
+    } finally {
+      await own.close();
+    }
+  });
+
+  test("one client exhausting step-up does not lock step-up for another client", async () => {
+    const own = createApi({
+      db, auth,
+      rateLimit: { capacity: 5000, refillPerSecond: 5000 }, // general limiter wide open
+      sensitiveRateLimits: { "step-up": { capacity: 2, refillPerSecond: 0 } },
+    });
+    await own.listen();
+    try {
+      const login = await auth.login({ identifier: "alice", password: PASSWORD });
+      assert.equal(login.ok, true);
+      const stepUp = (xff) => fetch(`${own.url}/v1/auth/step-up`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${login.accessToken}`,
+          "x-forwarded-for": xff,
+        },
+        body: JSON.stringify({ action: "admin.rbac.manage", password: "wrong guess" }),
+      }).then((r) => r.status);
+
+      assert.deepEqual([await stepUp("203.0.113.66"), await stepUp("203.0.113.66"), await stepUp("203.0.113.66")], [401, 401, 429]);
+      // Another client is still refused on the password, not on the budget.
+      assert.equal(await stepUp("198.51.100.20"), 401);
+    } finally {
+      await own.close();
+    }
+  });
+
+  test("x-forwarded-for from a non-loopback peer is ignored: every forged value shares the peer's bucket", async () => {
+    const own = createApi({ db, auth, rateLimit: { capacity: 2, refillPerSecond: 0 } });
+    const statuses = [];
+    for (const xff of ["198.51.100.1", "198.51.100.2", "198.51.100.3"]) {
+      statuses.push(await injectRequest(own, {
+        url: "/v1/health", headers: { "x-forwarded-for": xff }, remoteAddress: "203.0.113.9",
+      }));
+    }
+    assert.deepEqual(statuses, [200, 200, 429]);
+    // A different real peer still has its own budget.
+    assert.equal(await injectRequest(own, { url: "/v1/health", remoteAddress: "203.0.113.10" }), 200);
+  });
+});
+
+describe("the fallback budget for sensitive routes", () => {
+  test("refills at 5 per 300 seconds, not at createRateLimiter's 10/second default", async () => {
+    // The fallback used to be written with a key createRateLimiter never
+    // read (refillRatePerSecond), so it silently refilled at 10 tokens/s.
+    let t = 1_000_000;
+    const own = createApi({
+      db, auth, now: () => t,
+      rateLimit: { capacity: 5000, refillPerSecond: 5000 }, // general limiter wide open
+      // sensitiveRateLimits deliberately omitted -- exercising the fallback.
+    });
+    await own.listen();
+    try {
+      // An empty body is refused with 400 by the handler, which is enough
+      // to tell "reached the handler" apart from "rate limited" (429).
+      const post = () => fetch(`${own.url}/v1/auth/password-reset/request`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: "{}",
+      }).then((r) => r.status);
+
+      for (let i = 0; i < 5; i++) assert.equal(await post(), 400, `request ${i + 1} is within capacity`);
+      assert.equal(await post(), 429, "capacity of 5 is exhausted");
+
+      t += 1_000;
+      assert.equal(await post(), 429, "one second later there is still no token (10/s would have refilled it)");
+
+      t += 57_000; // 58s since exhaustion: ~0.97 of a token
+      assert.equal(await post(), 429, "less than one token after 58 seconds");
+
+      t += 3_000; // 61s since exhaustion: just over one token
+      assert.equal(await post(), 400, "one token refilled after ~60 seconds (5/300 per second)");
+      assert.equal(await post(), 429, "and only one");
+    } finally {
+      await own.close();
+    }
   });
 });
 

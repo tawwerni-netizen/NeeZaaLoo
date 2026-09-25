@@ -53,6 +53,9 @@ before(async () => {
   api = createApi({
     db, auth, settlement, tournament, globalSkill,
     rateLimit: { capacity: 5000, refillPerSecond: 5000 },
+    // Many step-ups against one server; the strict step-up budget has its
+    // own dedicated test in api.test.mjs.
+    sensitiveRateLimits: { "step-up": { capacity: 5000, refillPerSecond: 5000 } },
   });
   await api.listen();
   base = api.url;
@@ -174,9 +177,10 @@ describe("a full tournament through the API", () => {
     const bracket = await req("GET", `/v1/tournaments/${id}/pairings?round=1`, { token: await tokenFor("ply1") });
     assert.equal(bracket.body.pairings.length, 2);
 
-    // Drive round 1 to completion directly through the tournament service
-    // (there is no "report a chess result" HTTP route yet -- that arrives
-    // with the realtime-to-tournament wiring; see KNOWN ISSUES).
+    // Drive round 1 to completion directly through the tournament service.
+    // (In production, the realtime engine completes the duel, and the 
+    // worker's `bridgeCompletedPairings` sweep picks it up. For API tests, 
+    // we bypass the worker and report directly).
     const settlement = createSettlementService(db);
     const tournamentSvc = createTournamentService(db);
     for (const row of bracket.body.pairings) {

@@ -648,7 +648,7 @@ export function Hero() {
                 <bdi dir="ltr">100% {isRtl ? "مهارة" : "Skill"}</bdi>
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "مهارة بدون أي صدفة أو حظ" : "Zero Luck, Zero RNG, Anti-Cheat"}
+                {isRtl ? "مهارة خالصة، خوارزميات عادلة، حماية ضد الغش" : "100% Pure Skill, Deterministic, Anti-Cheat"}
               </div>
               <div className={styles.metricSub}>
                 {isRtl ? "خوادم مشفرة وقواعد حتمية تضمن انتصار الأذكى تكتيكياً بدون أي تحيز" : "Deterministic server verification guarantees integrity and fair play"}

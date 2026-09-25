@@ -63,7 +63,7 @@ const TOURNAMENT_SLIDES: TournSlide[] = [
     titleAr: "معارك السرعة والذكاء الخاطف",
     titleEn: "Speed Battle & Reflex Championship",
     metaAr: "التسجيل مفتوح للجميع • منافسات مهارية خالية من الحظ • تسوية فورية",
-    metaEn: "Open Registration • Zero Luck Factor • Instant Settlement",
+    metaEn: "Open Registration • 100% Skill-Based • Instant Settlement",
     badgeAr: "تسجيل مفتوح",
     badgeEn: "REGISTRATION OPEN",
     tagAr: "سجّل مقعدك ↗",

@@ -242,7 +242,12 @@ export function createSettlementService(db, { asset = "USDT" } = {}) {
       );
       const results = [];
       for (const row of due.rows) {
-        results.push({ duelId: row.id, ...(await this.settle(row.id)) });
+        try {
+          results.push({ duelId: row.id, ...(await this.settle(row.id)) });
+        } catch (e) {
+          results.push({ duelId: row.id, ok: false, error: e.message });
+          console.error(`Settlement sweep failed for ${row.id}: ${e.message}`);
+        }
       }
       return results;
     },

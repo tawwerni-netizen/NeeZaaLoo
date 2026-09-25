@@ -15,7 +15,7 @@ export default function FairPlayPage() {
   const whyPoints = [
     {
       icon: "🎯",
-      title: locale === "ar" ? "صفر في المائة حظ (0% Luck)" : "Zero Luck Factor (0% Luck)",
+      title: locale === "ar" ? "١٠٠٪ مهارة (100% Skill)" : "100% Skill-Based (100% Skill)",
       desc: locale === "ar" 
         ? "جميع الألعاب تعتمد حصرياً على الذكاء والتخطيط والتكتيك الذهني — لا نرد ولا عجلة ولا عناصر صدفة تتحكم بالنتائج."
         : "All games rely exclusively on mental acumen, tactical depth, and strategic foresight — no dice rolls or random elements."
@@ -91,7 +91,7 @@ export default function FairPlayPage() {
             <p className={styles.whyDesc}>
               {locale === "ar"
                 ? "صممنا هذه الصفحة لنضع بين يديك الحقائق التقنية المجردة بدون أي وعود وهمية. في نيزالو، نحن لا ندير منصة رهان أو حظ، بل نوفر بيئة أولمبية إلكترونية تنافسية عادلة ومشفرة."
-                : "We built this page to give you transparent technical realities without buzzwords. At Nizalo, we run a pure esports skill arena, not a gambling platform."}
+                : "We built this page to give you transparent technical realities without buzzwords. At Nizalo, we run a pure esports skill arena built on deterministic competition."}
             </p>
           </div>
 

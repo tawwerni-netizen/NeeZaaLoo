@@ -36,7 +36,7 @@ import styles from "./MatchmakingFlow.module.css";
 
 type Ticket = { id: string; game_id: string; status: string; duel_id: string | null; enqueued_at: string } | null;
 type Duel = { id: string; game_id: string; seat_0: string; seat_1: string };
-type OpponentInfo = { id: string; handle: string; avatarUrl?: string | null };
+type OpponentInfo = { id: string; handle: string; avatarUrl?: string | null; globalSkill?: number | null; exp?: { level: number } };
 
 const GAME_NAME_KEY: Record<string, string> = { chess: "chess", "speed-math": "speed_math" };
 
@@ -52,6 +52,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
   const [insufficientFunds, setInsufficientFunds] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [opponent, setOpponent] = useState<OpponentInfo | null>(null);
+  const [selfProfile, setSelfProfile] = useState<OpponentInfo | null>(null);
   const [duelId, setDuelId] = useState<string | null>(null);
 
   const cancelledRef = useRef(false);
@@ -69,7 +70,13 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
     }
     (async () => {
       try {
-        const activeRes = await get<{ active: boolean; duel?: { id: string; gameId: string } }>("/v1/me/active-duel").catch(() => null);
+        const [activeRes, selfRes] = await Promise.all([
+          get<{ active: boolean; duel?: { id: string; gameId: string } }>("/v1/me/active-duel").catch(() => null),
+          get<OpponentInfo>(`/v1/players/${player.id}/preview`).catch(() => null)
+        ]);
+
+        if (selfRes) setSelfProfile(selfRes);
+
         if (activeRes?.active && activeRes.duel && activeRes.duel.gameId === gameId) {
           router.replace(`/${locale}/game/${activeRes.duel.id}`);
           return;
@@ -167,6 +174,15 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
             </div>
             <p className={styles.radarStatus}>{findingMessage}</p>
             <p className={`nz-num ${styles.timer}`}>{formatElapsed(elapsedSec)}</p>
+            
+            <div className={styles.serverAuthoritativeBadge}>
+              <span style={{ fontSize: "16px" }}>🛡️</span>
+              <div>
+                <strong>{locale === "ar" ? "توفيق آمن وموثوق" : "Server-Authoritative Matchmaking"}</strong>
+                <span>{locale === "ar" ? "نظام مراقب 100% لضمان اللعب النظيف" : "100% Monitored for Fairplay"}</span>
+              </div>
+            </div>
+
             <button className={styles.cancelLink} onClick={() => void cancel()}>{t("matchmaking.cancel")}</button>
           </motion.div>
         )}
@@ -181,6 +197,12 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
             >
               <Avatar nickname={player?.handle || "You"} avatarUrl={(player as any)?.avatarUrl ?? null} size={100} />
               <span className={styles.vsHandleDramatic}>{player?.handle}</span>
+              {selfProfile?.globalSkill != null && (
+                <div className={styles.vsGssBadge}>
+                  <span className={styles.vsGssLabel}>GSS</span>
+                  {selfProfile.globalSkill}
+                </div>
+              )}
             </motion.div>
             
             <motion.div 
@@ -200,6 +222,12 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
             >
               <Avatar nickname={opponent.handle} avatarUrl={opponent.avatarUrl ?? null} size={100} />
               <span className={styles.vsHandleDramatic}>{opponent.handle}</span>
+              {opponent.globalSkill != null && (
+                <div className={styles.vsGssBadge}>
+                  <span className={styles.vsGssLabel}>GSS</span>
+                  {opponent.globalSkill}
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}

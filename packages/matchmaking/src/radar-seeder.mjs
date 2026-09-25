@@ -84,6 +84,7 @@ export function createRadarSeederWorker(db, { minChallenges = 8, maxChallenges =
               AND p.handle NOT LIKE 'ai_%'
               AND p.handle NOT LIKE 'bot_%'
               AND p.handle NOT LIKE 'test_%'
+              AND p.disabled_at IS NULL
               AND NOT EXISTS (
                 SELECT 1 FROM lobby_open_challenge c
                  WHERE c.creator_id = p.id AND c.status = 'OPEN' AND c.expires_at > now()
@@ -143,6 +144,7 @@ export function createRadarSeederWorker(db, { minChallenges = 8, maxChallenges =
              LEFT JOIN ledger_account la ON la.key = 'user:' || b.id || ':available' AND la.asset = COALESCE($1, 'USDT')
              LEFT JOIN ledger_balance lb ON lb.account_id = la.id
             WHERE b.id = ANY($2::text[])
+              AND b.disabled_at IS NULL
               AND b.id <> $3
               AND ($4 = 0 OR COALESCE(lb.balance, 0) >= $4)
             ORDER BY random()

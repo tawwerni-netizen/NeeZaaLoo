@@ -64,6 +64,7 @@ export function createStandingByWorker(db, mm, { timeoutSeconds = 5, emit = () =
            LEFT JOIN ledger_account la ON la.key = 'user:' || b.id || ':available' AND la.asset = COALESCE($3, 'USDT')
            LEFT JOIN ledger_balance lb ON lb.account_id = la.id
           WHERE b.id = ANY($2::text[])
+            AND b.disabled_at IS NULL
             AND at.id IS NULL
             AND ($4 = 0 OR COALESCE(lb.balance, 0) >= $4)
           ORDER BY ABS(COALESCE(r.rating_x100, 150000) - $5) ASC

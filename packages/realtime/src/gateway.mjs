@@ -39,9 +39,20 @@ import { createInMemoryBus } from "./bus.mjs";
  *                                               exactly the prior behaviour every existing test relies on
  * @param {string} [opts.host]                  listen host; omitted lets `ws`/Node pick its own default
  */
+/**
+ * Extracts the alpha-2 country code from the cf-ipcountry header injected by Cloudflare.
+ */
+export function resolveClientCountry(req) {
+  const country = req.headers["cf-ipcountry"];
+  if (typeof country === "string" && country.length === 2 && country !== "XX" && country !== "T1") {
+    return country.toUpperCase();
+  }
+  return null;
+}
+
 export function createGateway({
   sessions, duels, plugins, now = () => Date.now(), rateLimit, store = null, auth = null,
-  lease = null, ownerId = null, port = 0, host = undefined,
+  lease = null, ownerId = null, port = 0, host = undefined, db = null,
   // Browser origins allowed to open a socket at all. WebSockets are exempt
   // from the same-origin policy and carry no CORS preflight, so without
   // this ANY page on the internet can open a connection to this gateway
@@ -140,6 +151,24 @@ export function createGateway({
     throw new TypeError("createGateway needs either an auth service or a sessions map");
   }
 
+  let blockedCountriesCache = { at: 0, value: null };
+  const controlCacheMs = 1000;
+
+  async function loadBlockedCountries() {
+    if (!db) return new Set();
+    const t = now();
+    if (blockedCountriesCache.value && t - blockedCountriesCache.at < controlCacheMs) return blockedCountriesCache.value;
+    try {
+      const r = await db.query("SELECT country_code FROM market WHERE geo_rule = 'BLOCK'");
+      const value = new Set(r.rows.map((x) => x.country_code));
+      blockedCountriesCache = { at: t, value };
+      return value;
+    } catch (err) {
+      if (blockedCountriesCache.value) return blockedCountriesCache.value;
+      return new Set();
+    }
+  }
+
   // Every label below is a small, bounded enum (a channel TYPE, an event
   // KIND, a REASON code) -- never a playerId, nickname, message id, or raw
   // channelId (which embeds a duelId and would make each match its own
@@ -219,6 +248,16 @@ export function createGateway({
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ ok: true, service: "gateway", duels: duels.size }));
       return;
+    }
+
+    const clientCountry = resolveClientCountry(req);
+    if (clientCountry) {
+      const blockedCountries = await loadBlockedCountries();
+      if (blockedCountries.has(clientCountry)) {
+        res.writeHead(403, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: "GEO_BLOCKED", detail: "Service is not available in your jurisdiction" }));
+        return;
+      }
     }
 
     if (req.method === "POST" && (pathname === "/sync" || pathname === "/intent" || pathname === "/action")) {
@@ -354,11 +393,22 @@ export function createGateway({
 
   const wss = new WebSocketServer({
     server: httpServer,
-    verifyClient: ({ origin }, done) => {
-      if (originAllowed(origin)) return done(true);
-      // 403, not a silent drop: a misconfigured allowlist should be obvious
-      // in a browser console rather than look like an unreachable server.
-      done(false, 403, "origin not allowed");
+    verifyClient: async ({ origin, req }, done) => {
+      if (!originAllowed(origin)) {
+        // 403, not a silent drop: a misconfigured allowlist should be obvious
+        // in a browser console rather than look like an unreachable server.
+        return done(false, 403, "origin not allowed");
+      }
+      
+      const clientCountry = resolveClientCountry(req);
+      if (clientCountry) {
+        const blockedCountries = await loadBlockedCountries();
+        if (blockedCountries.has(clientCountry)) {
+          return done(false, 403, "Service is not available in your jurisdiction");
+        }
+      }
+      
+      done(true);
     },
   });
 
