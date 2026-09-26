@@ -32,7 +32,7 @@ function ChessBoardAdapter({ view, lastMove, mySeat, canMove, onMove }: BoardPro
   // for both fields and left the last-move highlight permanently dark)
   // is this game's own job, per BoardProps.lastMove's own `unknown` type.
   const uci = typeof lastMove === "string" ? lastMove : null;
-  const parsedLastMove = uci ? { from: uci.slice(0, 2), to: uci.slice(2, 4) } : null;
+  const parsedLastMove = (uci && uci !== "undo") ? { from: uci.slice(0, 2), to: uci.slice(2, 4) } : null;
   return (
     <ChessBoard
       fen={v.fen}

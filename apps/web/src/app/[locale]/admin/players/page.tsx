@@ -150,6 +150,10 @@ export default function AdminPlayersPage() {
   const [confiscateReason, setConfiscateReason] = useState<string>("Cheating / Fair Play Violation - balance confiscated");
   const [isConfiscating, setIsConfiscating] = useState(false);
 
+  const [addBalanceTarget, setAddBalanceTarget] = useState<{ id: string; handle: string } | null>(null);
+  const [addBalanceAmount, setAddBalanceAmount] = useState<string>("10");
+  const [isAddingBalance, setIsAddingBalance] = useState(false);
+
   // Player Financial & AML inspection state
   const [inspectTarget, setInspectTarget] = useState<PlayerRecord | null>(null);
   const [inspectLoading, setInspectLoading] = useState(false);
@@ -247,6 +251,33 @@ export default function AdminPlayersPage() {
       alert(adminErrorMessage(e, isAr ? "فشلت عملية المصادرة والحظر" : "Failed to confiscate balance and ban player"));
     } finally {
       setIsConfiscating(false);
+    }
+  }
+
+  async function handleAddBalance() {
+    if (!addBalanceTarget) return;
+    setIsAddingBalance(true);
+    try {
+      const res = await post<{ ok: boolean; amountAdded?: string }>(
+        `/v1/admin/players/${addBalanceTarget.id}/add-balance`,
+        { amount: addBalanceAmount }
+      );
+      showNotice(
+        isAr
+          ? `✓ تم إضافة رصيد بنجاح للاعب @${addBalanceTarget.handle}`
+          : `✓ Successfully added balance to @${addBalanceTarget.handle}`
+      );
+      setAddBalanceTarget(null);
+      setAddBalanceAmount("10");
+      if (inspectTarget?.id === addBalanceTarget.id) {
+        setInspectTarget(null);
+      }
+      loadPlayers();
+    } catch (e: any) {
+      if (e?.code === "STEP_UP_REQUIRED") return;
+      alert(adminErrorMessage(e, isAr ? "فشلت عملية إضافة الرصيد" : "Failed to add balance"));
+    } finally {
+      setIsAddingBalance(false);
     }
   }
 
@@ -441,6 +472,20 @@ export default function AdminPlayersPage() {
                             title="Mute user from Chat"
                           >
                             🔇 Mute Chat
+                          </button>
+
+                          {/* Add Balance */}
+                          <button
+                            type="button"
+                            className={styles.actionBtn}
+                            style={{ background: "rgba(34, 197, 94, 0.15)", borderColor: "#22c55e", color: "#4ade80" }}
+                            onClick={() => {
+                              setAddBalanceTarget({ id: p.id, handle: p.handle });
+                              setAddBalanceAmount("10");
+                            }}
+                            title="إضافة رصيد للاعب"
+                          >
+                            💰 إضافة رصيد
                           </button>
 
                           {/* Cheat Ban & Confiscate */}
@@ -759,6 +804,66 @@ export default function AdminPlayersPage() {
                 {isPromoting
                   ? (isAr ? "جاري الحفظ..." : "Saving...")
                   : (isAr ? "تأكيد التعيين والترقية" : "Confirm Assignment & Promotion")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Balance Modal */}
+      {addBalanceTarget && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)",
+          backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 2000, padding: "20px"
+        }}>
+          <div style={{
+            background: "#161924", border: "1px solid #22c55e", borderRadius: "16px",
+            maxWidth: "480px", width: "100%", padding: "30px",
+            boxShadow: "0 25px 50px -12px rgba(34, 197, 94, 0.25)",
+          }}>
+            <h2 style={{ margin: "0 0 15px 0", color: "#4ade80", fontSize: "1.25rem", display: "flex", alignItems: "center", gap: "8px" }}>
+              💰 {isAr ? "إضافة رصيد (USDT)" : "Add Balance (USDT)"}
+            </h2>
+            <p style={{ margin: "0 0 20px 0", color: "#a0aec0", fontSize: "0.95rem", lineHeight: "1.5" }}>
+              {isAr
+                ? `أنت على وشك إضافة رصيد مجاني للاعب @${addBalanceTarget.handle}. سيتم تمويل هذا الرصيد من ميزانية العروض الترويجية للمنصة.`
+                : `You are about to add free promotional balance to @${addBalanceTarget.handle}.`}
+            </p>
+
+            <label style={{ display: "block", marginBottom: "8px", color: "#cbd5e1", fontSize: "0.9rem", fontWeight: 500 }}>
+              {isAr ? "المبلغ (USDT)" : "Amount (USDT)"}
+            </label>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={addBalanceAmount}
+              onChange={(e) => setAddBalanceAmount(e.target.value)}
+              style={{
+                width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #2d3348",
+                background: "#0f111a", color: "#fff", marginBottom: "24px", fontSize: "1rem"
+              }}
+              placeholder="e.g. 10"
+            />
+
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={() => setAddBalanceTarget(null)}
+                disabled={isAddingBalance}
+              >
+                {isAr ? "إلغاء" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                className={styles.actionBtn}
+                style={{ background: "#22c55e", borderColor: "#22c55e", color: "#fff", fontWeight: 800 }}
+                onClick={handleAddBalance}
+                disabled={isAddingBalance || !addBalanceAmount || parseFloat(addBalanceAmount) <= 0}
+              >
+                {isAddingBalance ? (isAr ? "جاري الإضافة..." : "Adding...") : (isAr ? "إضافة الرصيد" : "Add Balance")}
               </button>
             </div>
           </div>

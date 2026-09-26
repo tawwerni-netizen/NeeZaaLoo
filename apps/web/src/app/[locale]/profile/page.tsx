@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { RequireAuth } from "@/components/RequireAuth";
+import { useAuth } from "@/lib/auth-context";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/Button";
@@ -38,6 +39,7 @@ export default function ProfilePage() {
 
 function ProfileContent() {
   const { t, locale } = useI18n();
+  const { logout } = useAuth();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -479,6 +481,17 @@ function ProfileContent() {
         <p className={styles.memberSince}>
           📅 {t("profile.member_since_label")}: {new Date(profile.memberSince).toLocaleDateString()}
         </p>
+
+        <div style={{ display: "flex", justifyContent: "center", marginTop: "2rem", marginBottom: "2rem" }}>
+          <Button variant="ghost" onClick={() => void logout()} style={{ color: "var(--nz-red)", borderColor: "var(--nz-red)", padding: "10px 24px" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 8, verticalAlign: "middle" }}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            {locale === "ar" ? "تسجيل الخروج" : "Log out"}
+          </Button>
+        </div>
 
         {cropperImage && (
           <ImageCropperModal

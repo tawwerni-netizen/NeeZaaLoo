@@ -25,8 +25,8 @@ export function MobileBottomNav() {
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
   const isHome = pathWithoutLocale === "/";
-  const isArena = pathWithoutLocale.startsWith("/play") || pathWithoutLocale.startsWith("/games");
-  const isTournaments = pathWithoutLocale.startsWith("/tournaments");
+  const isArena = pathWithoutLocale.startsWith("/play");
+  const isGames = pathWithoutLocale.startsWith("/games");
   const isWallet = pathWithoutLocale.startsWith("/wallet");
   const isProfile = pathWithoutLocale.startsWith("/profile");
 
@@ -62,17 +62,17 @@ export function MobileBottomNav() {
           {isArena && <span className={styles.activeIndicator} />}
         </LocaleLink>
 
-        {/* 3. Tournaments */}
+        {/* 3. Games */}
         <LocaleLink
-          href="/tournaments"
-          className={[styles.navItem, isTournaments ? styles.active : ""].join(" ")}
-          aria-label={t("nav.tournaments")}
+          href="/games"
+          className={[styles.navItem, isGames ? styles.active : ""].join(" ")}
+          aria-label={t("nav.games")}
         >
           <span className={styles.navIconWrap}>
-            <span className={styles.emojiIcon}>🏆</span>
+            <span className={styles.emojiIcon}>🎲</span>
           </span>
-          <span className={styles.navLabel}>{t("nav.tournaments")}</span>
-          {isTournaments && <span className={styles.activeIndicator} />}
+          <span className={styles.navLabel}>{t("nav.games")}</span>
+          {isGames && <span className={styles.activeIndicator} />}
         </LocaleLink>
 
         {/* 4. Wallet */}

@@ -3521,6 +3521,39 @@ function buildRoutes() {
         return { body: { ok: true, playerId: params.id } };
       } },
 
+    { method: "POST", path: "/v1/admin/players/:id/add-balance", action: "admin.rbac.manage",
+      subjectType: "player",
+      handler: async ({ params, actor, body, db }) => {
+        const amountUsdt = parseFloat(body.amount);
+        if (isNaN(amountUsdt) || amountUsdt <= 0) {
+          return { status: 400, body: errorBody("INVALID_AMOUNT", "Amount must be a positive number") };
+        }
+        
+        const player = await db.query("SELECT id FROM player WHERE id = $1", [params.id]);
+        if (!player.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
+
+        const reason = (typeof body?.reason === "string" && body.reason.trim()) ? body.reason.trim() : "Manual balance addition by Super Admin";
+        const amountMinor = BigInt(Math.floor(amountUsdt * 1_000_000));
+        
+        const stamp = Date.now();
+        // Credit user's available account (liability -> negative amount increases it)
+        // Debit platform promotions (liability -> positive amount decreases it)
+        const legs = [
+          { account: "platform:promotions", amount: amountMinor.toString() },
+          { account: `user:${params.id}:available`, amount: (-amountMinor).toString() }
+        ];
+
+        await db.query(`SELECT ledger_open_user_wallet($1, 'USDT')`, [params.id]);
+
+        await db.query(
+          `SELECT ledger_post($1, 'ADJUSTMENT', 'ADMIN', $2, $3::jsonb, 'USDT', $4, 'player', $5)`,
+          [`add-bal-${params.id}-USDT-${stamp}`, actor.id, JSON.stringify(legs), reason, params.id]
+        );
+
+        return { body: { ok: true, playerId: params.id, amountAdded: amountMinor.toString() } };
+      } 
+    },
+
     { method: "POST", path: "/v1/admin/players/:id/confiscate-and-ban", action: "admin.user.confiscate",
       subjectType: "player",
       handler: async ({ params, actor, body, db }) => {
