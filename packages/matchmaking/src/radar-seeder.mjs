@@ -147,7 +147,7 @@ export function createRadarSeederWorker(db, { minChallenges = 8, maxChallenges =
             WHERE b.id = ANY($2::text[])
               AND b.disabled_at IS NULL
               AND b.id <> $3
-              AND ($4 = 0 OR COALESCE(lb.balance, 0) >= $4)
+              AND ($4 = 0 OR ledger_natural_balance(la.normal_side, COALESCE(lb.balance, 0)) >= $4)
             ORDER BY random()
             LIMIT 1`,
           [asset, STANDING_BY_BOT_IDS, ch.creator_id, stakeMinor.toString()]

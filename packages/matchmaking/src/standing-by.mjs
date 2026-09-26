@@ -66,7 +66,7 @@ export function createStandingByWorker(db, mm, { timeoutSeconds = 5, emit = () =
           WHERE b.id = ANY($2::text[])
             AND b.disabled_at IS NULL
             AND at.id IS NULL
-            AND ($4 = 0 OR COALESCE(lb.balance, 0) >= $4)
+            AND ($4 = 0 OR ledger_natural_balance(la.normal_side, COALESCE(lb.balance, 0)) >= $4)
           ORDER BY ABS(COALESCE(r.rating_x100, 150000) - $5) ASC
           LIMIT 1`,
         [t.game_id, STANDING_BY_BOT_IDS, asset, stakeMinor.toString(), t.rating_x100]
