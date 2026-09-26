@@ -39,7 +39,8 @@ const STAKE_LADDER = [
 export function createRadarSeederWorker(db, { minChallenges = 8, maxChallenges = 12, emit = () => {} } = {}) {
   return async function tick() {
     let standingByEnabled = true;
-    let waitSeconds = 25;
+    // Default wait to between 10 and 15 seconds to ensure human-like fast matching
+    let waitSeconds = 10 + Math.floor(Math.random() * 6);
     try {
       const cfgRes = await db.query(
         `SELECT value FROM bot_platform_config WHERE key = 'standing_by'`
@@ -47,7 +48,7 @@ export function createRadarSeederWorker(db, { minChallenges = 8, maxChallenges =
       if (cfgRes.rows.length > 0) {
         const val = cfgRes.rows[0].value;
         if (val.enabled === false) standingByEnabled = false;
-        if (val.wait_seconds != null) waitSeconds = Math.max(15, Number(val.wait_seconds) * 3);
+        if (val.wait_seconds != null) waitSeconds = Math.max(10, Number(val.wait_seconds));
       }
     } catch {
       // fallback to defaults

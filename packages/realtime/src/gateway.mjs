@@ -1296,6 +1296,15 @@ export function createGateway({
             playerId: conn.playerId, intent: msg.intent, nonce: msg.nonce, baseVersion: msg.baseVersion,
           }, t);
           if (!res.ok) {
+            console.error("[DEBUG: INTENT REJECTED]", {
+              playerId: conn.playerId,
+              intent: msg.intent,
+              reason: res.reason,
+              baseVersion: msg.baseVersion,
+              currentVersion: duel.version,
+              cseq: msg.cseq,
+              nonce: msg.nonce,
+            });
             // A rejected intent is a normal answer, not a disconnect. Bad input
             // is expected traffic; dropping the socket would punish lag.
             // A REPLAYED_ACTION is not "bad input" in that same ordinary

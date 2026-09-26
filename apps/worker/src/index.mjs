@@ -271,7 +271,7 @@ async function main() {
 
   const standingByWorker = createTickLoop(
     createStandingByWorker(db, mm, {
-      timeoutSeconds: Number(process.env.STANDING_BY_TIMEOUT_SECONDS || 5),
+      timeoutSeconds: Number(process.env.STANDING_BY_TIMEOUT_SECONDS || 12),
       emit: logger.emit,
     }),
     { intervalMs: Number(process.env.STANDING_BY_INTERVAL_MS || 5000) }
@@ -284,7 +284,7 @@ async function main() {
     { intervalMs: botSimulatorIntervalMs }
   );
 
-  const radarSeederIntervalMs = Number(process.env.RADAR_SEEDER_INTERVAL_MS || 35000);
+  const radarSeederIntervalMs = Number(process.env.RADAR_SEEDER_INTERVAL_MS || 5000);
   const radarSeederWorker = createTickLoop(
     createRadarSeederWorker(db, { emit: logger.emit }),
     { intervalMs: radarSeederIntervalMs }
