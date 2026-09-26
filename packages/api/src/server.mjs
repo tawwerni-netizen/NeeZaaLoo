@@ -3751,6 +3751,54 @@ function buildRoutes() {
         };
       } },
 
+    { method: "POST", path: "/v1/admin/deposits/:id/approve", action: "admin.rbac.manage",
+      subjectType: "deposit",
+      handler: async ({ params, body, actor, db }) => {
+        const amountUsdt = parseFloat(body.amount);
+        if (isNaN(amountUsdt) || amountUsdt <= 0) {
+          return { status: 400, body: errorBody("INVALID_AMOUNT", "Amount must be positive") };
+        }
+        
+        const amountMinor = Math.floor(amountUsdt * 1_000_000).toString();
+        const txHash = body.txHash || `MANUAL-${Date.now()}`;
+
+        return await db.transaction(async (tx) => {
+          const locked = await tx.query("SELECT * FROM deposit WHERE id=$1 FOR UPDATE", [params.id]);
+          if (!locked.rows.length) return { status: 404, body: errorBody("NOT_FOUND") };
+          const dep = locked.rows[0];
+
+          if (dep.status === "CREDITED") {
+            return { status: 400, body: errorBody("ALREADY_CREDITED", "Deposit is already credited") };
+          }
+          
+          const custody = (dep.network === "TRC20" || dep.network === "TRON") ? "TRON" : dep.network;
+          
+          const posted = await tx.query(
+            `SELECT * FROM ledger_post($1,'DEPOSIT','SYSTEM',NULL,$2::jsonb,$3,NULL,'deposit',$4)`,
+            [
+              `deposit:manual:${dep.id}:${Date.now()}`,
+              JSON.stringify([
+                { account: `platform:custody:${dep.asset}:${custody}`, amount: amountMinor },
+                { account: `user:${dep.player_id}:available`, amount: (-amountMinor).toString() },
+              ]),
+              dep.asset, dep.id,
+            ]
+          );
+
+          await tx.query(
+            `UPDATE deposit
+                SET status='CREDITED', credited_tx_id=$2, credited_at=now(),
+                    observed_tx_hash=$3, observed_output_index=0, observed_amount_minor=$4,
+                    observed_asset=$5, observed_network=$6, confirmations=1
+              WHERE id=$1`,
+            [dep.id, posted.rows[0].transaction_id, txHash,
+             amountMinor, dep.asset, dep.network]
+          );
+
+          return { body: { ok: true, depositId: dep.id } };
+        });
+      } },
+
     { method: "GET", path: "/v1/admin/withdrawals", action: "admin.wallet.read",
       handler: async ({ db, query }) => {
         const q = (query.get ? query.get("q") : query.q) ? (query.get ? query.get("q") : query.q).trim() : "";
