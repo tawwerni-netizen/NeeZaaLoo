@@ -794,3 +794,9 @@
     font-size: 20px;
   }
 }
+
+.logoutButton {
+  color: var(--nz-red) !important;
+  border-color: var(--nz-red) !important;
+  padding: 10px 24px !important;
+}
