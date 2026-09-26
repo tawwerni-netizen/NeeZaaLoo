@@ -94,7 +94,13 @@ export function createSettlementService(db, { asset = "USDT" } = {}) {
           if (!duel.reservation_tx_id) {
             // Refusing here is the point: paying out stakes that were never
             // locked would mint money.
-            return { ok: false, reason: SettleResult.NOT_RESERVED };
+            // Mark as VOIDED so it drops out of the COMPLETED queue and doesn't
+            // cause head-of-line blocking for legitimate duels behind it.
+            await tx.query(
+              `UPDATE duel SET status = 'VOIDED'::duel_status, settled_at = now() WHERE id = $1`,
+              [duelId]
+            );
+            return { ok: false, reason: SettleResult.NOT_RESERVED, status: "VOIDED" };
           }
 
           if (duel.priced_rake_bps !== null && duel.priced_rake_bps !== undefined) {
