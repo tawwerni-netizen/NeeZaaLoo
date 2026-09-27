@@ -755,7 +755,7 @@ export function createGateway({
     if (!duel?.players) return null;
     const pid = duel.players[seat];
     if (typeof pid !== "string") return null;
-    const m = /^ai-(easy|medium|hard|expert|invincible)$/i.exec(pid);
+    const m = /^ai-(easy|medium|hard|expert|invincible)(?:-\d+)?$/i.exec(pid);
     if (m) return { seat, difficulty: m[1].toUpperCase(), playerId: pid };
     if (
       pid.startsWith("bot_") ||

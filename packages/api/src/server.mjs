@@ -270,7 +270,7 @@ export function createApi({
   // the same financial/matchmaking surfaces the rest of this file protects.
   corsOrigins = [],
 }) {
-  const routes = compileRoutes(buildRoutes());
+  const routes = compileRoutes(buildRoutes(storeSvc));
 
   // Fail closed at startup. An undeclared action here is a deployment that
   // would have served an endpoint nobody authorised.
@@ -686,7 +686,7 @@ function deviceErrorStatus(reason) {
   return DEVICE_ERROR_STATUS[reason] ?? 400;
 }
 
-function buildRoutes() {
+function buildRoutes(storeSvc) {
   const deviceLimiters = new Map();
 
   /** Wraps a handler so it only runs for an enabled device within its rate budget; the device lands on ctx.device. */
@@ -2050,8 +2050,9 @@ function buildRoutes() {
         const gameId = String(body.gameId ?? "chess");
         const difficulty = String(body.difficulty ?? "MEDIUM").toUpperCase();
         const timeProfile = body.timeProfile ? String(body.timeProfile).toUpperCase() : "STANDARD";
+        const mode = String(body.mode || body.variant || "standard");
         const vsComputer = createVsComputerService(db);
-        const r = await vsComputer.createDuel({ gameId, playerId: actor.id, difficulty, timeProfile });
+        const r = await vsComputer.createDuel({ gameId, playerId: actor.id, difficulty, timeProfile, mode });
         if (!r.ok) return { status: 400, body: errorBody(r.reason) };
         return { status: 201, body: { duelId: r.duelId } };
       } },

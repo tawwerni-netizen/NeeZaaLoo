@@ -349,6 +349,7 @@ function startProcess(name, script, childPort, customCwd) {
 
       const childEnv = Object.assign({}, baseEnv, {
         NODE_OPTIONS: nodeOptions,
+        PORT: String(childPort),
         OBSERVABILITY_PORT: String(childPort + 100),
       });
 

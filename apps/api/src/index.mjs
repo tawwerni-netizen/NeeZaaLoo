@@ -433,8 +433,9 @@ async function main() {
   });
   logger.emit("worker.tick_started", { worker: "api", workerId: workerIdentity(), host, port });
 
+  let obs = null;
   try {
-    const obs = createObservabilityServer({
+    obs = createObservabilityServer({
       metrics,
       checks: [{ name: "database", check: async () => { await db.query("SELECT 1"); return true; } }],
       port: Number(process.env.OBSERVABILITY_PORT || 3001),
@@ -449,7 +450,7 @@ async function main() {
     logger,
     gracefulShutdownMs: Number(process.env.GRACEFUL_SHUTDOWN_MS || 10000),
     stop: async () => {
-      await Promise.all([api.close(), obs.stop(), chatBus.close()]);
+      await Promise.all([api.close(), obs?.stop(), chatBus.close()]);
       await pool.end();
     },
   });
