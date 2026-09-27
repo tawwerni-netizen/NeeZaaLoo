@@ -22,6 +22,7 @@ import "./checkers";
 import "./reversi";
 import "./gomoku";
 import "./seega";
+import "./ludo";
 
 export { getGame, listGames } from "./registry";
 export type { GamePlugin, BoardProps, Difficulty } from "./types";

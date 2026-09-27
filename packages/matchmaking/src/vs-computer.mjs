@@ -36,7 +36,7 @@ export const Difficulty = Object.freeze({
 // ever moves in, silently expiring on time instead of erroring loudly.
 const AI_SUPPORTED_GAMES = new Set([
   "chess", "checkers", "connect-four", "xo", "speed-math", "dominoes", "backgammon",
-  "seega", "reversi", "gomoku", "billiards",
+  "seega", "reversi", "gomoku", "billiards", "ludo",
 ]);
 
 /**
@@ -65,7 +65,7 @@ function resolveChallengeFor(gameId, difficulty, spawned, requestedTimeControl) 
 export function createVsComputerService(db) {
   return {
     async createDuel({
-      gameId, playerId, difficulty, timeControl, timeProfile = "STANDARD",
+      gameId, playerId, difficulty, timeControl, timeProfile = "STANDARD", mode = "standard",
     }) {
       if (!AI_SUPPORTED_GAMES.has(gameId)) {
         return { ok: false, reason: VsComputerError.UNSUPPORTED_GAME };
@@ -76,7 +76,7 @@ export function createVsComputerService(db) {
       }
 
       const spawn = DEFAULT_SPAWNERS[gameId];
-      const spawned = spawn();
+      const spawned = spawn({ mode });
       const { initialState, timeControl: resolvedTimeControl } =
         resolveChallengeFor(gameId, difficulty, spawned, timeControl);
       const botId = `ai-${difficulty.toLowerCase()}`;
@@ -85,12 +85,16 @@ export function createVsComputerService(db) {
       const g = await db.query("SELECT plugin_version FROM game WHERE id = $1", [gameId]);
       const pluginVersion = g.rows[0]?.plugin_version ?? 1;
 
+      const is4p = mode.endsWith("-4p");
+      const seat2 = is4p ? `${botId}-2` : null;
+      const seat3 = is4p ? `${botId}-3` : null;
+
       await db.query(
         `INSERT INTO duel
-           (id, game_id, plugin_version, pairing_key, seat_0, seat_1,
+           (id, game_id, plugin_version, pairing_key, seat_0, seat_1, seat_2, seat_3,
             tier, stake_minor, initial_state, seed, time_control, status, started_at, is_vs_computer)
-         VALUES ($1,$2,$3,$4,$5,$6,'FREE'::entry_tier,0,$7::jsonb,$8,$9::jsonb,'LIVE'::duel_status,now(),TRUE)`,
-        [duelId, gameId, pluginVersion, `vs-computer:${duelId}`, playerId, botId,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'FREE'::entry_tier,0,$9::jsonb,$10,$11::jsonb,'LIVE'::duel_status,now(),TRUE)`,
+        [duelId, gameId, pluginVersion, `vs-computer:${duelId}`, playerId, botId, seat2, seat3,
           JSON.stringify(initialState), spawned.seed, JSON.stringify(resolvedTimeControl)]
       );
       return { ok: true, duelId, botId };

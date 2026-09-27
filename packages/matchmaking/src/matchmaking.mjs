@@ -92,7 +92,7 @@ export function createMatchmakingService(db, { now = () => Date.now() } = {}) {
       );
       if (!r.rows.length) return { ok: true, paired: false };
       const row = r.rows[0];
-      return { ok: true, paired: true, duelId: row.duel_id, seat0: row.seat_0, seat1: row.seat_1, created: row.created };
+      return { ok: true, paired: true, duelId: row.duel_id, seat0: row.seat_0, seat1: row.seat_1, seat2: row.seat_2, seat3: row.seat_3, created: row.created };
     },
 
     /**

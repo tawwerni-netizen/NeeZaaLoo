@@ -1,83 +1,78 @@
-"use client";
-
-import { useEffect, use } from "react";
-import { useRouter } from "next/navigation";
-import { useI18n } from "@/lib/i18n/context";
+import type { Metadata } from "next";
+import ClientPage from "./ClientPage";
 
 type Props = {
   params: Promise<{ locale: string; code: string }>;
 };
 
-export default function ReferralVanityPage({ params }: Props) {
-  const { code } = use(params);
-  const { locale } = useI18n();
-  const router = useRouter();
+// Use an internal helper to fetch without relying on client `get` which uses window
+async function fetchDuel(code: string) {
+  try {
+    const res = await fetch(`http://localhost:3000/v1/duels/${code}`, {
+      cache: "no-store"
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
 
-  useEffect(() => {
-    if (!code) return;
-    const cleanCode = encodeURIComponent(code.trim().toUpperCase());
-    // Set 30-day referral attribution cookie
-    document.cookie = `nz_ref=${cleanCode}; path=/; max-age=2592000; samesite=lax`;
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const code = (await params).code;
+  
+  // Duel IDs are typically KSUIDs (27 chars).
+  if (code && code.length >= 20) {
+    const duel = await fetchDuel(code);
+    if (duel && duel.id) {
+      let gameName = "Nizalo Match";
+      if (duel.game_id === "ludo") gameName = "Ludo";
+      if (duel.game_id === "dominoes") gameName = "Dominoes";
 
-    // Redirect to home/play
-    const timer = setTimeout(() => {
-      router.replace(`/${locale}/play`);
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [code, locale, router]);
-
-  return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "#080B10",
-      color: "#FFF",
-      fontFamily: "var(--font-sans, system-ui, sans-serif)",
-      padding: "2rem",
-      textAlign: "center",
-    }}>
-      <div style={{
-        background: "rgba(22, 28, 38, 0.8)",
-        border: "1px solid rgba(212, 163, 62, 0.3)",
-        borderRadius: "1rem",
-        padding: "2.5rem 2rem",
-        maxWidth: "420px",
-        boxShadow: "0 12px 32px rgba(0,0,0,0.6)",
-      }}>
-        <div style={{
-          fontSize: "1.25rem",
-          fontWeight: 800,
-          color: "#E5C158",
-          letterSpacing: "4px",
-          marginBottom: "1rem",
-        }}>
-          NIZALO
-        </div>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 0.5rem" }}>
-          Welcome to Nizalo!
-        </h1>
-        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.95rem", lineHeight: 1.5, margin: "0 0 1.5rem" }}>
-          You were invited by code <strong style={{ color: "#FCD34D" }}>{code?.toUpperCase()}</strong>. Preparing your experience...
-        </p>
-        <div style={{
-          display: "inline-block",
-          width: "32px",
-          height: "32px",
-          border: "3px solid rgba(212, 163, 62, 0.2)",
-          borderTopColor: "#E5C158",
-          borderRadius: "50%",
-          animation: "spin 0.8s linear infinite",
-        }} />
-      </div>
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
+      const title = duel.tier === "CASH" 
+        ? `Watch High-Stakes ${gameName} Live!`
+        : `Watch ${gameName} Match Live!`;
+      const desc = `Join the spectator arena on Nizalo and watch this match live.`;
+      
+      const locale = (await params).locale;
+      
+      return {
+        title,
+        description: desc,
+        openGraph: {
+          title,
+          description: desc,
+          url: `https://nizalo.com/${locale}/r/${code}`,
+          siteName: "Nizalo",
+          type: "website",
+          images: [
+            {
+              url: "https://nizalo.com/images/og-spectate.jpg",
+              width: 1200,
+              height: 630,
+            }
+          ]
+        },
+        twitter: {
+          card: "summary_large_image",
+          title,
+          description: desc,
+          images: ["https://nizalo.com/images/og-spectate.jpg"]
         }
-      `}</style>
-    </div>
-  );
+      };
+    }
+  }
+
+  return {
+    title: "You've been invited to Nizalo",
+    description: "Join Nizalo with this referral code and start playing competitive games.",
+    openGraph: {
+      title: "You've been invited to Nizalo",
+      description: "Join Nizalo with this referral code and start playing competitive games.",
+    }
+  };
+}
+
+export default async function Page({ params }: Props) {
+  return <ClientPage params={params} />;
 }

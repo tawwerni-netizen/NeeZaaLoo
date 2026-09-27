@@ -72,10 +72,15 @@ export const ACTIONS = {
   "tournament.join":         { capability: null, control: "TOURNAMENTS" },
   "tournament.withdraw":     { capability: null, control: "TOURNAMENTS" },
   "tournament.read":         { capability: null },   // list/detail/standings/bracket/results -- read-only, public shape
+  "tournament.create":       { capability: null, control: "TOURNAMENTS" },
   "global_skill.read":       { capability: null },   // own profile, leaderboards, per-game ratings
   "notification.read":       { capability: null, selfOnly: true },
   "player.daily_challenge.read": { capability: null, selfOnly: true },
   "player.recommendation.read":  { capability: null, selfOnly: true },
+  "player.season.read":          { capability: null, selfOnly: true },
+  "player.season.purchase":      { capability: null, selfOnly: true },
+  "player.season.claim":         { capability: null, selfOnly: true },
+  "player.store.purchase":       { capability: null, selfOnly: true },
   "player.referral.read":        { capability: null, selfOnly: true, control: "REFERRALS" },
   "player.referral.code.read":   { capability: null, control: "REFERRALS" },
   "player.consent.read":         { capability: null, selfOnly: true },

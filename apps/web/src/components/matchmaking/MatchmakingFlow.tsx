@@ -35,12 +35,12 @@ import type { StakeChoice } from "@/components/play/StakeSelect";
 import styles from "./MatchmakingFlow.module.css";
 
 type Ticket = { id: string; game_id: string; status: string; duel_id: string | null; enqueued_at: string } | null;
-type Duel = { id: string; game_id: string; seat_0: string; seat_1: string };
+type Duel = { id: string; game_id: string; seat_0: string; seat_1: string; seat_2?: string; seat_3?: string };
 type OpponentInfo = { id: string; handle: string; avatarUrl?: string | null; globalSkill?: number | null; exp?: { level: number } };
 
 const GAME_NAME_KEY: Record<string, string> = { chess: "chess", "speed-math": "speed_math" };
 
-export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: StakeChoice }) {
+export function MatchmakingFlow({ gameId, stake, mode }: { gameId: string; stake?: StakeChoice; mode?: string }) {
   const { player } = useAuth();
   const { openPopup } = useAuthPopup();
   const { t, locale } = useI18n();
@@ -84,6 +84,7 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
 
         const res = await post<{ ticketId?: string }>("/v1/matchmaking/tickets", {
           gameId,
+          ...(mode ? { mode } : {}),
           ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor, asset: stake.asset } : {}),
         });
         if (res?.ticketId) {
@@ -110,9 +111,13 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
   // Poll for a match while waiting.
   useEffect(() => {
     if (phase !== "waiting") return;
+    let timer: NodeJS.Timeout;
     const started = Date.now();
-    const timer = setInterval(async () => {
+    
+    const poll = async () => {
+      if (cancelledRef.current || phase !== "waiting") return;
       setElapsedSec(Math.floor((Date.now() - started) / 1000));
+      
       try {
         const url = ticketIdRef.current
           ? `/v1/matchmaking/status?ticketId=${encodeURIComponent(ticketIdRef.current)}`
@@ -123,21 +128,30 @@ export function MatchmakingFlow({ gameId, stake }: { gameId: string; stake?: Sta
           ticketIdRef.current = String(ticket.id);
         }
         if (ticket?.status === "MATCHED" && ticket.duel_id) {
-          clearInterval(timer);
-          setDuelId(ticket.duel_id);
+          // Do not stop polling until we have successfully fetched the opponent info.
+          // In distributed environments, duel record might not be immediately available.
           const duel = await get<Duel>(`/v1/duels/${ticket.duel_id}`);
           const opponentId = duel.seat_0 === player?.id ? duel.seat_1 : duel.seat_0;
           const info = await get<OpponentInfo>(`/v1/players/${opponentId}`);
           if (!cancelledRef.current) {
+            setDuelId(ticket.duel_id);
             setOpponent(info);
             setPhase("matched");
+            return; // Stop polling on success
           }
         }
       } catch {
         // A transient poll failure is not fatal -- try again next tick.
       }
-    }, 1000);
-    return () => clearInterval(timer);
+      
+      // Schedule next poll
+      if (!cancelledRef.current && phase === "waiting") {
+        timer = setTimeout(poll, 1000);
+      }
+    };
+    
+    timer = setTimeout(poll, 1000);
+    return () => clearTimeout(timer);
   }, [phase, player?.id]);
 
   // "Matched" reveal, then countdown.

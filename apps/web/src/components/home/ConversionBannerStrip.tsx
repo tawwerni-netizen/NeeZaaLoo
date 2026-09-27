@@ -120,7 +120,7 @@ const MAIN_BANNERS: LocalizedBanner[] = [
   },
   {
     id: "tournaments",
-    img: "/images/banners/banner-tournaments.jpg",
+    img: "/images/banners/tournament-banner-1.jpg",
     href: "/tournaments",
     tag: {
       ar: "🌍 بطولات ضخمة",

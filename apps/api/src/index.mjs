@@ -58,12 +58,14 @@ import { createMasteryService } from "../../../packages/mastery/src/service.mjs"
 import { createStreakService } from "../../../packages/engagement/src/streaks.mjs";
 import { createDailyChallengeService } from "../../../packages/engagement/src/daily-challenges.mjs";
 import { createRecommendationService } from "../../../packages/engagement/src/recommendations.mjs";
+import { createSeasonService } from "../../../packages/engagement/src/seasons.mjs";
 import { ChessPlugin } from "../../../packages/game-chess/src/plugin.mjs";
 import { SpeedMathPlugin } from "../../../packages/game-speed-math/src/plugin.mjs";
 import { CheckersPlugin } from "../../../packages/game-checkers/src/plugin.mjs";
 import { ConnectFourPlugin } from "../../../packages/game-connect-four/src/plugin.mjs";
 import { XOPlugin } from "../../../packages/game-xo/src/plugin.mjs";
 import { DominoesPlugin } from "../../../packages/game-dominoes/src/plugin.mjs";
+import { LudoPlugin } from "../../../packages/game-ludo/src/plugin.mjs";
 import { BackgammonPlugin } from "../../../packages/game-backgammon/src/plugin.mjs";
 import { SeegaPlugin } from "../../../packages/game-seega/src/plugin.mjs";
 import { ReversiPlugin } from "../../../packages/game-reversi/src/plugin.mjs";
@@ -77,6 +79,7 @@ import { createMessageService } from "../../../packages/chat/src/messages.mjs";
 import { createReportService } from "../../../packages/chat/src/reports.mjs";
 import { createReferralService } from "../../../packages/referral/src/index.mjs";
 import { createConsentService } from "../../../packages/compliance/src/consent.mjs";
+import { createStoreService } from "../../../packages/store/src/service.mjs";
 import { createPgBus } from "../../../packages/realtime/src/bus.mjs";
 import { createEmailService, createConsoleEmailProvider, createMockEmailProvider, createSmtpEmailProvider } from "../../../packages/email/src/index.mjs";
 import { createApi } from "../../../packages/api/src/server.mjs";
@@ -249,11 +252,12 @@ async function main() {
   const streakService = createStreakService(db);
   const dailyChallenges = createDailyChallengeService(db);
   const recommendations = createRecommendationService(db, masteryService);
+  const seasons = createSeasonService(db);
   const gamePlugins = new Map([
     ["chess", ChessPlugin], ["speed-math", SpeedMathPlugin],
     ["checkers", CheckersPlugin], ["connect-four", ConnectFourPlugin],
     ["xo", XOPlugin], ["dominoes", DominoesPlugin], ["backgammon", BackgammonPlugin],
-    ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin],
+    ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin], ["ludo", LudoPlugin],
   ]);
   const profile = createProfileService(db, {
     nicknameService: createNicknameService(db),
@@ -358,13 +362,19 @@ async function main() {
   const referrals = createReferralService(db);
   const consent = createConsentService(db);
 
+  const storeSvc = createStoreService(db, {
+    awardFrame: frameService.award,
+    awardBadge: badgeService.award,
+    purchasePremium: seasons.purchasePremium
+  });
+
   const api = createApi({
     db, auth, settlement, tournament, globalSkill, reconciliation, rbac,
     emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
     googleOAuth, googleFrontendOrigin: process.env.GOOGLE_FRONTEND_ORIGIN || "https://nizalo.com",
     profile, support, ticketNotifications, chat, progression,
-    mastery: masteryService, streaks: streakService, dailyChallenges, recommendations, frames: frameService,
-    rails, railHealth, localPayments, referrals, consent,
+    mastery: masteryService, streaks: streakService, dailyChallenges, recommendations, seasons, frames: frameService,
+    rails, railHealth, localPayments, referrals, consent, storeSvc,
     paymentSvc, paymentProvider: provider,
     rateLimit: { capacity: Number(process.env.RATE_LIMIT_CAPACITY || 100), refillPerSecond: Number(process.env.RATE_LIMIT_REFILL || 20) },
     sensitiveRateLimits: {

@@ -60,6 +60,8 @@ export function GameModes() {
               </div>
             );
           })}
+
+
           <div className={styles.arenaCard}>
             <div className={styles.arenaThumbnailWrapper}>
               <picture style={{ width: "100%", height: "100%", display: "block" }}>

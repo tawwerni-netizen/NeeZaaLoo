@@ -42,6 +42,8 @@ export function Header() {
     { href: "/games", label: t("nav.games"), icon: "🎲" },
     { href: "/tournaments", label: t("nav.tournaments"), icon: "🏆" },
     { href: "/clans", label: t("nav.clans"), icon: "🛡️" },
+    { href: "/store", label: t("nav.store") || "Store", icon: "🛒" },
+    { href: "/battle-pass", label: t("nav.battle_pass") || "Seasons", icon: "🎟️" },
     { href: "/rank", label: t("nav.rank"), icon: "👑" },
     { href: "/wallet", label: t("nav.wallet"), icon: "💰" },
   ];

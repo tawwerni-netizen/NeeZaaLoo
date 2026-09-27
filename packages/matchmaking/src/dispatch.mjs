@@ -59,7 +59,7 @@ export function createDispatchWorker(db, {
 
     const paired = [];
     for (let i = 0; i < maxPairingsPerPool; i++) {
-      const { initialState, seed } = spawn();
+      const { initialState, seed } = spawn(pool);
       const res = await mm.pair({
         gameId: pool.gameId,
         mode: pool.mode,

@@ -138,6 +138,8 @@ export function DuelShell({ duelId }: { duelId: string }) {
           game_id?: string;
           seat_0?: string;
           seat_1?: string;
+          seat_2?: string;
+          seat_3?: string;
           status?: string;
           result?: string | null;
           termination_reason?: string | null;
@@ -147,7 +149,12 @@ export function DuelShell({ duelId }: { duelId: string }) {
         );
         if (!cancelled && d) {
           if (d.game_id) setGameId((prev) => prev ?? d.game_id!);
-          if (d.seat_0 && d.seat_1) setPlayers((prev) => prev ?? [d.seat_0!, d.seat_1!]);
+          if (d.seat_0 && d.seat_1) {
+            const p = [d.seat_0!, d.seat_1!];
+            if (d.seat_2) p.push(d.seat_2!);
+            if (d.seat_3) p.push(d.seat_3!);
+            setPlayers((prev) => prev ?? p);
+          }
           if (d.status === "COMPLETED" || d.status === "SETTLED") {
             setCompletedInfo({
               completed: true,
@@ -365,6 +372,12 @@ export function DuelShell({ duelId }: { duelId: string }) {
           />
         ) : plugin && view ? (
           <div className={styles.duelArena}>
+            {gameId && (
+              <div 
+                className={styles.duelArenaBg}
+                style={{ backgroundImage: `url(/images/games/${gameId.replace(/_/g, "-")}-hero.jpg)` }}
+              />
+            )}
             <div className={styles.vsHeader}>
               {players && (mySeat !== null ? (
                 <PlayerStrip

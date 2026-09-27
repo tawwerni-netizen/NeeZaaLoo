@@ -138,7 +138,7 @@
 
 [dir="rtl"] .bannerTitle {
   writing-mode: vertical-rl;
-  transform: none;
+  transform: rotate(180deg);
 }
 
 .accordionItemActive .bannerTitle {

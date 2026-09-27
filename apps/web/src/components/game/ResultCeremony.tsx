@@ -48,20 +48,32 @@ export function ResultCeremony({
 
 
       const frame = () => {
+        // Left Cannon
         confetti({
-          particleCount: 5,
+          particleCount: 8,
           angle: 60,
-          spread: 55,
+          spread: 60,
           origin: { x: 0 },
-          colors: ['#22c55e', '#fbbf24', '#3b82f6']
+          colors: ['#22d3ee', '#fbbf24', '#d946ef', '#FFD700']
         });
+        // Right Cannon
         confetti({
-          particleCount: 5,
+          particleCount: 8,
           angle: 120,
-          spread: 55,
+          spread: 60,
           origin: { x: 1 },
-          colors: ['#22c55e', '#fbbf24', '#3b82f6']
+          colors: ['#22d3ee', '#fbbf24', '#d946ef', '#FFD700']
         });
+        
+        // Occasional center burst for extra dopamine
+        if (Math.random() > 0.85) {
+           confetti({
+            particleCount: 30,
+            spread: 100,
+            origin: { y: 0.6 },
+            colors: ['#FFD700', '#fbbf24', '#ffffff']
+          });
+        }
 
         if (Date.now() < end) {
           requestAnimationFrame(frame);
@@ -85,7 +97,7 @@ export function ResultCeremony({
   }, [outcome, isSpectator]);
 
   return (
-    <div className={[styles.card, outcome ? styles[`outcome-${outcome}`] : ""].join(" ")}>
+    <div className={[styles.card, outcome ? styles[`outcome-${outcome}`] : ""].join(" ")} data-game={gameId}>
       {/* Victory Laurel Wreath for WIN */}
       {!isSpectator && outcome === "win" && (
         <motion.div

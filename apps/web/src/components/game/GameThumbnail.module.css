@@ -13,10 +13,33 @@
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
 }
 
+.thumbnailWrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-25deg);
+  transition: none;
+  z-index: 10;
+  pointer-events: none;
+}
+
 .thumbnailWrap:hover {
-  transform: translateY(-3px) scale(1.01);
-  border-color: rgba(255, 215, 0, 0.45);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(255, 215, 0, 0.15);
+  transform: translateY(-5px) scale(1.02);
+  border-color: rgba(255, 215, 0, 1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 45px rgba(255, 215, 0, 0.6), inset 0 0 25px rgba(255, 215, 0, 0.3);
+}
+
+.thumbnailWrap:hover::after {
+  animation: shinySweep 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes shinySweep {
+  0% { left: -100%; }
+  100% { left: 200%; }
 }
 
 .bgArt {
@@ -189,3 +212,4 @@
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.8); }
 }
+

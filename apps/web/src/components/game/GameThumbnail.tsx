@@ -32,6 +32,7 @@ const SUPPORTED_GAMES = new Set([
   "seega",
   "reversi",
   "gomoku",
+  "ludo",
 ]);
 
 export function GameThumbnail({

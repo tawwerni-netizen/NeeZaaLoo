@@ -47,14 +47,15 @@
 
 .tableFelt {
   position: relative;
-  background: radial-gradient(ellipse at 50% 40%, #155747 0%, #0c3329 100%);
+  background: radial-gradient(ellipse at 50% 40%, #050011 0%, #000000 100%);
   border-radius: var(--nz-radius-xl);
   padding: var(--nz-space-6) var(--nz-space-4);
-  border: 4px solid #2d1d11;
+  border: 4px solid #ff00ff;
   box-shadow: 
     0 12px 0 #130a04,
-    0 24px 45px rgba(0, 0, 0, 0.7),
-    inset 0 0 30px rgba(0, 0, 0, 0.6);
+    0 24px 45px rgba(0, 0, 0, 0.9),
+    inset 0 0 30px rgba(255, 0, 255, 0.4),
+    0 0 40px rgba(255, 0, 255, 0.5);
 }
 
 .lineViewport {
@@ -85,12 +86,13 @@
 .tile3d {
   position: relative;
   border-radius: 6px;
-  background: linear-gradient(145deg, #ffffff 0%, #f4f0e6 60%, #ded7c5 100%);
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: linear-gradient(145deg, #ffffff 0%, #e0ffff 60%, #aeeeee 100%);
+  border: 2px solid #00ffff;
   box-shadow: 
-    0 4px 0 #b3a992,
-    0 8px 12px rgba(0, 0, 0, 0.45),
-    inset 0 1px 1px rgba(255, 255, 255, 0.9);
+    0 4px 0 #008888,
+    0 8px 12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    0 0 15px rgba(0, 255, 255, 0.3);
   transition: all var(--nz-dur-fast) var(--nz-ease-out);
   user-select: none;
 }
@@ -148,9 +150,11 @@
 
 .glow {
   box-shadow: 
-    0 0 0 3px var(--nz-brand-orange),
+    0 0 0 3px #ffea00,
     0 6px 0 #b3a992,
-    0 12px 20px rgba(255, 90, 43, 0.5) !important;
+    0 12px 30px rgba(255, 234, 0, 0.8),
+    0 0 40px rgba(255, 234, 0, 0.5) !important;
+  z-index: 10;
 }
 
 .endZone {
@@ -159,19 +163,17 @@
   transform: translateY(-50%) translateZ(30px);
   padding: var(--nz-space-3) var(--nz-space-4);
   border-radius: var(--nz-radius-pill);
-  border: 2px solid var(--nz-brand-orange);
-  background: rgba(255, 90, 43, 0.4);
+  border: 2px solid #00ffcc;
+  background: rgba(0, 255, 204, 0.2);
   color: #fff;
   font-size: var(--nz-text-sm);
-  font-weight: 700;
+  font-weight: 900;
   cursor: pointer;
   backdrop-filter: blur(8px);
-  box-shadow: 0 0 20px rgba(255, 90, 43, 0.7);
-  animation: pulseZone 1.2s infinite ease-in-out;
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.9), inset 0 0 10px rgba(0, 255, 204, 0.5);
+  animation: pulseZoneArcade 0.8s infinite alternate ease-in-out;
   z-index: 100;
   pointer-events: auto;
-  user-select: none;
-  touch-action: manipulation;
 }
 
 @keyframes pulseZone {
@@ -194,13 +196,13 @@
   display: flex;
   gap: var(--nz-space-3);
   padding: var(--nz-space-4);
-  background: linear-gradient(145deg, #2a1b10 0%, #170d06 100%);
+  background: linear-gradient(145deg, #110022 0%, #050011 100%);
   border-radius: var(--nz-radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 3px solid #ff00ff;
   box-shadow: 
     0 8px 0 #0c0703,
-    0 16px 28px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 16px 28px rgba(0, 0, 0, 0.8),
+    inset 0 0 20px rgba(255, 0, 255, 0.4);
   overflow-x: auto;
 }
 
@@ -234,9 +236,66 @@
 
 @media (max-width: 640px) {
   .perspective { transform: none !important; }
-  .tableFelt { padding: 12px 8px; border-width: 2px; }
+  .tableFelt {
+  position: relative;
+  background: radial-gradient(ellipse at 50% 40%, #050011 0%, #000000 100%);
+  border-radius: var(--nz-radius-xl);
+  padding: var(--nz-space-6) var(--nz-space-4);
+  border: 4px solid #ff00ff;
+  box-shadow: 
+    0 12px 0 #130a04,
+    0 24px 45px rgba(0, 0, 0, 0.9),
+    inset 0 0 30px rgba(255, 0, 255, 0.4),
+    0 0 40px rgba(255, 0, 255, 0.5);
+}
   .lineViewport { min-height: 110px; }
-  .handTrayBevel { padding: 8px 10px; gap: 8px; }
-  .endZone { padding: 6px 12px; font-size: 12px; }
+  .handTrayBevel {
+  display: flex;
+  gap: var(--nz-space-3);
+  padding: var(--nz-space-4);
+  background: linear-gradient(145deg, #110022 0%, #050011 100%);
+  border-radius: var(--nz-radius-xl);
+  border: 3px solid #ff00ff;
+  box-shadow: 
+    0 8px 0 #0c0703,
+    0 16px 28px rgba(0, 0, 0, 0.8),
+    inset 0 0 20px rgba(255, 0, 255, 0.4);
+  overflow-x: auto;
+}
+  .endZone {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) translateZ(30px);
+  padding: var(--nz-space-3) var(--nz-space-4);
+  border-radius: var(--nz-radius-pill);
+  border: 2px solid #00ffcc;
+  background: rgba(0, 255, 204, 0.2);
+  color: #fff;
+  font-size: var(--nz-text-sm);
+  font-weight: 900;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.9), inset 0 0 10px rgba(0, 255, 204, 0.5);
+  animation: pulseZoneArcade 0.8s infinite alternate ease-in-out;
+  z-index: 100;
+  pointer-events: auto;
+}
 }
 
+
+@keyframes pulseZoneArcade { from { transform: translateY(-50%) translateZ(30px) scale(1); filter: brightness(1); } to { transform: translateY(-50%) translateZ(30px) scale(1.1); filter: brightness(1.5); } }
+.endZoneGlow {
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.8), inset 0 0 15px rgba(0, 255, 204, 0.4);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: glowPulseZone 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes glowPulseZone {
+  from { opacity: 0.3; transform: scale(1); }
+  to { opacity: 0.8; transform: scale(1.05); }
+}

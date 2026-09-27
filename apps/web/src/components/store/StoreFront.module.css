@@ -1,0 +1,376 @@
+.storeContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #1a0b2e 0%, #0d0614 100%);
+  color: #fff;
+  padding: 2rem;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Background animation */
+.storeContainer::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 0, 128, 0.05) 0%, transparent 40%);
+  animation: rotateBg 30s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes rotateBg {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.header {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 3rem;
+}
+
+.headerGlow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 100px;
+  background: rgba(255, 0, 128, 0.2);
+  filter: blur(50px);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  margin: 0;
+  background: linear-gradient(135deg, #ff007a, #7000ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(255, 0, 128, 0.3);
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #a898c0;
+  margin-top: 0.5rem;
+}
+
+.balanceWidget {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(20, 10, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem 1.5rem;
+  border-radius: 30px;
+  margin-top: 1.5rem;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+.balanceIcon {
+  font-size: 1.5rem;
+}
+
+.balanceAmount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.addFundsBtn {
+  background: linear-gradient(135deg, #00ff88, #00b3ff);
+  color: #000;
+  text-decoration: none;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.addFundsBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+}
+
+.navTabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.tabBtn {
+  background: rgba(30, 15, 45, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  backdrop-filter: blur(10px);
+}
+
+.tabBtn:hover {
+  background: rgba(60, 30, 90, 0.8);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.activeTab {
+  background: linear-gradient(135deg, #7000ff, #ff007a);
+  border-color: transparent;
+  box-shadow: 0 0 20px rgba(112, 0, 255, 0.4);
+}
+
+.contentArea {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.card {
+  background: rgba(20, 10, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  border-color: rgba(255, 0, 128, 0.3);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 0, 128, 0.2);
+}
+
+.popularCard {
+  border-color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+}
+
+.popularBadge {
+  position: absolute;
+  top: -12px;
+  background: linear-gradient(90deg, #ff8a00, #e52e71);
+  padding: 0.3rem 1rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  box-shadow: 0 5px 15px rgba(229, 46, 113, 0.4);
+}
+
+.coinIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
+
+.coinAmount {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.bonusAmount {
+  color: #00ff88;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.buyBtnUsdt {
+  margin-top: auto;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #00b3ff, #00ff88);
+  border: none;
+  border-radius: 12px;
+  color: #000;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.buyBtnUsdt:hover:not(:disabled) {
+  filter: brightness(1.2);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+}
+
+.buyBtnUsdt:disabled {
+  background: #333;
+  color: #888;
+  cursor: not-allowed;
+}
+
+/* Cosmetics */
+.cosmeticPreview {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+}
+
+.cosmeticName {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.cosmeticType {
+  font-size: 0.8rem;
+  color: #888;
+  letter-spacing: 2px;
+  margin-bottom: 1.5rem;
+}
+
+.buyBtnCoin {
+  margin-top: auto;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #ff007a, #7000ff);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.buyBtnCoin:hover:not(:disabled) {
+  filter: brightness(1.2);
+  box-shadow: 0 0 20px rgba(255, 0, 128, 0.4);
+}
+
+.buyBtnCoin:disabled {
+  background: #333;
+  color: #888;
+  cursor: not-allowed;
+}
+
+/* Pass */
+.passContainer {
+  background: rgba(30, 10, 50, 0.8);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 30px;
+  padding: 4rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.passGlow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(138, 43, 226, 0.2) 0%, transparent 70%);
+  z-index: -1;
+}
+
+.passIcon {
+  font-size: 6rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
+}
+
+.passTitle {
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(to right, #00b3ff, #ff007a, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.passDesc {
+  font-size: 1.2rem;
+  color: #ccc;
+  margin-bottom: 2rem;
+}
+
+.passPerks {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto 3rem auto;
+  max-width: 400px;
+  text-align: left;
+}
+
+.passPerks li {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1rem;
+  border-radius: 12px;
+  border-left: 4px solid #ff007a;
+}
+
+.passBuyBtn {
+  padding: 1.2rem 3rem;
+  background: linear-gradient(90deg, #ff007a, #7000ff);
+  border: none;
+  border-radius: 30px;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(255, 0, 128, 0.3);
+}
+
+.passBuyBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 15px 30px rgba(255, 0, 128, 0.5);
+}
+
+.passBuyBtn:disabled {
+  background: #333;
+  color: #888;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .title { font-size: 2.5rem; }
+  .passTitle { font-size: 2rem; }
+  .passContainer { padding: 2rem; }
+  .navTabs { flex-direction: column; gap: 0.5rem; }
+}

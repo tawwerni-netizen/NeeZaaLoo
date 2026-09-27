@@ -24,10 +24,19 @@ const nextConfig = {
   poweredByHeader: false,
   async rewrites() {
     const apiTarget = process.env.API_INTERNAL_URL || "http://127.0.0.1:4000";
+    const gatewayTarget = process.env.GATEWAY_INTERNAL_URL || "http://127.0.0.1:3010";
     return [
       {
         source: "/v1/:path*",
         destination: `${apiTarget}/v1/:path*`,
+      },
+      {
+        source: "/gateway/:path*",
+        destination: `${gatewayTarget}/gateway/:path*`,
+      },
+      {
+        source: "/gateway",
+        destination: `${gatewayTarget}/gateway`,
       },
     ];
   },

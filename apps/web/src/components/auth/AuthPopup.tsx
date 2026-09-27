@@ -29,7 +29,7 @@ import { Logo } from "@/components/Logo";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthPopup } from "@/lib/auth-popup-context";
 import { useI18n } from "@/lib/i18n/context";
-import { get, ApiError } from "@/lib/api";
+import { get, post, setTokens, ApiError } from "@/lib/api";
 import { transition } from "@/lib/motion";
 import { authErrorKey } from "@/components/auth/error-messages";
 import { GoogleButton } from "./GoogleButton";
@@ -179,13 +179,30 @@ export function AuthPopup() {
             </div>
 
             <div className={styles.options}>
+              <button
+                type="button"
+                className={`${styles.option} ${styles.optionPrimary}`}
+                onClick={async () => {
+                  try {
+                    const guestRes = await post<{ accessToken: string; refreshToken: string }>("/v1/auth/guest", {});
+                    setTokens(guestRes.accessToken, guestRes.refreshToken, true);
+                    closePopup();
+                    window.location.reload();
+                  } catch (e) {
+                    // ignore
+                  }
+                }}
+              >
+                <span className={styles.optionLabel}>{locale === "ar" ? "المتابعة كزائر" : "Continue as Guest"}</span>
+                <span className={styles.optionBody}>{locale === "ar" ? "ابدأ اللعب فوراً بدون حساب" : "Start playing instantly without an account"}</span>
+              </button>
+              <LocaleLink href="/register" className={styles.option} onClick={closePopup}>
+                <span className={styles.optionLabel}>{t("authPopup.create_account")}</span>
+                <span className={styles.optionBody}>{t("authPopup.create_account_body")}</span>
+              </LocaleLink>
               <LocaleLink href="/login" className={styles.option} onClick={closePopup}>
                 <span className={styles.optionLabel}>{t("authPopup.sign_in")}</span>
                 <span className={styles.optionBody}>{t("authPopup.sign_in_body")}</span>
-              </LocaleLink>
-              <LocaleLink href="/register" className={`${styles.option} ${styles.optionPrimary}`} onClick={closePopup}>
-                <span className={styles.optionLabel}>{t("authPopup.create_account")}</span>
-                <span className={styles.optionBody}>{t("authPopup.create_account_body")}</span>
               </LocaleLink>
             </div>
 

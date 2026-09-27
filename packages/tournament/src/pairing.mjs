@@ -87,12 +87,16 @@ export function buildFirstRound(players) {
  */
 export function buildNextRound(previousRoundWinners) {
   const bySlot = new Map(previousRoundWinners.map((w) => [w.slot, w.winner]));
-  const slots = [...bySlot.keys()].sort((a, b) => a - b);
+  if (bySlot.size === 0) return [];
+  const maxSlot = Math.max(...bySlot.keys());
+  const nextRoundSlots = Math.floor(maxSlot / 2) + 1;
   const pairings = [];
-  for (let i = 0; i < slots.length; i += 2) {
-    const a = bySlot.get(slots[i]);
-    const b = bySlot.get(slots[i + 1]);
-    pairings.push({ slot: i / 2, seat0: a, seat1: b ?? null });
+  for (let i = 0; i < nextRoundSlots; i++) {
+    let a = bySlot.get(i * 2) || null;
+    let b = bySlot.get(i * 2 + 1) || null;
+    if (!a && !b) continue; // Both branches died
+    if (!a) { a = b; b = null; }
+    pairings.push({ slot: i, seat0: a, seat1: b });
   }
   return pairings;
 }

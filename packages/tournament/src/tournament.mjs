@@ -42,7 +42,7 @@ export function createTournamentService(db, { now = () => Date.now(), emailServi
       capacity, minPlayers = 2, timeControl, swissRounds = null,
       registrationClosesAt, prizeStructure = [], createdBy,
       title = null, description = null, eligibility = {}, visibility = "PUBLIC",
-      scheduledStartsAt = null,
+      scheduledStartsAt = null, organizerRakeBps = 0,
     }) {
       const id = `trn_${randomUUID()}`;
       // Snapshotted here, not read live at round-creation time: a tournament
@@ -74,27 +74,27 @@ export function createTournamentService(db, { now = () => Date.now(), emailServi
               time_control, swiss_rounds, registration_closes_at, prize_structure, created_by,
               title, description, ruleset_version, eligibility, visibility, scheduled_starts_at,
               priced_rake_bps, priced_economy_rule_id, priced_economy_rule_version,
-              priced_min_rake_minor, priced_max_rake_minor, priced_at)
+              priced_min_rake_minor, priced_max_rake_minor, priced_at, organizer_rake_bps)
            VALUES ($1,$2,$3::tournament_format,$4::entry_tier,$5,$6,$7,$8,$9::jsonb,$10,$11,$12::jsonb,$13,
-                   $14,$15,$16,$17::jsonb,$18,$19,$20,$21,$22,$23,$24,now())`,
+                   $14,$15,$16,$17::jsonb,$18,$19,$20,$21,$22,$23,$24,now(),$25)`,
           [id, gameId, format, tier, String(entryFeeMinor), asset, capacity, minPlayers,
            JSON.stringify(timeControl), swissRounds, registrationClosesAt,
            JSON.stringify(prizeStructure), createdBy ?? null,
            title, description, rulesetVersion, JSON.stringify(eligibility), visibility, scheduledStartsAt,
-           r.rake_bps, r.rule_id, r.rule_version, r.min_rake_minor, r.max_rake_minor]
+           r.rake_bps, r.rule_id, r.rule_version, r.min_rake_minor, r.max_rake_minor, organizerRakeBps]
         );
       } else {
         await db.query(
           `INSERT INTO tournament
              (id, game_id, format, tier, entry_fee_minor, asset, capacity, min_players,
               time_control, swiss_rounds, registration_closes_at, prize_structure, created_by,
-              title, description, ruleset_version, eligibility, visibility, scheduled_starts_at)
+              title, description, ruleset_version, eligibility, visibility, scheduled_starts_at, organizer_rake_bps)
            VALUES ($1,$2,$3::tournament_format,$4::entry_tier,$5,$6,$7,$8,$9::jsonb,$10,$11,$12::jsonb,$13,
-                   $14,$15,$16,$17::jsonb,$18,$19)`,
+                   $14,$15,$16,$17::jsonb,$18,$19,$20)`,
           [id, gameId, format, tier, String(entryFeeMinor), asset, capacity, minPlayers,
            JSON.stringify(timeControl), swissRounds, registrationClosesAt,
            JSON.stringify(prizeStructure), createdBy ?? null,
-           title, description, rulesetVersion, JSON.stringify(eligibility), visibility, scheduledStartsAt]
+           title, description, rulesetVersion, JSON.stringify(eligibility), visibility, scheduledStartsAt, organizerRakeBps]
         );
       }
       await audit(db, id, "CREATED", "SYSTEM", null, { format, tier, capacity });
@@ -589,7 +589,8 @@ export function createTournamentService(db, { now = () => Date.now(), emailServi
         const t = await tx.query(
           `SELECT tier, entry_fee_minor::text AS fee, asset, game_id, prize_structure, status,
                   priced_rake_bps, priced_min_rake_minor::text AS priced_min_rake_minor,
-                  priced_max_rake_minor::text AS priced_max_rake_minor
+                  priced_max_rake_minor::text AS priced_max_rake_minor,
+                  organizer_rake_bps, created_by
              FROM tournament WHERE id=$1 FOR UPDATE`,
           [tournamentId]
         );
@@ -687,7 +688,10 @@ export function createTournamentService(db, { now = () => Date.now(), emailServi
           rank: p.rank,
           minor: (distributable * BigInt(p.bps)) / 10000n,
         }));
-        const allocated = prizes.reduce((a, p) => a + p.minor, 0n);
+        
+        const organizerRakeMinor = (distributable * BigInt(tour.organizer_rake_bps ?? 0)) / 10000n;
+        
+        const allocated = prizes.reduce((a, p) => a + p.minor, 0n) + organizerRakeMinor;
         // The indivisible remainder from a multi-way floor split has nowhere
         // fair to go -- there is no single "the player" to round in favour
         // of, unlike a one-to-one duel rake. It is folded into the platform
@@ -698,6 +702,9 @@ export function createTournamentService(db, { now = () => Date.now(), emailServi
         const legs = [];
         for (const e of entrants.rows) legs.push({ account: `user:${e.player_id}:locked`, amount: fee.toString() });
         if (actualRake > 0n) legs.push({ account: "platform:rake", amount: (-actualRake).toString() });
+        if (organizerRakeMinor > 0n && tour.created_by) {
+          legs.push({ account: `user:${tour.created_by}:available`, amount: (-organizerRakeMinor).toString() });
+        }
         const byRank = new Map(standings.map((s) => [s.rank, s.player_id]));
         for (const p of prizes) {
           if (p.minor <= 0n) continue;

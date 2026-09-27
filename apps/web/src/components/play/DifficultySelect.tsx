@@ -306,8 +306,42 @@ export function DifficultySelect({
           const isGuestLocked = d !== "EASY" && !player;
           const badgeText = cfg.badge ? getLang(cfg.badge) : null;
           const titleText = getLang(cfg.title, d);
-          const tierText = getLang(cfg.tier);
-          const descText = getLang(cfg.desc);
+          let tierText = getLang(cfg.tier);
+          let descText = getLang(cfg.desc);
+          let specs = cfg.specs;
+
+          if (plugin.id === "ludo") {
+            if (d === "EASY") {
+              tierText = isRtl ? "مبتدئ • Casual" : "Beginner • Casual";
+              descText = isRtl ? "خصم يعتمد على الحظ ويحرك قطعه عشوائياً. مثالي للاسترخاء والمتعة." : "An opponent relying on luck with random moves. Perfect for relaxation.";
+              specs = [
+                { icon: "🎲", text: { ar: "تحركات عشوائية تماماً", en: "Completely random moves", es: "", fr: "", hi: "", zh: "" } },
+                { icon: "🌱", text: { ar: "فرصة كبيرة للفوز", en: "High chance of winning", es: "", fr: "", hi: "", zh: "" } }
+              ];
+            } else if (d === "MEDIUM") {
+              tierText = isRtl ? "متوازن • Balanced" : "Balanced";
+              descText = isRtl ? "خصم يفكر قليلاً قبل التحرك. يحاول حماية قطعه وأكل قطعك إذا سنحت الفرصة." : "An opponent that thinks slightly before moving. Tries to protect its pieces and eat yours.";
+              specs = [
+                { icon: "🧠", text: { ar: "يلعب ببعض الاستراتيجية", en: "Plays with some strategy", es: "", fr: "", hi: "", zh: "" } },
+                { icon: "🎯", text: { ar: "ينتهز الفرص الواضحة", en: "Takes obvious chances", es: "", fr: "", hi: "", zh: "" } }
+              ];
+            } else if (d === "HARD") {
+              tierText = isRtl ? "استراتيجي • Strategic" : "Strategic";
+              descText = isRtl ? "خصم ذكي يخطط لخطواته ويسعى دائماً لإرجاعك للبداية." : "A smart opponent that plans moves and always tries to send you back to start.";
+              specs = [
+                { icon: "⚡", text: { ar: "لا يفوت فرصة لأكلك", en: "Never misses a chance to eat your pieces", es: "", fr: "", hi: "", zh: "" } },
+                { icon: "🛡️", text: { ar: "يؤمن قطعه بذكاء", en: "Secures its pieces smartly", es: "", fr: "", hi: "", zh: "" } }
+              ];
+            } else if (d === "EXPERT") {
+              tierText = isRtl ? "ملك اللودو • Ludo King" : "Ludo King";
+              descText = isRtl ? "لا يرحم! يستغل كل رقم في النرد بأفضل طريقة ممكنة. حظاً موفقاً!" : "Ruthless! Exploits every dice roll in the best possible way. Good luck!";
+              specs = [
+                { icon: "🔥", text: { ar: "أفضل استغلال للنرد", en: "Best dice exploitation", es: "", fr: "", hi: "", zh: "" } },
+                { icon: "👑", text: { ar: "محترف في عرقلة خصومه", en: "Pro at blocking opponents", es: "", fr: "", hi: "", zh: "" } }
+              ];
+            }
+          }
+
           const ctaText = getLang(cfg.cta, isRtl ? "اختر المستوى" : "Select");
 
           return (
@@ -356,7 +390,7 @@ export function DifficultySelect({
 
               {/* Feature bullet list */}
               <div className={styles.specsList}>
-                {cfg.specs.map((sp, idx) => (
+                {specs.map((sp, idx) => (
                   <div key={idx} className={styles.specItem}>
                     <span className={styles.specIcon}>{sp.icon}</span>
                     <span className={styles.specText}>{getLang(sp.text)}</span>

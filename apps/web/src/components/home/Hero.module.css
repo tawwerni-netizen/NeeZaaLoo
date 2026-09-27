@@ -237,6 +237,30 @@
               background 0.22s ease;
 }
 
+.quickStakeCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0) 60%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.quickStakeCard:hover::after {
+  opacity: 1;
+  animation: heroShinySweep 1.5s infinite linear;
+}
+
 .cardGlowLine {
   position: absolute;
   top: 0;
@@ -475,10 +499,39 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
+.showcaseCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 60%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 10;
+}
+
 .carouselContainer:hover .showcaseCard {
   transform: translateY(-4px) scale(1.005);
-  box-shadow: 0 35px 80px -12px rgba(0, 0, 0, 0.9), 0 0 65px rgba(255, 98, 50, 0.28);
-  border-color: rgba(245, 158, 11, 0.65);
+  box-shadow: 0 35px 80px -12px rgba(0, 0, 0, 0.9), 0 0 85px rgba(255, 98, 50, 0.5);
+  border-color: rgba(245, 158, 11, 0.9);
+}
+
+.carouselContainer:hover .showcaseCard::after {
+  opacity: 1;
+  animation: heroShinySweep 2s infinite linear;
+}
+
+@keyframes heroShinySweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .slidesStack {
@@ -968,8 +1021,32 @@
   cursor: default;
 }
 
+.metricCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0) 60%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 10;
+}
+
 .metricCard:hover {
   transform: translateY(-5px);
+}
+
+.metricCard:hover::after {
+  opacity: 1;
+  animation: heroShinySweep 1.5s infinite linear;
 }
 
 .metricCard:hover .cardGlowLine {

@@ -27,6 +27,7 @@ import { createStandingByWorker } from "../../../packages/matchmaking/src/standi
 import { createRadarSeederWorker } from "../../../packages/matchmaking/src/radar-seeder.mjs";
 import { createLiveArenaSimulator } from "../../../packages/matchmaking/src/live-arena-simulator.mjs";
 import { createBotMatchSimulator } from "../../../packages/matchmaking/src/bot-simulator.mjs";
+import { createLiquidityBotEngine } from "../../../packages/matchmaking/src/liquidity-bots.mjs";
 import { createPaymentService } from "../../../packages/payments/src/payments.mjs";
 import { createSandboxProvider } from "../../../packages/payments/src/provider.mjs";
 import { createOxapayProvider } from "../../../packages/payments/src/oxapay.mjs";
@@ -56,6 +57,7 @@ import { BackgammonPlugin } from "../../../packages/game-backgammon/src/plugin.m
 import { SeegaPlugin } from "../../../packages/game-seega/src/plugin.mjs";
 import { ReversiPlugin } from "../../../packages/game-reversi/src/plugin.mjs";
 import { GomokuPlugin } from "../../../packages/game-gomoku/src/plugin.mjs";
+import { LudoPlugin } from "../../../packages/game-ludo/src/plugin.mjs";
 import { createEmailService, createConsoleEmailProvider, createMockEmailProvider, createSmtpEmailProvider } from "../../../packages/email/src/index.mjs";
 import {
   createLogger, createMetricsRegistry, createConsoleSink, createStructuredLogSink,
@@ -97,7 +99,7 @@ async function main() {
     ["chess", ChessPlugin], ["speed-math", SpeedMathPlugin],
     ["checkers", CheckersPlugin], ["connect-four", ConnectFourPlugin],
     ["xo", XOPlugin], ["dominoes", DominoesPlugin], ["backgammon", BackgammonPlugin],
-    ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin],
+    ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin], ["ludo", LudoPlugin],
   ]);
   const settlement = createSettlementService(db);
   const store = createDuelStore(db, { emit: logger.emit });
@@ -284,6 +286,15 @@ async function main() {
     { intervalMs: botSimulatorIntervalMs }
   );
 
+  const liquidityBotEngine = createLiquidityBotEngine(db, mm, { 
+    waitThresholdMs: Number(process.env.LIQUIDITY_BOT_WAIT_MS || 15000) 
+  });
+  const liquidityBotIntervalMs = Number(process.env.LIQUIDITY_BOT_INTERVAL_MS || 5000);
+  const liquidityBotWorker = createTickLoop(
+    () => liquidityBotEngine.tick(),
+    { intervalMs: liquidityBotIntervalMs }
+  );
+
   const radarSeederIntervalMs = Number(process.env.RADAR_SEEDER_INTERVAL_MS || 5000);
   const radarSeederWorker = createTickLoop(
     createRadarSeederWorker(db, { emit: logger.emit }),
@@ -315,6 +326,7 @@ async function main() {
     workers: [
       { name: "matchmaking_dispatch", worker: dispatchWorker },
       { name: "standing_by_matchmaking", worker: standingByWorker, intervalMs: Number(process.env.STANDING_BY_INTERVAL_MS || 2500) },
+      { name: "liquidity_bots", worker: liquidityBotWorker, intervalMs: liquidityBotIntervalMs },
       { name: "bot_match_simulator", worker: botSimulatorWorker, intervalMs: botSimulatorIntervalMs },
       { name: "radar_seeder", worker: radarSeederWorker, intervalMs: radarSeederIntervalMs },
       { name: "live_arena_simulator", worker: liveArenaSimulatorWorker, intervalMs: liveArenaSimulatorIntervalMs },

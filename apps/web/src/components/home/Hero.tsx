@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
 import { transition } from "@/lib/motion";
@@ -11,6 +12,33 @@ import { listGames } from "@/lib/games";
 import { playCardHoverSound, playDifficultySelectSound } from "@/lib/game-audio";
 import { HeroParticles } from "./HeroParticles";
 import styles from "./Hero.module.css";
+
+const triggerDopamineExplosion = () => {
+  const duration = 1000;
+  const end = Date.now() + duration;
+
+  const frame = () => {
+    confetti({
+      particleCount: 8,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 },
+      colors: ['#FFD700', '#FFB800', '#FFEA00', '#00FFFF', '#FF00FF']
+    });
+    confetti({
+      particleCount: 8,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 },
+      colors: ['#FFD700', '#FFB800', '#FFEA00', '#00FFFF', '#FF00FF']
+    });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  };
+  frame();
+};
 
 const FEATURED_COUNT = 6;
 
@@ -85,6 +113,22 @@ type ShowcaseSlide = {
 };
 
 const SHOWCASE_SLIDES: ShowcaseSlide[] = [
+  {
+    id: "ludo",
+    gameId: "ludo",
+    image: "/images/hero-showcase/showcase-ludo-legends.jpg",
+    superAr: "لودو الأساطير",
+    superEn: "LUDO OF LEGENDS",
+    titleAr: "بطولة لودو الكبرى المباشرة",
+    titleEn: "Grand Ludo Live Championship",
+    metaAr: "4 لاعبين • تنافس استراتيجي عالي • جوائز ضخمة",
+    metaEn: "4 Players • High Tactical Competition • Massive Prizes",
+    badgeAr: "ميدان حي 24/7",
+    badgeEn: "LIVE ARENA 24/7",
+    tagAr: "العب لودو الآن ↗",
+    tagEn: "PLAY LUDO NOW ↗",
+    targetHref: "/play/ludo",
+  },
   {
     id: "chess",
     gameId: "chess",
@@ -320,7 +364,10 @@ export function Hero() {
             <LocaleLink
               href="/play"
               onMouseEnter={() => playCardHoverSound()}
-              onClick={() => playDifficultySelectSound("HARD")}
+              onClick={(e) => {
+                triggerDopamineExplosion();
+                playDifficultySelectSound("HARD");
+              }}
             >
               <Button variant="primary" className={styles.primaryBtn}>
                 <span style={{ marginInlineEnd: "8px" }}>⚔️</span>
@@ -383,7 +430,10 @@ export function Hero() {
                   href={`/play?stake=${qs.stake}&tier=CASH`}
                   className={`${styles.quickStakeCard} ${qs.themeClass} ${qs.popular ? styles.quickStakeCardPopular : ""}`}
                   onMouseEnter={() => playCardHoverSound()}
-                  onClick={() => playDifficultySelectSound(qs.soundLevel)}
+                  onClick={() => {
+                    triggerDopamineExplosion();
+                    playDifficultySelectSound(qs.soundLevel);
+                  }}
                   title={isRtl ? `بدء نزال بقيمة ${qs.stake} USDT` : `Start a ${qs.stake} USDT duel`}
                 >
                   <div className={styles.cardGlowLine} style={{ background: `linear-gradient(90deg, ${qs.accentColor}, transparent)` }} />

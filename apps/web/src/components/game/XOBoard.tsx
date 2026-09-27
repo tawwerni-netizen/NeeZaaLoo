@@ -105,8 +105,8 @@ export function XOBoard({ board, lastMove, legalCells, mySeat, canMove, onMove }
   return (
     <div className={styles.wrap}>
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
-        <div className={styles.chalkboardFrame} dir="ltr">
-          <div className={styles.chalkGrid} role="grid" aria-label={t("game.move_history")}>
+        <div className={styles.titaniumFrame} dir="ltr">
+          <div className={styles.board} role="grid" aria-label={t("game.move_history")}>
             {Array.from({ length: 9 }).map((_, cell) => {
               const mark = board[cell] ?? 0;
               const isLegal = legalCells.includes(cell);
@@ -123,7 +123,7 @@ export function XOBoard({ board, lastMove, legalCells, mySeat, canMove, onMove }
                   className={[
                     styles.cell,
                     isLegal && canMove ? styles.cellLegal : "",
-                    isWinning ? styles.cellWinning : "",
+                    isWinning ? styles.winningCell : "",
                   ].join(" ")}
                   disabled={!canMove || !isLegal}
                   onClick={() => {

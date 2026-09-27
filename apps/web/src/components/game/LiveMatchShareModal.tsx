@@ -92,8 +92,8 @@ export function LiveMatchShareModal({
   const [copied, setCopied] = useState(false);
 
   const shareUrl = useMemo(() => {
-    if (typeof window === "undefined") return `https://nizalo.com/${locale}/game/${duelId}`;
-    return `${window.location.origin}/${locale}/game/${duelId}`;
+    if (typeof window === "undefined") return `https://nizalo.com/${locale}/r/${duelId}`;
+    return `${window.location.origin}/${locale}/r/${duelId}`;
   }, [locale, duelId]);
 
   const displayName = gameName || gameId.toUpperCase();

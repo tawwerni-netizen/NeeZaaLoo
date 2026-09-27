@@ -75,6 +75,12 @@ export function UserMenu() {
               </LocaleLink>
             )}
 
+            {player.isOrganizer && (
+              <LocaleLink href="/organizer" className={styles.menuItem} onClick={() => setOpen(false)}>
+                🏆 {t("nav.organizer") || "Organizer Dashboard"}
+              </LocaleLink>
+            )}
+
             <div className={styles.divider} />
 
             <button

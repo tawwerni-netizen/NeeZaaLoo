@@ -71,7 +71,7 @@ export function createAuthService(db, {
 
   const svc = {
     /** Create an account. The password is never stored, logged, or echoed. */
-    async register({ playerId, handle, email = null, password, referralCode = null, termsAccepted = true, locale = "en", policyVersion = "1.0.0" }, ctx = {}) {
+    async register({ playerId, handle, email = null, password, referralCode = null, termsAccepted = true, locale = "en", policyVersion = "1.0.0", isGuest = false }, ctx = {}) {
       if (termsAccepted !== true) {
         return { ok: false, reason: AuthError.TERMS_ACCEPTANCE_REQUIRED };
       }
@@ -91,7 +91,7 @@ export function createAuthService(db, {
           if (emailCheck.rows.length) return { ok: false, reason: "EMAIL_TAKEN" };
         }
 
-        await tx.query("INSERT INTO player (id, handle, locale) VALUES ($1,$2,$3)", [playerId, handle, locale || "en"]);
+        await tx.query("INSERT INTO player (id, handle, locale, is_guest) VALUES ($1,$2,$3,$4)", [playerId, handle, locale || "en", isGuest]);
         await tx.query(
           "INSERT INTO credential (player_id, password_hash) VALUES ($1,$2)",
           [playerId, passwordHash]

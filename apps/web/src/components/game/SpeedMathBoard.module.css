@@ -22,14 +22,16 @@
   flex-direction: column;
   align-items: center;
   padding: var(--nz-space-3) var(--nz-space-4);
-  background: var(--nz-surface-1);
-  border: 1px solid var(--nz-line);
+  background: linear-gradient(180deg, #1a1a24 0%, #0a0a12 100%);
+  border: 2px solid #33334d;
   border-radius: var(--nz-radius-lg);
-  box-shadow: var(--nz-shadow-1);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.05);
+  transition: all 0.3s ease;
 }
 
 .podYou {
-  border-color: rgba(255, 90, 43, 0.4);
+  border-color: #ff8c00;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.6), 0 0 20px rgba(255, 140, 0, 0.4), inset 0 0 10px rgba(255, 140, 0, 0.2);
 }
 
 .podLabel {
@@ -49,16 +51,19 @@
 
 .streakFlame {
   position: absolute;
-  top: -10px;
-  right: -6px;
-  font-size: 11px;
-  font-weight: 700;
+  top: -12px;
+  right: -10px;
+  font-size: 13px;
+  font-weight: 900;
   color: #fff;
-  background: linear-gradient(135deg, #ff7a2b 0%, #e03818 100%);
-  padding: 2px 6px;
+  background: linear-gradient(135deg, #ffea00 0%, #ff2a00 100%);
+  padding: 4px 10px;
   border-radius: var(--nz-radius-pill);
-  box-shadow: 0 0 8px rgba(255, 90, 43, 0.8);
-  animation: flamePulse 0.8s infinite alternate ease-in-out;
+  box-shadow: 0 0 15px rgba(255, 42, 0, 0.9), 0 0 30px rgba(255, 234, 0, 0.6);
+  border: 1px solid #fff;
+  animation: flamePulseArcade 0.4s infinite alternate ease-in-out;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  transform-origin: center;
 }
 
 @keyframes flamePulse {
@@ -93,21 +98,23 @@
 .hologramCard {
   position: relative;
   width: 100%;
-  background: linear-gradient(145deg, #181d24 0%, #0d1014 100%);
-  border: 2px solid #2d3748;
+  background: linear-gradient(145deg, #180024 0%, #0d0014 100%);
+  border: 3px solid #ff00ff;
   border-radius: var(--nz-radius-2xl);
   padding: var(--nz-space-8) var(--nz-space-6);
   box-shadow: 
-    0 12px 0 #080a0d,
+    0 12px 0 #0a000d,
     0 24px 45px rgba(0, 0, 0, 0.8),
     inset 0 1px 1px rgba(255, 255, 255, 0.15),
-    inset 0 0 30px rgba(0, 0, 0, 0.9);
+    inset 0 0 40px rgba(255, 0, 255, 0.4),
+    0 0 30px rgba(255, 0, 255, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--nz-space-6);
   overflow: hidden;
-  transition: all var(--nz-dur-fast) var(--nz-ease-out);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: hologramFloat 4s ease-in-out infinite;
 }
 
 .hologramScanline {
@@ -119,14 +126,17 @@
 }
 
 .correct {
-  border-color: var(--nz-win) !important;
-  box-shadow: 0 0 30px rgba(47, 191, 113, 0.5), inset 0 0 20px rgba(47, 191, 113, 0.3) !important;
+  border-color: #00ffcc !important;
+  box-shadow: 0 0 60px rgba(0, 255, 204, 0.8), inset 0 0 40px rgba(0, 255, 204, 0.6), 0 0 100px rgba(0, 255, 204, 0.4) !important;
+  background: linear-gradient(145deg, #002b22 0%, #001410 100%) !important;
+  animation: correctFlash 0.4s ease-out !important;
 }
 
 .incorrect {
-  border-color: var(--nz-loss) !important;
-  box-shadow: 0 0 30px rgba(229, 72, 77, 0.5), inset 0 0 20px rgba(229, 72, 77, 0.3) !important;
-  animation: shakeCard 0.3s ease-in-out;
+  border-color: #ff003c !important;
+  box-shadow: 0 0 60px rgba(255, 0, 60, 0.8), inset 0 0 40px rgba(255, 0, 60, 0.6) !important;
+  background: linear-gradient(145deg, #2b000a 0%, #140005 100%) !important;
+  animation: errorShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
 }
 
 @keyframes shakeCard {
@@ -140,10 +150,11 @@
   align-items: center;
   justify-content: center;
   gap: var(--nz-space-4);
-  font-size: clamp(38px, 9vw, 56px);
-  font-weight: 700;
-  color: #fff;
-  min-height: 70px;
+  font-size: clamp(48px, 11vw, 68px);
+  font-weight: 900;
+  color: #ffffff;
+  min-height: 80px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 0, 255, 0.4);
 }
 
 .operand {
@@ -151,9 +162,10 @@
 }
 
 .operatorBadge {
-  color: var(--nz-brand-orange);
-  text-shadow: 0 0 12px rgba(255, 90, 43, 0.8);
+  color: #ff00ff;
+  text-shadow: 0 0 15px rgba(255, 0, 255, 0.8), 0 0 30px rgba(255, 0, 255, 0.5);
   font-size: 0.9em;
+  animation: pulseOperator 1.5s infinite alternate;
 }
 
 .waiting {
@@ -172,21 +184,23 @@
 .answerInput {
   flex: 1;
   font-size: var(--nz-text-2xl);
-  font-weight: 700;
+  font-weight: 800;
   text-align: center;
   padding: var(--nz-space-3);
-  background: #090b0e;
-  border: 2px solid #2b3340;
+  background: #000;
+  border: 2px solid #ff00ff;
   border-radius: var(--nz-radius-lg);
   color: #fff;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9);
+  box-shadow: inset 0 0 15px rgba(255, 0, 255, 0.3), 0 0 15px rgba(255, 0, 255, 0.2);
   transition: all var(--nz-dur-fast) var(--nz-ease-out);
+  font-family: var(--nz-font-num);
 }
 
 .answerInput:focus {
   outline: none;
-  border-color: var(--nz-brand-orange);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(255, 90, 43, 0.5);
+  border-color: #00ffcc;
+  box-shadow: inset 0 0 20px rgba(0, 255, 204, 0.4), 0 0 25px rgba(0, 255, 204, 0.6);
+  color: #00ffcc;
 }
 
 .submitButton {
@@ -198,17 +212,18 @@
   font-size: 20px;
   font-weight: 700;
   border-radius: var(--nz-radius-lg);
-  background: var(--nz-brand-orange);
-  border: none;
+  background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+  border: 2px solid #fff3a0;
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255, 90, 43, 0.4);
+  box-shadow: 0 0 15px rgba(255, 140, 0, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.4);
   transition: all var(--nz-dur-fast) var(--nz-ease-out);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .submitButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 90, 43, 0.6);
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(255, 140, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 215, 0, 0.5);
 }
 
 .submitButton:disabled {
@@ -235,10 +250,69 @@
 
 @media (max-width: 640px) {
   .perspective { transform: none !important; }
-  .hologramCard { padding: 18px 14px; border-radius: var(--nz-radius-xl); }
-  .equation { font-size: clamp(30px, 8vw, 42px); min-height: 52px; }
-  .answerInput { font-size: 20px; padding: 10px; }
-  .submitButton { width: 46px; height: 46px; font-size: 18px; }
+  .hologramCard {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(145deg, #180024 0%, #0d0014 100%);
+  border: 3px solid #ff00ff;
+  border-radius: var(--nz-radius-2xl);
+  padding: var(--nz-space-8) var(--nz-space-6);
+  box-shadow: 
+    0 12px 0 #0a000d,
+    0 24px 45px rgba(0, 0, 0, 0.8),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    inset 0 0 40px rgba(255, 0, 255, 0.4),
+    0 0 30px rgba(255, 0, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-6);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: hologramFloat 4s ease-in-out infinite;
+}
+  .equation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nz-space-4);
+  font-size: clamp(48px, 11vw, 68px);
+  font-weight: 900;
+  color: #ffffff;
+  min-height: 80px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 0, 255, 0.4);
+}
+  .answerInput {
+  flex: 1;
+  font-size: var(--nz-text-2xl);
+  font-weight: 800;
+  text-align: center;
+  padding: var(--nz-space-3);
+  background: #000;
+  border: 2px solid #ff00ff;
+  border-radius: var(--nz-radius-lg);
+  color: #fff;
+  box-shadow: inset 0 0 15px rgba(255, 0, 255, 0.3), 0 0 15px rgba(255, 0, 255, 0.2);
+  transition: all var(--nz-dur-fast) var(--nz-ease-out);
+  font-family: var(--nz-font-num);
+}
+  .submitButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  font-size: 20px;
+  font-weight: 700;
+  border-radius: var(--nz-radius-lg);
+  background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+  border: 2px solid #fff3a0;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(255, 140, 0, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.4);
+  transition: all var(--nz-dur-fast) var(--nz-ease-out);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
 }
 
 /* ==========================================================================
@@ -380,3 +454,13 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+
+@keyframes hologramFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); box-shadow: 0 17px 0 #0a000d, 0 30px 50px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,0,255,0.6), 0 0 45px rgba(255,0,255,0.7); } }
+@keyframes correctFlash { 0% { transform: scale(1); filter: brightness(1); } 20% { transform: scale(1.05); filter: brightness(1.5); } 100% { transform: scale(1); filter: brightness(1); } }
+@keyframes errorShake { 10%, 90% { transform: translate3d(-4px, 0, 0); } 20%, 80% { transform: translate3d(6px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-8px, 0, 0); } 40%, 60% { transform: translate3d(8px, 0, 0); } }
+@keyframes flamePulseArcade { from { transform: scale(1) rotate(-3deg); filter: hue-rotate(-10deg) brightness(1.2); } to { transform: scale(1.2) rotate(3deg); filter: hue-rotate(10deg) brightness(1.5); } }
+@keyframes pulseOperator { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.1); opacity: 1; text-shadow: 0 0 25px rgba(255, 0, 255, 1), 0 0 50px rgba(255, 0, 255, 0.8); } }
+.podOpponent {
+  border-color: #ff0055;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.6), 0 0 20px rgba(255, 0, 85, 0.4), inset 0 0 10px rgba(255, 0, 85, 0.2);
+}

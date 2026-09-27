@@ -469,6 +469,7 @@ INSERT INTO game (id, display_name, plugin_version, is_live, cash_enabled) VALUE
 CREATE TABLE player (
   id         TEXT PRIMARY KEY,
   handle     TEXT NOT NULL UNIQUE,
+  is_organizer BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT player_handle_shape CHECK (handle ~ '^[A-Za-z0-9_-]{3,24}$')
 );
@@ -548,6 +549,8 @@ CREATE TABLE duel (
   pairing_key        TEXT        NOT NULL UNIQUE,
   seat_0             TEXT        NOT NULL REFERENCES player(id),  -- white, in chess
   seat_1             TEXT        NOT NULL REFERENCES player(id),
+  seat_2             TEXT        REFERENCES player(id),
+  seat_3             TEXT        REFERENCES player(id),
   tier               entry_tier  NOT NULL,
   stake_minor        BIGINT      NOT NULL DEFAULT 0,
   asset              TEXT,
@@ -566,7 +569,11 @@ CREATE TABLE duel (
   settled_at         TIMESTAMPTZ,
 
   -- Self-play is the simplest collusion vector there is. Close it structurally.
-  CONSTRAINT duel_distinct_players CHECK (seat_0 <> seat_1),
+  CONSTRAINT duel_distinct_players CHECK (
+    seat_0 <> seat_1
+    AND (seat_2 IS NULL OR (seat_2 <> seat_0 AND seat_2 <> seat_1))
+    AND (seat_3 IS NULL OR (seat_3 <> seat_0 AND seat_3 <> seat_1 AND seat_3 <> seat_2))
+  ),
   CONSTRAINT duel_completed_has_result
     CHECK (status NOT IN ('COMPLETED', 'SETTLED')
            OR (result IS NOT NULL AND termination_reason IS NOT NULL)),
@@ -623,7 +630,7 @@ CREATE FUNCTION mm_pair(
   p_initial     JSONB,
   p_time_control JSONB,
   p_seed        TEXT DEFAULT NULL
-) RETURNS TABLE (duel_id TEXT, seat_0 TEXT, seat_1 TEXT, created BOOLEAN)
+) RETURNS TABLE (duel_id TEXT, seat_0 TEXT, seat_1 TEXT, seat_2 TEXT, seat_3 TEXT, created BOOLEAN)
 LANGUAGE plpgsql AS $$
 DECLARE
   a            matchmaking_ticket;
@@ -679,15 +686,15 @@ BEGIN
   -- Idempotent: a retried pairing returns the duel it already made.
   SELECT d.id INTO v_existing FROM duel d WHERE d.pairing_key = v_pairing_key;
   IF v_existing IS NOT NULL THEN
-    RETURN QUERY SELECT v_existing, v_seat0, v_seat1, FALSE;
+    RETURN QUERY SELECT v_existing, v_seat0, v_seat1, v_seat2, v_seat3, FALSE;
     RETURN;
   END IF;
 
-  INSERT INTO duel (id, game_id, plugin_version, pairing_key, seat_0, seat_1,
+  INSERT INTO duel (id, game_id, plugin_version, pairing_key, seat_0, seat_1, seat_2, seat_3,
                     tier, stake_minor, asset, initial_state, seed, time_control, status)
-  SELECT p_duel_id, p_game_id, g.plugin_version, v_pairing_key, v_seat0, v_seat1,
+  SELECT p_duel_id, p_game_id, g.plugin_version, v_pairing_key, v_seat0, v_seat1, v_seat2, v_seat3,
          p_tier, p_stake_minor,
-         CASE WHEN p_tier = 'CASH' THEN 'USDT' ELSE NULL END::TEXT,
+         CASE WHEN p_tier = 'CASH' THEN p_asset ELSE NULL END::TEXT,
          p_initial, p_seed, p_time_control,
          -- A cash duel is RESERVED, not READY: entry fees must be locked in the
          -- ledger before play begins. Only a free duel is ready on creation.
@@ -698,7 +705,7 @@ BEGIN
      SET status = 'MATCHED', duel_id = p_duel_id
    WHERE id IN (a.id, b.id);
 
-  RETURN QUERY SELECT p_duel_id, v_seat0, v_seat1, TRUE;
+  RETURN QUERY SELECT p_duel_id, v_seat0, v_seat1, v_seat2, v_seat3, TRUE;
 END;
 $$;
 
@@ -2195,6 +2202,7 @@ CREATE TABLE tournament (
   completed_at           TIMESTAMPTZ,
   prize_structure        JSONB              NOT NULL DEFAULT '[]'::jsonb,  -- [{"rank":1,"bps":5000}, ...]
   created_by             TEXT,
+  organizer_rake_bps     INT                NOT NULL DEFAULT 0,
   created_at             TIMESTAMPTZ        NOT NULL DEFAULT now(),
 
   CONSTRAINT tournament_capacity_sane CHECK (capacity >= 2),
@@ -2204,7 +2212,7 @@ CREATE TABLE tournament (
     CHECK ((format = 'SWISS') = (swiss_rounds IS NOT NULL)),
   -- Prize shares are basis points of the pool and must not exceed 100%. They
   -- MAY total less (the remainder is rake, per the Economy Rules Engine).
-  CONSTRAINT tournament_prize_bps_sane CHECK (jsonb_bps_sum(prize_structure) <= 10000)
+  CONSTRAINT tournament_prize_bps_sane CHECK (jsonb_bps_sum(prize_structure) + organizer_rake_bps <= 10000)
 );
 
 CREATE INDEX tournament_open_idx ON tournament (registration_closes_at)
@@ -5433,3 +5441,68 @@ SET min_withdrawal_minor = 10000000,
     min_deposit_minor = 5000000,
     updated_at = now();
 
+- -   M i g r a t i o n   0 0 7 4 :   S e a s o n s   &   B a t t l e   P a s s  
+ - -   I n t r o d u c e s   a   B a t t l e   P a s s   s y s t e m   w h e r e   S e a s o n a l   E X P   i s   a c c u m u l a t e d   f r o m   d a i l y   c h a l l e n g e s  
+ - -   a n d   g a m e p l a y ,   u n l o c k i n g   F r e e   a n d   P r e m i u m   r e w a r d   t i e r s .  
+  
+ C R E A T E   T A B L E   s e a s o n   (  
+     i d                     T E X T   P R I M A R Y   K E Y ,  
+     n a m e                 T E X T   N O T   N U L L ,  
+     s t a r t s _ a t       T I M E S T A M P T Z   N O T   N U L L ,  
+     e n d s _ a t           T I M E S T A M P T Z   N O T   N U L L ,  
+     c r e a t e d _ a t     T I M E S T A M P T Z   N O T   N U L L   D E F A U L T   n o w ( ) ,  
+     C H E C K   ( e n d s _ a t   >   s t a r t s _ a t )  
+ ) ;  
+  
+ C R E A T E   T A B L E   b a t t l e _ p a s s _ t i e r   (  
+     s e a s o n _ i d                           T E X T   N O T   N U L L   R E F E R E N C E S   s e a s o n ( i d ) ,  
+     l e v e l                                   I N T   N O T   N U L L   C H E C K   ( l e v e l   >   0 ) ,  
+     r e q u i r e d _ e x p                     I N T   N O T   N U L L   C H E C K   ( r e q u i r e d _ e x p   >   0 ) ,  
+      
+     - -   F r e e   t r a c k  
+     f r e e _ r e w a r d _ t y p e             T E X T ,   - -   ' A S S E T '  
+     f r e e _ r e w a r d _ a s s e t           T E X T ,  
+     f r e e _ r e w a r d _ a m o u n t         B I G I N T ,  
+      
+     - -   P r e m i u m   t r a c k  
+     p r e m i u m _ r e w a r d _ t y p e       T E X T ,   - -   ' A S S E T '  
+     p r e m i u m _ r e w a r d _ a s s e t     T E X T ,  
+     p r e m i u m _ r e w a r d _ a m o u n t   B I G I N T ,  
+      
+     P R I M A R Y   K E Y   ( s e a s o n _ i d ,   l e v e l )  
+ ) ;  
+  
+ C R E A T E   T A B L E   b a t t l e _ p a s s _ p r e m i u m   (  
+     p l a y e r _ i d           T E X T   N O T   N U L L   R E F E R E N C E S   p l a y e r ( i d ) ,  
+     s e a s o n _ i d           T E X T   N O T   N U L L   R E F E R E N C E S   s e a s o n ( i d ) ,  
+     p u r c h a s e d _ a t     T I M E S T A M P T Z   N O T   N U L L   D E F A U L T   n o w ( ) ,  
+     P R I M A R Y   K E Y   ( p l a y e r _ i d ,   s e a s o n _ i d )  
+ ) ;  
+  
+ C R E A T E   T A B L E   b a t t l e _ p a s s _ c l a i m   (  
+     i d                     T E X T   P R I M A R Y   K E Y ,  
+     p l a y e r _ i d       T E X T   N O T   N U L L   R E F E R E N C E S   p l a y e r ( i d ) ,  
+     s e a s o n _ i d       T E X T   N O T   N U L L   R E F E R E N C E S   s e a s o n ( i d ) ,  
+     l e v e l               I N T   N O T   N U L L ,  
+     i s _ p r e m i u m     B O O L E A N   N O T   N U L L   D E F A U L T   F A L S E ,  
+     c l a i m e d _ a t     T I M E S T A M P T Z   N O T   N U L L   D E F A U L T   n o w ( ) ,  
+     U N I Q U E   ( p l a y e r _ i d ,   s e a s o n _ i d ,   l e v e l ,   i s _ p r e m i u m )  
+ ) ;  
+  
+ - -   P r e - s e e d   S e a s o n   1  
+ I N S E R T   I N T O   s e a s o n   ( i d ,   n a m e ,   s t a r t s _ a t ,   e n d s _ a t )  
+ V A L U E S   (  
+     ' s e a s o n _ 1 ' ,  
+     ' S e a s o n   1 :   L a u n c h ' ,  
+     n o w ( )   -   i n t e r v a l   ' 1   d a y ' ,  
+     n o w ( )   +   i n t e r v a l   ' 6 0   d a y s '  
+ ) ;  
+  
+ - -   P r e - s e e d   s o m e   t i e r s   f o r   S e a s o n   1  
+ I N S E R T   I N T O   b a t t l e _ p a s s _ t i e r   ( s e a s o n _ i d ,   l e v e l ,   r e q u i r e d _ e x p ,   f r e e _ r e w a r d _ t y p e ,   f r e e _ r e w a r d _ a s s e t ,   f r e e _ r e w a r d _ a m o u n t ,   p r e m i u m _ r e w a r d _ t y p e ,   p r e m i u m _ r e w a r d _ a s s e t ,   p r e m i u m _ r e w a r d _ a m o u n t )   V A L U E S  
+     ( ' s e a s o n _ 1 ' ,   1 ,   1 0 0 ,     ' A S S E T ' ,   ' U S D T ' ,   5 0 0 0 0 0 ,         ' A S S E T ' ,   ' U S D T ' ,   2 0 0 0 0 0 0 ) ,  
+     ( ' s e a s o n _ 1 ' ,   2 ,   2 5 0 ,     N U L L ,         N U L L ,       N U L L ,             ' A S S E T ' ,   ' U S D T ' ,   3 0 0 0 0 0 0 ) ,  
+     ( ' s e a s o n _ 1 ' ,   3 ,   5 0 0 ,     ' A S S E T ' ,   ' U S D T ' ,   1 0 0 0 0 0 0 ,       ' A S S E T ' ,   ' U S D T ' ,   5 0 0 0 0 0 0 ) ,  
+     ( ' s e a s o n _ 1 ' ,   4 ,   1 0 0 0 ,   N U L L ,         N U L L ,       N U L L ,             ' A S S E T ' ,   ' U S D T ' ,   7 0 0 0 0 0 0 ) ,  
+     ( ' s e a s o n _ 1 ' ,   5 ,   2 0 0 0 ,   ' A S S E T ' ,   ' U S D T ' ,   2 5 0 0 0 0 0 ,       ' A S S E T ' ,   ' U S D T ' ,   1 5 0 0 0 0 0 0 ) ;  
+ 

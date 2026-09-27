@@ -23,7 +23,9 @@
     "admin": "Admin",
     "arena": "Arena",
     "clans": "Clans",
-    "deposit": "Deposit"
+    "deposit": "Deposit",
+    "store": "Store",
+    "battle_pass": "Battle Pass"
   },
   "footer": {
     "learn": "Learn",
@@ -150,6 +152,11 @@
         "description": "Five stones in a row — straight, diagonal, anywhere on the board — before your opponent does.",
         "duration": "10–20 min",
         "mode": "1v1 · Ranked or free"
+      },
+      "ludo": {
+        "description": "The ultimate race to the center! Avoid traps and lead your pawns to victory in Ludo Royale.",
+        "mode": "Tactical",
+        "duration": "15-30 Mins"
       }
     },
     "how": {
@@ -250,7 +257,8 @@
       "backgammon": "Backgammon",
       "seega": "Seega",
       "reversi": "Reversi",
-      "gomoku": "Gomoku"
+      "gomoku": "Gomoku",
+      "ludo": "Ludo Royale"
     },
     "unknown_game": "Unknown game."
   },
@@ -539,6 +547,11 @@
       "desc_american": "American (All-Fives): Score multiples of 5 on open ends.",
       "traditional": "Traditional",
       "american": "American (All-Fives)"
+    },
+    "ludo": {
+      "variant_heading": "Players",
+      "desc_2p": "Classic 1vs1 Duel",
+      "desc_4p": "4-Player Free-For-All"
     }
   },
   "dashboard": {

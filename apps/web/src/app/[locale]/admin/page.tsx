@@ -39,6 +39,10 @@ type Summary = {
     pendingDeposits: number;
     riskAlerts: number;
     reconciliationStatus: string;
+    dau: number;
+    mau: number;
+    churnRate: string;
+    ltvUsdtMinor: string;
   };
   finance: {
     solvency: { asset: string; custodyHeldMinor: string; userLiabilitiesMinor: string; botLiquidityMinor?: string }[];
@@ -258,6 +262,10 @@ function AdminDashboardContent() {
 function KpiRow({ summary }: { summary: Summary }) {
   const cards: { label: string; icon: IconName; value: string; chip?: ChipState }[] = [
     { label: "Platform fees", icon: "finance", value: `$${formatUsd(summary.kpis.platformFees.minor)}` },
+    { label: "LTV (Avg)", icon: "finance", value: `$${formatUsd(summary.kpis.ltvUsdtMinor)}` },
+    { label: "DAU", icon: "arena", value: formatCompactNumber(summary.kpis.dau) },
+    { label: "MAU", icon: "arena", value: formatCompactNumber(summary.kpis.mau) },
+    { label: "Churn Rate (30d)", icon: "risk", value: summary.kpis.churnRate },
     { label: "Active matches", icon: "matches", value: formatCompactNumber(summary.kpis.activeMatches) },
     { label: "Live players", icon: "arena", value: formatCompactNumber(summary.kpis.livePlayers) },
     { label: "Pending withdrawals", icon: "withdrawals", value: formatCompactNumber(summary.kpis.pendingWithdrawals) },

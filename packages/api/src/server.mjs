@@ -43,6 +43,7 @@ import { ReportError } from "../../chat/src/reports.mjs";
 import { createDirectChatService } from "../../chat/src/direct.mjs";
 import { createConsentService, ConsentError } from "../../compliance/src/consent.mjs";
 import { registerBotRoutes } from "./bots/bot-router.mjs";
+import { registerStoreRoutes } from "./store/router.mjs";
 
 async function poolBatch(tasks, concurrency = 3) {
   const results = new Array(tasks.length);
@@ -223,8 +224,8 @@ export function createApi({
   db, auth, settlement = null, tournament = null, globalSkill = null, reconciliation = null, rbac = null,
   emailIdentity = null, emailVerification = null, welcomeEmail = null, emailLoginCode = null, passwordReset = null,
   googleOAuth = null, profile = null, support = null, ticketNotifications = null, chat = null,
-  mastery = null, streaks = null, dailyChallenges = null, recommendations = null, frames = null,
-  consent = null,
+  mastery = null, streaks = null, dailyChallenges = null, recommendations = null, seasons = null, frames = null,
+  consent = null, storeSvc = null,
   // Read-only admin visibility into EXP/achievements/badges (Slice 11,
   // directive #20) -- { exp, achievements, badges }, the SAME
   // packages/profile services `profile` above already wraps for the
@@ -752,6 +753,7 @@ function buildRoutes() {
           termsAccepted: true,
           locale: "ar",
           policyVersion: "1.0.0",
+          isGuest: true,
         }, { ip, userAgent });
         if (!reg.ok) return { status: 400, body: errorBody(reg.reason) };
         const log = await auth.login({
@@ -1101,7 +1103,7 @@ function buildRoutes() {
     { method: "GET", path: "/v1/me", action: "player.profile.read",
       handler: async ({ actor, db, emailIdentity }) => {
         const r = await db.query(
-          "SELECT id, handle, locale, created_at FROM player WHERE id = $1", [actor.id]
+          "SELECT id, handle, locale, is_organizer, created_at FROM player WHERE id = $1", [actor.id]
         );
         if (!r.rows.length) return { body: {} };
         const email = await emailIdentity?.getByPlayerId(actor.id);
@@ -1110,6 +1112,7 @@ function buildRoutes() {
         const isAdmin = roles.includes("SUPER_ADMIN") || roles.includes("ADMIN");
         return { body: {
           ...r.rows[0],
+          isOrganizer: Boolean(r.rows[0].is_organizer),
           email: email?.email_display ?? null,
           emailVerified: Boolean(email?.verified_at),
           isAdmin
@@ -2428,6 +2431,8 @@ function buildRoutes() {
               AND ($3::text IS NULL OR pa.handle ILIKE '%' || $3 || '%' OR pb.handle ILIKE '%' || $3 || '%')
               AND ($4::boolean IS TRUE OR d.is_vs_computer = FALSE OR ($3::text IS NOT NULL AND pa.handle ILIKE '%' || $3 || '%'))
             ORDER BY 
+              CASE WHEN d.tier = 'CASH' THEN 0 ELSE 1 END,
+              d.stake_minor DESC,
               CASE WHEN d.status = 'LIVE' AND (SELECT count(*) FROM duel_event de WHERE de.duel_id = d.id) > 0 THEN 0
                    WHEN d.status = 'LIVE' THEN 1
                    ELSE 2 END,
@@ -2477,7 +2482,7 @@ function buildRoutes() {
     { method: "GET", path: "/v1/duels/:id", action: "duel.spectate",
       handler: async ({ params, db }) => {
         const r = await db.query(
-          `SELECT id, game_id, seat_0, seat_1, tier, status, result,
+          `SELECT id, game_id, seat_0, seat_1, seat_2, seat_3, tier, status, result,
                   termination_reason, game_hash, created_at,
                   initial_state, seed, time_control, clock_state, is_vs_computer
              FROM duel WHERE id = $1`, [params.id]
@@ -2492,9 +2497,9 @@ function buildRoutes() {
       handler: async ({ actor, db, query }) => {
         const limit = Math.min(Number(query.get("limit") ?? 50) || 50, 200);
         const r = await db.query(
-          `SELECT id, game_id, seat_0, seat_1, tier, status, result,
+          `SELECT id, game_id, seat_0, seat_1, seat_2, seat_3, tier, status, result,
                   termination_reason, created_at, completed_at
-             FROM duel WHERE seat_0 = $1 OR seat_1 = $1
+             FROM duel WHERE seat_0 = $1 OR seat_1 = $1 OR seat_2 = $1 OR seat_3 = $1
             ORDER BY created_at DESC LIMIT $2`,
           [actor.id, limit]
         );
@@ -2694,41 +2699,55 @@ function buildRoutes() {
         // just chess. The cross-game combination lives at /v1/leaderboard/global.
         const limit = Math.min(Number(query.get("limit") ?? 50) || 50, 200);
         const gameId = query.get("game");
-        const cacheKey = `${gameId || "all"}:${limit}`;
+        const country = query.get("country");
+        
+        let cacheKey = `${gameId || "all"}:${limit}`;
+        if (country) cacheKey += `:${country}`;
+        
         const now = Date.now();
         if (!globalThis.__lbCache) globalThis.__lbCache = new Map();
         const cached = globalThis.__lbCache.get(cacheKey);
         if (cached && (now - cached.ts < 15000)) {
-          return { body: { gameId: gameId ?? "all", entries: cached.rows } };
+          return { body: { gameId: gameId ?? "all", country: country ?? null, entries: cached.rows } };
         }
 
         let r;
         if (gameId && gameId !== "all") {
-          r = await db.query(
-            `SELECT r.player_id, p.handle, p.avatar_key, p.selected_badge_code,
-                    r.rating_x100, r.rd_x100, r.games_played
-               FROM rating r JOIN player p ON p.id = r.player_id
-              WHERE r.game_id = $2
-                AND p.handle NOT LIKE 'ai_%'
-                AND p.handle NOT LIKE 'test_%'
-              ORDER BY r.rating_x100 DESC, r.games_played DESC LIMIT $1`, [limit, gameId]
-          );
+          let sql = `
+            SELECT r.player_id, p.handle, p.avatar_key, p.selected_badge_code,
+                   r.rating_x100, r.rd_x100, r.games_played
+              FROM rating r JOIN player p ON p.id = r.player_id
+              ${country ? "JOIN player_jurisdiction pj ON pj.player_id = p.id" : ""}
+             WHERE r.game_id = $2
+               AND p.handle NOT LIKE 'ai_%'
+               AND p.handle NOT LIKE 'test_%'
+               ${country ? "AND pj.country_code = $3" : ""}
+             ORDER BY r.rating_x100 DESC, r.games_played DESC LIMIT $1
+          `;
+          const params = [limit, gameId];
+          if (country) params.push(country.toUpperCase());
+          r = await db.query(sql, params);
         } else {
-          r = await db.query(
-            `SELECT p.id AS player_id, p.handle, p.avatar_key, p.selected_badge_code,
-                    COALESCE(MAX(r.rating_x100), 150000) AS rating_x100,
-                    COALESCE(SUM(r.games_played), 0)::int AS games_played
-               FROM player p
-               JOIN rating r ON r.player_id = p.id
-              WHERE p.handle NOT LIKE 'ai_%'
-                AND p.handle NOT LIKE 'test_%'
-              GROUP BY p.id, p.handle, p.avatar_key, p.selected_badge_code
-              ORDER BY rating_x100 DESC, games_played DESC, p.created_at ASC
-              LIMIT $1`, [limit]
-          );
+          let sql = `
+            SELECT p.id AS player_id, p.handle, p.avatar_key, p.selected_badge_code,
+                   COALESCE(MAX(r.rating_x100), 150000) AS rating_x100,
+                   COALESCE(SUM(r.games_played), 0)::int AS games_played
+              FROM player p
+              JOIN rating r ON r.player_id = p.id
+              ${country ? "JOIN player_jurisdiction pj ON pj.player_id = p.id" : ""}
+             WHERE p.handle NOT LIKE 'ai_%'
+               AND p.handle NOT LIKE 'test_%'
+               ${country ? "AND pj.country_code = $2" : ""}
+             GROUP BY p.id, p.handle, p.avatar_key, p.selected_badge_code
+             ORDER BY rating_x100 DESC, games_played DESC, p.created_at ASC
+             LIMIT $1
+          `;
+          const params = [limit];
+          if (country) params.push(country.toUpperCase());
+          r = await db.query(sql, params);
         }
         globalThis.__lbCache.set(cacheKey, { ts: now, rows: r.rows });
-        return { body: { gameId: gameId ?? "all", entries: r.rows } };
+        return { body: { gameId: gameId ?? "all", country: country ?? null, entries: r.rows } };
       } },
 
     // --- Clans & Guilds --------------------------------------------------------
@@ -2834,6 +2853,40 @@ function buildRoutes() {
     { method: "GET", path: "/v1/me/daily-challenges", action: "player.daily_challenge.read",
       owner: ({ actor }) => actor.id,
       handler: async ({ actor, dailyChallenges }) => ({ body: { challenges: await dailyChallenges.myChallenges(actor.id) } }) },
+      
+    // --- Seasons & Battle Pass -------------------------------------------------
+    
+    { method: "GET", path: "/v1/me/season-progress", action: "player.season.read",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, seasons }) => ({ body: await seasons.myProgress(actor.id) }) },
+      
+    { method: "POST", path: "/v1/me/season/premium", action: "player.season.purchase",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, req, seasons }) => {
+        if (typeof req.body?.seasonId !== "string") {
+          return { status: 400, body: { error: "BAD_REQUEST", detail: "Missing or invalid seasonId" } };
+        }
+        const res = await seasons.purchasePremium({ playerId: actor.id, seasonId: req.body.seasonId });
+        if (!res.ok) {
+          if (res.reason === "INSUFFICIENT_FUNDS") return { status: 402, body: { error: res.reason } };
+          return { status: 400, body: { error: res.reason } };
+        }
+        return { status: 200, body: await seasons.myProgress(actor.id) };
+      } },
+
+    { method: "POST", path: "/v1/me/season/claim", action: "player.season.claim",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, req, seasons }) => {
+        const { seasonId, level, track } = req.body || {};
+        if (typeof seasonId !== "string" || typeof level !== "number" || typeof track !== "string") {
+          return { status: 400, body: { error: "BAD_REQUEST", detail: "Missing or invalid seasonId, level, or track" } };
+        }
+        const res = await seasons.claimReward({ playerId: actor.id, seasonId, level, track });
+        if (!res.ok) {
+          return { status: 400, body: { error: res.reason } };
+        }
+        return { status: 200, body: await seasons.myProgress(actor.id) };
+      } },
 
     // --- Cross-game discovery --------------------------------------------------
     // Every reason is derived from the caller's OWN gameplay data (mastery,
@@ -3050,6 +3103,37 @@ function buildRoutes() {
         return r.ok ? { body: r } : { status: 400, body: errorBody(r.reason) };
       } },
 
+    { method: "POST", path: "/v1/tournaments", action: "tournament.create",
+      handler: async ({ body, actor, tournament, db }) => {
+        const p = await db.query("SELECT is_organizer FROM player WHERE id = $1", [actor.id]);
+        if (!p.rows.length || !p.rows[0].is_organizer) {
+          return { status: 403, body: errorBody("FORBIDDEN", "Only verified organizers can create B2B tournaments") };
+        }
+        let entryFeeMinor = body?.entryFeeMinor;
+        if (entryFeeMinor === undefined && body?.entryFeeUsd !== undefined) {
+          const fee = parseFloat(body.entryFeeUsd || "0");
+          entryFeeMinor = BigInt(Math.round(fee * 1_000_000));
+        }
+        const tier = body?.tier || (entryFeeMinor && BigInt(entryFeeMinor) > 0n ? "CASH" : "FREE");
+        const asset = tier === "CASH" ? await resolveStakeAsset(db, body?.asset) : null;
+        if (tier === "CASH" && !asset) return { status: 400, body: errorBody("UNSUPPORTED_ASSET") };
+        const closesAt = body?.registrationClosesAt || new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
+        const r = await tournament.create({
+          ...body,
+          tier,
+          asset,
+          entryFeeMinor: entryFeeMinor !== undefined ? BigInt(entryFeeMinor) : 0n,
+          registrationClosesAt: closesAt,
+          scheduledStartsAt: body?.scheduledStartsAt || closesAt,
+          createdBy: actor.id,
+          organizerRakeBps: body?.organizerRakeBps !== undefined ? Number(body.organizerRakeBps) : undefined,
+        });
+        if (r.ok && body?.autoOpen) {
+          await tournament.openRegistration(r.tournamentId);
+        }
+        return { status: 201, body: r };
+      } },
+
     // --- Admin: dashboard ----------------------------------------------------
     // One aggregation point for the admin dashboard's KPI row and panels.
     // Every figure here is a real read from a table or view this platform
@@ -3069,6 +3153,7 @@ function buildRoutes() {
           openFairplay, openReconciliation, openCriticalReconciliation,
           openTournaments, liveGamesCatalog, matches24h, recentAudit,
           feeTrend, matchVolumeByGame, withdrawalQueue, recentTransactions,
+          engagementStats, baseStats, churnStats,
         ] = await poolBatch([
           () => db.query(
             // One platform:rake account per coin. Every enabled coin is a
@@ -3173,6 +3258,34 @@ function buildRoutes() {
                    FROM withdrawal ORDER BY requested_at DESC LIMIT 8)
              ) recent ORDER BY at DESC LIMIT 8`
           ),
+          // Admin CRM Analytics: DAU, MAU
+          () => db.query(
+            `SELECT
+              count(DISTINCT player_id) FILTER (WHERE created_at >= now() - interval '24 hours')::int AS dau,
+              count(DISTINCT player_id)::int AS mau
+             FROM auth_session
+             WHERE created_at >= now() - interval '30 days'`
+          ),
+          // Admin CRM Analytics: Churn rate and LTV calculation bases
+          () => db.query(
+            `SELECT count(*)::int AS total_players FROM player`
+          ),
+          () => db.query(
+            `WITH previous_period AS (
+               SELECT DISTINCT player_id
+               FROM auth_session
+               WHERE created_at >= now() - interval '60 days'
+                 AND created_at < now() - interval '30 days'
+             ),
+             current_period AS (
+               SELECT DISTINCT player_id
+               FROM auth_session
+               WHERE created_at >= now() - interval '30 days'
+             )
+             SELECT
+               (SELECT count(*)::int FROM previous_period) AS active_previous,
+               (SELECT count(*)::int FROM previous_period WHERE player_id NOT IN (SELECT player_id FROM current_period)) AS churned`
+          ),
         ], 3);
 
         // The one configured rail's real health (see GET /v1/admin/payments/rails,
@@ -3203,14 +3316,29 @@ function buildRoutes() {
         }
         if (openCriticalReconciliation.rows[0].c > 0) reconciliationStatus = "CRITICAL";
 
+        const activePrevious = churnStats.rows[0].active_previous;
+        const churned = churnStats.rows[0].churned;
+        const churnRatePct = activePrevious > 0 ? (churned / activePrevious) * 100 : 0;
+        
+        const totalFeesMinor = rakeBalance.rows.reduce((sum, r) => sum + BigInt(r.balance ?? "0"), 0n);
+        const totalPlayers = baseStats.rows[0].total_players;
+        const ltvProxyMinor = totalPlayers > 0 ? (totalFeesMinor / BigInt(totalPlayers)).toString() : "0";
+
         return {
           body: {
             generatedAt: new Date().toISOString(),
             kpis: {
               platformFees: {
-                minor: rakeBalance.rows.reduce((sum, r) => sum + BigInt(r.balance ?? "0"), 0n).toString(),
+                minor: totalFeesMinor.toString(),
                 asset: "USD",
                 byAsset: Object.fromEntries(rakeBalance.rows.map((r) => [r.asset, r.balance ?? "0"])),
+              },
+              crm: {
+                dau: engagementStats.rows[0].dau,
+                mau: engagementStats.rows[0].mau,
+                churnRatePct: Number(churnRatePct.toFixed(2)),
+                ltvProxyMinor: ltvProxyMinor,
+                totalPlayers: totalPlayers,
               },
               activeMatches: liveDuels.rows[0].matches,
               livePlayers: liveDuels.rows[0].players,
@@ -6080,6 +6208,7 @@ function buildRoutes() {
         return { body: { ok: true, withdrawal: r.withdrawal } };
       }) },
   ];
+  registerStoreRoutes(routes, storeSvc);
   registerBotRoutes(routes);
   return routes;
 }

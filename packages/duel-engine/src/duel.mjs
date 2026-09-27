@@ -410,18 +410,42 @@ export function acceptDraw(duel, playerId, serverTimeMs) {
   return finish(duel, { result: "1/2-1/2", reason: "DRAW_AGREED" }, serverTimeMs);
 }
 
-/** Sweeper entry point: no client message involved. */
 export function claimTimeout(duel, plugin, serverTimeMs) {
   if (duel.status !== DuelState.LIVE) return { ok: false, reason: Reject.NOT_LIVE };
 
+  const accepted = duel.events.filter(e => e.type === "INTENT_ACCEPTED");
+  const plyCount = accepted.length;
+  const lastEventTime = plyCount === 0 ? duel.startedAt : accepted[plyCount - 1].serverTimeMs;
+
   if (isShared(duel)) {
-    if (!sharedExpired(duel.clock, serverTimeMs)) return { ok: false, reason: "NOT_FLAGGED" };
+    if (!sharedExpired(duel.clock, serverTimeMs)) {
+      if (plyCount === 0 && (serverTimeMs - duel.startedAt > 45000)) {
+        return finish(duel, { result: "1/2-1/2", reason: "ABORTED" }, serverTimeMs);
+      }
+      return { ok: false, reason: "NOT_FLAGGED" };
+    }
+    
+    // Time expired
+    if (plyCount === 0) {
+      return finish(duel, { result: "1/2-1/2", reason: "ABORTED" }, serverTimeMs);
+    }
+    
     // Nobody forfeits when a shared deadline passes; the position is scored.
     return finish(duel, plugin.outcomeOnExpiry(duel.state), serverTimeMs);
   }
 
   const flag = checkFlag(duel.clock, serverTimeMs);
+  
+  // First-move abort grace period: if a player goes AFK before both have moved,
+  // abort the game after 45 seconds of their inaction (or if their clock flags first).
+  if (plyCount < 2) {
+    if (flag.flagged || (serverTimeMs - lastEventTime > 45000)) {
+      return finish(duel, { result: "1/2-1/2", reason: "ABORTED" }, serverTimeMs);
+    }
+  }
+
   if (!flag.flagged) return { ok: false, reason: "NOT_FLAGGED" };
+  
   return finish(duel, {
     result: flag.byIndex === 0 ? "0-1" : "1-0",
     reason: "TIMEOUT",

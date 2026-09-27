@@ -12,7 +12,7 @@ function readCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1] ?? "") : null;
 }
 
-type Player = { id: string; handle: string; locale: SupportedLocale; created_at: string; isAdmin?: boolean; isGuest?: boolean };
+type Player = { id: string; handle: string; locale: SupportedLocale; created_at: string; isAdmin?: boolean; isOrganizer?: boolean; isGuest?: boolean };
 
 type AuthState = {
   player: Player | null;

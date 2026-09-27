@@ -42,6 +42,8 @@ import { XOPlugin } from "../../../packages/game-xo/src/plugin.mjs";
 import { createXoAiAdapter } from "../../../packages/game-xo/src/ai.mjs";
 import { DominoesPlugin } from "../../../packages/game-dominoes/src/plugin.mjs";
 import { createDominoesAiAdapter } from "../../../packages/game-dominoes/src/ai.mjs";
+import { LudoPlugin } from "../../../packages/game-ludo/src/plugin.mjs";
+import { createLudoAiAdapter } from "../../../packages/game-ludo/src/ai.mjs";
 import { BackgammonPlugin } from "../../../packages/game-backgammon/src/plugin.mjs";
 import { createBackgammonAiAdapter } from "../../../packages/game-backgammon/src/ai.mjs";
 import { SeegaPlugin } from "../../../packages/game-seega/src/plugin.mjs";
@@ -101,7 +103,7 @@ async function main() {
     ["chess", ChessPlugin], ["speed-math", SpeedMathPlugin],
     ["checkers", CheckersPlugin], ["connect-four", ConnectFourPlugin],
     ["xo", XOPlugin], ["dominoes", DominoesPlugin], ["backgammon", BackgammonPlugin],
-    ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin],
+    ["seega", SeegaPlugin], ["reversi", ReversiPlugin], ["gomoku", GomokuPlugin], ["ludo", LudoPlugin],
   ]);
   const ownerId = workerIdentity();
 
@@ -202,6 +204,7 @@ async function main() {
       ["seega", createSeegaAiAdapter()],
       ["reversi", createReversiAiAdapter()],
       ["gomoku", createGomokuAiAdapter()],
+      ["ludo", createLudoAiAdapter()],
     ]),
   });
 

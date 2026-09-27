@@ -168,14 +168,37 @@
   gap: var(--nz-space-4);
   padding: var(--nz-space-6) var(--nz-space-4);
   border-radius: var(--nz-radius-2xl);
-  background: radial-gradient(ellipse 80% 50% at 50% 120%, rgba(255, 90, 43, 0.12) 0%, transparent 70%),
-              radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.12) 0%, transparent 70%),
-              linear-gradient(180deg, #0d1117 0%, #080a0e 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.25), inset 0 0 20px rgba(255, 215, 0, 0.15);
   overflow: hidden;
   margin-block: var(--nz-space-4);
   width: 100%;
+}
+
+.duelArenaBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.35) saturate(1.8) contrast(1.2) blur(8px);
+  pointer-events: none;
+}
+
+.duelArenaBg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 120%, rgba(255, 90, 43, 0.25) 0%, transparent 70%),
+              radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.25) 0%, transparent 70%),
+              linear-gradient(180deg, rgba(13, 17, 23, 0.7) 0%, rgba(8, 10, 14, 0.9) 100%);
+  z-index: 1;
+}
+
+.duelArena > *:not(.duelArenaBg) {
+  position: relative;
+  z-index: 2;
 }
 
 .actionsRow {
@@ -345,7 +368,7 @@
   min-width: 0;
 }
 
-.vsBadge {
+.vsBadge { animation: vsPulse 1.5s infinite alternate; 
   font-family: var(--nz-font-heading);
   font-size: 1.5rem;
   font-weight: 800;
@@ -362,7 +385,7 @@
     gap: 4px;
     border-radius: var(--nz-radius-lg);
   }
-  .vsBadge {
+  .vsBadge { animation: vsPulse 1.5s infinite alternate; 
     font-size: 1rem;
     padding: 0 4px;
   }
@@ -373,3 +396,5 @@
   display: flex;
   justify-content: center;
 }
+
+@keyframes vsPulse { 0% { text-shadow: 0 0 10px rgba(255, 184, 0, 0.6); transform: scale(1); } 100% { text-shadow: 0 0 25px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 90, 43, 0.8); transform: scale(1.1); } }

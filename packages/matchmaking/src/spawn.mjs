@@ -76,4 +76,17 @@ export const DEFAULT_SPAWNERS = {
     const seed = randomUUID();
     return { initialState: { seed }, seed };
   },
+
+  // Ludo depends on random dice rolls, so it requires a seed.
+  // It also accepts pool to dynamically configure the player count.
+  ludo: (pool) => {
+    const seed = randomUUID();
+    return {
+      initialState: {
+        seed,
+        config: { playerCount: pool?.mode === "standard-4p" ? 4 : 2 },
+      },
+      seed,
+    };
+  },
 };

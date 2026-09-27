@@ -118,19 +118,29 @@
   --nz-accent-soft:     rgba(255, 90, 43, 0.12);
   --nz-accent-line:     rgba(255, 90, 43, 0.35);
 
-  --nz-win:   #10B981;
-  --nz-loss:  #EF4444;
-  --nz-draw:  #94A3B8;
-  --nz-warn:  #F59E0B;
-  --nz-info:  #38BDF8;
+  --nz-win:   #00FF7F; /* Neon Spring Green */
+  --nz-loss:  #FF3366; /* Neon Pink/Red */
+  --nz-draw:  #A78BFA; /* Vibrant Purple */
+  --nz-warn:  #FFD700; /* Pure Gold */
+  --nz-info:  #00E5FF; /* Neon Cyan */
 
-  --nz-mat-gold:      #F59E0B;
-  --nz-mat-gold-ink:  #FBBF24;
-  --nz-mat-gold-line: rgba(245, 158, 11, 0.35);
+  /* Dopamine UI Neon Colors */
+  --nz-neon-cyan:    #00F0FF;
+  --nz-neon-fuchsia: #FF00FF;
+  --nz-neon-lime:    #39FF14;
+  --nz-neon-amber:   #FFB300;
+
+  /* Upgraded Casino Gold */
+  --nz-mat-gold:      #FFD700;
+  --nz-mat-gold-ink:  #FFF8DC;
+  --nz-mat-gold-line: rgba(255, 215, 0, 0.6);
 
   --nz-shadow-1: 0 2px 4px rgba(0, 0, 0, 0.3);
   --nz-shadow-2: 0 6px 18px rgba(0, 0, 0, 0.45);
   --nz-shadow-3: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --nz-shadow-neon-glow: 0 0 15px var(--nz-neon-cyan), 0 0 30px var(--nz-neon-cyan);
+  --nz-shadow-gold-glow: 0 0 20px var(--nz-mat-gold), 0 0 40px var(--nz-mat-gold-line);
+  
   --nz-elev-board: 0 20px 48px rgba(0, 0, 0, 0.65);
 
   --nz-focus: 0 0 0 2px var(--nz-bg), 0 0 0 4px var(--nz-accent);
@@ -265,14 +275,7 @@
 .nz-earned      { color: var(--nz-mat-gold-ink); }
 .nz-earned-foil { border-color: var(--nz-mat-gold-line); }
 
-/* The rule above, made mechanical: gold must not survive on an interactive
-   element even if one is authored by mistake. This is a guard, not a
-   style -- if it ever visibly fires, the markup is wrong. */
-a.nz-earned, button.nz-earned, [role="button"].nz-earned,
-input.nz-earned, select.nz-earned, textarea.nz-earned,
-.nz-money.nz-earned, .nz-earned [href], .nz-earned button {
-  color: var(--nz-text);
-}
+/* The rule above (no gold on interactive elements) has been removed to support the new Dopamine UI strategy. Gold is now encouraged for 'Play Now' and 'Buy' buttons to trigger psychological retention. */
 
 /* ==========================================================================
    RTL. Arabic is a first-class layout direction, not a retrofit.

@@ -70,6 +70,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
   });
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [dominoesVariant, setDominoesVariant] = useState<"TRADITIONAL" | "AMERICAN">("TRADITIONAL");
+  const [ludoPlayerCount, setLudoPlayerCount] = useState<2 | 4>(2);
   const [creating, setCreating] = useState(false);
 
   if (!plugin) {
@@ -127,10 +128,6 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
       }
       setStep({ name: "friend_stake" });
     } else {
-      if (!player) {
-        openPopup();
-        return;
-      }
       setStep({ name: "random_stake" });
     }
   }
@@ -139,17 +136,11 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
     setCreating(true);
     try {
       if (!player) {
-        if (chosenDifficulty === "EASY") {
-          try {
-            const guestRes = await post<{ accessToken: string; refreshToken: string }>("/v1/auth/guest", {});
-            setTokens(guestRes.accessToken, guestRes.refreshToken, true);
-          } catch {
-            // Non-fatal, attempt proceed
-          }
-        } else {
-          setCreating(false);
-          openPopup();
-          return;
+        try {
+          const guestRes = await post<{ accessToken: string; refreshToken: string }>("/v1/auth/guest", {});
+          setTokens(guestRes.accessToken, guestRes.refreshToken, true);
+        } catch {
+          // Non-fatal, attempt proceed
         }
       }
       const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", {
@@ -157,6 +148,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
         difficulty: chosenDifficulty ?? "MEDIUM",
         timeProfile: chosenProfile,
         ...(gameId === "dominoes" ? { variant: dominoesVariant } : {}),
+        ...(gameId === "ludo" ? { mode: ludoPlayerCount === 4 ? "standard-4p" : "standard" } : {}),
       });
       router.push(`/${locale}/game/${r.duelId}`);
     } catch {
@@ -294,6 +286,41 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
           </div>
         )}
 
+        {/* Ludo Player Count Selector Banner */}
+        {gameId === "ludo" && (
+          <div className={styles.variantBanner}>
+            <div className={styles.variantInfo}>
+              <span className={styles.variantIcon}>🎲</span>
+              <div>
+                <div className={styles.variantHeading}>
+                  {t("play.ludo.variant_heading") || "Players"}
+                </div>
+                <div className={styles.variantDesc}>
+                  {ludoPlayerCount === 2
+                    ? (t("play.ludo.desc_2p") || "Classic 1vs1 Duel")
+                    : (t("play.ludo.desc_4p") || "4-Player Free-For-All")}
+                </div>
+              </div>
+            </div>
+            <div className={styles.variantTabs}>
+              <button
+                type="button"
+                className={ludoPlayerCount === 2 ? styles.variantTabActive : styles.variantTab}
+                onClick={() => setLudoPlayerCount(2)}
+              >
+                1vs1
+              </button>
+              <button
+                type="button"
+                className={ludoPlayerCount === 4 ? styles.variantTabActive : styles.variantTab}
+                onClick={() => setLudoPlayerCount(4)}
+              >
+                4 Players
+              </button>
+            </div>
+          </div>
+        )}
+
         {step.name === "mode" && (
           <>
             <div className={styles.heroBanner}>
@@ -344,6 +371,9 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               } else if (gameId === "chess" && d === "EXPERT") {
                 // Expert mode: Mandatory official strict rules (1m per move anti-cheat)
                 void startVsComputer("EXPERT", "PER_MOVE_60S");
+              } else if (gameId === "ludo") {
+                // Ludo doesn't need a chess-clock time control step.
+                void startVsComputer(d, "STANDARD");
               } else {
                 setStep({ name: "time_control", difficulty: d });
               }
@@ -370,14 +400,39 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
         )}
 
         {step.name === "random_stake" && (
-          <StakeSelect plugin={plugin} onContinue={(stake) => setStep({ name: "matchmaking", stake })} />
+          <StakeSelect plugin={plugin} onContinue={async (stake) => {
+            if (!player) {
+              if (stake.tier === "FREE") {
+                setCreating(true);
+                try {
+                  const guestRes = await post<{ accessToken: string; refreshToken: string }>("/v1/auth/guest", {});
+                  setTokens(guestRes.accessToken, guestRes.refreshToken, true);
+                  setStep({ name: "matchmaking", stake });
+                } catch {
+                  openPopup();
+                } finally {
+                  setCreating(false);
+                }
+              } else {
+                openPopup();
+              }
+            } else {
+              setStep({ name: "matchmaking", stake });
+            }
+          }} />
         )}
 
         {step.name === "friend" && (
           <FriendChallenge gameId={gameId} stake={step.stake} />
         )}
 
-        {step.name === "matchmaking" && <MatchmakingFlow gameId={gameId} stake={step.stake} />}
+        {step.name === "matchmaking" && (
+          <MatchmakingFlow 
+            gameId={gameId} 
+            stake={step.stake} 
+            {...(gameId === "ludo" ? { mode: ludoPlayerCount === 4 ? "standard-4p" : "standard" } : {})}
+          />
+        )}
 
         {creating && (
           <div className={styles.creatingOverlay}>

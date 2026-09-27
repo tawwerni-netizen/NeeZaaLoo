@@ -163,14 +163,9 @@ export function createSettlementService(db, { asset = "USDT" } = {}) {
           transactionId = posted.transaction_id;
         }
 
-        // VS_COMPUTER never rates: a bot is not a skill-matched opponent
-        // drawn from the real pool, and letting one move a real player's
-        // Glicko rating (in either direction, repeatedly, on demand) would
-        // make rating gameable. `rating_applied` is still stamped below
-        // regardless -- it means "settlement's rating step is done," not
-        // "a rating changed," so a VS_COMPUTER duel is never re-attempted
-        // by a retry either.
-        const ratings = duel.is_vs_computer ? null : await applyRatings(tx, duel);
+        // VS_COMPUTER never rates. ABORTED games (e.g. first move timeouts) also never rate.
+        const isAborted = duel.termination_reason === "ABORTED";
+        const ratings = (duel.is_vs_computer || isAborted) ? null : await applyRatings(tx, duel);
 
         await tx.query(
           `UPDATE duel
