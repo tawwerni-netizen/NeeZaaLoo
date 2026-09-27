@@ -178,7 +178,7 @@ export function createDuel({ duelId, plugin, players, seed, config = {}, timeCon
     // used to cost.
     clock: turnModel === TurnModel.SIMULTANEOUS
       ? createSharedClock({ durationMs: timeControl.durationMs ?? timeControl.initialMs }, now)
-      : createClock(timeControl, now, challenge.state?.turn ?? 0),
+      : createClock(timeControl, now, challenge.state?.turn ?? 0, players.length),
     timeControl: turnModel === TurnModel.SIMULTANEOUS
       ? { durationMs: timeControl.durationMs ?? timeControl.initialMs }
       : { initialMs: timeControl.initialMs, incrementMs: timeControl.incrementMs ?? 0 },
@@ -288,7 +288,10 @@ export function runIntent(duel, plugin, { playerId, intent, nonce, baseVersion }
   if (isShared(duel)) {
     // No turns to take out of order; the only question is whether time is up.
     if (sharedExpired(duel.clock, serverTimeMs)) {
-      return finish(duel, plugin.outcomeOnExpiry(duel.state), serverTimeMs);
+      const outcome = typeof plugin.outcomeOnExpiry === "function" 
+        ? plugin.outcomeOnExpiry(duel.state) 
+        : { result: "1/2-1/2", reason: "ABORTED" };
+      return finish(duel, outcome, serverTimeMs);
     }
   } else {
     if (seat !== duel.clock.toMove) return { ok: false, reason: Reject.NOT_YOUR_TURN };
@@ -316,7 +319,7 @@ export function runIntent(duel, plugin, { playerId, intent, nonce, baseVersion }
   if (!isShared(duel)) {
     const turnAfter = res.state.turn;
     const keepMover = turnAfter !== undefined && turnAfter === turnBefore;
-    applyMove(duel.clock, serverTimeMs, { keepMover });
+    applyMove(duel.clock, serverTimeMs, { keepMover, nextToMove: turnAfter });
   }
   // The board just changed, so any open draw offer is stale -- whoever
   // still wants one must ask again, exactly like the physical convention
@@ -431,7 +434,10 @@ export function claimTimeout(duel, plugin, serverTimeMs) {
     }
     
     // Nobody forfeits when a shared deadline passes; the position is scored.
-    return finish(duel, plugin.outcomeOnExpiry(duel.state), serverTimeMs);
+    const outcome = typeof plugin.outcomeOnExpiry === "function"
+      ? plugin.outcomeOnExpiry(duel.state)
+      : { result: "1/2-1/2", reason: "ABORTED" };
+    return finish(duel, outcome, serverTimeMs);
   }
 
   const flag = checkFlag(duel.clock, serverTimeMs);
@@ -524,7 +530,7 @@ export function verifyReplay(replay, plugin) {
   // charge; its only temporal rule is the shared deadline.
   const clock = simultaneous
     ? createSharedClock({ durationMs: replay.timeControl.durationMs ?? replay.timeControl.initialMs }, 0)
-    : createClock(replay.timeControl, 0);
+    : createClock(replay.timeControl, 0, rebuilt.state?.turn ?? 0, replay.players.length);
 
   // Errors are reported by ply — the number a human auditor counts — rather
   // than by internal event sequence, which is an implementation detail.
@@ -540,13 +546,16 @@ export function verifyReplay(replay, plugin) {
       return { valid: false, error: `ply ${ply}: wrong seat` };
     }
 
+    const turnBefore = rebuilt.state.turn;
     const res = plugin.applyIntent(rebuilt.state, mv.intent, { seat: mv.seat, serverTimeMs: mv.atMs });
     if (!res.ok) {
       return { valid: false, error: `ply ${ply} (${JSON.stringify(mv.intent)}): ${res.reason}` };
     }
     rebuilt.state = res.state;
+    const turnAfter = res.state.turn;
+    const keepMover = turnAfter !== undefined && turnAfter === turnBefore;
 
-    if (!simultaneous && applyMove(clock, mv.atMs).flagged) {
+    if (!simultaneous && applyMove(clock, mv.atMs, { keepMover, nextToMove: turnAfter }).flagged) {
       return { valid: false, error: `ply ${ply}: clock flagged during replay` };
     }
   }

@@ -6,7 +6,7 @@ import {
 
 const ALL_TEN = [
   "chess", "checkers", "dominoes", "backgammon", "seega",
-  "connect-four", "xo", "speed-math", "reversi", "gomoku",
+  "connect-four", "xo", "speed-math", "reversi", "gomoku", "ludo",
 ];
 
 describe("per-game time controls: every launch game has a safe, real profile", () => {

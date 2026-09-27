@@ -364,7 +364,162 @@ export const GAMES_CONTENT: Record<string, GameContentRegistryItem> = {
     }
   },
 
-
+  ludo: {
+    id: "ludo",
+    slug: "ludo",
+    turnModel: "ALTERNATING",
+    defaultDuration: "5m - 15m",
+    locales: {
+      ar: {
+        title: "لودو التنافسية (Ludo)",
+        tagline: "صراع النرد التكتيكي والسباق نحو بر الأمان",
+        coreCta: "اثبت مهارتك. العب. اكسب.",
+        legalPrizeNotice: "اكسب الجوائز عبر منافسات المهارة المؤهلة",
+        overview: [
+          "لعبة لودو على Nizalo تدمج بين الحظ المدروس والتكتيكات العالية في تحريك البيادق لحماية مسارك وعرقلة الخصوم.",
+          "تخضع جميع الرميات لآليات نرد مشفرة بالكامل لضمان العدالة المطلقة."
+        ],
+        rules: {
+          objective: "إيصال البيادق الأربعة إلى نقطة النهاية (المنزل) قبل الخصوم.",
+          setup: "4 بيادق لكل لاعب في منطقة البداية الخاصة به.",
+          mechanics: [
+            "رمي النرد للتحرك.",
+            "الحصول على رقم 6 يمنحك لفة إضافية ويسمح بخروج بيدق من القاعدة.",
+            "الهبوط على بيدق الخصم يعيده إلى البداية."
+          ],
+          victoryConditions: [
+            "إيصال جميع البيادق إلى المنزل بنجاح.",
+            "انسحاب الخصم."
+          ]
+        },
+        beginner: {
+          coreTips: [
+            "حرك البيادق المتعددة بدلاً من التركيز على بيدق واحد لتجنب الخسارة السريعة.",
+            "استغل المربعات الآمنة (التي تحمل نجمة) لحماية بيادقك."
+          ],
+          commonMistakes: [
+            "ترك بيادقك قريبة من بيادق الخصم النشطة دون حماية.",
+            "عدم استغلال اللفات الإضافية بشكل استراتيجي."
+          ]
+        },
+        strategy: {
+          openingPrinciples: [
+            "الخروج بأكبر عدد من البيادق في أسرع وقت عند الحصول على 6.",
+            "توزيع المخاطر عبر الرقعة."
+          ],
+          tacticalPatterns: [
+            "الاصطفاف خلف الخصم لتهديده المستمر.",
+            "تكوين جدار (حاجز) عند السماح بذلك لتأخير الخصوم."
+          ],
+          midgameCoordination: [
+            "الموازنة بين الهجوم (إرجاع الخصوم) والدفاع (التقدم للمنزل)."
+          ]
+        },
+        advancedStrategy: {
+          deepCalculation: [
+            "حساب احتمالات رميات النرد ومواقع الخصم لاتخاذ القرار الأقل خطورة.",
+            "توقع مسارات الخصم لعرقلته."
+          ],
+          clockManagement: [
+            "اللعب السريع لتجنب خسارة الوقت في النهايات المعقدة."
+          ],
+          endgameTechnique: [
+            "الحفاظ على البيادق قريبة من المنزل وتقليل الحركات المكشوفة."
+          ]
+        },
+        faq: [
+          {
+            question: "كيف يتم ضمان عدالة النرد؟",
+            answer: "تُستخدم خوارزميات توليد أرقام عشوائية مشفرة (RNG) غير قابلة للتلاعب وتمت الموافقة عليها قانونياً."
+          }
+        ],
+        tournament: {
+          format: "أنظمة الإقصاء الفردي ومباريات التحدي السريعة.",
+          tieBreakers: "حسم سريع بنظام نقاط التقدم.",
+          prizeDistribution: "توزيع تلقائي للجوائز فور انتهاء المباراة."
+        },
+        livePlay: {
+          matchmaking: "توفيق يعتمد على التقييم والخبرة لضمان التكافؤ.",
+          latencyProtection: "مزامنة لحظية لحماية الأدوار.",
+          fairPlayEngine: "مراقبة مستمرة لمنع أي استغلال للوقت أو التواطؤ."
+        }
+      },
+      en: {
+        title: "Competitive Ludo",
+        tagline: "Tactical Dice Rolling and the Race to Safety",
+        coreCta: "PROVE. PLAY. WIN.",
+        legalPrizeNotice: "earn prizes through eligible skill competitions",
+        overview: [
+          "Ludo on Nizalo merges calculated luck with high-level tactics in moving tokens to protect your path and block opponents.",
+          "All dice rolls are governed by cryptographically secure RNG for absolute fairness."
+        ],
+        rules: {
+          objective: "Move all 4 tokens to the home area before your opponents.",
+          setup: "4 tokens per player in their respective starting base.",
+          mechanics: [
+            "Roll the dice to move.",
+            "Rolling a 6 grants an extra turn and allows a token to exit the base.",
+            "Landing on an opponent's token sends it back to start."
+          ],
+          victoryConditions: [
+            "Successfully moving all tokens into home.",
+            "Opponent resignation."
+          ]
+        },
+        beginner: {
+          coreTips: [
+            "Move multiple tokens rather than focusing on just one.",
+            "Utilize safe squares (stars) to protect your tokens."
+          ],
+          commonMistakes: [
+            "Leaving tokens vulnerable right in front of active opponent tokens.",
+            "Failing to strategize extra rolls."
+          ]
+        },
+        strategy: {
+          openingPrinciples: [
+            "Deploy as many tokens as possible early on.",
+            "Spread risk across the board."
+          ],
+          tacticalPatterns: [
+            "Tail opponents closely to maintain a constant threat.",
+            "Form blockades to delay opponent progression."
+          ],
+          midgameCoordination: [
+            "Balance between aggression (capturing) and defense (racing home)."
+          ]
+        },
+        advancedStrategy: {
+          deepCalculation: [
+            "Calculate dice probabilities and opponent positions to minimize risk.",
+            "Anticipate opponent movement paths."
+          ],
+          clockManagement: [
+            "Play swiftly to avoid timing out in complex endgame races."
+          ],
+          endgameTechnique: [
+            "Keep tokens close to home and minimize exposed movements."
+          ]
+        },
+        faq: [
+          {
+            question: "How is dice fairness guaranteed?",
+            answer: "We use legally approved, cryptographically secure RNG algorithms."
+          }
+        ],
+        tournament: {
+          format: "Single elimination brackets and rapid challenge matches.",
+          tieBreakers: "Sudden-death based on total progress points.",
+          prizeDistribution: "Automated prize payout upon match completion."
+        },
+        livePlay: {
+          matchmaking: "Skill-based rating pairing for balanced games.",
+          latencyProtection: "Real-time sync to protect turns.",
+          fairPlayEngine: "Continuous monitoring against time abuse or collusion."
+        }
+      }
+    }
+  },
 
   checkers: {
     id: "checkers",

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import styles from "./StoreFront.module.css";
-import { Link } from "../../i18n/routing";
+import { LocaleLink } from "@/components/LocaleLink";
 import { post } from "../../lib/api";
 import { 
   playCardHoverSound, 
@@ -85,9 +85,9 @@ export function StoreFront() {
         <div className={styles.balanceWidget}>
           <span className={styles.balanceIcon}>🪙</span>
           <span className={styles.balanceAmount}>{balance}</span>
-          <Link href="/wallet" className={styles.addFundsBtn} onMouseEnter={playCardHoverSound} onClick={playButtonClickSound}>
+          <LocaleLink href="/wallet" className={styles.addFundsBtn} onMouseEnter={playCardHoverSound} onClick={playButtonClickSound}>
             + USDT
-          </Link>
+          </LocaleLink>
         </div>
       </div>
 

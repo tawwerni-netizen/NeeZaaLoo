@@ -72,6 +72,7 @@ export function clearTokens() {
   removeCookie(ACCESS_TOKEN_KEY);
   removeCookie(REFRESH_TOKEN_KEY);
   removeCookie("nz_user_email");
+  window.dispatchEvent(new Event("nz_auth_cleared"));
 }
 
 export class ApiError extends Error {

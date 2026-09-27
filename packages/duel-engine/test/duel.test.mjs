@@ -528,8 +528,8 @@ describe("claimTimeout: the sweeper, no client message involved", () => {
     const res = claimTimeout(duel, plugin, 5000);
     assert.equal(res.ok, true);
     assert.equal(res.completed, true);
-    assert.equal(duel.outcome.reason, "TIMEOUT");
-    assert.equal(duel.outcome.result, "0-1");
+    assert.equal(duel.outcome.reason, "ABORTED");
+    assert.equal(duel.outcome.result, "1/2-1/2");
   });
 
   test("is refused on a non-LIVE duel", () => {
@@ -546,7 +546,8 @@ describe("claimTimeout: the sweeper, no client message involved", () => {
     assert.equal(claimTimeout(duel, plugin, 5000).ok, false);
     const res = claimTimeout(duel, plugin, 20_000);
     assert.equal(res.ok, true);
-    assert.equal(duel.outcome.reason, "TIME_EXPIRED");
+    assert.equal(duel.outcome.reason, "ABORTED");
+    assert.equal(duel.outcome.result, "1/2-1/2");
   });
 });
 

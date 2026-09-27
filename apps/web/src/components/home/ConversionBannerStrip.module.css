@@ -137,8 +137,12 @@
 }
 
 [dir="rtl"] .bannerTitle {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
+  writing-mode: horizontal-tb;
+  transform: none;
+  white-space: normal;
+  text-align: center;
+  font-size: 1.5rem;
+  line-height: 1.4;
 }
 
 .accordionItemActive .bannerTitle {

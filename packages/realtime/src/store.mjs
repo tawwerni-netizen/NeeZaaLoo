@@ -67,6 +67,7 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
         }
 
         if (finished) {
+          console.error(`[STORE.PERSIST DEBUG] duelId: ${duel.duelId} | outcome:`, JSON.stringify(duel.outcome), `| result:`, duel.outcome?.result, `| reason:`, duel.outcome?.reason);
           await tx.query(
             `UPDATE duel
                 SET status = 'COMPLETED'::duel_status,

@@ -27,13 +27,13 @@ export const FLAG = "FLAG";
  *   the plugin's own `state.turn`, which is what actually decides whose
  *   intent is accepted.
  */
-export function createClock(tc, startedAtMs, initialToMove = 0) {
+export function createClock(tc, startedAtMs, initialToMove = 0, playerCount = 2) {
   if (tc.perMoveMs || tc.model === "PER_MOVE") {
     const limit = tc.perMoveMs ?? tc.initialMs;
     return {
       model: "PER_MOVE",
       perMoveMs: limit,
-      remaining: [limit, limit],
+      remaining: Array(playerCount).fill(limit),
       toMove: initialToMove,
       turnStartedAt: startedAtMs,
     };
@@ -44,7 +44,7 @@ export function createClock(tc, startedAtMs, initialToMove = 0) {
   return {
     initialMs: tc.initialMs,
     incrementMs: tc.incrementMs ?? 0,
-    remaining: [tc.initialMs, tc.initialMs], // [white, black]
+    remaining: Array(playerCount).fill(tc.initialMs),
     toMove: initialToMove,
     turnStartedAt: startedAtMs,
   };
@@ -74,7 +74,7 @@ export function createClock(tc, startedAtMs, initialToMove = 0) {
  * out before completing the move: the move does not count and the clock is left
  * at zero for that player.
  */
-export function applyMove(clock, serverTimeMs, { keepMover = false } = {}) {
+export function applyMove(clock, serverTimeMs, { keepMover = false, nextToMove } = {}) {
   const i = clock.toMove;
   const elapsed = serverTimeMs - clock.turnStartedAt;
 
@@ -88,9 +88,10 @@ export function applyMove(clock, serverTimeMs, { keepMover = false } = {}) {
       clock.remaining[i] = 0;
       return { flagged: true, byIndex: i, remaining: [...clock.remaining] };
     }
-    clock.remaining[0] = clock.perMoveMs;
-    clock.remaining[1] = clock.perMoveMs;
-    clock.toMove = keepMover ? i : i ^ 1;
+    for (let idx = 0; idx < clock.remaining.length; idx++) {
+      clock.remaining[idx] = clock.perMoveMs;
+    }
+    clock.toMove = keepMover ? i : (nextToMove ?? (i ^ 1));
     clock.turnStartedAt = serverTimeMs;
     return { flagged: false, byIndex: null, remaining: [...clock.remaining] };
   }
@@ -103,7 +104,7 @@ export function applyMove(clock, serverTimeMs, { keepMover = false } = {}) {
   }
 
   clock.remaining[i] = keepMover ? left : left + clock.incrementMs;
-  clock.toMove = keepMover ? i : i ^ 1;
+  clock.toMove = keepMover ? i : (nextToMove ?? (i ^ 1));
   clock.turnStartedAt = serverTimeMs;
   return { flagged: false, byIndex: null, remaining: [...clock.remaining] };
 }
@@ -124,7 +125,7 @@ export function readClock(clock, serverTimeMs) {
   const i = clock.toMove;
   const elapsed = Math.max(0, serverTimeMs - clock.turnStartedAt);
   if (clock.model === "PER_MOVE") {
-    const live = [clock.perMoveMs, clock.perMoveMs];
+    const live = Array(clock.remaining.length).fill(clock.perMoveMs);
     live[i] = Math.max(0, clock.perMoveMs - elapsed);
     return { model: "PER_MOVE", remaining: live, toMove: i, perMoveMs: clock.perMoveMs };
   }
