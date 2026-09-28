@@ -85,7 +85,7 @@ export function GoogleOneTap() {
         if (data?.ok && data.accessToken && data.refreshToken) {
           await applySession(data.accessToken, data.refreshToken, true);
           setShowCustomCard(false);
-          window.location.reload();
+          window.location.href = `/${locale}/home`;
         }
       } catch (err) {
         console.error("[OneTap] Credential exchange error:", err);

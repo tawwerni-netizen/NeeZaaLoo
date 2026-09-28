@@ -20,10 +20,12 @@ export async function GET(request: Request) {
     (host.startsWith("0.0.0.0") ? "https://nizalo.com" : `${proto}://${host}`);
 
   let locale = "ar";
+  let returnTo: string | null = null;
   try {
     if (stateStr) {
       const parsed = JSON.parse(decodeURIComponent(stateStr));
       if (parsed.locale) locale = parsed.locale;
+      if (parsed.returnTo && typeof parsed.returnTo === "string") returnTo = parsed.returnTo;
     }
   } catch {
     // Keep default locale
@@ -118,7 +120,8 @@ export async function GET(request: Request) {
     const accessToken = sessionData.accessToken;
     const refreshToken = sessionData.refreshToken;
 
-    const targetUrl = `${origin}/${locale}/auth/google/complete?outcome=session_direct&access=${encodeURIComponent(accessToken)}&refresh=${encodeURIComponent(refreshToken)}`;
+    const returnQuery = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : "";
+    const targetUrl = `${origin}/${locale}/auth/google/complete?outcome=session_direct&access=${encodeURIComponent(accessToken)}&refresh=${encodeURIComponent(refreshToken)}${returnQuery}`;
     const response = NextResponse.redirect(targetUrl);
 
     // Set persistent auth cookies for 30 days

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { get, ApiError } from "@/lib/api";
+import { get, setTokens, ApiError } from "@/lib/api";
 import { useI18n } from "@/lib/i18n/context";
 import { LocaleLink } from "@/components/LocaleLink";
 import { authErrorKey } from "./error-messages";
@@ -34,7 +34,13 @@ export function GoogleButton({ onError, className, label, returnTo }: GoogleButt
     const onMessage = (event: MessageEvent) => {
       if (event.data?.type === "NIZALO_AUTH_SUCCESS") {
         window.removeEventListener("message", onMessage);
-        window.location.reload();
+        if (event.data.access && event.data.refresh) {
+          setTokens(event.data.access, event.data.refresh);
+        }
+        const target = returnTo
+          ? (returnTo.startsWith("/") ? `/${locale}${returnTo}` : returnTo)
+          : `/${locale}/home`;
+        window.location.href = target;
       }
     };
     window.addEventListener("message", onMessage);

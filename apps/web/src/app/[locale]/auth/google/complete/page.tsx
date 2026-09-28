@@ -68,15 +68,19 @@ function GoogleCompleteInner() {
   const [error, setError] = useState<string | null>(null);
   const attempted = useRef(false);
 
-  function notifyOpenerAndRedirect(target: string) {
+  function notifyOpenerAndRedirect(target: string, accessTok?: string | null, refreshTok?: string | null) {
     if (typeof window !== "undefined" && window.opener) {
       try {
-        window.opener.postMessage({ type: "NIZALO_AUTH_SUCCESS" }, "*");
+        window.opener.postMessage({
+          type: "NIZALO_AUTH_SUCCESS",
+          access: accessTok || access,
+          refresh: refreshTok || refresh,
+        }, "*");
         window.close();
         return;
       } catch {}
     }
-    router.replace(target);
+    window.location.href = target;
   }
 
   async function finalize(withTotp?: string) {
@@ -86,7 +90,7 @@ function GoogleCompleteInner() {
         "/v1/auth/google/finalize", { handoffCode: handoff, totpCode: withTotp }
       );
       await applySession(r.accessToken, r.refreshToken);
-      notifyOpenerAndRedirect(getRedirectTarget(returnTo, locale));
+      notifyOpenerAndRedirect(getRedirectTarget(returnTo, locale), r.accessToken, r.refreshToken);
     } catch (e) {
       const code = e instanceof ApiError ? (e.code ?? "BAD_STATE") : "NETWORK_ERROR";
       if (code === "TOTP_REQUIRED") {

@@ -223,11 +223,12 @@ async function main() {
   const oauthHandoff = createOAuthHandoffService(db);
   let googleOAuth = null;
   const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  if (googleClientId && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REDIRECT_URI) {
+  const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || "https://nizalo.com/api/auth/google/callback";
+  if (googleClientId && process.env.GOOGLE_CLIENT_SECRET) {
     const googleProvider = createGoogleOidcProvider({
       clientId: googleClientId,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      redirectUri: process.env.GOOGLE_REDIRECT_URI,
+      redirectUri: googleRedirectUri,
     });
     googleOAuth = createGoogleOAuthFlow(db, {
       googleProvider, oauthIdentity, oauthHandoff, emailIdentity, auth, signingKey,
@@ -236,7 +237,7 @@ async function main() {
   } else {
     logger.emit("worker.tick_failed", {
       worker: "api",
-      error: "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET/GOOGLE_REDIRECT_URI not set -- Google sign-in routes will return 503 until configured.",
+      error: "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET not set -- Google sign-in routes will return 503 until configured.",
     });
   }
 

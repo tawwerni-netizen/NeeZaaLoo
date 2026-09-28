@@ -155,183 +155,15 @@ function getEnv(childPort) {
     OXAPAY_CALLBACK_URL:     process.env.OXAPAY_CALLBACK_URL || "https://nizalo.com/v1/payments/oxapay/webhook",
     DB_POOL_SIZE:            process.env.DB_POOL_SIZE || "5",
     API_INTERNAL_URL:        process.env.API_INTERNAL_URL || ("http://127.0.0.1:" + apiPort),
+    GOOGLE_REDIRECT_URI:     process.env.GOOGLE_REDIRECT_URI || "https://nizalo.com/api/auth/google/callback",
   });
 }
 
 // ---------------------------------------------------------------------------
-// Single Master Instance Lock (Prevents overlapping deployments on Hostinger)
+// Process Management (Safe & Isolated for Hostinger Cloud)
 // ---------------------------------------------------------------------------
-const pidFile = path.join(here, ".server.pid");
-try {
-  if (fs.existsSync(pidFile)) {
-    const oldPid = parseInt(fs.readFileSync(pidFile, "utf8").trim(), 10);
-    if (oldPid && oldPid !== process.pid) {
-      try {
-        process.kill(oldPid, 0); // Check if alive
-        console.log(`[master] Terminating previous master instance PID ${oldPid}...`);
-        process.kill(oldPid, "SIGTERM");
-        const start = Date.now();
-        while (Date.now() - start < 800) {
-          try {
-            process.kill(oldPid, 0);
-          } catch {
-            break;
-          }
-        }
-        try { process.kill(oldPid, "SIGKILL"); } catch {}
-      } catch {}
-    }
-  }
-  fs.writeFileSync(pidFile, String(process.pid));
-} catch {}
-
-function removePidFile() {
-  try {
-    if (fs.existsSync(pidFile)) {
-      const p = parseInt(fs.readFileSync(pidFile, "utf8").trim(), 10);
-      if (p === process.pid) fs.unlinkSync(pidFile);
-    }
-  } catch {}
-}
-process.on("exit", removePidFile);
-
-// ---------------------------------------------------------------------------
-// Process Management (Hardened for Hostinger Cloud / cGroup Process Quotas)
-// ---------------------------------------------------------------------------
-const { execSync } = require("node:child_process");
-
 const children = {};
 let isShuttingDown = false;
-
-function isChildPid(pid) {
-  return Object.values(children).some((c) => c && c.pid === pid);
-}
-
-function getInodesForPort(p) {
-  const inodes = new Set();
-  const hexPort = p.toString(16).toUpperCase().padStart(4, "0");
-  for (const file of ["/proc/net/tcp", "/proc/net/tcp6"]) {
-    try {
-      if (!fs.existsSync(file)) continue;
-      const content = fs.readFileSync(file, "utf8");
-      const lines = content.split("\n");
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        const parts = line.split(/\s+/);
-        const localAddr = parts[1];
-        if (localAddr && localAddr.toUpperCase().endsWith(":" + hexPort)) {
-          const inode = parts[9];
-          if (inode && inode !== "0") {
-            inodes.add(inode);
-          }
-        }
-      }
-    } catch {}
-  }
-  return inodes;
-}
-
-function freePort(p) {
-  if (process.platform === "win32") {
-    try {
-      const out = execSync(`netstat -ano | findstr :${p}`, { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] });
-      for (const line of out.split("\n")) {
-        const parts = line.trim().split(/\s+/);
-        const pid = parts[parts.length - 1];
-        if (pid && pid !== "0" && pid !== String(process.pid) && !isChildPid(Number(pid))) {
-          try { execSync(`taskkill /F /PID ${pid} >nul 2>&1`); } catch {}
-        }
-      }
-    } catch {}
-    return;
-  }
-
-  // Linux: 1. Pure Node /proc inspection via socket inodes
-  try {
-    const inodes = getInodesForPort(p);
-    if (inodes.size > 0 && fs.existsSync("/proc")) {
-      const entries = fs.readdirSync("/proc");
-      for (const entry of entries) {
-        if (!/^\d+$/.test(entry)) continue;
-        const pid = Number(entry);
-        if (pid === process.pid || isChildPid(pid)) continue;
-
-        const fdDir = `/proc/${entry}/fd`;
-        try {
-          const fds = fs.readdirSync(fdDir);
-          for (const fd of fds) {
-            try {
-              const link = fs.readlinkSync(`${fdDir}/${fd}`);
-              for (const inode of inodes) {
-                if (link.includes(`[${inode}]`)) {
-                  console.log(`[freePort] Killing stale PID ${pid} listening on port ${p} (inode ${inode})`);
-                  try { process.kill(pid, "SIGKILL"); } catch {}
-                  break;
-                }
-              }
-            } catch {}
-          }
-        } catch {}
-      }
-    }
-  } catch {}
-
-  // Linux: 2. Fallback shell utilities ONLY before children exist
-  if (Object.keys(children).length === 0) {
-    try { execSync(`fuser -k -9 ${p}/tcp 2>/dev/null || true`); } catch {}
-    try { execSync(`lsof -ti :${p} 2>/dev/null | xargs -r kill -9 2>/dev/null || true`); } catch {}
-    try { execSync(`ss -lptn 'sport = :${p}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill -9 2>/dev/null || true`); } catch {}
-    try { execSync(`netstat -tlpn 2>/dev/null | grep ':${p} ' | awk '{print $7}' | cut -d/ -f1 | grep -v '^-$' | xargs -r kill -9 2>/dev/null || true`); } catch {}
-  }
-}
-
-function cleanupZombies() {
-  if (process.platform === "win32") return;
-
-  // 1. Pure Node /proc inspection: terminate any stale node processes from previous builds or sub-apps
-  try {
-    if (fs.existsSync("/proc")) {
-      const entries = fs.readdirSync("/proc");
-      for (const entry of entries) {
-        if (!/^\d+$/.test(entry)) continue;
-        const pid = Number(entry);
-        if (pid === process.pid || isChildPid(pid)) continue;
-
-        try {
-          const cmdline = fs.readFileSync(`/proc/${entry}/cmdline`, "utf8").replace(/\0/g, " ");
-          const isStale =
-            (cmdline.includes("node") || cmdline.includes("npm")) &&
-            (cmdline.includes("apps/api") ||
-             cmdline.includes("apps/worker") ||
-             cmdline.includes("apps/gateway") ||
-             cmdline.includes("standalone/apps/web") ||
-             cmdline.includes("hbuilds/versions") ||
-             cmdline.includes("packages/api") ||
-             cmdline.includes("server.mjs") ||
-             (cmdline.includes("server.js") && pid !== process.pid && !cmdline.includes("hostinger") && !cmdline.includes(".next")));
-
-          if (isStale) {
-            console.log(`[cleanupZombies] Killing stale PID ${pid}: ${cmdline.slice(0, 80)}`);
-            try { process.kill(pid, "SIGKILL"); } catch {}
-          }
-        } catch {}
-      }
-    }
-  } catch (e) {
-    console.warn("[cleanupZombies] /proc scan error:", e.message);
-  }
-
-  // 2. Simple fallback pkill commands ONLY before children exist
-  if (Object.keys(children).length === 0) {
-    const targets = ["apps/api", "apps/worker", "apps/gateway", "standalone/apps/web", "hbuilds/versions"];
-    for (const t of targets) {
-      try {
-        execSync(`pkill -9 -f "${t}" 2>/dev/null || true`);
-      } catch {}
-    }
-  }
-}
 
 function startProcess(name, script, childPort, customCwd) {
   let failures = 0;
@@ -339,10 +171,6 @@ function startProcess(name, script, childPort, customCwd) {
 
   function launch() {
     if (isShuttingDown) return;
-    freePort(childPort);
-    if (name !== "Next.js") {
-      freePort(childPort + 100);
-    }
     console.log(`[${name}] Spawning on port ${childPort}...`);
     try {
       const baseEnv = name === "Next.js"
@@ -351,6 +179,7 @@ function startProcess(name, script, childPort, customCwd) {
             HOSTNAME: "127.0.0.1",
             NODE_ENV: "production",
             API_INTERNAL_URL: `http://127.0.0.1:${apiPort}`,
+            GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || "https://nizalo.com/api/auth/google/callback",
           })
         : getEnv(childPort);
 
@@ -387,12 +216,6 @@ function startProcess(name, script, childPort, customCwd) {
         lastCrash = now;
         failures++;
 
-        // Free port cleanly before attempting restart
-        freePort(childPort);
-        if (name !== "Next.js") {
-          freePort(childPort + 100);
-        }
-
         // Exponential backoff to prevent fork storms
         const delay = failures <= 2 ? 1500 : failures <= 4 ? 4000 : failures <= 6 ? 8000 : 20000;
         console.warn(`[${name}] Exited (code=${code}, signal=${signal}). Crash count: ${failures}. Restarting in ${delay / 1000}s...`);
@@ -407,10 +230,6 @@ function startProcess(name, script, childPort, customCwd) {
   launch();
 }
 
-// Clean any leftover zombie processes and ports before boot
-cleanupZombies();
-[nextPort, apiPort, gwPort, 4001, apiPort + 100, gwPort + 100, 4101].forEach(freePort);
-
 startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
 startProcess("API",     apiScript,    apiPort);
 startProcess("Gateway", gwScript,     gwPort);
@@ -419,19 +238,25 @@ startProcess("Worker",  workerScript, 4001);
 function shutdown() {
   if (isShuttingDown) return;
   isShuttingDown = true;
-  console.log("Shutting down all child processes...");
-  Object.keys(children).forEach((k) => {
-    try {
-      const child = children[k];
+  console.log("[master] Gracefully shutting down all child processes...");
+  try {
+    server.close();
+  } catch {}
+  for (const name of Object.keys(children)) {
+    const child = children[name];
+    if (child && child.pid) {
+      try { child.kill("SIGTERM"); } catch {}
+    }
+  }
+  setTimeout(() => {
+    for (const name of Object.keys(children)) {
+      const child = children[name];
       if (child && child.pid) {
-        try { process.kill(child.pid, "SIGKILL"); } catch {}
+        try { child.kill("SIGKILL"); } catch {}
       }
-    } catch (e) {}
-  });
-  cleanupZombies();
-  [nextPort, apiPort, gwPort, 4001, apiPort + 100, gwPort + 100, 4101].forEach(freePort);
-  removePidFile();
-  setTimeout(() => process.exit(0), 150);
+    }
+    process.exit(0);
+  }, 500);
 }
 process.on("SIGINT",  shutdown);
 process.on("SIGTERM", shutdown);

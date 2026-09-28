@@ -93,7 +93,10 @@ export function AuthPopup() {
       if (event.data?.type === "NIZALO_AUTH_SUCCESS") {
         window.removeEventListener("message", onMessage);
         closePopup();
-        window.location.reload();
+        if (event.data.access && event.data.refresh) {
+          setTokens(event.data.access, event.data.refresh);
+        }
+        window.location.href = `/${locale}/home`;
       }
     };
     window.addEventListener("message", onMessage);
