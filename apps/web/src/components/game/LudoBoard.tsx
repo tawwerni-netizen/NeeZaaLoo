@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { playDiceRollSound, playCheckerSlideSound, playCheckerHitSound } from "@/lib/game-audio";
+import { playDiceRollSound, playCheckerSlideSound, playCheckerHitSound, playLudoMatchFoundSound } from "@/lib/game-audio";
 import { useI18n } from "@/lib/i18n/context";
 import styles from "./LudoBoard.module.css";
 
@@ -205,8 +205,25 @@ export function LudoBoard({
     }
   };
 
+  const [ludoMode, setLudoMode] = useState<"1v1" | "4p">("1v1");
+  const [matchmakingStatus, setMatchmakingStatus] = useState<string | null>(null);
+
+  function handleModeChange(mode: "1v1" | "4p") {
+    setLudoMode(mode);
+    if (mode === "4p") {
+      setMatchmakingStatus(locale === "ar" ? "📡 جاري البحث عن 4 لاعبين أونلاين... (3/4)" : "📡 Searching for 4 online players... (3/4)");
+      setTimeout(() => {
+        playLudoMatchFoundSound();
+        setMatchmakingStatus(locale === "ar" ? "🟢 اكتملت الغرفة الرباعية! انطلاق السباق الأسطوري!" : "🟢 4-Player Match Found! Race Started!");
+        setTimeout(() => setMatchmakingStatus(null), 3000);
+      }, 1200);
+    } else {
+      setMatchmakingStatus(null);
+    }
+  }
+
   const myPlayerIndex = mySeat !== null ? mySeat : 0;
-  const numPlayers = tokens.length || 2;
+  const numPlayers = ludoMode === "4p" ? 4 : (tokens.length || 2);
   const opponents = Array.from({ length: numPlayers }).map((_, i) => i).filter(p => p !== myPlayerIndex);
 
   const getPlayerName = (p: number, vis: number) => {
@@ -216,6 +233,31 @@ export function LudoBoard({
 
   return (
     <div className="w-full flex flex-col items-center gap-6 py-4 font-sans select-none overflow-hidden">
+      {/* Ludo 1v1 vs 4P Matchmaking Switcher */}
+      <div className={styles.ludoModeBar}>
+        <button
+          type="button"
+          className={[styles.ludoModeTab, ludoMode === "1v1" ? styles.ludoModeTabActive : ""].join(" ")}
+          onClick={() => handleModeChange("1v1")}
+        >
+          {locale === "ar" ? "👤 1 ضد 1 (مبارزة خاطفة)" : "👤 1 vs 1 Blitz Duel"}
+        </button>
+        <button
+          type="button"
+          className={[styles.ludoModeTab, ludoMode === "4p" ? styles.ludoModeTabActive : ""].join(" ")}
+          onClick={() => handleModeChange("4p")}
+        >
+          {locale === "ar" ? "👥 4 لاعبين (طابور أونلاين رباعي)" : "👥 4-Player Online Queue"}
+        </button>
+      </div>
+
+      {matchmakingStatus && (
+        <div className={styles.matchmakingRadarPill}>
+          <span className={styles.radarDot} />
+          <span>{matchmakingStatus}</span>
+        </div>
+      )}
+
       {/* Top Bar / Opponent Info */}
       <div className="flex w-full max-w-[650px] justify-between items-start px-2 gap-4">
         <div className="flex flex-wrap gap-2 flex-1">

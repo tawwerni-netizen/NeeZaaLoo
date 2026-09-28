@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import { useVisualSettings } from "./TableEnvironment";
-import { playDiceRollSound, playCheckerSlideSound, playCheckerHitSound } from "@/lib/game-audio";
+import { playDiceRollSound, playCheckerSlideSound, playCheckerHitSound, playDoublingCubeClack, playMahbousaPinSound } from "@/lib/game-audio";
 import styles from "./BackgammonBoard.module.css";
 
 type LegalAction = { from: number | "BAR"; die: number; to: number | "OFF" };
+type BackgammonVariant = "classic" | "mahbousa" | "tawla31";
+
 type Props = {
   board: number[];
   bar: [number, number];
@@ -63,11 +65,12 @@ function DieFace({ value }: { value: number }) {
   );
 }
 
-function BackgammonChecker({ seat, muted = false }: { seat: 0 | 1; muted?: boolean }) {
+function BackgammonChecker({ seat, muted = false, isPinned = false }: { seat: 0 | 1; muted?: boolean; isPinned?: boolean }) {
   const isWhite = seat === 0;
   return (
     <div className={[styles.checker3d, isWhite ? styles.checkerWhite : styles.checkerBlack, muted ? styles.checkerMuted : ""].join(" ")}>
       <div className={styles.checkerInnerRim} />
+      {isPinned && <span className={styles.pinnedCheckerOverlay} title="قرص محبوس">🔒</span>}
     </div>
   );
 }
@@ -138,23 +141,77 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
   const { t, locale } = useI18n();
   const { perspective3D } = useVisualSettings();
   const [selected, setSelected] = useState<number | "BAR" | null>(null);
+  const [variant, setVariant] = useState<BackgammonVariant>("classic");
   const [doublingStakeIndex, setDoublingStakeIndex] = useState<number>(0);
   const [doublingBannerText, setDoublingBannerText] = useState<string | null>(null);
+  const [doublingOffer, setDoublingOffer] = useState<{ proposer: 0 | 1; nextStake: number } | null>(null);
+  const [pinnedPoints, setPinnedPoints] = useState<Set<number>>(new Set());
 
   const currentStake = DOUBLING_STAKES[doublingStakeIndex] ?? 64;
 
   function handleDoublingClick() {
+    playDoublingCubeClack();
     const nextIdx = (doublingStakeIndex + 1) % DOUBLING_STAKES.length;
-    setDoublingStakeIndex(nextIdx);
-    playCheckerHitSound();
     const nextStake = DOUBLING_STAKES[nextIdx] ?? 64;
-    const label = nextStake === 64
-      ? (locale === "ar" ? "🎲 مكعب المضاعفة: الرهان الأساسي 1x" : "🎲 Doubling Cube: Initial Stakes 1x")
-      : (locale === "ar" ? `🎲 مكعب المضاعفة: تم رفع الرهان إلى ${nextStake}x!` : `🎲 Doubling Cube: Stakes Doubled to ${nextStake}x!`);
+
+    if (nextStake === 64) {
+      setDoublingStakeIndex(0);
+      const label = locale === "ar" ? "🎲 مكعب المضاعفة: الرهان الأساسي 1x" : "🎲 Doubling Cube: Initial Stakes 1x";
+      setDoublingBannerText(label);
+      setTimeout(() => setDoublingBannerText((prev) => (prev === label ? null : prev)), 3000);
+      return;
+    }
+
+    // Trigger negotiation offer
+    const proposerSeat = mySeat ?? 0;
+    setDoublingOffer({ proposer: proposerSeat, nextStake });
+
+    // If local game / vs computer, simulate intelligent opponent response
+    const label = locale === "ar"
+      ? `⏳ تم طلب مضاعفة الرهان إلى ${nextStake}x... بانتظار رد الخصم!`
+      : `⏳ Doubling offered to ${nextStake}x... awaiting response!`;
     setDoublingBannerText(label);
+
     setTimeout(() => {
-      setDoublingBannerText((prev) => (prev === label ? null : prev));
-    }, 3000);
+      // 80% chance computer accepts
+      const willAccept = Math.random() < 0.85;
+      if (willAccept) {
+        setDoublingStakeIndex(nextIdx);
+        playDoublingCubeClack();
+        const acceptMsg = locale === "ar"
+          ? `✅ الخصم قبل التحدي! الرهان أصبح ${nextStake}x!`
+          : `✅ Opponent accepted! Stakes are now ${nextStake}x!`;
+        setDoublingBannerText(acceptMsg);
+      } else {
+        const dropMsg = locale === "ar"
+          ? `🏳️ الخصم رفض المضاعفة وانسحب! فوز بالضربة القاضية برهان ${currentStake === 64 ? "1" : currentStake}x!`
+          : `🏳️ Opponent dropped the double! Victory claim at ${currentStake === 64 ? "1" : currentStake}x stakes!`;
+        setDoublingBannerText(dropMsg);
+      }
+      setDoublingOffer(null);
+      setTimeout(() => setDoublingBannerText(null), 4000);
+    }, 1400);
+  }
+
+  function handleAcceptDouble() {
+    if (!doublingOffer) return;
+    const targetStake = doublingOffer.nextStake;
+    const targetIdx = DOUBLING_STAKES.indexOf(targetStake as any);
+    if (targetIdx !== -1) setDoublingStakeIndex(targetIdx);
+    playDoublingCubeClack();
+    const msg = locale === "ar" ? `✅ قبلت التحدي! تم رفع الرهان إلى ${targetStake}x!` : `✅ Challenge accepted! Stake is now ${targetStake}x!`;
+    setDoublingBannerText(msg);
+    setDoublingOffer(null);
+    setTimeout(() => setDoublingBannerText(null), 3000);
+  }
+
+  function handleDropDouble() {
+    if (!doublingOffer) return;
+    setDoublingOffer(null);
+    const msg = locale === "ar" ? "🏳️ تم الانسحاب من الجولة." : "🏳️ Round conceded.";
+    setDoublingBannerText(msg);
+    onMove({ pass: true });
+    setTimeout(() => setDoublingBannerText(null), 3000);
   }
 
   const flip = mySeat === 1;
@@ -195,7 +252,17 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
     const dest = destinationsFromSelected.get(String(idx));
     if (selected !== null && dest) {
       if (seat !== null && mySeat !== null && seat !== mySeat && count === 1) {
-        playCheckerHitSound();
+        if (variant === "mahbousa") {
+          playMahbousaPinSound();
+          setPinnedPoints((prev) => new Set([...prev, idx]));
+          const banner = locale === "ar"
+            ? "🔒 تم حَبْس قرص الخصم بنجاح! لا يمكنه تحريكه حتى تتركه."
+            : "🔒 Enemy checker pinned! Cannot move until unblocked.";
+          setDoublingBannerText(banner);
+          setTimeout(() => setDoublingBannerText((prev) => (prev === banner ? null : prev)), 3500);
+        } else {
+          playCheckerHitSound();
+        }
       } else {
         playCheckerSlideSound();
       }
@@ -231,6 +298,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
     const isSelected = selected === idx;
     const isDestination = selected !== null && destinationsFromSelected.has(String(idx));
     const isSelectable = canMove && seat === mySeat && sourcesWithLegalMove.has(String(idx));
+    const isPinned = variant === "mahbousa" && pinnedPoints.has(idx);
     const shown = Math.min(count, MAX_SHOWN);
     const overflow = count - shown;
 
@@ -252,7 +320,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
         <div className={styles.pointTriangle} />
         <div className={styles.checkerStack}>
           {seat !== null && Array.from({ length: shown }).map((_, i) => (
-            <BackgammonChecker key={i} seat={seat} />
+            <BackgammonChecker key={i} seat={seat} isPinned={isPinned && i === 0} />
           ))}
           {overflow > 0 && <span className={styles.overflowLabel}>+{overflow}</span>}
         </div>
@@ -263,6 +331,43 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
 
   return (
     <div className={styles.wrap}>
+      {/* Variant Selector Tabs */}
+      <div className={styles.variantSelector}>
+        <button
+          type="button"
+          className={[styles.variantBtn, variant === "classic" ? styles.variantBtnActive : ""].join(" ")}
+          onClick={() => {
+            setVariant("classic");
+            setDoublingBannerText(locale === "ar" ? "🎲 تم تفعيل: طاولة كلاسيكية (قواعد عالمية)" : "🎲 Classic Backgammon Active");
+            setTimeout(() => setDoublingBannerText(null), 2500);
+          }}
+        >
+          {locale === "ar" ? "🎲 كلاسيكية" : "🎲 Classic"}
+        </button>
+        <button
+          type="button"
+          className={[styles.variantBtn, variant === "mahbousa" ? styles.variantBtnActive : ""].join(" ")}
+          onClick={() => {
+            setVariant("mahbousa");
+            setDoublingBannerText(locale === "ar" ? "🔒 تم تفعيل: طاولة محبوسة (حَبْس القرص بدون أكل للبار)" : "🔒 Egyptian Mahbousa Active");
+            setTimeout(() => setDoublingBannerText(null), 2500);
+          }}
+        >
+          {locale === "ar" ? "🔒 محبوسة مصرية" : "🔒 Mahbousa"}
+        </button>
+        <button
+          type="button"
+          className={[styles.variantBtn, variant === "tawla31" ? styles.variantBtnActive : ""].join(" ")}
+          onClick={() => {
+            setVariant("tawla31");
+            setDoublingBannerText(locale === "ar" ? "👑 تم تفعيل: طاولة 31 (سباق تجميع البيادق)" : "👑 Tawla 31 Active");
+            setTimeout(() => setDoublingBannerText(null), 2500);
+          }}
+        >
+          {locale === "ar" ? "👑 طاولة 31" : "👑 Tawla 31"}
+        </button>
+      </div>
+
       <div className={styles.diceRow}>
         <DoublingCubeFace
           stake={currentStake}
@@ -288,6 +393,42 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
             transition={{ duration: 0.25 }}
           >
             {doublingBannerText}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Doubling Challenge Modal */}
+      <AnimatePresence>
+        {doublingOffer && doublingOffer.proposer !== mySeat && (
+          <motion.div
+            className={styles.doublingOfferModalBackdrop}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className={styles.doublingOfferCard}
+              initial={{ scale: 0.85, y: 16 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.85, y: 16 }}
+            >
+              <h3 className={styles.doublingOfferTitle}>
+                {locale === "ar" ? `⚡ طلب مضاعفة الرهان إلى ${doublingOffer.nextStake}x!` : `⚡ Doubling Stakes Challenge: ${doublingOffer.nextStake}x!`}
+              </h3>
+              <p className={styles.doublingOfferDesc}>
+                {locale === "ar"
+                  ? "يعرض عليك الخصم رفع قيمة الرهان الحالي للجولة. إذا قبلت، يستمر اللعب بضعف القيمة، وإذا انسحبت، يخسر رهانك الحالي فقط."
+                  : "The opponent offers to double the current round stakes. Accept to fight at doubled stakes, or drop to forfeit current flat stake."}
+              </p>
+              <div className={styles.doublingOfferActions}>
+                <button type="button" className={styles.doublingAcceptBtn} onClick={handleAcceptDouble}>
+                  {locale === "ar" ? `✅ قبول المضاعفة (${doublingOffer.nextStake}x)` : `✅ Accept (${doublingOffer.nextStake}x)`}
+                </button>
+                <button type="button" className={styles.doublingDropBtn} onClick={handleDropDouble}>
+                  {locale === "ar" ? "🏳️ انسحاب وتنازل" : "🏳️ Drop / Concede"}
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

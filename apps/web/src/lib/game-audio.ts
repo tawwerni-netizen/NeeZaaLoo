@@ -877,3 +877,128 @@ export function playPurchaseErrorSound() {
   osc.stop(now + 0.35);
 }
 
+/**
+ * Resonant tactile clack for the Doubling Cube (مكعب المضاعفة) 3D rotation and wager doubling.
+ */
+export function playDoublingCubeClack() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // Solid amber wood/resin impact with high resonant snap
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc1.type = "triangle";
+  osc1.frequency.setValueAtTime(620, now);
+  osc1.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(1240, now);
+  osc2.frequency.exponentialRampToValueAtTime(320, now + 0.05);
+
+  gain.gain.setValueAtTime(0.42, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + 0.11);
+  osc2.stop(now + 0.11);
+}
+
+/**
+ * Triumphant ascending harmonic chimes for All-Fives 55 Dominoes score increments (+5, +10, +15, +20).
+ */
+export function playAllFivesScoreSound(points: number = 5) {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // Dynamic scale depending on score magnitude
+  const baseFreqs = points >= 15 ? [587.33, 739.99, 880.00, 1174.66] : [523.25, 659.25, 783.99];
+  baseFreqs.forEach((freq, idx) => {
+    const t = now + idx * 0.06;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, t);
+
+    gain.gain.setValueAtTime(0.24, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 0.32);
+  });
+}
+
+/**
+ * Heavy locking "Thud-Snap" when pinning an opponent's checker in Egyptian Mahbousa (طاولة محبوسة).
+ */
+export function playMahbousaPinSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // Deep acoustic thud + sharp metallic latch
+  const thud = ctx.createOscillator();
+  const latch = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  thud.type = "triangle";
+  thud.frequency.setValueAtTime(180, now);
+  thud.frequency.exponentialRampToValueAtTime(45, now + 0.12);
+
+  latch.type = "sawtooth";
+  latch.frequency.setValueAtTime(880, now + 0.02);
+  latch.frequency.exponentialRampToValueAtTime(220, now + 0.07);
+
+  gain.gain.setValueAtTime(0.48, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+  thud.connect(gain);
+  latch.connect(gain);
+  gain.connect(ctx.destination);
+
+  thud.start(now);
+  latch.start(now + 0.02);
+  thud.stop(now + 0.15);
+  latch.stop(now + 0.09);
+}
+
+/**
+ * Grand stadium brass fanfare chime when 4-Player Ludo matchmaking room is filled.
+ */
+export function playLudoMatchFoundSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
+  notes.forEach((freq, idx) => {
+    const t = now + idx * 0.08;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, t);
+
+    gain.gain.setValueAtTime(0.28, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 0.4);
+  });
+}
+

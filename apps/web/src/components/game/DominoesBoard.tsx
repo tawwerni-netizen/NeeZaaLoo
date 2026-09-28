@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import { useVisualSettings } from "./TableEnvironment";
-import { playDominoTileClickSound } from "@/lib/game-audio";
+import { playDominoTileClickSound, playAllFivesScoreSound } from "@/lib/game-audio";
 import styles from "./DominoesBoard.module.css";
 
 type Tile = [number, number];
 type LineTile = { tile: Tile; orientation: [number, number] };
 type Line = { left: number | null; right: number | null; tiles: LineTile[] };
+type DominoVariant = "classic" | "all_fives";
 
 type Props = {
   line: Line;
@@ -89,14 +90,43 @@ function DominoTile({
 }
 
 export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, mySeat, canMove, onMove }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<Tile | null>(null);
   const [slam, setSlam] = useState(false);
+  const [variant, setVariant] = useState<DominoVariant>("classic");
+  const [p0Score, setP0Score] = useState(0);
+  const [p1Score, setP1Score] = useState(0);
+  const [scoreToast, setScoreToast] = useState<{ points: number; text: string } | null>(null);
 
   function triggerSlam() {
     setSlam(true);
     setTimeout(() => setSlam(false), 320);
+  }
+
+  function checkAllFivesScore(tile: Tile, end?: "LEFT" | "RIGHT") {
+    if (variant !== "all_fives") return;
+    let newLeft = line.left;
+    let newRight = line.right;
+
+    if (!line.tiles || line.tiles.length === 0) {
+      newLeft = tile[0];
+      newRight = tile[1];
+    } else if (end === "LEFT") {
+      newLeft = tile[0] === line.left ? tile[1] : tile[0];
+    } else if (end === "RIGHT") {
+      newRight = tile[0] === line.right ? tile[1] : tile[0];
+    }
+
+    const sum = (newLeft ?? 0) + (newRight ?? 0);
+    if (sum > 0 && sum % 5 === 0) {
+      playAllFivesScoreSound(sum);
+      if (mySeat === 0) setP0Score((s) => s + sum);
+      else setP1Score((s) => s + sum);
+      const text = locale === "ar" ? `🔥 +${sum} نقطة مضاعف خمسات!` : `🔥 +${sum} All-Fives Multiplier!`;
+      setScoreToast({ points: sum, text });
+      setTimeout(() => setScoreToast(null), 3000);
+    }
   }
 
   const selectedEnds = useMemo(
@@ -117,12 +147,14 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
     if (ends[0] === "ANY") {
       triggerSlam();
       playDominoTileClickSound();
+      checkAllFivesScore(tile);
       onMove({ tile });
       return;
     }
     if (ends.length === 1) {
       triggerSlam();
       playDominoTileClickSound();
+      checkAllFivesScore(tile, ends[0] as "LEFT" | "RIGHT");
       onMove({ tile, end: ends[0] as "LEFT" | "RIGHT" });
       return;
     }
@@ -137,6 +169,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
     if (!selected) return;
     triggerSlam();
     playDominoTileClickSound();
+    checkAllFivesScore(selected, end);
     onMove({ tile: selected, end });
     setSelected(null);
   }
@@ -149,6 +182,45 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
 
   return (
     <div className={styles.wrap}>
+      {/* Variant Selector Tabs */}
+      <div className={styles.variantBar}>
+        <button
+          type="button"
+          className={[styles.variantTab, variant === "classic" ? styles.variantTabActive : ""].join(" ")}
+          onClick={() => setVariant("classic")}
+        >
+          {locale === "ar" ? "🀄 ضمنة عادية (Draw/Block)" : "🀄 Classic Draw & Block"}
+        </button>
+        <button
+          type="button"
+          className={[styles.variantTab, variant === "all_fives" ? styles.variantTabActive : ""].join(" ")}
+          onClick={() => setVariant("all_fives")}
+        >
+          {locale === "ar" ? "⚡ ضمنة أمريكاني (All-Fives 55)" : "⚡ American All-Fives 55"}
+        </button>
+      </div>
+
+      {/* All-Fives 55 Scoreboard */}
+      {variant === "all_fives" && (
+        <div className={styles.scoreboard55}>
+          <div className={styles.scoreItem}>
+            <span>{locale === "ar" ? "👤 نقاطك:" : "👤 You:"}</span>
+            <span className={styles.scoreNumber}>{mySeat === 0 ? p0Score : p1Score}</span>
+            <span className={styles.scoreTarget}>/ 50</span>
+          </div>
+          {scoreToast && (
+            <div className={styles.allFivesScoreBadge}>
+              {scoreToast.text}
+            </div>
+          )}
+          <div className={styles.scoreItem}>
+            <span>{locale === "ar" ? "🤖 الخصم:" : "🤖 Opponent:"}</span>
+            <span className={styles.scoreNumber}>{mySeat === 0 ? p1Score : p0Score}</span>
+            <span className={styles.scoreTarget}>/ 50</span>
+          </div>
+        </div>
+      )}
+
       {opponentSeat !== null && (
         <div className={styles.opponentRow}>
           <span className={styles.handCountLabel}>{t("game.dominoes.tiles_left", { count: oppCount })}</span>

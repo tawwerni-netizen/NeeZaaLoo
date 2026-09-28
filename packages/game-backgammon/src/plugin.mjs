@@ -78,6 +78,15 @@ function cloneState(state) {
 }
 
 function outcomeFor(state) {
+  if (state.resigned !== undefined && state.resigned !== null) {
+    const winner = other(state.resigned);
+    return {
+      result: winner === SEAT_0 ? "1-0" : "0-1",
+      reason: "DOUBLE_DROPPED",
+      multiplier: state.cubeValue || 1,
+    };
+  }
+
   const winner =
     state.off[SEAT_0] === CHECKERS_PER_SIDE ? SEAT_0 :
     state.off[SEAT_1] === CHECKERS_PER_SIDE ? SEAT_1 : null;
@@ -98,7 +107,8 @@ function outcomeFor(state) {
     multiplier = loserInWinnerHomeOrBar ? 3 : 2;
     reason = multiplier === 3 ? "BACKGAMMON" : "GAMMON";
   }
-  return { result: winner === SEAT_0 ? "1-0" : "0-1", reason, multiplier };
+  const finalMultiplier = (state.cubeValue || 1) * multiplier;
+  return { result: winner === SEAT_0 ? "1-0" : "0-1", reason, multiplier: finalMultiplier };
 }
 
 export const BackgammonPlugin = {
@@ -122,6 +132,48 @@ export const BackgammonPlugin = {
     if (typeof intent !== "object" || intent === null) return { ok: false, reason: "MALFORMED" };
     if (state.turn !== ctx.seat) return { ok: false, reason: "NOT_YOUR_TURN" };
     const seat = ctx.seat;
+
+    if (intent.double) {
+      if (intent.double === "PROPOSE") {
+        const nextStake = (state.cubeValue || 1) * 2;
+        let next = cloneState(state);
+        next.doublingOffer = { proposer: seat, nextStake };
+        next.moves.push({ seat, action: "DOUBLE_PROPOSED", stake: nextStake });
+        return {
+          ok: true,
+          state: next,
+          record: { action: "DOUBLE_PROPOSED", seat, stake: nextStake },
+          events: [{ type: "DOUBLE_PROPOSED", payload: { seat, stake: nextStake } }],
+        };
+      }
+      if (intent.double === "ACCEPT") {
+        if (!state.doublingOffer || state.doublingOffer.proposer === seat) return { ok: false, reason: "ILLEGAL" };
+        let next = cloneState(state);
+        next.cubeValue = state.doublingOffer.nextStake;
+        next.cubeOwner = seat;
+        next.doublingOffer = null;
+        next.moves.push({ seat, action: "DOUBLE_ACCEPTED", stake: next.cubeValue });
+        return {
+          ok: true,
+          state: next,
+          record: { action: "DOUBLE_ACCEPTED", seat, stake: next.cubeValue },
+          events: [{ type: "DOUBLE_ACCEPTED", payload: { seat, stake: next.cubeValue } }],
+        };
+      }
+      if (intent.double === "DROP") {
+        if (!state.doublingOffer || state.doublingOffer.proposer === seat) return { ok: false, reason: "ILLEGAL" };
+        let next = cloneState(state);
+        const winner = other(seat);
+        next.resigned = seat;
+        next.moves.push({ seat, action: "DOUBLE_DROPPED" });
+        return {
+          ok: true,
+          state: next,
+          record: { action: "DOUBLE_DROPPED", seat },
+          events: [{ type: "DOUBLE_DROPPED", payload: { seat, winner } }],
+        };
+      }
+    }
 
     if (intent.pass === true) {
       if (Object.keys(intent).length !== 1) return { ok: false, reason: "MALFORMED" };
