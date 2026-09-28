@@ -179,6 +179,21 @@ let consecutiveRefusedErrors = 0;
 const LOCK_FILE = path.join(here, ".nizalo-master.pid");
 const LOCK_TIMEOUT_MS = 6000; // 6 seconds without heartbeat = stale leader lock
 
+const childLogsRingBuffer = [];
+function recordChildLog(msg) {
+  const line = `[${new Date().toISOString()}] ${msg}`;
+  childLogsRingBuffer.push(line);
+  if (childLogsRingBuffer.length > 60) childLogsRingBuffer.shift();
+}
+
+function checkPortLive(port) {
+  return new Promise((resolve) => {
+    const s = net.createConnection({ host: "127.0.0.1", port });
+    s.once("connect", () => { s.destroy(); resolve(true); });
+    s.once("error", () => { s.destroy(); resolve(false); });
+  });
+}
+
 function isPidAlive(pid) {
   if (!pid || typeof pid !== "number" || isNaN(pid) || pid <= 0) return false;
   try {
@@ -444,7 +459,7 @@ function startProcess(name, script, childPort, customCwd) {
       const child = spawn(process.execPath, [script], {
         cwd: customCwd || here,
         env: childEnv,
-        stdio: "inherit",
+        stdio: ["inherit", "pipe", "pipe"],
         // detached:true gives each child its own process group so Hostinger's
         // group-wide SIGABRT (sent when terminating the old master) cannot
         // reach children that belong to the new master. We do NOT call
@@ -452,11 +467,26 @@ function startProcess(name, script, childPort, customCwd) {
         detached: true,
       });
 
+      if (child.stdout) {
+        child.stdout.on("data", (chunk) => {
+          process.stdout.write(chunk);
+          recordChildLog(`[${name}] ` + chunk.toString().trim().slice(0, 300));
+        });
+      }
+      if (child.stderr) {
+        child.stderr.on("data", (chunk) => {
+          process.stderr.write(chunk);
+          recordChildLog(`[${name}:err] ` + chunk.toString().trim().slice(0, 300));
+        });
+      }
+
       child.on("error", (err) => {
+        recordChildLog(`[${name}:spawn_err] ${err.message}`);
         console.error(`[${name}] Spawn error:`, err.message);
       });
 
       child.on("exit", (code, signal) => {
+        recordChildLog(`[${name}:exit] code=${code} signal=${signal}`);
         if (isShuttingDown) return;
         delete children[name];
         const now = Date.now();
@@ -643,9 +673,9 @@ function proxyHttp(req, res, targetPort, attempt = 1) {
     // Follower self-healing: if repeated ECONNREFUSED occurs on backend ports, check if leader is dead
     if (err.code === "ECONNREFUSED" && !isLeader && !isShuttingDown) {
       consecutiveRefusedErrors++;
-      if (consecutiveRefusedErrors >= 6) {
+      if (consecutiveRefusedErrors >= 3) {
         consecutiveRefusedErrors = 0;
-        console.warn(`[master] 6 consecutive ECONNREFUSED on port ${targetPort}. Checking if supervisor died...`);
+        console.warn(`[master] 3 consecutive ECONNREFUSED on port ${targetPort}. Checking if supervisor died...`);
         const status = acquireLeaderLock();
         if (status.isLeader) {
           if (leaderWatcherTimer) { clearInterval(leaderWatcherTimer); leaderWatcherTimer = null; }
@@ -858,6 +888,58 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // Diagnostics endpoint: reveals master role, lock status, ports, and last child logs
+  if (url.startsWith("/diag")) {
+    const forceLeader = url.includes("forceLeader=1");
+    if (forceLeader && !isLeader) {
+      console.log(`[diag] Forcing leadership acquisition on PID ${process.pid}`);
+      try { fs.unlinkSync(LOCK_FILE); } catch {}
+      const st = acquireLeaderLock();
+      if (st.isLeader) {
+        bootServicesAsLeader();
+      }
+    }
+
+    function probe(targetPort) {
+      return new Promise((resolve) => {
+        const s = net.createConnection({ host: "127.0.0.1", port: targetPort });
+        s.once("connect", () => { s.destroy(); resolve({ port: targetPort, open: true }); });
+        s.once("error", (e) => { s.destroy(); resolve({ port: targetPort, open: false, error: e.code }); });
+      });
+    }
+
+    Promise.all([probe(nextPort), probe(apiPort), probe(gwPort), probe(workerPort)]).then((ports) => {
+      let lockData = null;
+      try {
+        lockData = JSON.parse(fs.readFileSync(LOCK_FILE, "utf8"));
+      } catch (e) {
+        lockData = { error: e.message };
+      }
+
+      const childStatus = {};
+      for (const [name, ch] of Object.entries(children)) {
+        childStatus[name] = {
+          pid: ch ? ch.pid : null,
+          killed: ch ? ch.killed : null,
+          exitCode: ch ? ch.exitCode : null,
+          signalCode: ch ? ch.signalCode : null,
+        };
+      }
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({
+        masterPid: process.pid,
+        isLeader,
+        lockData,
+        ports,
+        children: childStatus,
+        recentLogs: childLogsRingBuffer.slice(-40),
+        uptime: process.uptime(),
+      }, null, 2));
+    });
+    return;
+  }
+
   // Static assets (CSS, JS chunks, images, avatars, fonts) bypass rate limits entirely
   if (!isStaticAsset(url)) {
     const check = checkRateLimit(ip, isApi, false, url);
@@ -1021,7 +1103,7 @@ function bootServicesAsLeader() {
 
 function startFollowerWatcher() {
   if (leaderWatcherTimer) return;
-  leaderWatcherTimer = setInterval(() => {
+  leaderWatcherTimer = setInterval(async () => {
     if (isShuttingDown) {
       clearInterval(leaderWatcherTimer);
       leaderWatcherTimer = null;
@@ -1033,7 +1115,25 @@ function startFollowerWatcher() {
       leaderWatcherTimer = null;
       console.log(`[master] Promoted to leader supervisor (PID ${process.pid}). Starting child services...`);
       bootServicesAsLeader();
+      return;
     }
+
+    // Proactive backend check: if we are follower, but both 4000 and 3002 are unreachable,
+    // the leader has failed or died without releasing lock. Take over immediately!
+    try {
+      const isApiUp = await checkPortLive(apiPort);
+      const isNextUp = await checkPortLive(nextPort);
+      if (!isApiUp && !isNextUp) {
+        console.warn(`[master] Both API (${apiPort}) and Next.js (${nextPort}) unreachable under current leader. Breaking lock and taking over.`);
+        try { fs.unlinkSync(LOCK_FILE); } catch {}
+        const newStatus = acquireLeaderLock();
+        if (newStatus.isLeader) {
+          clearInterval(leaderWatcherTimer);
+          leaderWatcherTimer = null;
+          bootServicesAsLeader();
+        }
+      }
+    } catch {}
   }, 2000);
   if (typeof leaderWatcherTimer.unref === "function") {
     leaderWatcherTimer.unref();
