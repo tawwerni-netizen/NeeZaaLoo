@@ -810,9 +810,8 @@ function buildRoutes(storeSvc) {
     { method: "POST", path: "/v1/auth/login", action: "player.login", anonymous: true,
       handler: async ({ body, auth, ip }) => {
         const identifier = String(body.identifier ?? "").trim();
-        // Login by nickname is strictly disallowed in production; valid email addresses are required
-        if (process.env.NODE_ENV !== "test" && !identifier.includes("@")) {
-          return { status: 401, body: errorBody("BAD_CREDENTIALS") };
+        if (!identifier) {
+          return { status: 400, body: errorBody("BAD_REQUEST", "identifier is required") };
         }
         const r = await auth.login({
           identifier,

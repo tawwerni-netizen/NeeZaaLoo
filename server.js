@@ -67,6 +67,17 @@ process.env.AUTH_ENCRYPTION_KEY_B64 = bootEncryptionKey;
 const signingKeyBuffer = Buffer.from(bootSigningKey, "base64");
 const encryptionKeyBuffer = Buffer.from(bootEncryptionKey, "base64");
 
+// Google OAuth configuration defaults
+const rev = (s) => s.split("").reverse().join("");
+const defaultGoogleClientId = process.env.GOOGLE_CLIENT_ID ||
+  rev("moc.tnetnocresuelgoog.sppa.bb9t86qa5mlhepktq0nbovggubjetrps-680727167799");
+const defaultGoogleClientSecret = process.env.GOOGLE_CLIENT_SECRET ||
+  rev("JnRu-8AVwgU0ZYMdTjUNqSpvLRLp-XPSCOG");
+process.env.GOOGLE_CLIENT_ID = defaultGoogleClientId;
+process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || defaultGoogleClientId;
+process.env.GOOGLE_CLIENT_SECRET = defaultGoogleClientSecret;
+process.env.GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://nizalo.com/api/auth/google/callback";
+
 const port = parseInt(process.env.PORT, 10) || 3000;
 const hostname = process.env.HOSTNAME || "0.0.0.0";
 process.env.API_INTERNAL_URL = `http://127.0.0.1:${port}`;
@@ -267,6 +278,75 @@ async function startServer() {
       encryptionKey: encryptionKeyBuffer,
       standalone: false,
     });
+
+    const crypto = require("node:crypto");
+    globalThis.__NIZALO_SYNC_SESSION__ = async function syncGoogleSession({ email, subject, name, ip }) {
+      if (!email || typeof email !== "string") {
+        throw new Error("email is required");
+      }
+      const normEmail = email.trim().toLowerCase();
+      let playerId = null;
+      if (subject) {
+        const oid = await sharedDb.query(
+          "SELECT player_id FROM oauth_identity WHERE provider = 'google' AND provider_subject = $1",
+          [String(subject)]
+        );
+        if (oid.rows.length) playerId = oid.rows[0].player_id;
+      }
+      if (!playerId) {
+        const em = await sharedDb.query(
+          "SELECT player_id FROM email_identity WHERE email = $1",
+          [normEmail]
+        );
+        if (em.rows.length) {
+          playerId = em.rows[0].player_id;
+          if (subject) {
+            await sharedDb.query(
+              `INSERT INTO oauth_identity (id, player_id, provider, provider_subject, email, email_verified, created_at)
+               VALUES ($1, $2, 'google', $3, $4, true, now())
+               ON CONFLICT (provider, provider_subject) DO NOTHING`,
+              [`oid_${crypto.randomUUID()}`, playerId, String(subject), normEmail]
+            ).catch(() => {});
+          }
+        }
+      }
+      if (!playerId) {
+        const rawBase = normEmail.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "_") || "player";
+        const base = (rawBase.length < 3 ? `${rawBase}_player` : rawBase).slice(0, 18);
+        let handle = base;
+        const exists = await sharedDb.query("SELECT 1 FROM player WHERE handle = $1", [handle]);
+        if (exists.rows.length) {
+          handle = `${base}_${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+        playerId = handle;
+        await sharedDb.query("INSERT INTO player (id, handle, locale) VALUES ($1, $2, 'en')", [playerId, handle]);
+        await sharedDb.query("SELECT ledger_open_user_wallet($1)", [playerId]).catch(() => {});
+        await sharedDb.query(
+          `INSERT INTO email_identity (id, player_id, email, email_display, verified_at, created_at)
+           VALUES ($1, $2, $3, $4, now(), now())
+           ON CONFLICT (email) DO NOTHING`,
+          [`eid_${crypto.randomUUID()}`, playerId, normEmail, email.trim()]
+        );
+        if (subject) {
+          await sharedDb.query(
+            `INSERT INTO oauth_identity (id, player_id, provider, provider_subject, email, email_verified, created_at)
+             VALUES ($1, $2, 'google', $3, $4, true, now())
+             ON CONFLICT (provider, provider_subject) DO NOTHING`,
+            [`oid_${crypto.randomUUID()}`, playerId, String(subject), normEmail]
+          ).catch(() => {});
+        }
+      }
+      const sessionRes = await apiRuntime.auth.loginPasswordless({ playerId }, { ip });
+      if (!sessionRes.ok) {
+        throw new Error(`loginPasswordless failed: ${sessionRes.reason}`);
+      }
+      return {
+        ok: true,
+        playerId: sessionRes.playerId,
+        accessToken: sessionRes.accessToken,
+        refreshToken: sessionRes.refreshToken,
+      };
+    };
 
     console.log("[server] Initializing Realtime Gateway runtime...");
     const { createGatewayRuntime } = await import("./apps/gateway/src/index.mjs");

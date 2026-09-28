@@ -40,44 +40,63 @@ export async function POST(request: NextRequest) {
       name: payload.name || payload.given_name || payload.email.split("@")[0],
     });
 
-    const candidates = [
-      process.env.API_INTERNAL_URL || "http://127.0.0.1:4000",
-      "http://localhost:4000",
-      "http://127.0.0.1:3000",
-      "http://localhost:3000",
-      request.nextUrl.origin,
-    ].filter(Boolean);
+    let sessionData: { accessToken: string; refreshToken: string; playerId?: string } | null = null;
 
-    let syncRes: Response | null = null;
-    let lastError: any = null;
-
-    for (const base of candidates) {
+    // Prefer fast in-process session generation (unified monolith)
+    if (typeof (globalThis as any).__NIZALO_SYNC_SESSION__ === "function") {
       try {
-        const candidateRes = await fetch(`${base}/v1/auth/google/sync-session`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: syncPayload,
-          signal: AbortSignal.timeout(4000),
+        const inProcResult = await (globalThis as any).__NIZALO_SYNC_SESSION__({
+          email: payload.email,
+          subject: payload.sub || payload.id,
+          name: payload.name || payload.given_name || payload.email.split("@")[0],
+          ip: request.headers.get("x-forwarded-for") || undefined,
         });
-        if (candidateRes.ok) {
-          syncRes = candidateRes;
-          break;
-        } else {
-          const errText = await candidateRes.text().catch(() => "");
-          lastError = `Status ${candidateRes.status} from ${base}: ${errText.slice(0, 100)}`;
-          console.warn(`[OneTap] Candidate ${base} returned status ${candidateRes.status}:`, errText.slice(0, 100));
+        if (inProcResult?.accessToken) {
+          sessionData = inProcResult;
         }
-      } catch (err: any) {
-        lastError = err?.message || err;
+      } catch (inProcErr) {
+        console.error("[OneTap] In-process sync error:", inProcErr);
       }
     }
 
-    if (!syncRes || !syncRes.ok) {
-      console.error("[OneTap] All sync targets failed. Last error:", lastError);
-      return NextResponse.json({ ok: false, error: "SYNC_SESSION_FAILED" }, { status: 502 });
+    // Fallback to loopback candidates if not running in unified monolith
+    if (!sessionData) {
+      const candidates = [
+        process.env.API_INTERNAL_URL || "http://127.0.0.1:4000",
+        "http://localhost:4000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+        request.nextUrl.origin,
+      ].filter(Boolean);
+
+      let lastError: any = null;
+      for (const base of candidates) {
+        try {
+          const candidateRes = await fetch(`${base}/v1/auth/google/sync-session`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: syncPayload,
+            signal: AbortSignal.timeout(4000),
+          });
+          if (candidateRes.ok) {
+            sessionData = await candidateRes.json();
+            break;
+          } else {
+            const errText = await candidateRes.text().catch(() => "");
+            lastError = `Status ${candidateRes.status} from ${base}: ${errText.slice(0, 100)}`;
+            console.warn(`[OneTap] Candidate ${base} returned status ${candidateRes.status}:`, errText.slice(0, 100));
+          }
+        } catch (err: any) {
+          lastError = err?.message || err;
+        }
+      }
+
+      if (!sessionData || !sessionData.accessToken) {
+        console.error("[OneTap] All sync targets failed. Last error:", lastError);
+        return NextResponse.json({ ok: false, error: "SYNC_SESSION_FAILED" }, { status: 502 });
+      }
     }
 
-    const sessionData = await syncRes.json();
     const { accessToken, refreshToken, playerId } = sessionData;
 
     const response = NextResponse.json({
