@@ -142,6 +142,8 @@ function getEnv(childPort) {
   return Object.assign({}, process.env, {
     NODE_ENV:               process.env.API_NODE_ENV || "production",
     PORT:                   String(childPort),
+    HOST:                   "127.0.0.1",
+    HOSTNAME:               "127.0.0.1",
     WS_PORT:                String(gwPort),
     DATABASE_URL:           process.env.DATABASE_URL,
     AUTH_SIGNING_KEY_B64:   signingKey,
@@ -165,28 +167,191 @@ function getEnv(childPort) {
 }
 
 // ---------------------------------------------------------------------------
-// Process Management (Safe & Isolated for Hostinger Cloud)
+// Process Management & Leader Election (Safe for Hostinger Multi-Worker Cloud)
 // ---------------------------------------------------------------------------
 const children = {};
 let isShuttingDown = false;
+let isLeader = false;
+let leaderWatcherTimer = null;
+
+const LOCK_FILE = path.join(here, ".nizalo-master.pid");
+
+function isPidAlive(pid) {
+  if (!pid || typeof pid !== "number") return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
- * Evict any process currently holding `port` on Linux by using `fuser`, `lsof`, or `ss`.
- * This runs synchronously via execSync so the port is freed BEFORE we spawn
- * the child that needs it. Safe on Hostinger (Linux); a no-op on errors.
+ * Atomically check or acquire the leader supervisor role.
+ * On Hostinger Cloud, multiple worker instances of server.js are spawned
+ * concurrently to handle traffic on port 3000. Exactly ONE becomes the Leader
+ * (supervising the 4 child processes), while all other instances run as
+ * Follower proxy workers forwarding requests without port collisions.
+ */
+function acquireLeaderLock() {
+  try {
+    const fd = fs.openSync(LOCK_FILE, "wx");
+    fs.writeFileSync(fd, JSON.stringify({ pid: process.pid, time: Date.now() }));
+    fs.closeSync(fd);
+    return { isLeader: true };
+  } catch (err) {
+    if (err.code === "EEXIST") {
+      try {
+        const raw = fs.readFileSync(LOCK_FILE, "utf8");
+        const data = JSON.parse(raw);
+        if (data && data.pid && isPidAlive(data.pid)) {
+          if (data.pid === process.pid) return { isLeader: true };
+          return { isLeader: false, leaderPid: data.pid };
+        }
+      } catch {}
+      // Lock file is stale (previous leader died)
+      try { fs.unlinkSync(LOCK_FILE); } catch {}
+      try {
+        const fd = fs.openSync(LOCK_FILE, "wx");
+        fs.writeFileSync(fd, JSON.stringify({ pid: process.pid, time: Date.now() }));
+        fs.closeSync(fd);
+        return { isLeader: true };
+      } catch {
+        return { isLeader: false };
+      }
+    }
+    return { isLeader: false };
+  }
+}
+
+/**
+ * Direct procfs socket-owner discovery on Linux.
+ * Bypasses missing fuser/lsof utilities by inspecting /proc/net/tcp and /proc/[pid]/fd.
+ */
+function findPidsByPort(port) {
+  if (process.platform !== "linux") return [];
+  const pids = new Set();
+  const hexPort = port.toString(16).toUpperCase().padStart(4, "0");
+  try {
+    const inodes = new Set();
+    for (const tcpFile of ["/proc/net/tcp", "/proc/net/tcp6"]) {
+      if (!fs.existsSync(tcpFile)) continue;
+      const content = fs.readFileSync(tcpFile, "utf8");
+      for (const line of content.split("\n")) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 10) {
+          const localAddr = parts[1];
+          const state = parts[3];
+          if (localAddr && localAddr.endsWith(":" + hexPort) && state === "0A") {
+            const inode = parts[9];
+            if (inode && inode !== "0") inodes.add(inode);
+          }
+        }
+      }
+    }
+    if (inodes.size === 0) return [];
+
+    const procEntries = fs.readdirSync("/proc");
+    for (const entry of procEntries) {
+      if (!/^\d+$/.test(entry)) continue;
+      const pid = parseInt(entry, 10);
+      if (pid === process.pid) continue;
+      const fdDir = `/proc/${pid}/fd`;
+      try {
+        const fds = fs.readdirSync(fdDir);
+        for (const fd of fds) {
+          try {
+            const link = fs.readlinkSync(`${fdDir}/${fd}`);
+            for (const inode of inodes) {
+              if (link.includes(`socket:[${inode}]`)) {
+                pids.add(pid);
+                break;
+              }
+            }
+          } catch {}
+        }
+      } catch {}
+    }
+  } catch {}
+  return Array.from(pids);
+}
+
+/**
+ * Discover any stale orphan node processes from earlier dead deployments.
+ */
+function findStaleChildPids() {
+  if (process.platform !== "linux") return [];
+  const pids = [];
+  const knownScripts = [
+    "apps/api/src/index.mjs",
+    "apps/gateway/src/index.mjs",
+    "apps/worker/src/index.mjs",
+    "hostinger/server.js",
+    ".next/hostinger",
+  ];
+  try {
+    const entries = fs.readdirSync("/proc");
+    for (const entry of entries) {
+      if (!/^\d+$/.test(entry)) continue;
+      const pid = parseInt(entry, 10);
+      if (pid === process.pid) continue;
+      try {
+        const cmdline = fs.readFileSync(`/proc/${pid}/cmdline`, "utf8");
+        for (const s of knownScripts) {
+          if (cmdline.includes(s)) {
+            pids.push(pid);
+            break;
+          }
+        }
+      } catch {}
+    }
+  } catch {}
+  return pids;
+}
+
+/**
+ * Evict any process currently holding `port` on Linux.
+ * Uses pure-node procfs inspection first (works everywhere),
+ * followed by standard tool fallbacks (fuser, lsof, ss).
  */
 function evictPort(port) {
   if (process.platform === "win32") return;
+  // 1. Direct procfs socket-owner discovery and termination
+  try {
+    const pids = findPidsByPort(port);
+    for (const p of pids) {
+      try {
+        console.log(`[evict] Terminating process ${p} holding port ${port}...`);
+        process.kill(p, "SIGKILL");
+      } catch {}
+    }
+  } catch {}
+
+  // 2. Shell fallback tools
   try {
     const cmd = `sh -c "fuser -k ${port}/tcp 2>/dev/null || (lsof -ti:${port} 2>/dev/null | xargs kill -9 2>/dev/null) || (ss -lptn 'sport = :${port}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs kill -9 2>/dev/null) || true"`;
     require("node:child_process").execSync(cmd, {
       stdio: "ignore",
       timeout: 3000,
     });
-    console.log(`[evict] Cleared port ${port}`);
-  } catch {
-    // Nothing was holding the port, or eviction tool is unavailable — both are fine.
+  } catch {}
+}
+
+/**
+ * Evict all stale child processes and ports before spawning fresh instances.
+ */
+function evictStaleOrphans() {
+  const stalePids = findStaleChildPids();
+  for (const p of stalePids) {
+    try {
+      console.log(`[evict] Terminating stale child process (PID ${p})`);
+      process.kill(p, "SIGKILL");
+    } catch {}
   }
+  evictPort(nextPort);
+  evictPort(apiPort);
+  evictPort(gwPort);
+  evictPort(workerPort);
 }
 
 /**
@@ -301,7 +466,19 @@ function startProcess(name, script, childPort, customCwd) {
 function shutdown() {
   if (isShuttingDown) return;
   isShuttingDown = true;
-  console.log("[master] Gracefully shutting down all child processes...");
+  console.log(`[master] Gracefully shutting down (PID ${process.pid})...`);
+  try {
+    if (leaderWatcherTimer) clearInterval(leaderWatcherTimer);
+  } catch {}
+  try {
+    if (isLeader && fs.existsSync(LOCK_FILE)) {
+      const raw = fs.readFileSync(LOCK_FILE, "utf8");
+      const data = JSON.parse(raw);
+      if (data && data.pid === process.pid) {
+        fs.unlinkSync(LOCK_FILE);
+      }
+    }
+  } catch {}
   try {
     server.close();
   } catch {}
@@ -759,6 +936,38 @@ server.on("error", (err) => {
   shutdown();
 });
 
+function bootServicesAsLeader() {
+  if (isShuttingDown) return;
+  isLeader = true;
+  console.log(`[master] Elected as leader supervisor (PID ${process.pid}). Initializing child services.`);
+  evictStaleOrphans();
+
+  startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
+  startProcess("API",     apiScript,    apiPort);
+  startProcess("Gateway", gwScript,     gwPort);
+  startProcess("Worker",  workerScript, workerPort);
+}
+
+function startFollowerWatcher() {
+  if (leaderWatcherTimer) return;
+  leaderWatcherTimer = setInterval(() => {
+    if (isShuttingDown) {
+      clearInterval(leaderWatcherTimer);
+      return;
+    }
+    const status = acquireLeaderLock();
+    if (status.isLeader) {
+      clearInterval(leaderWatcherTimer);
+      leaderWatcherTimer = null;
+      console.log(`[master] Promoted to leader supervisor (PID ${process.pid}). Starting child services...`);
+      bootServicesAsLeader();
+    }
+  }, 3000);
+  if (typeof leaderWatcherTimer.unref === "function") {
+    leaderWatcherTimer.unref();
+  }
+}
+
 server.listen(port, hostname, () => {
   console.log(`========================================`);
   console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
@@ -768,17 +977,12 @@ server.listen(port, hostname, () => {
   console.log(`  -> Worker    : ${workerPort}`);
   console.log(`========================================`);
 
-  // ---------------------------------------------------------------------------
-  // Spawn children AFTER the master proxy is already accepting connections.
-  // Hostinger's watchdog probes port 3000 within ~3 seconds of process start;
-  // spawning children here (instead of before listen) ensures the watchdog
-  // gets a 200 from /health immediately and does NOT send SIGABRT to the
-  // deployment. Children each have internal EADDRINUSE retry loops so
-  // overlapping deployments resolve port conflicts without external kills.
-  // ---------------------------------------------------------------------------
-  startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
-  startProcess("API",     apiScript,    apiPort);
-  startProcess("Gateway", gwScript,     gwPort);
-  startProcess("Worker",  workerScript, workerPort);
+  const status = acquireLeaderLock();
+  if (status.isLeader) {
+    bootServicesAsLeader();
+  } else {
+    console.log(`[master] Running as proxy worker (PID ${process.pid}). Active supervisor is PID ${status.leaderPid}.`);
+    startFollowerWatcher();
+  }
 });
 

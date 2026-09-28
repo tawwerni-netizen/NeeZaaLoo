@@ -433,7 +433,7 @@ async function main() {
     corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:3000,http://127.0.0.1:3000,https://nizalo.com,https://app.nizalo.com").split(",").map((s) => s.trim()).filter(Boolean),
   });
 
-  const host = process.env.HOST || "0.0.0.0";
+  const host = process.env.HOST || "127.0.0.1";
   const port = Number(process.env.PORT || 4000);
   // Retry binding on EADDRINUSE: Hostinger overlapping deployments may leave
   // the old API holding port 4000 briefly. Wait up to 60s.
@@ -460,7 +460,39 @@ async function main() {
         if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
         const remaining = Math.round((deadline - Date.now()) / 1000);
         console.warn(`[api] Port ${port} busy (EADDRINUSE), evicting stale holder and retrying for ${remaining}s more...`);
-        if (process.platform !== "win32") {
+        if (process.platform === "linux") {
+          try {
+            const hexPort = port.toString(16).toUpperCase().padStart(4, "0");
+            const inodes = new Set();
+            for (const f of ["/proc/net/tcp", "/proc/net/tcp6"]) {
+              if (!fs.existsSync(f)) continue;
+              for (const l of fs.readFileSync(f, "utf8").split("\n")) {
+                const parts = l.trim().split(/\s+/);
+                if (parts[1]?.endsWith(":" + hexPort) && parts[3] === "0A") {
+                  if (parts[9] && parts[9] !== "0") inodes.add(parts[9]);
+                }
+              }
+            }
+            if (inodes.size > 0) {
+              for (const entry of fs.readdirSync("/proc")) {
+                if (!/^\d+$/.test(entry)) continue;
+                const pid = parseInt(entry, 10);
+                if (pid === process.pid) continue;
+                const fdDir = `/proc/${pid}/fd`;
+                try {
+                  for (const fd of fs.readdirSync(fdDir)) {
+                    const link = fs.readlinkSync(`${fdDir}/${fd}`);
+                    for (const inode of inodes) {
+                      if (link.includes(`socket:[${inode}]`)) {
+                        process.kill(pid, "SIGKILL");
+                        break;
+                      }
+                    }
+                  }
+                } catch {}
+              }
+            }
+          } catch {}
           try {
             const cmd = `sh -c "fuser -k ${port}/tcp 2>/dev/null || (lsof -ti:${port} 2>/dev/null | xargs kill -9 2>/dev/null) || true"`;
             execSync(cmd, { stdio: "ignore", timeout: 2000 });

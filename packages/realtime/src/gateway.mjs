@@ -12,6 +12,7 @@
  * the truth again.
  */
 import http from "node:http";
+import fs from "node:fs";
 import { execSync } from "node:child_process";
 import { WebSocketServer } from "ws";
 import {
@@ -433,14 +434,46 @@ export async function createGateway({
           httpServer.once("error", onError);
           httpServer.once("listening", onListening);
           if (host) httpServer.listen(port, host);
-          else httpServer.listen(port);
+          else httpServer.listen(port, "127.0.0.1");
         });
         break; // bound successfully
       } catch (err) {
         if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
         const remaining = Math.round((deadline - Date.now()) / 1000);
         console.warn(`[gateway] Port ${port} busy (EADDRINUSE), evicting stale holder and retrying for ${remaining}s more...`);
-        if (process.platform !== "win32") {
+        if (process.platform === "linux") {
+          try {
+            const hexPort = port.toString(16).toUpperCase().padStart(4, "0");
+            const inodes = new Set();
+            for (const f of ["/proc/net/tcp", "/proc/net/tcp6"]) {
+              if (!fs.existsSync(f)) continue;
+              for (const l of fs.readFileSync(f, "utf8").split("\n")) {
+                const parts = l.trim().split(/\s+/);
+                if (parts[1]?.endsWith(":" + hexPort) && parts[3] === "0A") {
+                  if (parts[9] && parts[9] !== "0") inodes.add(parts[9]);
+                }
+              }
+            }
+            if (inodes.size > 0) {
+              for (const entry of fs.readdirSync("/proc")) {
+                if (!/^\d+$/.test(entry)) continue;
+                const pid = parseInt(entry, 10);
+                if (pid === process.pid) continue;
+                const fdDir = `/proc/${pid}/fd`;
+                try {
+                  for (const fd of fs.readdirSync(fdDir)) {
+                    const link = fs.readlinkSync(`${fdDir}/${fd}`);
+                    for (const inode of inodes) {
+                      if (link.includes(`socket:[${inode}]`)) {
+                        process.kill(pid, "SIGKILL");
+                        break;
+                      }
+                    }
+                  }
+                } catch {}
+              }
+            }
+          } catch {}
           try {
             const cmd = `sh -c "fuser -k ${port}/tcp 2>/dev/null || (lsof -ti:${port} 2>/dev/null | xargs kill -9 2>/dev/null) || true"`;
             execSync(cmd, { stdio: "ignore", timeout: 2000 });

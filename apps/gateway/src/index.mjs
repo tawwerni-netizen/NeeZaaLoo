@@ -167,7 +167,7 @@ async function main() {
   const gw = await createGateway({
     auth, duels, plugins, store, lease, ownerId, fairPlay, db,
     port: Number(process.env.WS_PORT || 3010),
-    host: process.env.HOST || "0.0.0.0",
+    host: process.env.HOST || "127.0.0.1",
     // The same allowlist the REST API uses for CORS: a socket is just as
     // much a cross-origin surface, and is not covered by CORS at all.
     allowedOrigins: (process.env.CORS_ORIGINS
