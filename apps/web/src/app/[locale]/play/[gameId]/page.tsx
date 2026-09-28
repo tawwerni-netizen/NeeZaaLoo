@@ -374,8 +374,8 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               } else if (gameId === "chess" && d === "EXPERT") {
                 // Expert mode: Mandatory official strict rules (1m per move anti-cheat)
                 void startVsComputer("EXPERT", "PER_MOVE_60S");
-              } else if (gameId === "ludo") {
-                // Ludo doesn't need a chess-clock time control step.
+              } else if (gameId === "ludo" || gameId === "xo" || gameId === "speed-math" || gameId === "connect-four" || gameId === "dominoes") {
+                // Fast-paced and classic tile games start immediately with authentic standard turn pacing:
                 void startVsComputer(d, "STANDARD");
               } else {
                 setStep({ name: "time_control", difficulty: d });
