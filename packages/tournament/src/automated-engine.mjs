@@ -37,6 +37,7 @@ export const TOURNAMENT_TIERS = [
 export const GAME_TIME_CONTROLS = {
   chess: { initialSeconds: 300, incrementSeconds: 3 },
   dominoes: { initialSeconds: 120, incrementSeconds: 2 },
+  ludo: { initialSeconds: 180, incrementSeconds: 2 },
   backgammon: { initialSeconds: 180, incrementSeconds: 2 },
   checkers: { initialSeconds: 120, incrementSeconds: 2 },
   "speed-math": { initialSeconds: 60, incrementSeconds: 0 },

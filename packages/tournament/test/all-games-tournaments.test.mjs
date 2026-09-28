@@ -8,7 +8,7 @@ import { createTournamentBotFiller } from "../src/bot-filler.mjs";
 
 const ACTIVE_GAMES = [
   "chess", "dominoes", "backgammon", "speed-math", "xo",
-  "connect-four", "checkers", "reversi", "gomoku", "seega"
+  "connect-four", "checkers", "reversi", "gomoku", "seega", "ludo"
 ];
 
 describe("All 10 Games Tournaments Activation", () => {

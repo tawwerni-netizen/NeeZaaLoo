@@ -153,6 +153,9 @@ const BACKGAMMON_I18N: Record<string, {
   btnMahbousa: string;
   btnTawla31: string;
   doubleBadge: (d: number) => string;
+  youAccepted: (stake: number) => string;
+  youDropped: string;
+  pinnedSuccess: string;
 }> = {
   ar: {
     initialStake: "🎲 مكعب المضاعفة: الرهان الأساسي 1x",
@@ -170,6 +173,9 @@ const BACKGAMMON_I18N: Record<string, {
     btnMahbousa: "🔒 محبوسة مصرية",
     btnTawla31: "👑 طاولة 31",
     doubleBadge: (d) => `⚡ دبل ${d}-${d} • ٤ حركات!`,
+    youAccepted: (s) => `✅ قبلت التحدي! تم رفع الرهان إلى ${s}x!`,
+    youDropped: "🏳️ تم الانسحاب من الجولة.",
+    pinnedSuccess: "🔒 تم حَبْس قرص الخصم بنجاح! لا يمكنه تحريكه حتى تتركه.",
   },
   en: {
     initialStake: "🎲 Doubling Cube: Initial Stakes 1x",
@@ -187,6 +193,9 @@ const BACKGAMMON_I18N: Record<string, {
     btnMahbousa: "🔒 Mahbousa",
     btnTawla31: "👑 Tawla 31",
     doubleBadge: (d) => `⚡ DOUBLE ${d}-${d} • 4 MOVES!`,
+    youAccepted: (s) => `✅ Challenge accepted! Stake is now ${s}x!`,
+    youDropped: "🏳️ Round conceded.",
+    pinnedSuccess: "🔒 Enemy checker pinned! Cannot move until unblocked.",
   },
   es: {
     initialStake: "🎲 Dado de doblar: Apuesta inicial 1x",
@@ -204,6 +213,9 @@ const BACKGAMMON_I18N: Record<string, {
     btnMahbousa: "🔒 Mahbousa",
     btnTawla31: "👑 Tawla 31",
     doubleBadge: (d) => `⚡ DOBLE ${d}-${d} • ¡4 MOVIMIENTOS!`,
+    youAccepted: (s) => `✅ ¡Desafío aceptado! ¡La apuesta es ahora ${s}x!`,
+    youDropped: "🏳️ Ronda concedida.",
+    pinnedSuccess: "🔒 ¡Ficha rival atrapada! No puede moverse hasta ser liberada.",
   },
   fr: {
     initialStake: "🎲 Videau : Enjeu initial 1x",
@@ -221,6 +233,9 @@ const BACKGAMMON_I18N: Record<string, {
     btnMahbousa: "🔒 Mahbousa",
     btnTawla31: "👑 Tawla 31",
     doubleBadge: (d) => `⚡ DOUBLE ${d}-${d} • 4 COUPS !`,
+    youAccepted: (s) => `✅ Défi accepté ! L'enjeu est désormais ${s}x !`,
+    youDropped: "🏳️ Manche concédée.",
+    pinnedSuccess: "🔒 Pion ennemi bloqué ! Impossible de bouger avant d'être libéré.",
   },
   hi: {
     initialStake: "🎲 डबलिंग क्यूब: प्रारंभिक दांव 1x",
@@ -238,6 +253,9 @@ const BACKGAMMON_I18N: Record<string, {
     btnMahbousa: "🔒 महबूसा",
     btnTawla31: "👑 तावला 31",
     doubleBadge: (d) => `⚡ डबल ${d}-${d} • 4 चालें!`,
+    youAccepted: (s) => `✅ चुनौती स्वीकार की! दांव अब ${s}x है!`,
+    youDropped: "🏳️ राउंड छोड़ दिया गया।",
+    pinnedSuccess: "🔒 दुश्मन का मोहरा फंसा दिया गया! मुक्त होने तक हिल नहीं सकता।",
   },
   zh: {
     initialStake: "🎲 加倍骰子：初始赌注 1x",
@@ -255,6 +273,9 @@ const BACKGAMMON_I18N: Record<string, {
     btnMahbousa: "🔒 封锁棋",
     btnTawla31: "👑 塔夫拉31",
     doubleBadge: (d) => `⚡ 豹子双骰 ${d}-${d} • 4次走子！`,
+    youAccepted: (s) => `✅ 已接受挑战！赌注提升至 ${s}x！`,
+    youDropped: "🏳️ 本轮已弃权认输。",
+    pinnedSuccess: "🔒 成功封锁敌方棋子！解除压制前无法移动。",
   },
 };
 
@@ -315,7 +336,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
     const targetIdx = DOUBLING_STAKES.indexOf(targetStake as any);
     if (targetIdx !== -1) setDoublingStakeIndex(targetIdx);
     playDoublingCubeClack();
-    const msg = locale === "ar" ? `✅ قبلت التحدي! تم رفع الرهان إلى ${targetStake}x!` : `✅ Challenge accepted! Stake is now ${targetStake}x!`;
+    const msg = strings.youAccepted(targetStake);
     setDoublingBannerText(msg);
     setDoublingOffer(null);
     setTimeout(() => setDoublingBannerText(null), 3000);
@@ -324,7 +345,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
   function handleDropDouble() {
     if (!doublingOffer) return;
     setDoublingOffer(null);
-    const msg = locale === "ar" ? "🏳️ تم الانسحاب من الجولة." : "🏳️ Round conceded.";
+    const msg = strings.youDropped;
     setDoublingBannerText(msg);
     onMove({ pass: true });
     setTimeout(() => setDoublingBannerText(null), 3000);
@@ -371,9 +392,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
         if (variant === "mahbousa") {
           playMahbousaPinSound();
           setPinnedPoints((prev) => new Set([...prev, idx]));
-          const banner = locale === "ar"
-            ? "🔒 تم حَبْس قرص الخصم بنجاح! لا يمكنه تحريكه حتى تتركه."
-            : "🔒 Enemy checker pinned! Cannot move until unblocked.";
+          const banner = strings.pinnedSuccess;
           setDoublingBannerText(banner);
           setTimeout(() => setDoublingBannerText((prev) => (prev === banner ? null : prev)), 3500);
         } else {
@@ -454,7 +473,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
           className={[styles.variantBtn, variant === "classic" ? styles.variantBtnActive : ""].join(" ")}
           onClick={() => {
             setVariant("classic");
-            setDoublingBannerText(locale === "ar" ? "🎲 تم تفعيل: طاولة كلاسيكية (قواعد عالمية)" : "🎲 Classic Backgammon Active");
+            setDoublingBannerText(strings.classicActive);
             setTimeout(() => setDoublingBannerText(null), 2500);
           }}
         >
