@@ -6,6 +6,42 @@
   width: 100%;
 }
 
+.blitzHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--nz-space-1);
+}
+
+.blitzChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: var(--nz-radius-pill);
+  background: rgba(255, 90, 43, 0.15);
+  border: 1px solid rgba(255, 90, 43, 0.45);
+  color: #ff8c5a;
+  font-size: var(--nz-text-xs);
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  box-shadow: 0 0 15px rgba(255, 90, 43, 0.25);
+}
+
+.blitzPulseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff5a2b;
+  box-shadow: 0 0 8px #ff5a2b;
+  animation: blitzPulse 0.9s infinite alternate;
+}
+
+@keyframes blitzPulse {
+  from { opacity: 0.4; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.25); }
+}
+
 .boardContainer {
   position: relative;
   display: flex;

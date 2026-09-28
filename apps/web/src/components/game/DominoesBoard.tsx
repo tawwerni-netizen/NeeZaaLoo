@@ -63,13 +63,18 @@ function Pips({ value }: { value: number }) {
 }
 
 function DominoTile({
-  values = [0, 0], size = "md", faded = false, glow = false,
+  values = [0, 0], size = "md", faded = false, glow = false, playable = false,
 }: {
-  values?: [number, number] | Tile; size?: "sm" | "md" | "lg"; faded?: boolean; glow?: boolean;
+  values?: [number, number] | Tile; size?: "sm" | "md" | "lg"; faded?: boolean; glow?: boolean; playable?: boolean;
 }) {
   const safeValues: [number, number] = Array.isArray(values) && values.length === 2 ? values : [0, 0];
   return (
-    <div className={[styles.tile3d, styles[`tile-${size}`], faded ? styles.faded : "", glow ? styles.glow : ""].join(" ")}>
+    <div className={[
+      styles.tile3d,
+      styles[`tile-${size}`],
+      faded ? styles.faded : "",
+      glow ? styles.glow : (playable ? styles.playableGlow : "")
+    ].join(" ")}>
       {/* 3D Tile Face */}
       <div className={styles.tileFace}>
         <div className={styles.half}><Pips value={safeValues[0] ?? 0} /></div>
@@ -87,6 +92,12 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
   const { t } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<Tile | null>(null);
+  const [slam, setSlam] = useState(false);
+
+  function triggerSlam() {
+    setSlam(true);
+    setTimeout(() => setSlam(false), 320);
+  }
 
   const selectedEnds = useMemo(
     () => (selected ? legalEndsFor(selected, line) : []),
@@ -104,11 +115,13 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
     const ends = legalEndsFor(tile, line);
     if (ends.length === 0) return;
     if (ends[0] === "ANY") {
+      triggerSlam();
       playDominoTileClickSound();
       onMove({ tile });
       return;
     }
     if (ends.length === 1) {
+      triggerSlam();
       playDominoTileClickSound();
       onMove({ tile, end: ends[0] as "LEFT" | "RIGHT" });
       return;
@@ -122,6 +135,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
       e.preventDefault();
     }
     if (!selected) return;
+    triggerSlam();
     playDominoTileClickSound();
     onMove({ tile: selected, end });
     setSelected(null);
@@ -148,7 +162,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
 
       {/* 3D Felt Table Surface */}
       <div className={[styles.tableContainer, perspective3D ? styles.perspective : ""].join(" ")}>
-        <div className={styles.tableFelt} onClick={() => setSelected(null)}>
+        <div className={[styles.tableFelt, slam ? styles.boardSlam : ""].join(" ")} onClick={() => setSelected(null)}>
           <div className={styles.lineViewport} dir="ltr">
             <div className={styles.line} onClick={(e) => e.stopPropagation()}>
               {safeTiles.length === 0 && <span className={styles.emptyHint}>{t("game.dominoes.empty_line")}</span>}
@@ -227,7 +241,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
                     onClick={() => handleTileClick(tile)}
                     aria-pressed={isSelected}
                   >
-                    <DominoTile values={tile} size="lg" faded={!playable} glow={isSelected} />
+                    <DominoTile values={tile} size="lg" faded={!playable} glow={isSelected} playable={playable} />
                   </motion.button>
                 );
               })}

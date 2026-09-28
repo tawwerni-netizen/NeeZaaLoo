@@ -157,6 +157,39 @@
   z-index: 10;
 }
 
+.playableGlow {
+  border-color: #00ffcc !important;
+  animation: playablePulse 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes playablePulse {
+  0% {
+    transform: translateY(0);
+    box-shadow: 
+      0 4px 0 #008888,
+      0 6px 12px rgba(0, 0, 0, 0.6),
+      0 0 14px rgba(0, 255, 204, 0.55);
+  }
+  100% {
+    transform: translateY(-4px);
+    box-shadow: 
+      0 6px 0 #008888,
+      0 12px 20px rgba(0, 0, 0, 0.75),
+      0 0 24px rgba(0, 255, 204, 0.95);
+  }
+}
+
+.boardSlam {
+  animation: slamVibe 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slamVibe {
+  0% { transform: scale(1); }
+  25% { transform: scale(0.985) translateY(3px); }
+  60% { transform: scale(1.01) translateY(-1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
 .endZone {
   position: absolute;
   top: 50%;

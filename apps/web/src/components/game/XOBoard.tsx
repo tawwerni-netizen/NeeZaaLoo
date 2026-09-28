@@ -90,7 +90,7 @@ export function XOMarkSvg({ mark }: { mark: number }) {
 }
 
 export function XOBoard({ board, lastMove, legalCells, mySeat, canMove, onMove }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { perspective3D } = useVisualSettings();
   const [hoverCell, setHoverCell] = useState<number | null>(null);
   const winLine = useMemo(() => winningLine(board, lastMove), [board, lastMove]);
@@ -104,6 +104,13 @@ export function XOBoard({ board, lastMove, legalCells, mySeat, canMove, onMove }
 
   return (
     <div className={styles.wrap}>
+      <div className={styles.blitzHeader}>
+        <span className={styles.blitzChip}>
+          <span className={styles.blitzPulseDot} />
+          <span>{locale === "ar" ? "⚡ دور 5 ثوانٍ خاطف • موت مفاجئ" : "⚡ 5s Sudden Death • Blitz Turn"}</span>
+        </span>
+      </div>
+
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         <div className={styles.titaniumFrame} dir="ltr">
           <div className={styles.board} role="grid" aria-label={t("game.move_history")}>
@@ -165,16 +172,28 @@ export function XOBoard({ board, lastMove, legalCells, mySeat, canMove, onMove }
                 <defs>
                   <linearGradient id="laser-beam" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#FFF" />
-                    <stop offset="50%" stopColor="#FF5A2B" />
+                    <stop offset="45%" stopColor="#FF5A2B" />
                     <stop offset="100%" stopColor="#FFE699" />
                   </linearGradient>
                 </defs>
+                {/* Secondary radiant bloom */}
+                <motion.line
+                  {...lineCoordsFor(winLine)}
+                  stroke="#FF5A2B"
+                  strokeWidth="18"
+                  strokeLinecap="round"
+                  opacity={0.5}
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.35, ease: ease.out }}
+                />
+                {/* Sharp laser core */}
                 <motion.line
                   {...lineCoordsFor(winLine)}
                   stroke="url(#laser-beam)"
-                  strokeWidth="8"
+                  strokeWidth="7"
                   strokeLinecap="round"
-                  filter="drop-shadow(0 0 12px #FF5A2B)"
+                  filter="drop-shadow(0 0 14px #FFD700)"
                   initial={{ pathLength: 0, opacity: 0 }}
                   animate={{ pathLength: 1, opacity: 1 }}
                   transition={{ duration: 0.35, ease: ease.out }}

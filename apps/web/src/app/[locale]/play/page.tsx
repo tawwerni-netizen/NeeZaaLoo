@@ -85,8 +85,8 @@ function InnerPlayCatalogPage() {
           </h1>
           <p className={styles.heroSub}>
             {isRtl
-              ? "10 ألعاب مهارية عادلة 100% بدون أي حظ. نافس مباشرة في مبارزات 1v1، صقل تكتيكاتك، أو انضم للبطولات الكبرى بجوائز USDT كاش."
-              : "10 deterministic skill games. Duel in live 1v1 matches, hone tactics vs AI, or enter major cash cups with instant payouts."}
+              ? "11 لعبة معتمدة بقواعد عالمية أصيلة وتوقيت تكتيكي فريد. نافس مباشرة في مبارزات 1v1، صقل تكتيكاتك، أو انضم للبطولات الكبرى بجوائز USDT كاش."
+              : "11 authentic games with global tournament rules and unique pacing. Duel in live 1v1 matches, hone tactics vs AI, or enter major cash cups with instant payouts."}
           </p>
 
           {/* Quick Trust Chips */}

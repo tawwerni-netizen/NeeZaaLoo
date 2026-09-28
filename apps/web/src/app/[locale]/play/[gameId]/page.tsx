@@ -47,6 +47,373 @@ type Step =
   | { name: "friend"; stake: StakeChoice }
   | { name: "matchmaking"; stake: StakeChoice };
 
+interface RuleItem {
+  titleAr: string;
+  titleEn: string;
+  descAr: string;
+  descEn: string;
+}
+
+interface GameIdentitySpec {
+  timingBadge: { ar: string; en: string };
+  natureBadge: { ar: string; en: string };
+  dopamineBadge: { ar: string; en: string };
+  subtitle: { ar: string; en: string };
+  rules: RuleItem[];
+}
+
+const GAME_IDENTITY_REGISTRY: Record<string, GameIdentitySpec> = {
+  chess: {
+    timingBadge: { ar: "⏱️ ساعة فيد الرسمية (3+2 أو 60ث)", en: "⏱️ Official FIDE Clock (3+2 / 60s)" },
+    natureBadge: { ar: "🧠 ذكاء وتكتيك حتمي 100%", en: "🧠 100% Deterministic Skill" },
+    dopamineBadge: { ar: "💥 كش مات مهيب وصعود ELO", en: "💥 Checkmate Freeze-Frame & ELO" },
+    subtitle: {
+      ar: "معركة الملوك الخالدة بقواعد الاتحاد الدولي للشطرنج (FIDE) كاملة وصارمة.",
+      en: "The timeless battle of grandmasters under strict international FIDE laws."
+    },
+    rules: [
+      {
+        titleAr: "التبييت القانوني (Castling)",
+        titleEn: "Castling Maneuver",
+        descAr: "حماية الملك بالتبادل مع القلعة شرط ألا يكون الملك أو مساره تحت التهديد، ولم تتحرك القطعتان مسبقاً.",
+        descEn: "Secure your King with the Rook provided neither has moved and the traversed squares are safe."
+      },
+      {
+        titleAr: "الأخذ بالتجاوز (En Passant)",
+        titleEn: "En Passant Capture",
+        descAr: "أكل بيدق الخصم فور تحركه خطوتين للأمام إذا جاور بيدقك، وتسقط هذه الفرصة بعد النقلة مباشرة.",
+        descEn: "Capture an opponent pawn that advanced two squares immediately on the very next turn."
+      },
+      {
+        titleAr: "ترقية البيادق (Pawn Promotion)",
+        titleEn: "Pawn Promotion",
+        descAr: "بلوغ البيدق الصف الثامن للخصم يمنحه الترقية الإجبارية الفورية لوزير أو قلعة أو فيل أو حصان.",
+        descEn: "Reaching the 8th rank instantly crowns your pawn into a Queen, Rook, Bishop, or Knight."
+      },
+      {
+        titleAr: "قواعد التعادل المعتمدة",
+        titleEn: "Official Draw Conditions",
+        descAr: "تعادل الكش الميت (Stalemate)، تكرار الموقف 3 مرات، أو مرور 50 نقلة دون أكل أو تحريك أي بيدق.",
+        descEn: "Stalemate, threefold repetition, or 50 moves without a capture or pawn advance."
+      }
+    ]
+  },
+  dominoes: {
+    timingBadge: { ar: "⏱️ 25 ثانية لكل نقلة", en: "⏱️ 25s Move Timer" },
+    natureBadge: { ar: "🀄 قراءة بنك وتطابق أطراف", en: "🀄 Tile Tracking & Open Ends" },
+    dopamineBadge: { ar: "🀄 خبطة الدومينو وإغلاق القفل", en: "🀄 Domino Slam & Game Block" },
+    subtitle: {
+      ar: "لعبة المقاهي العريقة بحسابات البنك والأطراف المفتوحة بالنمط العادي والأمريكي.",
+      en: "The classic tile-shedding duel of deduction and bone control in Traditional and American All-Fives."
+    },
+    rules: [
+      {
+        titleAr: "مطابقة الأطراف المفتوحة",
+        titleEn: "Open End Matching",
+        descAr: "يجب أن يتطابق رقم البلاطة مع أحد الطرفين المفتوحين على الطاولة، وإلا يلزم السحب من البنك.",
+        descEn: "Played tiles must match one of the active open ends; otherwise draw from the boneyard."
+      },
+      {
+        titleAr: "النمط العادي (Draw/Block)",
+        titleEn: "Traditional Draw & Block",
+        descAr: "الفوز بإنهاء كل البلاطات في يدك أولاً، أو الحصول على أقل مجموع نقاط عند غلق اللعبة (القفل).",
+        descEn: "Win by shedding all your tiles first or holding the lowest pip sum during a dead block."
+      },
+      {
+        titleAr: "النمط الأمريكي (All-Fives)",
+        titleEn: "American All-Fives",
+        descAr: "تسجيل فوري للنقاط عند لعب بلاطة تجعل مجموع الأطراف المفتوحة يقبل القسمة على 5.",
+        descEn: "Score points immediately whenever the sum of exposed ends forms a multiple of 5."
+      },
+      {
+        titleAr: "إغلاق اللعبة (القفل)",
+        titleEn: "Blocked Game Resolution",
+        descAr: "عند نفاد البنك واستحالة لعب أي حركة من الطرفين، يُحسب مجموع نقاط يد كل لاعب لحسم الفائز.",
+        descEn: "When the boneyard empties and neither can play, lowest remaining pip count claims victory."
+      }
+    ]
+  },
+  ludo: {
+    timingBadge: { ar: "⏱️ 20 ثانية مع رمي تلقائي مريح", en: "⏱️ 20s Auto-Roll Pacing" },
+    natureBadge: { ar: "🎲 سباق تكتيكي وحظ عادل", en: "🎲 Tactical Race & Fair Dice" },
+    dopamineBadge: { ar: "🔥 الستة الذهبية وتشقلب النرد 3D", en: "🔥 3D Cyber-Die & Golden 6" },
+    subtitle: {
+      ar: "سباق الحظ والتكتيك الأسطوري بنرد ثلاثي الأبعاد وغرف خاصة بدون مستويات مصطنعة.",
+      en: "The legendary race of fortune and ambush with 3D Cyber-Dice and private friend rooms."
+    },
+    rules: [
+      {
+        titleAr: "الخروج من القاعدة (الرقم 6)",
+        titleEn: "Base Spawn with 6",
+        descAr: "يتطلب خروج أي قاطعة من قاعدتها إلى نقطة الانطلاق رمي الرقم (6) حصراً.",
+        descEn: "Spawning any token from your home yard to the start square requires rolling exactly a 6."
+      },
+      {
+        titleAr: "الرمية الإضافية المجانية (Bonus Roll)",
+        titleEn: "Bonus Extra Roll",
+        descAr: "تمنح رمية إضافية فورية عند رمي (6)، أو أكل قاطعة للخصم، أو وصول قاطعة لخط النهاية.",
+        descEn: "Earn a free extra roll upon rolling a 6, capturing an enemy token, or reaching home triangle."
+      },
+      {
+        titleAr: "عقوبة الثلاث ستات (Three 6s Rule)",
+        titleEn: "Three Consecutive 6s Penalty",
+        descAr: "إذا رمى اللاعب (6) ثلاث مرات متتالية، تسقط رميته الثالثة وينقل الدور فوراً منعاً للاحتكار.",
+        descEn: "Rolling three consecutive 6s cancels the third roll and passes the turn immediately."
+      },
+      {
+        titleAr: "المربعات الآمنة (8 نجوم)",
+        titleEn: "8 Star Safe Zones",
+        descAr: "المربعات المميزة بعلامة النجمة آمنة تماماً ولا يمكن أكل أي قاطعة تستقر فوقها.",
+        descEn: "Tokens stationed on star-marked squares are completely immune from enemy captures."
+      },
+      {
+        titleAr: "الوصول الدقيق للنهاية",
+        titleEn: "Exact Finishing Roll",
+        descAr: "لدخول المثلث الأخير وإنهاء مسار القاطعة، يلزم الحصول على رقم النرد المطابق تماماً للمربعات المتبقية.",
+        descEn: "Entering the final home victory triangle requires the exact remaining roll count."
+      }
+    ]
+  },
+  backgammon: {
+    timingBadge: { ar: "⏱️ 25 ثانية لكل نقلة", en: "⏱️ 25s Move Timer" },
+    natureBadge: { ar: "🎲 احتمالات تكتيكية ومكعب مضاعفة", en: "🎲 Tactical Odds & Doubling Cube" },
+    dopamineBadge: { ar: "🎲 دحرجة الزهر العاجي ومضاعفة 64x", en: "🎲 Ivory Dice & 64x Doubling" },
+    subtitle: {
+      ar: "أعرق ألعاب الشرق بالتناغم بين احتمالات النرد والتكتيك ومضاعفة الرهان.",
+      en: "The imperial contest of board control, bearing off, and doubling stakes."
+    },
+    rules: [
+      {
+        titleAr: "رمية الدوبل (Double Roll)",
+        titleEn: "Double Dice Rule",
+        descAr: "الحصول على نردين متطابقين (مثلاً 5-5) يمنحك 4 حركات كاملة بنفس القيمة بدلاً من اثنتين.",
+        descEn: "Rolling matched dice (e.g. 5-5) grants four full moves of that value instead of two."
+      },
+      {
+        titleAr: "أكل القرص المنفرد (Blot Hit)",
+        titleEn: "Single Blot Capture",
+        descAr: "الهبوط على نقطة بها قرص وحيد للخصم يطرده فوراً إلى الحاجز الأوسط (Bar) ولا يلعب حتى يخرج.",
+        descEn: "Landing on an isolated enemy checker hits it to the Bar, requiring re-entry before other moves."
+      },
+      {
+        titleAr: "مكعب المضاعفة (Doubling Cube)",
+        titleEn: "Doubling Cube Stakes",
+        descAr: "حق رفع قيمة رهان المباراة (2x, 4x, 8x...) ليختار الخصم بين القبول أو الانسحاب الفوري.",
+        descEn: "Propose doubling match stakes (2x, 4x, 8x...); opponent must either accept or forfeit."
+      },
+      {
+        titleAr: "إخراج الأقراص (Bearing Off)",
+        titleEn: "Bearing Off to Victory",
+        descAr: "لا يحق للاعب إخراج أي قرص من اللوح حتى تجتمع جميع أقراصه الـ 15 في بيته الأخير.",
+        descEn: "You cannot bear off any checkers until all 15 of your checkers arrive inside your home board."
+      }
+    ]
+  },
+  "speed-math": {
+    timingBadge: { ar: "⏱️ 60 ثانية متزامنة مشتركة", en: "⏱️ 60s Shared Sprint" },
+    natureBadge: { ar: "⚡ سرعة بديهة وحساب ذهني", en: "⚡ Mental Arithmetic & Reflex" },
+    dopamineBadge: { ar: "🔥 مضاعف الكومبو الناري x5", en: "🔥 Combo Multiplier Rush x5" },
+    subtitle: {
+      ar: "سباق الأدرينالين الخالص وجهاً لوجه في الحساب السريع تحت ضغط العداد المتزامن.",
+      en: "Pure adrenaline head-to-head arithmetic sprint against the synchronous clock."
+    },
+    rules: [
+      {
+        titleAr: "ساعة مشتركة 60 ثانية",
+        titleEn: "Synchronous 60s Race",
+        descAr: "نفس الأسئلة الحسابية تعرض لكلا المتسابقين في نفس اللحظة بدون أي تأخير.",
+        descEn: "Identical arithmetic questions appear simultaneously for both competitors in real time."
+      },
+      {
+        titleAr: "مضاعف الكومبو (Streak Multiplier)",
+        titleEn: "Streak Combo Multiplier",
+        descAr: "كل إجابة صحيحة متتالية ترفع مضاعف النقاط (x2, x3, x5) وتشعل شاشتك باللهب.",
+        descEn: "Consecutive correct answers trigger point multipliers (x2, x3, x5) and ignite fire combos."
+      },
+      {
+        titleAr: "عقوبة الخطأ وتصفير السلسلة",
+        titleEn: "Mistake Penalty & Reset",
+        descAr: "الإجابة الخاطئة تكسر سلسلة الكومبو فوراً وتمنح الخصم أسبقية التقدم في عداد النقاط.",
+        descEn: "An incorrect answer instantly breaks your multiplier streak and forfeits momentum."
+      }
+    ]
+  },
+  xo: {
+    timingBadge: { ar: "⚡ 5 ثوانٍ لكل حركة (موت مفاجئ)", en: "⚡ 5s Sudden Death Turn" },
+    natureBadge: { ar: "❌ سرعة رد فعل وتفادي الفخاخ", en: "❌ Quick Insight & Trap Evasion" },
+    dopamineBadge: { ar: "☄️ شطب الفوز النيزكي الليزري", en: "☄️ Meteor Laser Win-Strike" },
+    subtitle: {
+      ar: "معركة السرعة الخاطفة لمنع التعادل بضربة نيزكية قاضية في 5 ثوانٍ فقط.",
+      en: "Lightning-fast turn limit to break repetitive draws with a decisive laser strike."
+    },
+    rules: [
+      {
+        titleAr: "وقت الحركة الصارم (5 ثوانٍ)",
+        titleEn: "Strict 5s Turn Clock",
+        descAr: "لكل لاعب 5 ثوانٍ فقط لوضع علامته (X أو O)؛ انتهاء الوقت يعني الخسارة الفورية.",
+        descEn: "Each player has exactly 5 seconds per turn; timeout results in immediate forfeiture."
+      },
+      {
+        titleAr: "الخط المستقيم الثلاثي",
+        titleEn: "3-in-a-Row Alignment",
+        descAr: "أول من يشكل خطاً مستقيماً من 3 علامات (أفقياً، رأسياً، أو قطرياً) يفوز بالنزال.",
+        descEn: "First player to connect 3 marks horizontally, vertically, or diagonally wins instantly."
+      },
+      {
+        titleAr: "كسر جمود التعادل",
+        titleEn: "Fast-Paced Decisiveness",
+        descAr: "الضغط الزمني يحفز الأخطاء التكتيكية والانتصارات السريعة وتجنب التعادل المتكرر.",
+        descEn: "High time pressure rewards tactical intuition and eliminates slow, boring draws."
+      }
+    ]
+  },
+  "connect-four": {
+    timingBadge: { ar: "⏱️ 20 ثانية لكل إسقاط", en: "⏱️ 20s Drop Timer" },
+    natureBadge: { ar: "🔴 تكتيك الجاذبية والتطويق", en: "🔴 Gravity Strategy & Traps" },
+    dopamineBadge: { ar: "🎯 فخ التوصيل الرباعي المتتالي", en: "🎯 Tactical Quad-Drop Trap" },
+    subtitle: {
+      ar: "تحدي الجاذبية الذكي لإسقاط الأقراص وصنع الفخاخ الرباعية المزدوجة.",
+      en: "The vertical strategy battle of gravity drops and multi-threat traps."
+    },
+    rules: [
+      {
+        titleAr: "إسقاط الأقراص الرأسي",
+        titleEn: "Vertical Gravity Drop",
+        descAr: "تسقط الأقراص بالتناوب في أي من الأعمدة الـ 7 لتستقر في أدنى خانة فارغة متاحة.",
+        descEn: "Discs drop alternately into any of the 7 columns, falling to the lowest vacant slot."
+      },
+      {
+        titleAr: "توصيل 4 أقراص متصلة",
+        titleEn: "Connect Four to Win",
+        descAr: "الفوز الفوري يتحقق لأول من يربط 4 أقراص من لونه في خط أفقي أو رأسي أو قطري.",
+        descEn: "The first player to form an unbroken line of 4 discs in any direction claims victory."
+      },
+      {
+        titleAr: "الأعمدة المكتملة",
+        titleEn: "Column Capacity Limit",
+        descAr: "العمود الذي يكتمل بـ 6 أقراص يُغلق تلقائياً ولا يمكن الإسقاط داخله مجدداً.",
+        descEn: "Columns filled to max capacity (6 discs) are locked against further drops."
+      }
+    ]
+  },
+  checkers: {
+    timingBadge: { ar: "⏱️ 30 ثانية لكل نقلة", en: "⏱️ 30s Move Timer" },
+    natureBadge: { ar: "👑 تضحيات إجبارية وتتويج ملوكي", en: "👑 Forced Jumps & Royal Kings" },
+    dopamineBadge: { ar: "👑 أكل ثلاثي متتابع وتتويج الملك", en: "👑 Multi-Jump Chain & Coronation" },
+    subtitle: {
+      ar: "لعبة التحريض والتضحية الذكية لسحب الخصم إلى الفخاخ وتتويج الملوك.",
+      en: "The classic game of mandatory captures, cascading jumps, and crowning royal kings."
+    },
+    rules: [
+      {
+        titleAr: "القفز الإجباري (Mandatory Capture)",
+        titleEn: "Mandatory Capture",
+        descAr: "إذا توفرت قفزة أكل لقطعة الخصم، يجب تنفيذها إجبارياً ولا يسمح بأي حركة عادية بديلة.",
+        descEn: "If a capture jump is available, it is strictly mandatory and must be executed."
+      },
+      {
+        titleAr: "سلسلة القفز المتعدد (Multi-Jump)",
+        titleEn: "Cascading Multi-Jump",
+        descAr: "عند أكل قطعة وتوفر أكل تالٍ لنفس القطعة، يواصل اللاعب الأكل في نفس النقلة.",
+        descEn: "Continue jumping and capturing multiple pieces in a single sequence if available."
+      },
+      {
+        titleAr: "تتويج الملك (King Coronation)",
+        titleEn: "King Coronation",
+        descAr: "وصول القطعة للصف الأخير للخصم يتوجها ملكاً يملك حرية التحرك والقفز للأمام والخلف.",
+        descEn: "Reaching the enemy back row crowns the piece as a King, unlocking forward and backward moves."
+      }
+    ]
+  },
+  reversi: {
+    timingBadge: { ar: "⏱️ 30 ثانية لكل نقلة", en: "⏱️ 30s Move Timer" },
+    natureBadge: { ar: "🔄 حصر جانبي وسيطرة زوايا", en: "🔄 Flank Traps & Corner Control" },
+    dopamineBadge: { ar: "🌊 شلال انقلاب الأقراص المتتابع", en: "🌊 Multi-Disc Cascade Flip" },
+    subtitle: {
+      ar: "دقيقة واحدة لتتعلمها، وعمر كامل لتتقن فن قلب الطاولة في النقلة الأخيرة.",
+      en: "A minute to learn, a lifetime to master: turn the entire board in one move."
+    },
+    rules: [
+      {
+        titleAr: "الحصر والتطويق الإلزامي",
+        titleEn: "Mandatory Enclosure",
+        descAr: "يجب أن تطوق قرصاً أو أكثر للخصم بين قرصك الجديد وقرص موجود مسبقاً من لونك.",
+        descEn: "Every move must bracket one or more enemy discs between your new and existing pieces."
+      },
+      {
+        titleAr: "انقلاب الأقراص الشلالي",
+        titleEn: "Cascading Disc Flips",
+        descAr: "جميع أقراص الخصم المحصورة أفقياً ورأسياً وقطرياً تنقلب دفعة واحدة إلى لونك.",
+        descEn: "All bracketed discs horizontally, vertically, and diagonally flip to your color."
+      },
+      {
+        titleAr: "حصانة الزوايا الأربع",
+        titleEn: "Corner Immunity",
+        descAr: "الاستيلاء على زوايا اللوح الأربع يمنح أقراصك حصانة أبدية لا يمكن للخصم قلبها.",
+        descEn: "Capturing any of the 4 corner squares permanently locks those discs from being flipped."
+      }
+    ]
+  },
+  gomoku: {
+    timingBadge: { ar: "⏱️ دقيقة واحدة لكل حركة", en: "⏱️ 60s Strategic Focus" },
+    natureBadge: { ar: "⚪ تركيز عميق وتطويق شرقي", en: "⚪ Oriental Alignment & Focus" },
+    dopamineBadge: { ar: "✨ رنين حجر الخشب وتكامل الـ 5", en: "✨ Resonant Click & 5-in-a-Row" },
+    subtitle: {
+      ar: "فن الحصار الشرقي العريق على لوح غو 15x15 بنقاء الفكر والتناغم.",
+      en: "The ancient eastern art of alignment and subtle encirclement on 15x15."
+    },
+    rules: [
+      {
+        titleAr: "التناوب على تقاطعات اللوح",
+        titleEn: "Intersection Placement",
+        descAr: "يوضع حجر واحد بالتناوب على تقاطعات اللوح الـ 15x15 ولا يمكن تحريك الحجر بعد تثبيته.",
+        descEn: "Players alternate placing one stone on grid intersections; placed stones never move."
+      },
+      {
+        titleAr: "ربط 5 أحجار غير منقطعة",
+        titleEn: "Five in a Row Wins",
+        descAr: "الفوز الفوري يتحقق لأول من يربط 5 أحجار متصلة أفقياً أو رأسياً أو قطرياً.",
+        descEn: "First player to create an unbroken row of 5 stones in any direction wins immediately."
+      },
+      {
+        titleAr: "التطويق الوقائي والمباغتة",
+        titleEn: "Preventive Encirclement",
+        descAr: "إغلاق مسارات الخصم قبل تشكيل الخطوط المفتوحة هو جوهر الاستراتيجية والانتصار.",
+        descEn: "Blocking opponent open-ended lines early is crucial to prevent unblockable setups."
+      }
+    ]
+  },
+  seega: {
+    timingBadge: { ar: "⏱️ 25 ثانية لكل نقلة", en: "⏱️ 25s Move Timer" },
+    natureBadge: { ar: "🏺 تراث فرعوني وإطباق مزدوج", en: "🏺 Pharaonic Ambush Tactics" },
+    dopamineBadge: { ar: "⚔️ الإطباق الساندويتشي على الحصى", en: "⚔️ Double Sandwich Enclosure" },
+    subtitle: {
+      ar: "أقدم ألعاب الدهاء التكتيكي في التاريخ الفرعوني (شبكة 5x5) بمرحلتي الإنزال والتحريك.",
+      en: "The ancient pharaonic game of cunning drop phases and flanking ambushes on 5x5."
+    },
+    rules: [
+      {
+        titleAr: "مرحلة الإنزال بالتناوب",
+        titleEn: "Alternating Drop Phase",
+        descAr: "ينزل كل لاعب حجرين بالتناوب على اللوح مع ترك المربع الأوسط فارغاً تماماً.",
+        descEn: "Players alternate placing two stones at a time, keeping the center square empty."
+      },
+      {
+        titleAr: "مرحلة التحريك التكتيكي",
+        titleEn: "Movement Phase",
+        descAr: "تتحرك الحجارة خطوة واحدة نحو أي مربع فارغ مجاور أفقياً أو رأسياً.",
+        descEn: "Stones move one orthogonal step into adjacent vacant squares."
+      },
+      {
+        titleAr: "الأكل بالحصر (Sandwich Capture)",
+        titleEn: "Flanking Sandwich Capture",
+        descAr: "محاصرة حجر الخصم بين حجرين من لونك يقصيه من اللوح، ويمنحك حركة إضافية فورية.",
+        descEn: "Trapping an enemy stone between two of yours captures it and grants an extra move."
+      }
+    ]
+  }
+};
+
 function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) {
   const { gameId } = use(params);
   const { t, locale, dir } = useI18n();
@@ -56,6 +423,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
   const router = useRouter();
   const searchParams = useSearchParams();
   const plugin = getGame(gameId);
+  const spec = GAME_IDENTITY_REGISTRY[gameId];
 
   const [step, setStep] = useState<Step>(() => {
     const tier = searchParams.get("tier");
@@ -71,6 +439,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [dominoesVariant, setDominoesVariant] = useState<"TRADITIONAL" | "AMERICAN">("TRADITIONAL");
   const [ludoPlayerCount, setLudoPlayerCount] = useState<2 | 4>(2);
+  const [showRules, setShowRules] = useState(false);
   const [creating, setCreating] = useState(false);
 
   if (!plugin) {
@@ -346,8 +715,59 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               <div className={styles.heroContent}>
                 <h1 className={styles.heroTitle}>{gameName}</h1>
                 <p className={styles.heroSubtitle}>
-                  {t("play.hero_subtitle")}
+                  {spec?.subtitle ? (isRtl ? spec.subtitle.ar : spec.subtitle.en) : t("play.hero_subtitle")}
                 </p>
+
+                {spec && (
+                  <>
+                    <div className={styles.heroChips}>
+                      <span className={styles.heroChip}>
+                        {isRtl ? spec.timingBadge.ar : spec.timingBadge.en}
+                      </span>
+                      <span className={styles.heroChip}>
+                        {isRtl ? spec.natureBadge.ar : spec.natureBadge.en}
+                      </span>
+                      <span className={styles.heroChip}>
+                        {isRtl ? spec.dopamineBadge.ar : spec.dopamineBadge.en}
+                      </span>
+                    </div>
+
+                    <div className={styles.rulesAccordion}>
+                      <button
+                        type="button"
+                        className={styles.rulesToggleBtn}
+                        onClick={() => setShowRules((prev) => !prev)}
+                        aria-expanded={showRules}
+                      >
+                        <span className={styles.rulesToggleIcon}>📜</span>
+                        <span className={styles.rulesToggleText}>
+                          {isRtl ? "القوانين الرسمية المعتمدة عالمياً" : "Official International Rules & Specs"}
+                        </span>
+                        <span className={`${styles.rulesChevron} ${showRules ? styles.chevronOpen : ""}`}>
+                          ▼
+                        </span>
+                      </button>
+
+                      {showRules && (
+                        <div className={styles.rulesGrid}>
+                          {spec.rules.map((rule, idx) => (
+                            <div key={idx} className={styles.ruleCard}>
+                              <div className={styles.ruleCardHeader}>
+                                <span className={styles.ruleIndex}>{idx + 1}</span>
+                                <span className={styles.ruleTitle}>
+                                  {isRtl ? rule.titleAr : rule.titleEn}
+                                </span>
+                              </div>
+                              <p className={styles.ruleDesc}>
+                                {isRtl ? rule.descAr : rule.descEn}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             
@@ -368,17 +788,19 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
                 return;
               }
               setDifficulty(d);
-              if (gameId === "chess" && d === "EASY") {
-                // Easy mode: Open/unlimited time, instant guest start!
-                void startVsComputer("EASY", "UNLIMITED");
-              } else if (gameId === "chess" && d === "EXPERT") {
-                // Expert mode: Mandatory official strict rules (1m per move anti-cheat)
-                void startVsComputer("EXPERT", "PER_MOVE_60S");
-              } else if (gameId === "ludo" || gameId === "xo" || gameId === "speed-math" || gameId === "connect-four" || gameId === "dominoes") {
-                // Fast-paced and classic tile games start immediately with authentic standard turn pacing:
-                void startVsComputer(d, "STANDARD");
+              if (gameId === "chess") {
+                if (d === "EASY") {
+                  // Easy mode: Open/unlimited time, instant guest start!
+                  void startVsComputer("EASY", "UNLIMITED");
+                } else if (d === "EXPERT") {
+                  // Expert mode: Mandatory official strict rules (1m per move anti-cheat)
+                  void startVsComputer("EXPERT", "PER_MOVE_60S");
+                } else {
+                  setStep({ name: "time_control", difficulty: d });
+                }
               } else {
-                setStep({ name: "time_control", difficulty: d });
+                // All other games use their authentic intrinsic timing model:
+                void startVsComputer(d, "STANDARD");
               }
             }}
           />

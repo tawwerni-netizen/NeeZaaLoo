@@ -71,6 +71,47 @@
   to { transform: scale(1.12); }
 }
 
+.fireComboMid {
+  border-color: #ff9900 !important;
+  box-shadow: 
+    0 12px 0 #0a000d,
+    0 24px 45px rgba(0, 0, 0, 0.8),
+    inset 0 0 40px rgba(255, 153, 0, 0.4),
+    0 0 35px rgba(255, 153, 0, 0.6) !important;
+  animation: fireVibe 0.8s infinite alternate !important;
+}
+
+.fireComboExtreme {
+  border-color: #ff1100 !important;
+  box-shadow: 
+    0 12px 0 #0a000d,
+    0 24px 45px rgba(0, 0, 0, 0.8),
+    inset 0 0 50px rgba(255, 17, 0, 0.6),
+    0 0 55px rgba(255, 68, 0, 0.9) !important;
+  animation: fireVibeExtreme 0.4s infinite alternate !important;
+}
+
+@keyframes fireVibe {
+  from { transform: scale(1); }
+  to { transform: scale(1.02); }
+}
+
+@keyframes fireVibeExtreme {
+  from { transform: scale(1) rotate(-0.5deg); }
+  to { transform: scale(1.03) rotate(0.5deg); }
+}
+
+.flameExtreme {
+  background: linear-gradient(135deg, #ffff00 0%, #ff0055 50%, #ff0000 100%) !important;
+  box-shadow: 0 0 25px rgba(255, 0, 85, 1), 0 0 45px rgba(255, 255, 0, 0.8) !important;
+  animation: flamePulseExtreme 0.25s infinite alternate ease-in-out !important;
+}
+
+@keyframes flamePulseExtreme {
+  from { transform: scale(1.05) rotate(-3deg); }
+  to { transform: scale(1.2) rotate(3deg); }
+}
+
 .vsDivider {
   font-family: var(--nz-font-display);
   font-size: var(--nz-text-xs);

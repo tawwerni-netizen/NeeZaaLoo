@@ -183,7 +183,9 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
           <span className={styles.podLabel}>{t("matchmaking.you")}</span>
           <span className={`nz-num ${styles.podValue}`}>{myScore ?? 0}</span>
           {streak > 1 && (
-            <span className={styles.streakFlame}>🔥 {streak}x</span>
+            <span className={[styles.streakFlame, streak >= 4 ? styles.flameExtreme : ""].join(" ")}>
+              🔥 {streak}x {streak >= 4 ? "ULTRA!" : "STREAK"}
+            </span>
           )}
         </div>
 
@@ -197,7 +199,11 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
 
       {/* 3D Floating Question Hologram Card */}
       <div className={[styles.cardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
-        <div className={[styles.hologramCard, feedback ? styles[feedback] : ""].join(" ")} dir="ltr">
+        <div className={[
+          styles.hologramCard, 
+          feedback ? styles[feedback] : "",
+          streak >= 4 ? styles.fireComboExtreme : (streak >= 2 ? styles.fireComboMid : "")
+        ].join(" ")} dir="ltr">
           <div className={styles.hologramScanline} aria-hidden="true" />
 
           <AnimatePresence mode="wait">
