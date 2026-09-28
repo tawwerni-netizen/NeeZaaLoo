@@ -167,6 +167,40 @@ function getEnv(childPort) {
 const children = {};
 let isShuttingDown = false;
 
+/**
+ * Evict any process currently holding `port` on Linux by using `fuser -k`.
+ * This runs synchronously via execSync so the port is freed BEFORE we spawn
+ * the child that needs it. Safe on Hostinger (Linux); a no-op on errors.
+ */
+function evictPort(port) {
+  try {
+    // fuser exits 0 if it killed something, 1 if nothing was using the port.
+    require("node:child_process").execSync(`fuser -k ${port}/tcp`, {
+      stdio: "pipe",
+      timeout: 3000,
+    });
+    console.log(`[evict] Cleared port ${port}`);
+  } catch {
+    // Nothing was holding the port, or fuser is unavailable — both are fine.
+  }
+}
+
+/**
+ * Wait up to `maxMs` for a port to stop being in use (i.e. become bindable).
+ * Resolves as soon as the port is free or the timeout expires.
+ */
+function waitPortFree(port, maxMs = 5000) {
+  return new Promise((resolve) => {
+    const deadline = Date.now() + maxMs;
+    function check() {
+      const s = net.createConnection({ host: "127.0.0.1", port });
+      s.once("connect",  () => { s.destroy(); if (Date.now() < deadline) setTimeout(check, 150); else resolve(); });
+      s.once("error",    () => { s.destroy(); resolve(); }); // ECONNREFUSED = port is free
+    }
+    check();
+  });
+}
+
 function startProcess(name, script, childPort, customCwd) {
   let failures = 0;
   let lastCrash = 0;
@@ -219,9 +253,16 @@ function startProcess(name, script, childPort, customCwd) {
         failures++;
 
         // Exponential backoff to prevent fork storms
-        const delay = failures <= 2 ? 1500 : failures <= 4 ? 4000 : failures <= 6 ? 8000 : 20000;
-        console.warn(`[${name}] Exited (code=${code}, signal=${signal}). Crash count: ${failures}. Restarting in ${delay / 1000}s...`);
-        setTimeout(launch, delay);
+        const baseDelay = failures <= 2 ? 1500 : failures <= 4 ? 4000 : failures <= 6 ? 8000 : 20000;
+        console.warn(`[${name}] Exited (code=${code}, signal=${signal}). Crash count: ${failures}. Restarting in ${baseDelay / 1000}s...`);
+        setTimeout(async () => {
+          if (isShuttingDown) return;
+          // Evict whatever is holding our port (previous dying instance) then
+          // wait up to 3s for the OS to fully release it before spawning.
+          evictPort(childPort);
+          await waitPortFree(childPort, 3000);
+          if (!isShuttingDown) launch();
+        }, baseDelay);
       });
 
       children[name] = child;
@@ -231,6 +272,16 @@ function startProcess(name, script, childPort, customCwd) {
   }
   launch();
 }
+
+// ---------------------------------------------------------------------------
+// Boot-time port eviction: kill any lingering process from a previous
+// deployment that still holds our child ports. Hostinger starts the new
+// instance while the old one is still shutting down, so without this the
+// children immediately EADDRINUSE and the whole platform crash-loops.
+// ---------------------------------------------------------------------------
+console.log("[boot] Evicting stale processes from child ports...");
+[nextPort, apiPort, gwPort, workerPort].forEach(evictPort);
+console.log("[boot] Port eviction complete. Spawning children...");
 
 startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
 startProcess("API",     apiScript,    apiPort);
