@@ -14,16 +14,21 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "tsc -b --pretty",
     "build": "npm run build --workspace=apps/web",
-    "start": "node --v8-pool-size=1 server.js",
+    "start": "node server.js",
     "maintenance:vacuum": "node scripts/periodic_vacuum_and_cleanup.mjs",
     "maintenance:daemon": "node scripts/periodic_vacuum_and_cleanup.mjs --daemon --interval=6h"
   },
+  "dependencies": {
+    "@node-rs/argon2": "^2.2.0",
+    "next": "16.3.6",
+    "pg": "^8.23.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "ws": "^8.21.3"
+  },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
-    "@node-rs/argon2": "^2.2.0",
-    "pg": "^8.23.0",
     "tsx": "^4.23.13",
-    "typescript": "^7.0.2",
-    "ws": "^8.21.3"
+    "typescript": "^7.0.2"
   }
 }

@@ -78,9 +78,11 @@ process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT
 process.env.GOOGLE_CLIENT_SECRET = defaultGoogleClientSecret;
 process.env.GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://nizalo.com/api/auth/google/callback";
 
-const port = parseInt(process.env.PORT, 10) || 3000;
+const rawPort = process.env.PORT;
+const isSocket = typeof rawPort === "string" && (rawPort.startsWith("/") || rawPort.includes(".sock"));
+const port = isSocket ? rawPort : (parseInt(rawPort, 10) || 3000);
 const hostname = process.env.HOSTNAME || "0.0.0.0";
-process.env.API_INTERNAL_URL = `http://127.0.0.1:${port}`;
+process.env.API_INTERNAL_URL = isSocket ? `http://localhost` : `http://127.0.0.1:${port}`;
 process.env.OXAPAY_CALLBACK_URL = process.env.OXAPAY_CALLBACK_URL || "https://nizalo.com/v1/payments/oxapay/webhook";
 
 const avatarDir = process.env.AVATAR_STORAGE_DIR || path.join(here, "apps", "web", "public", "avatars");
@@ -112,6 +114,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Fast response for HEAD requests used by uptime probes & load balancers
+  if (req.method === "HEAD") {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end();
+    return;
+  }
+
   // Diagnostic Endpoint
   if (pathname === "/diag") {
     res.writeHead(200, { "Content-Type": "application/json" });
@@ -127,7 +136,7 @@ const server = http.createServer(async (req, res) => {
         gateway: Boolean(gwRuntime),
         worker: Boolean(workerRuntime),
       },
-      error: initError ? initError.message : null,
+      error: initError ? (initError.stack || initError.message) : null,
       timestamp: new Date().toISOString(),
     }));
     return;
@@ -163,14 +172,64 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Wait for initialization to complete if a request arrives during the ~300ms boot
+  // Handle warming up state gracefully (prevents watchdog SIGABRT on cold boot)
   if (!isReady) {
     if (initError) {
-      res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end(`Initialization error: ${initError.message}`);
+      res.writeHead(500, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(`<!DOCTYPE html><html><body style="font-family:sans-serif;padding:40px;background:#0d1117;color:#f85149">
+        <h2>Nizalo Initialization Error</h2>
+        <pre style="background:#161b22;padding:16px;border-radius:8px;color:#c9d1d9;overflow:auto">${initError.stack || initError.message}</pre>
+      </body></html>`);
       return;
     }
-    await readyPromise;
+
+    const acceptsHtml = req.headers["accept"] && req.headers["accept"].includes("text/html");
+    const isRootOrHtml = (pathname === "/" || acceptsHtml) && req.method === "GET";
+
+    if (isRootOrHtml) {
+      // 200 OK with auto-refresh satisfies Hostinger/LiteSpeed watchdog within <5ms while Next.js prepares
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Retry-After": "2",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+      });
+      res.end(`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="2">
+  <title>Nizalo | منصة نيزالو</title>
+  <style>
+    body { margin: 0; background: #07090e; color: #fff; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
+    .card { background: #0f141f; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 40px; max-width: 440px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .spinner { width: 44px; height: 44px; border: 3px solid rgba(255,107,0,0.2); border-top-color: #ff6b00; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 24px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-size: 22px; margin: 0 0 8px; font-weight: 700; }
+    p { color: #8e9bb0; font-size: 14px; margin: 0; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h1>منصة نيزالو قيد الانطلاق...</h1>
+    <p>يتم تحضير المحرك والألعاب. سيتم التحديث تلقائياً خلال ثانيتين.</p>
+  </div>
+</body>
+</html>`);
+      return;
+    }
+
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 6000));
+    try {
+      await Promise.race([readyPromise, timeoutPromise]);
+    } catch {
+      if (!isReady) {
+        res.writeHead(503, { "Content-Type": "application/json", "Retry-After": "2" });
+        res.end(JSON.stringify({ error: { code: "SERVICE_WARMING_UP", message: "Platform initializing, please retry in 2 seconds" } }));
+        return;
+      }
+    }
   }
 
   // Route REST API requests (/v1/* and OxaPay webhook) directly in-process
@@ -228,7 +287,11 @@ async function startServer() {
         };
         server.once("error", onError);
         server.once("listening", onListening);
-        server.listen(port, hostname);
+        if (isSocket) {
+          server.listen(port);
+        } else {
+          server.listen(port, hostname);
+        }
       });
       break;
     } catch (err) {
@@ -240,7 +303,8 @@ async function startServer() {
     }
   }
 
-  console.log(`[server] Unified monolith listening immediately on http://${hostname}:${port} (PID ${process.pid})`);
+  const listenTarget = isSocket ? `socket ${port}` : `http://${hostname}:${port}`;
+  console.log(`[server] Unified monolith listening immediately on ${listenTarget} (PID ${process.pid})`);
 
   try {
     console.log("[server] Initializing shared database pool & RealtimeBus...");
