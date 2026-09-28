@@ -1,6 +1,5 @@
 # Nizalo Platform - Hostinger LiteSpeed / Apache Reverse Proxy Configuration
-DirectoryIndex disabled
-Options -Indexes
+DirectoryIndex index.html
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
