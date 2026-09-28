@@ -1,425 +1,341 @@
+/* =============================================================================
+   NIZALO STORE (متجر نزلو) - AAA CYBERPUNK LUXURY STYLES
+   ============================================================================= */
+
 .storeContainer {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: radial-gradient(circle at center, #1a0b2e 0%, #0d0614 100%);
+  background: radial-gradient(circle at 50% 10%, #170d2b 0%, #0c0617 60%, #07030e 100%);
   color: #fff;
-  padding: 2rem;
-  font-family: 'Inter', sans-serif;
-  overflow: hidden;
+  padding: 2.5rem 1.5rem 4rem 1.5rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   position: relative;
+  overflow-x: hidden;
 }
 
-/* Background animation */
-.storeContainer::before {
-  content: '';
+/* Background Ambient Orbs */
+.bgGlowOrbTop {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: 
-    radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 0, 128, 0.05) 0%, transparent 40%);
-  animation: rotateBg 30s linear infinite;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(155, 81, 224, 0.22) 0%, rgba(255, 0, 128, 0.1) 50%, transparent 80%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  animation: pulseTopGlow 8s ease-in-out infinite alternate;
+}
+
+.bgGlowOrbBottom {
+  position: absolute;
+  bottom: -150px;
+  right: 10%;
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, rgba(112, 0, 255, 0.08) 50%, transparent 80%);
+  filter: blur(90px);
   pointer-events: none;
   z-index: 0;
 }
 
-@keyframes rotateBg {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.header {
-  text-align: center;
-  position: relative;
-  z-index: 1;
-  margin-bottom: 3rem;
-}
-
-.headerGlow {
+.cyberGridPattern {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 300px;
-  height: 100px;
-  background: rgba(255, 0, 128, 0.2);
-  filter: blur(50px);
-  border-radius: 50%;
-  z-index: -1;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.title {
-  font-size: 3.5rem;
-  font-weight: 900;
-  margin: 0;
-  background: linear-gradient(135deg, #ff007a, #7000ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-shadow: 0 0 20px rgba(255, 0, 128, 0.3);
+@keyframes pulseTopGlow {
+  0% { transform: translateX(-50%) scale(0.95); opacity: 0.7; }
+  100% { transform: translateX(-50%) scale(1.1); opacity: 1; }
 }
 
-.subtitle {
-  font-size: 1.2rem;
-  color: #a898c0;
-  margin-top: 0.5rem;
-}
+/* =============================================================================
+   HERO HEADER
+   ============================================================================= */
 
-.balanceWidget {
-  display: inline-flex;
-  align-items: center;
-  gap: 1rem;
-  background: rgba(20, 10, 30, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.75rem 1.5rem;
-  border-radius: 30px;
-  margin-top: 1.5rem;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.1);
-}
-
-.balanceIcon {
-  font-size: 1.5rem;
-}
-
-.balanceAmount {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
-.addFundsBtn {
-  background: linear-gradient(135deg, #00ff88, #00b3ff);
-  color: #000;
-  text-decoration: none;
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  font-weight: bold;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-}
-
-.addFundsBtn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
-}
-
-.navTabs {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 3rem;
-  position: relative;
-  z-index: 1;
-}
-
-.tabBtn {
-  background: rgba(30, 15, 45, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  backdrop-filter: blur(10px);
-}
-
-.tabBtn:hover {
-  background: rgba(60, 30, 90, 0.8);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-}
-
-.activeTab {
-  background: linear-gradient(135deg, #7000ff, #ff007a);
-  border-color: transparent;
-  box-shadow: 0 0 20px rgba(112, 0, 255, 0.4);
-}
-
-.contentArea {
-  flex: 1;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-  position: relative;
-  z-index: 1;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-}
-
-.card {
-  background: rgba(20, 10, 30, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
-  padding: 2rem;
+.heroHeader {
   text-align: center;
   position: relative;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto 3rem auto;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.card:hover {
-  transform: translateY(-10px);
-  border-color: rgba(255, 0, 128, 0.3);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 0, 128, 0.2);
-}
-
-.popularCard {
-  border-color: #ffd700;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
-}
-
-.popularBadge {
-  position: absolute;
-  top: -12px;
-  background: linear-gradient(90deg, #ff8a00, #e52e71);
-  padding: 0.3rem 1rem;
-  border-radius: 12px;
+.brandBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  padding: 0.4rem 1.1rem;
+  border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 800;
-  letter-spacing: 1px;
-  box-shadow: 0 5px 15px rgba(229, 46, 113, 0.4);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+  margin-bottom: 1.25rem;
 }
 
-.coinIcon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+.brandBadgeDot {
+  width: 8px;
+  height: 8px;
+  background: #00ff88;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #00ff88;
+  animation: blinkDot 2s infinite ease-in-out;
 }
 
-.coinAmount {
-  font-size: 2.5rem;
+@keyframes blinkDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.storeTitle {
+  font-size: 3.5rem;
   font-weight: 900;
-  color: #fff;
-  margin-bottom: 0.5rem;
-}
-
-.bonusAmount {
-  color: #00ff88;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
-}
-
-.buyBtnUsdt {
-  margin-top: auto;
-  width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, #00b3ff, #00ff88);
-  border: none;
-  border-radius: 12px;
-  color: #000;
-  font-size: 1.2rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.buyBtnUsdt:hover:not(:disabled) {
-  filter: brightness(1.2);
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-}
-
-.buyBtnUsdt:disabled {
-  background: #333;
-  color: #888;
-  cursor: not-allowed;
-}
-
-/* Cosmetics */
-.cosmeticPreview {
-  font-size: 5rem;
-  margin-bottom: 1rem;
-}
-
-.cosmeticName {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
-.cosmeticType {
-  font-size: 0.8rem;
-  color: #888;
-  letter-spacing: 2px;
-  margin-bottom: 1.5rem;
-}
-
-.buyBtnCoin {
-  margin-top: auto;
-  width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, #ff007a, #7000ff);
-  border: none;
-  border-radius: 12px;
-  color: #fff;
-  font-size: 1.2rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.buyBtnCoin:hover:not(:disabled) {
-  filter: brightness(1.2);
-  box-shadow: 0 0 20px rgba(255, 0, 128, 0.4);
-}
-
-.buyBtnCoin:disabled {
-  background: #333;
-  color: #888;
-  cursor: not-allowed;
-}
-
-/* Pass */
-.passContainer {
-  background: rgba(30, 10, 50, 0.8);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 30px;
-  padding: 4rem;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.passGlow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(138, 43, 226, 0.2) 0%, transparent 70%);
-  z-index: -1;
-}
-
-.passIcon {
-  font-size: 6rem;
-  margin-bottom: 1rem;
-  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
-}
-
-.passTitle {
-  font-size: 3rem;
-  font-weight: 900;
-  background: linear-gradient(to right, #00b3ff, #ff007a, #ffd700);
+  margin: 0;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 0%, #ffd700 45%, #ff007a 80%, #9b51e0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 35px rgba(255, 0, 128, 0.35));
 }
 
-.passDesc {
-  font-size: 1.2rem;
-  color: #ccc;
-  margin-bottom: 2rem;
+.storeSubtitle {
+  font-size: 1.15rem;
+  color: #c4b5fd;
+  margin-top: 0.85rem;
+  max-width: 680px;
+  line-height: 1.6;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
-.passPerks {
-  list-style: none;
-  padding: 0;
-  margin: 0 auto 3rem auto;
-  max-width: 400px;
-  text-align: left;
-}
+/* =============================================================================
+   BALANCES DOCK
+   ============================================================================= */
 
-.passPerks li {
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 1rem;
-  border-radius: 12px;
-  border-left: 4px solid #ff007a;
-}
-
-.passBuyBtn {
-  padding: 1.2rem 3rem;
-  background: linear-gradient(90deg, #ff007a, #7000ff);
-  border: none;
-  border-radius: 30px;
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 900;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 20px rgba(255, 0, 128, 0.3);
-}
-
-.passBuyBtn:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 15px 30px rgba(255, 0, 128, 0.5);
-}
-
-.passBuyBtn:disabled {
-  background: #333;
-  color: #888;
-  cursor: not-allowed;
-}
-
-@media (max-width: 768px) {
-  .title { font-size: 2.5rem; }
-  .passTitle { font-size: 2rem; }
-  .passContainer { padding: 2rem; }
-  .navTabs { flex-direction: column; gap: 0.5rem; }
-}
-
-.balancesRow {
+.balancesDock {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
+  width: 100%;
 }
 
-.balanceLabel {
-  font-size: 0.85rem;
-  color: #a898c0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+.balanceCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(22, 13, 38, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 0.75rem 1.25rem;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
+
+.balanceCard:hover {
+  transform: translateY(-2px);
+}
+
+.balanceCardCoin {
+  border-color: rgba(255, 215, 0, 0.25);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.06);
+}
+
+.balanceCardCoin:hover {
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+.balanceCardUsdt {
+  border-color: rgba(0, 240, 255, 0.25);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(0, 240, 255, 0.06);
+}
+
+.balanceCardUsdt:hover {
+  border-color: rgba(0, 240, 255, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+.balanceIconWrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.coinGlyph {
+  font-size: 1.6rem;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+}
+
+.usdtGlyph {
+  font-size: 1.4rem;
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.6));
+}
+
+.balanceInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+}
+
+.balanceCaption {
+  font-size: 0.75rem;
+  color: #9482b8;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.balanceNumber {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+
+.balanceCardCoin .balanceNumber {
+  color: #ffd700;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+
+.balanceCardUsdt .balanceNumber {
+  color: #00ff88;
+  text-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+}
+
+.quickRechargeBtn {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2));
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-inline-start: 0.5rem;
+}
+
+.quickRechargeBtn:hover {
+  background: #ffd700;
+  color: #000;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+}
+
+.depositCtaBtn {
+  background: linear-gradient(135deg, #00ff88, #00c3ff);
+  color: #000;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 0.45rem 1rem;
+  border-radius: 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  margin-inline-start: 0.5rem;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+}
+
+.depositCtaBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+  filter: brightness(1.15);
+}
+
+/* =============================================================================
+   FEEDBACK BANNER / TOAST
+   ============================================================================= */
 
 .feedbackBanner {
-  margin: 1.5rem auto 0 auto;
-  max-width: 650px;
-  padding: 1rem 1.25rem;
-  border-radius: 14px;
-  font-weight: 600;
+  margin: 1.75rem auto 0 auto;
+  width: 100%;
+  max-width: 720px;
+  padding: 1.1rem 1.4rem;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  animation: fadeIn 0.25s ease-out;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+  animation: slideInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(16px);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-6px); }
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .feedbackSuccess {
-  background: rgba(0, 255, 136, 0.12);
-  border: 1px solid rgba(0, 255, 136, 0.4);
-  color: #00ff88;
+  background: rgba(10, 35, 25, 0.9);
+  border: 1px solid rgba(0, 255, 136, 0.45);
+  color: #e6fff3;
 }
 
 .feedbackError {
-  background: rgba(255, 68, 68, 0.12);
-  border: 1px solid rgba(255, 68, 68, 0.4);
-  color: #ff6b6b;
+  background: rgba(45, 15, 25, 0.9);
+  border: 1px solid rgba(255, 75, 100, 0.45);
+  color: #ffe6eb;
+}
+
+.feedbackIcon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.feedbackTextGroup {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+  flex: 1;
+}
+
+.feedbackTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 0.2rem;
+  color: #fff;
+}
+
+.feedbackSuccess .feedbackTitle {
+  color: #00ff88;
+}
+
+.feedbackError .feedbackTitle {
+  color: #ff6b81;
+}
+
+.feedbackMessage {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  opacity: 0.95;
 }
 
 .feedbackActions {
@@ -430,35 +346,938 @@
 }
 
 .feedbackActionBtn {
-  background: linear-gradient(135deg, #00b3ff, #00ff88);
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
   color: #000;
-  padding: 0.4rem 0.9rem;
+  padding: 0.45rem 1rem;
   border-radius: 10px;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 800;
   border: none;
   cursor: pointer;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
 }
 
 .feedbackActionBtn:hover {
   transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.6);
 }
 
 .feedbackCloseBtn {
   background: transparent;
   border: none;
   color: currentColor;
-  opacity: 0.7;
-  font-size: 1.1rem;
+  opacity: 0.6;
+  font-size: 1.25rem;
   cursor: pointer;
-  padding: 0.2rem;
+  padding: 0.25rem;
   line-height: 1;
+  transition: opacity 0.2s ease;
 }
 
 .feedbackCloseBtn:hover {
   opacity: 1;
+}
+
+/* =============================================================================
+   NAVIGATION DOCK
+   ============================================================================= */
+
+.navContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+  position: relative;
+  z-index: 2;
+}
+
+.navDock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(18, 9, 32, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 0.45rem;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.tabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #a494c2;
+  padding: 0.85rem 1.6rem;
+  border-radius: 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.tabBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.activeTab {
+  background: linear-gradient(135deg, rgba(155, 81, 224, 0.35), rgba(255, 0, 128, 0.35)) !important;
+  border-color: rgba(255, 0, 128, 0.4) !important;
+  color: #fff !important;
+  box-shadow: 0 0 25px rgba(255, 0, 128, 0.25), inset 0 0 15px rgba(155, 81, 224, 0.2);
+}
+
+.tabIcon {
+  font-size: 1.3rem;
+}
+
+.tabText {
+  white-space: nowrap;
+}
+
+.tabBadgeGold {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+}
+
+.tabBadgeNeon {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(0, 240, 255, 0.15);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  color: #00f0ff;
+}
+
+.tabBadgePurple {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(191, 85, 236, 0.2);
+  border: 1px solid rgba(191, 85, 236, 0.5);
+  color: #e056fd;
+}
+
+/* =============================================================================
+   SHOWCASE STAGE
+   ============================================================================= */
+
+.showcaseStage {
+  flex: 1;
+  max-width: 1240px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.sectionTitle {
+  font-size: 2.2rem;
+  font-weight: 900;
+  margin: 0;
+  background: linear-gradient(135deg, #fff 30%, #ffd700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sectionSubtitle {
+  font-size: 1.05rem;
+  color: #a494c2;
+  margin-top: 0.5rem;
+  max-width: 600px;
+  margin-inline: auto;
+}
+
+/* =============================================================================
+   TAB 1: COIN PACKS GRID
+   ============================================================================= */
+
+.coinPacksGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.coinCard {
+  background: rgba(20, 11, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+  padding: 2.5rem 1.75rem 1.75rem 1.75rem;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(16px);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.coinCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: opacity 0.3s ease;
+}
+
+.coinCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+}
+
+.tier_bronze {
+  border-color: rgba(205, 127, 50, 0.25);
+}
+.tier_bronze:hover {
+  border-color: rgba(205, 127, 50, 0.6);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 25px rgba(205, 127, 50, 0.2);
+}
+
+.popularCard, .tier_gold {
+  border-color: rgba(255, 215, 0, 0.4);
+  background: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.08) 0%, rgba(20, 11, 35, 0.8) 70%);
+}
+.popularCard:hover, .tier_gold:hover {
+  border-color: #ffd700;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 215, 0, 0.3);
+}
+
+.tier_emerald {
+  border-color: rgba(0, 255, 136, 0.3);
+  background: radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.06) 0%, rgba(20, 11, 35, 0.8) 70%);
+}
+.tier_emerald:hover {
+  border-color: #00ff88;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 255, 136, 0.3);
+}
+
+.bestValueCard, .tier_diamond {
+  border-color: rgba(0, 240, 255, 0.45);
+  background: radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.1) 0%, rgba(20, 11, 35, 0.85) 70%);
+}
+.bestValueCard:hover, .tier_diamond:hover {
+  border-color: #00f0ff;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 240, 255, 0.35);
+}
+
+.packRibbon {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  padding: 0.3rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
+}
+
+.popularCard .packRibbon {
+  background: linear-gradient(90deg, #ff8c00, #ff007a);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(255, 0, 128, 0.4);
+}
+
+.bestValueCard .packRibbon {
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(0, 198, 255, 0.4);
+}
+
+.coinVisualWrapper {
+  position: relative;
+  margin: 1.5rem 0 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coinGlowAura {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+  filter: blur(10px);
+  z-index: 0;
+}
+
+.coinArt {
+  font-size: 4.5rem;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.6));
+  transition: transform 0.3s ease;
+}
+
+.coinCard:hover .coinArt {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.packName {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0.25rem 0 0.5rem 0;
+  color: #fff;
+}
+
+.coinAmountRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.coinCountMajor {
+  font-size: 2.75rem;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  line-height: 1;
+}
+
+.coinCountUnit {
+  font-size: 1.5rem;
+}
+
+.bonusCallout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #a494c2;
+  margin-bottom: 2rem;
+}
+
+.bonusBadge {
+  background: rgba(0, 255, 136, 0.15);
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  color: #00ff88;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.standardCallout {
+  font-size: 0.85rem;
+  color: #7b6a9e;
+  margin-bottom: 2rem;
+}
+
+.buyPackBtn {
+  margin-top: auto;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #00f0ff 0%, #00ff88 100%);
+  border: none;
+  border-radius: 16px;
+  color: #031417;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 240, 255, 0.3);
+}
+
+.buyPackBtn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.buyPackBtn:hover:not(:disabled)::after {
+  transform: translateX(100%);
+}
+
+.buyPackBtn:hover:not(:disabled) {
+  transform: scale(1.03);
+  box-shadow: 0 10px 30px rgba(0, 240, 255, 0.5);
+  filter: brightness(1.1);
+}
+
+.buyPackBtn:disabled {
+  background: #251b36;
+  color: #6a5a82;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btnPriceContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.priceTag {
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.btnSpinner {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* =============================================================================
+   TAB 2: COSMETICS GRID
+   ============================================================================= */
+
+.cosmeticsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 2rem;
+}
+
+.cosmeticCard {
+  background: rgba(20, 11, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.cosmeticCard:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255, 0, 128, 0.35);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 0, 128, 0.2);
+}
+
+.ownedCosmeticCard {
+  border-color: rgba(0, 255, 136, 0.3);
+}
+
+.cosmeticCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.rarityPill {
+  font-size: 0.7rem;
+  font-weight: 900;
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.typePill {
+  font-size: 0.75rem;
+  color: #9482b8;
+  font-weight: 600;
+}
+
+.previewBox {
+  height: 160px;
+  width: 100%;
+  border-radius: 20px;
+  background: rgba(10, 5, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.previewAura {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.framePreviewAvatarWrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mockAvatarCircle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #251b3b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #fff;
+  z-index: 1;
+}
+
+.animatedFrameRing {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  z-index: 2;
+  animation: rotateFrame 6s linear infinite;
+}
+
+@keyframes rotateFrame {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.badgePreviewWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.badgeGlyph {
+  font-size: 4.5rem;
+  filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+  transition: transform 0.3s ease;
+}
+
+.cosmeticCard:hover .badgeGlyph {
+  transform: scale(1.15) rotate(-5deg);
+}
+
+.cosmeticInfo {
+  margin-bottom: 1.5rem;
+  text-align: start;
+}
+
+.cosmeticTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0 0 0.4rem 0;
+  color: #fff;
+}
+
+.cosmeticDesc {
+  font-size: 0.85rem;
+  color: #a494c2;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cosmeticActionRow {
+  margin-top: auto;
+}
+
+.buyCosmeticBtn {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  background: linear-gradient(135deg, #ff007a 0%, #7000ff 100%);
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 20px rgba(255, 0, 128, 0.3);
+}
+
+.buyCosmeticBtn:hover:not(:disabled) {
+  transform: scale(1.03);
+  box-shadow: 0 10px 25px rgba(255, 0, 128, 0.5);
+  filter: brightness(1.15);
+}
+
+.buyCosmeticBtn:disabled {
+  background: #251b36;
+  color: #6a5a82;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.coinCostContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.costCoinValue {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.ownedBlock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  padding: 0.6rem 1rem;
+  border-radius: 14px;
+}
+
+.ownedCheck {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #00ff88;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.equipBtn {
+  background: #00ff88;
+  color: #000;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.equipBtn:hover {
+  transform: scale(1.05);
+}
+
+/* =============================================================================
+   TAB 3: BATTLE PASS
+   ============================================================================= */
+
+.passSection {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.passHeroContainer {
+  background: rgba(22, 11, 38, 0.85);
+  border: 1px solid rgba(155, 81, 224, 0.4);
+  border-radius: 32px;
+  padding: 3.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(155, 81, 224, 0.15);
+}
+
+.passAmbientBackdrop {
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 0, 128, 0.2) 0%, rgba(112, 0, 255, 0.1) 50%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.passContentGrid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.passIntroColumn {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+}
+
+.seasonFlag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(191, 85, 236, 0.15);
+  border: 1px solid rgba(191, 85, 236, 0.4);
+  padding: 0.35rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #e056fd;
+  width: fit-content;
+  margin-bottom: 1.25rem;
+}
+
+.seasonFlagDot {
+  width: 8px;
+  height: 8px;
+  background: #e056fd;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #e056fd;
+}
+
+.passMainTitle {
+  font-size: 2.75rem;
+  font-weight: 900;
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+  background: linear-gradient(135deg, #ffffff 0%, #ffd700 50%, #ff007a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.passHeroDesc {
+  font-size: 1.05rem;
+  color: #c4b5fd;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.passPerksGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.perkItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(10, 5, 20, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+}
+
+.perkIcon {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.perkText strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #fff;
+  margin-bottom: 0.2rem;
+}
+
+.perkText p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #9482b8;
+  line-height: 1.35;
+}
+
+.passCtas {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.passUnlockBtn {
+  padding: 1.1rem 2.5rem;
+  background: linear-gradient(135deg, #ff007a 0%, #7000ff 100%);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(255, 0, 128, 0.4);
+}
+
+.passUnlockBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 15px 35px rgba(255, 0, 128, 0.6);
+  filter: brightness(1.15);
+}
+
+.passUnlockBtn:disabled {
+  background: #333;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.passTrackLink {
+  color: #ffd700;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.passTrackLink:hover {
+  color: #fff;
+  transform: translateX(4px);
+}
+
+.passVisualColumn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trophyDisplayFrame {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.12) 0%, rgba(10, 5, 20, 0.6) 80%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(255, 215, 0, 0.1);
+}
+
+.trophyGlowHalo {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.35) 0%, transparent 70%);
+  filter: blur(25px);
+  pointer-events: none;
+}
+
+.trophyIcon {
+  font-size: 7.5rem;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 10px 25px rgba(255, 215, 0, 0.5));
+  animation: floatTrophy 4s ease-in-out infinite alternate;
+}
+
+@keyframes floatTrophy {
+  0% { transform: translateY(-5px); }
+  100% { transform: translateY(5px); }
+}
+
+.trophyCaption {
+  position: absolute;
+  bottom: -15px;
+  background: linear-gradient(90deg, #ffd700, #ff8c00);
+  color: #000;
+  font-weight: 900;
+  font-size: 0.8rem;
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  box-shadow: 0 6px 15px rgba(255, 215, 0, 0.4);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* =============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================= */
+
+@media (max-width: 900px) {
+  .storeTitle {
+    font-size: 2.75rem;
+  }
+  .passContentGrid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .passVisualColumn {
+    order: -1;
+  }
+  .passHeroContainer {
+    padding: 2.25rem 1.75rem;
+  }
+  .passPerksGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .storeContainer {
+    padding: 1.5rem 1rem 3rem 1rem;
+  }
+  .storeTitle {
+    font-size: 2.2rem;
+  }
+  .storeSubtitle {
+    font-size: 0.95rem;
+  }
+  .navDock {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .tabBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+  }
+  .balancesDock {
+    flex-direction: column;
+    width: 100%;
+  }
+  .balanceCard {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .feedbackBanner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .feedbackActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }

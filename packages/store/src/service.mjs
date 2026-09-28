@@ -43,12 +43,13 @@ export function createStoreService(db, {
 
   const COSMETICS = {
     "cos1": { type: "frame", cost: 500, code: "neon" },
-    "cos2": { type: "frame", cost: 800, code: "gold" },
-    "cos3": { type: "frame", cost: 1200, code: "neon" },
-    "cos4": { type: "badge", cost: 300, code: "veteran" },
+    "cos2": { type: "badge", cost: 800, code: "cyber_dice" },
+    "cos3": { type: "frame", cost: 1200, code: "holo_board" },
+    "cos4": { type: "badge", cost: 300, code: "VIP_GOLD" },
     "frame_neon": { type: "frame", cost: 500, code: "neon" },
     "frame_gold": { type: "frame", cost: 800, code: "gold" },
     "badge_veteran": { type: "badge", cost: 300, code: "veteran" },
+    "badge_vip": { type: "badge", cost: 300, code: "VIP_GOLD" },
   };
 
   const PASSES = {
@@ -107,11 +108,34 @@ export function createStoreService(db, {
     const item = COSMETICS[itemId];
     if (!item) return { ok: false, reason: StoreError.UNKNOWN_ITEM };
 
+    // 1. Pre-check ownership to avoid deducting funds if already held
+    if (item.type === "frame" && typeof db?.query === "function") {
+      try {
+        const owned = await db.query(
+          "SELECT 1 FROM player_frame WHERE player_id = $1 AND frame_code = $2",
+          [playerId, item.code]
+        );
+        if (owned?.rows?.length > 0) return { ok: false, reason: StoreError.ALREADY_OWNED };
+      } catch {
+        // ignore pre-check if table not queryable directly
+      }
+    } else if (item.type === "badge" && typeof db?.query === "function") {
+      try {
+        const owned = await db.query(
+          "SELECT 1 FROM player_badge WHERE player_id = $1 AND badge_code = $2",
+          [playerId, item.code]
+        );
+        if (owned?.rows?.length > 0) return { ok: false, reason: StoreError.ALREADY_OWNED };
+      } catch {
+        // ignore pre-check if table not queryable directly
+      }
+    }
+
     await ensureCoinAccount(playerId);
 
     const idempotency = `store:buy:cosmetic:${playerId}:${itemId}:${now()}:${randomUUID()}`;
 
-    // 1. Deduct COIN
+    // 2. Deduct COIN
     try {
       await ledgerPost(
         idempotency,
@@ -132,15 +156,18 @@ export function createStoreService(db, {
       throw e;
     }
 
-    // 2. Award cosmetic
+    // 3. Award cosmetic
     let awardRes;
     if (item.type === "frame") {
       awardRes = await awardFrame(playerId, item.code);
     } else if (item.type === "badge") {
-      awardRes = await awardBadge(playerId, item.code);
+      awardRes = await awardBadge(playerId, item.code, "PURCHASE");
     }
 
-    if (awardRes && !awardRes.awarded) {
+    if (awardRes && awardRes.ok === false) {
+      return { ok: false, reason: awardRes.reason || StoreError.ALREADY_OWNED };
+    }
+    if (awardRes && awardRes.awarded === false) {
       return { ok: false, reason: StoreError.ALREADY_OWNED };
     }
 

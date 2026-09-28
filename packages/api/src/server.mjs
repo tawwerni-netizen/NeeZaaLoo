@@ -501,7 +501,7 @@ export function createApi({
       db, auth, settlement, tournament, globalSkill, reconciliation, rbac,
       emailIdentity, emailVerification, welcomeEmail, emailLoginCode, passwordReset,
       googleOAuth, googleFrontendOrigin, profile, support, ticketNotifications, chat, progression, now,
-      mastery, streaks, dailyChallenges, recommendations, frames,
+      mastery, streaks, dailyChallenges, recommendations, frames, seasons,
       rails, railHealth, localPayments, referral, referrals, consent: consentService, controls, directChat,
       paymentSvc, paymentProvider,
     };
@@ -2805,6 +2805,47 @@ function buildRoutes(storeSvc) {
         return { body: { clans: r.rows } };
       } },
 
+    { method: "POST", path: "/v1/clans", action: "player.profile.update",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, body, db }) => {
+        const name = String(body?.name || "").trim();
+        const tag = String(body?.tag || "").trim().toUpperCase();
+        const logo = String(body?.logo || "🛡️").trim();
+        const description = String(body?.description || "").trim();
+
+        if (!name || name.length < 3 || name.length > 30) {
+          return { status: 400, body: errorBody("INVALID_NAME", "Clan name must be between 3 and 30 characters") };
+        }
+        if (!tag || tag.length < 2 || tag.length > 6) {
+          return { status: 400, body: errorBody("INVALID_TAG", "Clan tag must be between 2 and 6 characters") };
+        }
+
+        const clanId = `clan_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
+        try {
+          await db.query(
+            `INSERT INTO clan (id, name, tag, owner_id, logo, description, global_elo)
+             VALUES ($1, $2, $3, $4, $5, $6, 1500)`,
+            [clanId, name, tag, actor.id, logo, description]
+          );
+          await db.query(
+            `INSERT INTO clan_member (clan_id, player_id, role)
+             VALUES ($1, $2, 'OWNER')
+             ON CONFLICT (clan_id, player_id) DO UPDATE SET role = 'OWNER'`,
+            [clanId, actor.id]
+          );
+          await db.query(
+            `UPDATE player SET clan_id = $1 WHERE id = $2`,
+            [clanId, actor.id]
+          );
+          return { status: 201, body: { ok: true, clan_id: clanId } };
+        } catch (err) {
+          if (err.message && (err.message.includes("clan_name_key") || err.message.includes("clan_tag_key") || err.message.includes("unique constraint") || err.message.includes("duplicate key"))) {
+            return { status: 409, body: errorBody("NAME_OR_TAG_TAKEN", "Clan name or tag is already taken") };
+          }
+          throw err;
+        }
+      } },
+
     // --- Global Skill Score ----------------------------------------------------
     // Percentiles, tiers and the weighting breakdown are all read-only
     // projections of ratings the player already earned by playing. Nothing
@@ -2899,15 +2940,19 @@ function buildRoutes(storeSvc) {
     
     { method: "GET", path: "/v1/me/season-progress", action: "player.season.read",
       owner: ({ actor }) => actor.id,
-      handler: async ({ actor, seasons }) => ({ body: await seasons.myProgress(actor.id) }) },
+      handler: async ({ actor, seasons }) => {
+        if (!seasons) return { body: { active: false, tiers: [] } };
+        return { body: await seasons.myProgress(actor.id) };
+      } },
       
     { method: "POST", path: "/v1/me/season/premium", action: "player.season.purchase",
       owner: ({ actor }) => actor.id,
-      handler: async ({ actor, req, seasons }) => {
-        if (typeof req.body?.seasonId !== "string") {
+      handler: async ({ actor, body, seasons }) => {
+        if (!seasons) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE", "Seasons service unavailable") };
+        if (typeof body?.seasonId !== "string") {
           return { status: 400, body: { error: "BAD_REQUEST", detail: "Missing or invalid seasonId" } };
         }
-        const res = await seasons.purchasePremium({ playerId: actor.id, seasonId: req.body.seasonId });
+        const res = await seasons.purchasePremium({ playerId: actor.id, seasonId: body.seasonId });
         if (!res.ok) {
           if (res.reason === "INSUFFICIENT_FUNDS") return { status: 402, body: { error: res.reason } };
           return { status: 400, body: { error: res.reason } };
@@ -2917,8 +2962,9 @@ function buildRoutes(storeSvc) {
 
     { method: "POST", path: "/v1/me/season/claim", action: "player.season.claim",
       owner: ({ actor }) => actor.id,
-      handler: async ({ actor, req, seasons }) => {
-        const { seasonId, level, track } = req.body || {};
+      handler: async ({ actor, body, seasons }) => {
+        if (!seasons) return { status: 503, body: errorBody("SERVICE_UNAVAILABLE", "Seasons service unavailable") };
+        const { seasonId, level, track } = body || {};
         if (typeof seasonId !== "string" || typeof level !== "number" || typeof track !== "string") {
           return { status: 400, body: { error: "BAD_REQUEST", detail: "Missing or invalid seasonId, level, or track" } };
         }
