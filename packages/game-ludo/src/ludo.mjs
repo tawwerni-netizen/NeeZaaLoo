@@ -9,22 +9,21 @@ export const SEAT_1 = 1;
 // FNV-1a hash for string seeds
 function hashSeed(seed) {
   let h = 2166136261 >>> 0;
-  for (const ch of String(seed)) {
+  for (const ch of String(seed || Date.now())) {
     h ^= ch.charCodeAt(0);
     h = Math.imul(h, 16777619) >>> 0;
   }
   return h;
 }
 
-// PRNG (Mulberry32)
+// PRNG (Mulberry32 with correct accumulator progression)
 export function nextRandom(state) {
-  let h = typeof state.prngState === "number" ? state.prngState : hashSeed(state.prngState || state.seed || 12345);
-  h |= 0;
-  h = (h + 0x6D2B79F5) | 0;
-  let t = Math.imul(h ^ (h >>> 15), 1 | h);
+  let a = typeof state.prngState === "number" ? state.prngState : hashSeed(state.prngState || state.seed || Date.now());
+  a = (a + 0x6D2B79F5) | 0;
+  state.prngState = a;
+  let t = Math.imul(a ^ (a >>> 15), 1 | a);
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-  state.prngState = (t ^ (t >>> 14)) >>> 0;
-  return (state.prngState / 4294967296);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
 export function rollDice(state) {
@@ -32,9 +31,10 @@ export function rollDice(state) {
 }
 
 export function freshState(seed, playerCount = 2) {
+  const effectiveSeed = seed || `${Date.now()}-${Math.random()}`;
   return {
-    seed,
-    prngState: hashSeed(seed),
+    seed: effectiveSeed,
+    prngState: hashSeed(effectiveSeed),
     playerCount,
     turn: SEAT_0,
     phase: "ROLL", // "ROLL" or "MOVE"

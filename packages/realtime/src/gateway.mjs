@@ -883,6 +883,8 @@ export async function createGateway({
       ? aiMoveDelayMs
       : isBotVsBot
       ? 500 + Math.floor(Math.random() * 300)
+      : duel.gameId === "ludo"
+      ? 850 + Math.floor(Math.random() * 450)
       : 250 + Math.floor(Math.random() * 200);
 
     const timer = setTimeout(async () => {
