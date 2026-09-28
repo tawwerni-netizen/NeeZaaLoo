@@ -925,6 +925,18 @@ const server = createServer((req, res) => {
       }
     }
 
+    function httpProbe(targetPort, p) {
+      return new Promise((resolve) => {
+        const req = http.get(`http://127.0.0.1:${targetPort}${p}`, { timeout: 3000 }, (res) => {
+          let b = "";
+          res.on("data", c => b += c);
+          res.on("end", () => resolve({ port: targetPort, status: res.statusCode, body: b.slice(0, 100) }));
+        });
+        req.on("error", (e) => resolve({ port: targetPort, error: e.code, message: e.message }));
+        req.on("timeout", () => { req.destroy(); resolve({ port: targetPort, error: "TIMEOUT" }); });
+      });
+    }
+
     Promise.all([
       probe(nextPort, "127.0.0.1"),
       probe(nextPort, "localhost"),
@@ -932,7 +944,11 @@ const server = createServer((req, res) => {
       probe(apiPort, "localhost"),
       probe(gwPort, "127.0.0.1"),
       probe(workerPort, "127.0.0.1"),
-    ]).then((ports) => {
+      httpProbe(apiPort, "/v1/health"),
+      httpProbe(nextPort, "/"),
+    ]).then((probeResults) => {
+      const ports = probeResults.slice(0, 6);
+      const httpProbes = probeResults.slice(6);
       let lockData = null;
       try {
         lockData = JSON.parse(fs.readFileSync(LOCK_FILE, "utf8"));
@@ -942,20 +958,34 @@ const server = createServer((req, res) => {
 
       const childStatus = {};
       for (const [name, ch] of Object.entries(children)) {
+        let procInfo = null;
+        if (ch && ch.pid) {
+          try {
+            const status = fs.readFileSync(`/proc/${ch.pid}/status`, "utf8");
+            const stateLine = status.split("\n").find(l => l.startsWith("State:"));
+            const fds = fs.readdirSync(`/proc/${ch.pid}/fd`);
+            procInfo = { state: stateLine, fdCount: fds.length };
+          } catch (e) {
+            procInfo = { error: e.message };
+          }
+        }
         childStatus[name] = {
           pid: ch ? ch.pid : null,
           killed: ch ? ch.killed : null,
           exitCode: ch ? ch.exitCode : null,
           signalCode: ch ? ch.signalCode : null,
+          procInfo,
         };
       }
 
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({
         masterPid: process.pid,
+        uid: process.getuid ? process.getuid() : null,
         isLeader,
         lockData,
         ports,
+        httpProbes,
         tcpListening,
         children: childStatus,
         recentLogs: childLogsRingBuffer.slice(-40),
