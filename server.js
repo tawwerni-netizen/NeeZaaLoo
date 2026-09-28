@@ -41,6 +41,16 @@ if (fs.existsSync(envPath)) {
   }
 }
 
+// Clean all environment variables of leading/trailing quotes (from .env or panel injection)
+for (const key of Object.keys(process.env)) {
+  if (typeof process.env[key] === "string") {
+    let v = process.env[key].trim();
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+      process.env[key] = v.slice(1, -1).trim();
+    }
+  }
+}
+
 // Active Supabase Database Cluster
 const ACTIVE_PRODUCTION_DB_URL = "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=no-verify";
 if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("neon.tech") || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2") || process.env.DATABASE_URL.includes("ep-cold-frog-b2dicy1p")) {

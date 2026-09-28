@@ -62,6 +62,14 @@ import {
 const { Pool } = pg;
 
 async function main() {
+  for (const k of Object.keys(process.env)) {
+    if (typeof process.env[k] === "string") {
+      const v = process.env[k].trim();
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+        process.env[k] = v.slice(1, -1).trim();
+      }
+    }
+  }
 
   requireEnv(["DATABASE_URL"]);
   const sink = process.env.LOG_FORMAT === "pretty" ? createConsoleSink() : createStructuredLogSink();
