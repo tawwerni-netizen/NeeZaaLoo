@@ -67,7 +67,7 @@ function LoginForm() {
     const result = await login(identifier.trim(), password, remember);
     setSubmitting(false);
     if (result.ok) {
-      router.push(getSafeRedirect(returnTo, locale));
+      window.location.href = getSafeRedirect(returnTo, locale);
     } else {
       setError(t(authErrorKey(result.reason)));
     }

@@ -22,6 +22,10 @@ export function createStoreService(db, {
 
   // Hardcoded catalog for now
   const COIN_PACKS = {
+    "c1": { asset: "USDT", cost: 1_000_000, yields: 100 },
+    "c2": { asset: "USDT", cost: 5_000_000, yields: 550 },
+    "c3": { asset: "USDT", cost: 10_000_000, yields: 1400 },
+    "c4": { asset: "USDT", cost: 20_000_000, yields: 3000 },
     "pack_1000": { asset: "USDT", cost: 10_000_000, yields: 1000 },
     "pack_2150": { asset: "USDT", cost: 20_000_000, yields: 2150 },
     "pack_5500": { asset: "USDT", cost: 50_000_000, yields: 5500 },
@@ -29,13 +33,18 @@ export function createStoreService(db, {
   };
 
   const COSMETICS = {
+    "cos1": { type: "frame", cost: 500, code: "neon" },
+    "cos2": { type: "frame", cost: 800, code: "gold" },
+    "cos3": { type: "frame", cost: 1200, code: "neon" },
+    "cos4": { type: "badge", cost: 300, code: "veteran" },
     "frame_neon": { type: "frame", cost: 500, code: "neon" },
     "frame_gold": { type: "frame", cost: 800, code: "gold" },
     "badge_veteran": { type: "badge", cost: 300, code: "veteran" },
   };
 
   const PASSES = {
-    "premium_pass": { type: "pass", cost: 1500, seasonId: "current" },
+    "pass1": { type: "pass", cost: 15_000_000, seasonId: "season_1" },
+    "premium_pass": { type: "pass", cost: 5_000_000, seasonId: "season_1" },
   };
 
   async function buyCoins(playerId, packId) {
@@ -132,30 +141,11 @@ export function createStoreService(db, {
     const item = PASSES[itemId];
     if (!item) return { ok: false, reason: StoreError.UNKNOWN_ITEM };
 
-    const idempotency = `store:buy:pass:${playerId}:${itemId}:${now()}:${randomUUID()}`;
-
-    try {
-      await ledgerPost(
-        idempotency,
-        "STORE_SPEND",
-        "USER",
-        playerId,
-        JSON.stringify([
-          { account: `user:${playerId}:available`, amount: -item.cost },
-          { account: `platform:store:revenue`, amount: item.cost }
-        ]),
-        "COIN",
-        `Bought pass ${itemId}`
-      );
-    } catch (e) {
-      if (e.message && e.message.includes("violates check constraint \"ledger_account_users_never_negative\"")) {
-        return { ok: false, reason: StoreError.INSUFFICIENT_FUNDS };
-      }
-      throw e;
-    }
-
     const res = await purchasePremium({ playerId, seasonId: item.seasonId });
     if (!res.ok) {
+      if (res.reason === "INSUFFICIENT_FUNDS") {
+        return { ok: false, reason: StoreError.INSUFFICIENT_FUNDS };
+      }
       return { ok: false, reason: res.reason };
     }
 
