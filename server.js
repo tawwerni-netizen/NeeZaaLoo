@@ -928,46 +928,84 @@ const server = createServer((req, res) => {
 
     function testSelfLoopback(host = "127.0.0.1") {
       return new Promise((resolve) => {
-        const srv = net.createServer((sock) => { sock.end("ok"); });
-        srv.listen(0, host, () => {
-          const p = srv.address().port;
-          const client = net.connect({ host, port: p, timeout: 1000 }, () => {
-            client.destroy();
-            srv.close(() => resolve({ host, port: p, success: true }));
+        try {
+          const srv = net.createServer((sock) => { try { sock.end("ok"); } catch {} });
+          let closed = false;
+          function safeClose(cb) {
+            if (closed) return;
+            closed = true;
+            try { srv.close(cb); } catch { if (cb) cb(); }
+          }
+          srv.once("error", (e) => {
+            safeClose();
+            resolve({ host, success: false, bindError: e.code, message: e.message });
           });
-          client.on("error", (e) => {
-            srv.close(() => resolve({ host, port: p, success: false, error: e.code, message: e.message }));
+          srv.listen(0, host, () => {
+            try {
+              const addr = srv.address();
+              const p = addr && typeof addr === "object" ? addr.port : null;
+              if (!p) {
+                safeClose();
+                return resolve({ host, success: false, error: "NO_PORT" });
+              }
+              const client = net.connect({ host, port: p, timeout: 1000 }, () => {
+                try { client.destroy(); } catch {}
+                safeClose(() => resolve({ host, port: p, success: true }));
+              });
+              client.once("error", (e) => {
+                try { client.destroy(); } catch {}
+                safeClose(() => resolve({ host, port: p, success: false, error: e.code, message: e.message }));
+              });
+              client.once("timeout", () => {
+                try { client.destroy(); } catch {}
+                safeClose(() => resolve({ host, port: p, success: false, error: "TIMEOUT" }));
+              });
+            } catch (err) {
+              safeClose();
+              resolve({ host, success: false, error: err.message });
+            }
           });
-          client.on("timeout", () => {
-            client.destroy();
-            srv.close(() => resolve({ host, port: p, success: false, error: "TIMEOUT" }));
-          });
-        });
-        srv.on("error", (e) => resolve({ host, success: false, bindError: e.code, message: e.message }));
+        } catch (e) {
+          resolve({ host, success: false, error: e.message });
+        }
       });
     }
 
     function testUnixSocket() {
       return new Promise((resolve) => {
-        const sockPath = path.join(require("node:os").tmpdir(), `nizalo-test-${Date.now()}.sock`);
-        try { fs.unlinkSync(sockPath); } catch {}
-        const srv = net.createServer((sock) => { sock.end("ok"); });
-        srv.listen(sockPath, () => {
-          const client = net.connect(sockPath, () => {
-            client.destroy();
-            srv.close(() => {
-              try { fs.unlinkSync(sockPath); } catch {}
-              resolve({ success: true, path: sockPath });
-            });
+        try {
+          const sockPath = path.join(require("node:os").tmpdir(), `nizalo-test-${Date.now()}.sock`);
+          try { fs.unlinkSync(sockPath); } catch {}
+          const srv = net.createServer((sock) => { try { sock.end("ok"); } catch {} });
+          let closed = false;
+          function safeClose(cb) {
+            if (closed) return;
+            closed = true;
+            try { srv.close(cb); } catch { if (cb) cb(); }
+            try { fs.unlinkSync(sockPath); } catch {}
+          }
+          srv.once("error", (e) => {
+            safeClose();
+            resolve({ success: false, bindError: e.code, message: e.message });
           });
-          client.on("error", (e) => {
-            srv.close(() => {
-              try { fs.unlinkSync(sockPath); } catch {}
-              resolve({ success: false, error: e.code, message: e.message });
-            });
+          srv.listen(sockPath, () => {
+            try {
+              const client = net.connect(sockPath, () => {
+                try { client.destroy(); } catch {}
+                safeClose(() => resolve({ success: true, path: sockPath }));
+              });
+              client.once("error", (e) => {
+                try { client.destroy(); } catch {}
+                safeClose(() => resolve({ success: false, error: e.code, message: e.message }));
+              });
+            } catch (err) {
+              safeClose();
+              resolve({ success: false, error: err.message });
+            }
           });
-        });
-        srv.on("error", (e) => resolve({ success: false, bindError: e.code, message: e.message }));
+        } catch (e) {
+          resolve({ success: false, error: e.message });
+        }
       });
     }
 
@@ -1060,6 +1098,12 @@ const server = createServer((req, res) => {
         recentLogs: childLogsRingBuffer.slice(-30),
         uptime: process.uptime(),
       }, null, 2));
+    }).catch((err) => {
+      console.error("[diag error]", err);
+      if (!res.headersSent) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: err.message, stack: err.stack }));
+      }
     });
     return;
   }
