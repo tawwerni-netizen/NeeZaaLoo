@@ -144,10 +144,27 @@ export function createWorkerRuntime({
 
     async start(intervalMs = 1000) {
       httpServer = buildHttpServer();
-      await new Promise((resolve, reject) => {
-        httpServer.once("error", reject);
-        httpServer.listen(port, () => resolve());
-      });
+      // Retry binding on EADDRINUSE: Hostinger spawns overlapping master
+      // instances during deployment. The new child may encounter the old
+      // child still holding the port. We wait (up to 30s) instead of dying.
+      const deadline = Date.now() + 30_000;
+      while (true) {
+        try {
+          await new Promise((resolve, reject) => {
+            httpServer.removeAllListeners("error");
+            httpServer.once("error", reject);
+            httpServer.listen(port, () => resolve());
+          });
+          break; // bound successfully
+        } catch (err) {
+          if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
+          const remaining = Math.round((deadline - Date.now()) / 1000);
+          console.warn(`[runtime] Port ${port} busy (EADDRINUSE), retrying for ${remaining}s more...`);
+          // Recreate the server so the next listen() starts from a clean state
+          httpServer = buildHttpServer();
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
       for (const { name, worker, intervalMs: perWorkerIntervalMs } of workers) {
         // A worker's own `intervalMs` (e.g. reconciliation wants minutes,
         // not milliseconds) overrides the shared default passed to start();

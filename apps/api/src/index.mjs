@@ -434,10 +434,26 @@ async function main() {
 
   const host = process.env.HOST || "0.0.0.0";
   const port = Number(process.env.PORT || 4000);
-  await new Promise((resolve, reject) => {
-    api.server.once("error", reject);
-    api.server.listen(port, host, () => resolve());
-  });
+  // Retry binding on EADDRINUSE: Hostinger overlapping deployments may leave
+  // the old API holding port 4000 briefly. Wait up to 30s.
+  {
+    const deadline = Date.now() + 30_000;
+    while (true) {
+      try {
+        await new Promise((resolve, reject) => {
+          api.server.removeAllListeners("error");
+          api.server.once("error", reject);
+          api.server.listen(port, host, () => resolve());
+        });
+        break; // bound successfully
+      } catch (err) {
+        if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
+        const remaining = Math.round((deadline - Date.now()) / 1000);
+        console.warn(`[api] Port ${port} busy (EADDRINUSE), retrying for ${remaining}s more...`);
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+  }
   logger.emit("worker.tick_started", { worker: "api", workerId: workerIdentity(), host, port });
 
   let obs = null;

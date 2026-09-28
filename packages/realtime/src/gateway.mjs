@@ -50,7 +50,7 @@ export function resolveClientCountry(req) {
   return null;
 }
 
-export function createGateway({
+export async function createGateway({
   sessions, duels, plugins, now = () => Date.now(), rateLimit, store = null, auth = null,
   lease = null, ownerId = null, port = 0, host = undefined, db = null,
   // Browser origins allowed to open a socket at all. WebSockets are exempt
@@ -413,8 +413,27 @@ export function createGateway({
   });
 
   if (port != null) {
-    if (host) httpServer.listen(port, host);
-    else httpServer.listen(port);
+    // Retry binding on EADDRINUSE: Hostinger overlapping deployments may leave
+    // the old gateway holding port 3010 briefly. Wait up to 30s for it to
+    // release rather than crashing immediately.
+    const deadline = Date.now() + 30_000;
+    while (true) {
+      try {
+        await new Promise((resolve, reject) => {
+          httpServer.removeAllListeners("error");
+          httpServer.once("error", reject);
+          httpServer.once("listening", resolve);
+          if (host) httpServer.listen(port, host);
+          else httpServer.listen(port);
+        });
+        break; // bound successfully
+      } catch (err) {
+        if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
+        const remaining = Math.round((deadline - Date.now()) / 1000);
+        console.warn(`[gateway] Port ${port} busy (EADDRINUSE), retrying for ${remaining}s more...`);
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
   }
   /** duelId -> Set<connection> */
   const rooms = new Map();

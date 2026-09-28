@@ -274,15 +274,11 @@ function startProcess(name, script, childPort, customCwd) {
 }
 
 // ---------------------------------------------------------------------------
-// Boot-time port eviction: kill any lingering process from a previous
-// deployment that still holds our child ports. Hostinger starts the new
-// instance while the old one is still shutting down, so without this the
-// children immediately EADDRINUSE and the whole platform crash-loops.
+// Spawn children. Each child service has its own EADDRINUSE retry loop so
+// that overlapping Hostinger master instances don't fight over ports — the
+// new children simply WAIT for the old ones to release their port instead
+// of dying immediately and looping forever.
 // ---------------------------------------------------------------------------
-console.log("[boot] Evicting stale processes from child ports...");
-[nextPort, apiPort, gwPort, workerPort].forEach(evictPort);
-console.log("[boot] Port eviction complete. Spawning children...");
-
 startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
 startProcess("API",     apiScript,    apiPort);
 startProcess("Gateway", gwScript,     gwPort);

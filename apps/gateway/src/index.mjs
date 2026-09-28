@@ -164,7 +164,7 @@ async function main() {
     onListenError: () => chatBusMetrics?.listenErrors.inc(),
   });
 
-  const gw = createGateway({
+  const gw = await createGateway({
     auth, duels, plugins, store, lease, ownerId, fairPlay, db,
     port: Number(process.env.WS_PORT || 3010),
     host: process.env.HOST || "0.0.0.0",
