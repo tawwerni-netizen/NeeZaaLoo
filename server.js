@@ -235,7 +235,11 @@ function startProcess(name, script, childPort, customCwd) {
         cwd: customCwd || here,
         env: childEnv,
         stdio: "inherit",
-        detached: false,
+        // detached:true gives each child its own process group so Hostinger's
+        // group-wide SIGABRT (sent when terminating the old master) cannot
+        // reach children that belong to the new master. We do NOT call
+        // child.unref() so we keep our reference for explicit kill() in shutdown().
+        detached: true,
       });
 
       child.on("error", (err) => {
@@ -257,10 +261,15 @@ function startProcess(name, script, childPort, customCwd) {
         console.warn(`[${name}] Exited (code=${code}, signal=${signal}). Crash count: ${failures}. Restarting in ${baseDelay / 1000}s...`);
         setTimeout(async () => {
           if (isShuttingDown) return;
-          // Evict whatever is holding our port (previous dying instance) then
-          // wait up to 3s for the OS to fully release it before spawning.
-          evictPort(childPort);
-          await waitPortFree(childPort, 3000);
+          if (name === "Next.js") {
+            // Next.js standalone cannot retry EADDRINUSE internally — evict
+            // whatever holds its port, then wait for the OS to release it.
+            evictPort(childPort);
+            await waitPortFree(childPort, 5000);
+          }
+          // API, Gateway, Worker have EADDRINUSE retry loops inside their own
+          // process — they will wait for the port to become available without
+          // needing an external kill here.
           if (!isShuttingDown) launch();
         }, baseDelay);
       });

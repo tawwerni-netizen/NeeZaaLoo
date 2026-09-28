@@ -416,11 +416,13 @@ export async function createGateway({
     // Retry binding on EADDRINUSE: Hostinger overlapping deployments may leave
     // the old gateway holding port 3010 briefly. Wait up to 30s for it to
     // release rather than crashing immediately.
+    httpServer.setMaxListeners(50); // many retry listeners are fine here
     const deadline = Date.now() + 30_000;
     while (true) {
       try {
         await new Promise((resolve, reject) => {
           httpServer.removeAllListeners("error");
+          httpServer.removeAllListeners("listening");
           httpServer.once("error", reject);
           httpServer.once("listening", resolve);
           if (host) httpServer.listen(port, host);
