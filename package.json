@@ -16,7 +16,7 @@
     "build": "npm run build --workspace=apps/web",
     "start": "node server.js",
     "maintenance:vacuum": "node scripts/periodic_vacuum_and_cleanup.mjs",
-    "maintenance:daemon": "node scripts/periodic_vacuum_and_cleanup.mjs --daemon --interval=6h"
+    "maintenance:daemon": "node scripts/periodic_vacuum_and_cleanup.mjs --daemon --interval=4h"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.0",

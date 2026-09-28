@@ -355,10 +355,10 @@ export async function createWorkerAppRuntime({
     { intervalMs: liveArenaSimulatorIntervalMs }
   );
 
-  // Periodic Safe Database Maintenance & VACUUM (Every 2 Hours):
+  // Periodic Safe Database Maintenance & VACUUM (Every 4 Hours):
   // Keeps database storage lean, purges transient events/notifications,
   // reclaims dead tuples, and verifies ongoing system solvency.
-  const maintenanceIntervalMs = Number(process.env.MAINTENANCE_INTERVAL_MS || (2 * 3600 * 1000));
+  const maintenanceIntervalMs = Number(process.env.MAINTENANCE_INTERVAL_MS || (4 * 3600 * 1000));
   const maintenanceWorker = createTickLoop(
     async () => {
       try {
