@@ -60,8 +60,11 @@ if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("neon.tech") 
 }
 
 process.env.NODE_ENV = "production";
-// Constrain libuv threadpool across all processes to prevent hitting Hostinger's 120-process ceiling
-process.env.UV_THREADPOOL_SIZE = process.env.UV_THREADPOOL_SIZE || "2";
+// Constrain libuv threadpool to 1 per process: 5 processes × 1 thread = 5 extra OS threads,
+// well under Hostinger's process ceiling. At 2 it was 5 × 2 = 10 extra threads, contributing
+// to EAGAIN spawn failures when concurrent master instances were active.
+process.env.UV_THREADPOOL_SIZE = "1";
+
 
 // A boot-time report of what this process can actually SEE -- names and
 // presence only, never a value.
@@ -283,15 +286,12 @@ function startProcess(name, script, childPort, customCwd) {
 }
 
 // ---------------------------------------------------------------------------
-// Spawn children. Each child service has its own EADDRINUSE retry loop so
-// that overlapping Hostinger master instances don't fight over ports — the
-// new children simply WAIT for the old ones to release their port instead
-// of dying immediately and looping forever.
+// Children are spawned INSIDE server.listen()'s callback (see bottom of
+// file) so the master proxy is already accepting connections on port 3000
+// before any child process is forked. This satisfies Hostinger's 3-second
+// watchdog: it can probe /health and get a 200 immediately, which prevents
+// it from sending SIGABRT to every PID in the deployment group.
 // ---------------------------------------------------------------------------
-startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
-startProcess("API",     apiScript,    apiPort);
-startProcess("Gateway", gwScript,     gwPort);
-startProcess("Worker",  workerScript, workerPort);
 
 function shutdown() {
   if (isShuttingDown) return;
@@ -750,4 +750,18 @@ server.listen(port, hostname, () => {
   console.log(`  -> Gateway   : ${gwPort}`);
   console.log(`  -> Worker    : ${workerPort}`);
   console.log(`========================================`);
+
+  // ---------------------------------------------------------------------------
+  // Spawn children AFTER the master proxy is already accepting connections.
+  // Hostinger's watchdog probes port 3000 within ~3 seconds of process start;
+  // spawning children here (instead of before listen) ensures the watchdog
+  // gets a 200 from /health immediately and does NOT send SIGABRT to the
+  // deployment. Children each have internal EADDRINUSE retry loops so
+  // overlapping deployments resolve port conflicts without external kills.
+  // ---------------------------------------------------------------------------
+  startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
+  startProcess("API",     apiScript,    apiPort);
+  startProcess("Gateway", gwScript,     gwPort);
+  startProcess("Worker",  workerScript, workerPort);
 });
+
