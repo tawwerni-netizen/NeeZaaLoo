@@ -418,11 +418,12 @@ export function claimTimeout(duel, plugin, serverTimeMs) {
 
   const accepted = duel.events.filter(e => e.type === "INTENT_ACCEPTED");
   const plyCount = accepted.length;
-  const lastEventTime = plyCount === 0 ? duel.startedAt : accepted[plyCount - 1].serverTimeMs;
+  const effectiveStartedAt = duel.startedAt && duel.startedAt > 0 ? duel.startedAt : serverTimeMs;
+  const lastEventTime = plyCount === 0 ? effectiveStartedAt : accepted[plyCount - 1].serverTimeMs;
 
   if (isShared(duel)) {
     if (!sharedExpired(duel.clock, serverTimeMs)) {
-      if (plyCount === 0 && (serverTimeMs - duel.startedAt > 45000)) {
+      if (plyCount === 0 && (serverTimeMs - effectiveStartedAt > 45000)) {
         return finish(duel, { result: "1/2-1/2", reason: "ABORTED" }, serverTimeMs);
       }
       return { ok: false, reason: "NOT_FLAGGED" };

@@ -49,7 +49,10 @@ export function registerStoreRoutes(routes, storeSvc) {
         const result = await storeSvc.buyPass(actor.id, body.itemId);
         if (!result.ok) {
           if (result.reason === StoreError.INSUFFICIENT_FUNDS) {
-            return { status: 402, body: errorBody("INSUFFICIENT_FUNDS", "Insufficient Coins balance") };
+            return { status: 402, body: errorBody("INSUFFICIENT_FUNDS", "Insufficient USDT balance to purchase Battle Pass") };
+          }
+          if (result.reason === StoreError.ALREADY_OWNED) {
+            return { status: 409, body: errorBody("ALREADY_OWNED", "You already own this pass") };
           }
           if (result.reason === StoreError.UNKNOWN_ITEM) {
             return { status: 404, body: errorBody("UNKNOWN_ITEM", "Pass item not found") };

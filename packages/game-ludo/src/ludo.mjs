@@ -6,12 +6,24 @@
 export const SEAT_0 = 0;
 export const SEAT_1 = 1;
 
+// FNV-1a hash for string seeds
+function hashSeed(seed) {
+  let h = 2166136261 >>> 0;
+  for (const ch of String(seed)) {
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h;
+}
+
 // PRNG (Mulberry32)
 export function nextRandom(state) {
-  let t = state.prngState += 0x6D2B79F5;
-  t = Math.imul(t ^ t >>> 15, t | 1);
-  t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-  state.prngState = ((t ^ t >>> 14) >>> 0);
+  let h = typeof state.prngState === "number" ? state.prngState : hashSeed(state.prngState || state.seed || 12345);
+  h |= 0;
+  h = (h + 0x6D2B79F5) | 0;
+  let t = Math.imul(h ^ (h >>> 15), 1 | h);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  state.prngState = (t ^ (t >>> 14)) >>> 0;
   return (state.prngState / 4294967296);
 }
 
@@ -22,7 +34,7 @@ export function rollDice(state) {
 export function freshState(seed, playerCount = 2) {
   return {
     seed,
-    prngState: seed,
+    prngState: hashSeed(seed),
     playerCount,
     turn: SEAT_0,
     phase: "ROLL", // "ROLL" or "MOVE"

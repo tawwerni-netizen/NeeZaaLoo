@@ -63,6 +63,7 @@ function countdownFor(iso: string, locale: SupportedLocale, nowMs: number): stri
 
 export function getTournamentCover(gameId: string): string {
   const customCovers: Record<string, string> = {
+    ludo: "/images/tournaments/tournament-ludo.jpg",
     xo: "/images/tournaments/tournament-xo.jpg",
     "speed-math": "/images/tournaments/tournament-speed-math.jpg",
     seega: "/images/tournaments/tournament-seega.jpg",
@@ -81,6 +82,7 @@ export function formatTournamentTitle(row: { game_id: string; title?: string | n
   const rawTitle = (row.title || "").replace(/\[.*?\]/gi, "").trim();
   if (locale === "ar") {
     const g = row.game_id.toLowerCase();
+    if (g === "ludo") return "بطولة لودو الكبرى للمحترفين";
     if (g === "xo") return "بطولة نخبة الإكس أو الخاطفة";
     if (g === "speed-math") return "أولمبياد الحساب الذهني السريع";
     if (g === "seega") return "كأس أساتذة السيجة التكتيكية";

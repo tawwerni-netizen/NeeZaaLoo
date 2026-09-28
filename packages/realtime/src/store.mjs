@@ -125,7 +125,8 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
 
       const rows = await db.query(
         `SELECT id, game_id, plugin_version, seat_0, seat_1, tier, stake_minor::text AS stake,
-                asset, initial_state, seed, time_control, clock_state, status, is_vs_computer
+                asset, initial_state, seed, time_control, clock_state, status, is_vs_computer,
+                started_at, created_at
            FROM duel 
           WHERE status IN ('LIVE','READY','RESERVED')
             AND (started_at >= now() - interval '10 minutes' OR (started_at IS NULL AND created_at >= now() - interval '10 minutes'))
@@ -152,7 +153,8 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
       const r = await db.query(
         `SELECT id, game_id, plugin_version, seat_0, seat_1, tier, stake_minor::text AS stake,
                 asset, initial_state, seed, time_control, clock_state, status,
-                result, termination_reason, game_hash, is_vs_computer
+                result, termination_reason, game_hash, is_vs_computer,
+                started_at, created_at
            FROM duel WHERE id = $1`,
         [duelId]
       );
@@ -252,7 +254,7 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
         // see deriveSequenceState's own header for why this can never
         // drift from the log it's computed from.
         seq: deriveSequenceState(events.map((e) => ({ type: e.type, payload: e.payload }))),
-        startedAt: cs.startedAtMs ?? 0,
+        startedAt: cs.startedAtMs ?? (row.started_at ? new Date(row.started_at).getTime() : (row.created_at ? new Date(row.created_at).getTime() : recoveredAtMs)),
         outcome: row.result
           ? { result: row.result, reason: row.termination_reason }
           : null,

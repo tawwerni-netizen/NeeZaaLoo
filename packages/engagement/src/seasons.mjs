@@ -116,21 +116,21 @@ export function createSeasonService(db) {
         `SELECT ledger_natural_balance('CREDIT', COALESCE(b.balance,0))::bigint AS available
          FROM ledger_account a 
          LEFT JOIN ledger_balance b ON b.account_id = a.id
-         WHERE a.key = $1`,
-        [`user:${playerId}:available`]
+         WHERE a.key = $1 AND a.asset = $2`,
+        [`user:${playerId}:available`, asset]
       );
       const bal = balRes.rows.length ? BigInt(balRes.rows[0].available) : 0n;
       if (bal < costMinor) return { ok: false, reason: SeasonError.INSUFFICIENT_FUNDS };
 
       // Charge the player
-      const txId = `bp_purchase_${playerId}_${seasonId}`;
+      const txId = `bp_purchase_${playerId}_${seasonId}_${Date.now()}`;
       const legs = [
-        { account: `user:${playerId}:available`, amount: (-costMinor).toString() },
-        { account: 'platform:rake', amount: costMinor.toString() } // Battle pass revenue goes to platform:rake or platform:sales
+        { account: `user:${playerId}:available`, amount: costMinor.toString() },
+        { account: 'platform:rake', amount: (-costMinor).toString() }
       ];
       
       await tx.query(
-        `SELECT ledger_post($1, 'PURCHASE', 'USER', $2, $3::jsonb, $4, 'season', $5)`,
+        `SELECT * FROM ledger_post($1, 'PURCHASE', 'USER'::ledger_actor_type, $2, $3::jsonb, $4, 'season', 'season', $5)`,
         [txId, playerId, JSON.stringify(legs), asset, seasonId]
       );
 
@@ -177,14 +177,14 @@ export function createSeasonService(db) {
         const amount = BigInt(rewardDef.amountMinor);
         const txId = `bp_reward_${claimId}`;
         const legs = [
-          { account: 'platform:promotions', amount: (-amount).toString() }, // Deduct from marketing/promotions
-          { account: `user:${playerId}:available`, amount: amount.toString() }
+          { account: 'platform:promotions', amount: amount.toString() },
+          { account: `user:${playerId}:available`, amount: (-amount).toString() }
         ];
         // Ensure wallet open
         await tx.query(`SELECT ledger_open_user_wallet($1, $2)`, [playerId, rewardDef.asset]);
         
         await tx.query(
-          `SELECT ledger_post($1, 'REWARD', 'SYSTEM', 'system-automation', $2::jsonb, $3, 'battle_pass_claim', $4)`,
+          `SELECT * FROM ledger_post($1, 'REWARD', 'SYSTEM'::ledger_actor_type, 'system-automation', $2::jsonb, $3, 'battle_pass_claim', 'battle_pass_claim', $4)`,
           [txId, JSON.stringify(legs), rewardDef.asset, claimId]
         );
       }

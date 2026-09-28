@@ -305,7 +305,7 @@ export function Hero() {
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [loadedIndices, setLoadedIndices] = useState<number[]>([0]);
+  const [loadedIndices, setLoadedIndices] = useState<number[]>([0, 1]);
 
   const nextSlide = useCallback(() => {
     setCurrentIdx((prev) => (prev + 1) % SHOWCASE_SLIDES.length);
@@ -319,10 +319,12 @@ export function Hero() {
   useEffect(() => {
     setLoadedIndices((prev) => {
       const nextIdx = (currentIdx + 1) % SHOWCASE_SLIDES.length;
-      if (prev.includes(currentIdx) && prev.includes(nextIdx)) return prev;
+      const prevIdx = (currentIdx - 1 + SHOWCASE_SLIDES.length) % SHOWCASE_SLIDES.length;
+      if (prev.includes(currentIdx) && prev.includes(nextIdx) && prev.includes(prevIdx)) return prev;
       const set = new Set(prev);
       set.add(currentIdx);
       set.add(nextIdx);
+      set.add(prevIdx);
       return Array.from(set);
     });
   }, [currentIdx]);
@@ -497,6 +499,13 @@ export function Hero() {
                         loading={idx === 0 ? "eager" : "lazy"}
                         decoding={idx === 0 ? "sync" : "async"}
                         fetchPriority={idx === 0 ? "high" : "low"}
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (target.parentElement && target.parentElement.querySelector("source")) {
+                            target.parentElement.querySelector("source")?.remove();
+                          }
+                          target.src = slide.image;
+                        }}
                       />
                     </picture>
                   );

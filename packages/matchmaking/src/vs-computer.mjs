@@ -89,13 +89,25 @@ export function createVsComputerService(db) {
       const seat2 = is4p ? `${botId}-2` : null;
       const seat3 = is4p ? `${botId}-3` : null;
 
+      const nowMs = Date.now();
+      const initialClockState = {
+        toMove: 0,
+        initialMs: resolvedTimeControl.initialMs,
+        incrementMs: resolvedTimeControl.incrementMs ?? 0,
+        remaining: is4p
+          ? [resolvedTimeControl.initialMs, resolvedTimeControl.initialMs, resolvedTimeControl.initialMs, resolvedTimeControl.initialMs]
+          : [resolvedTimeControl.initialMs, resolvedTimeControl.initialMs],
+        startedAtMs: nowMs,
+        turnStartedAt: nowMs,
+      };
+
       await db.query(
         `INSERT INTO duel
            (id, game_id, plugin_version, pairing_key, seat_0, seat_1, seat_2, seat_3,
-            tier, stake_minor, initial_state, seed, time_control, status, started_at, is_vs_computer)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'FREE'::entry_tier,0,$9::jsonb,$10,$11::jsonb,'LIVE'::duel_status,now(),TRUE)`,
+            tier, stake_minor, initial_state, seed, time_control, clock_state, status, started_at, is_vs_computer)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'FREE'::entry_tier,0,$9::jsonb,$10,$11::jsonb,$12::jsonb,'LIVE'::duel_status,now(),TRUE)`,
         [duelId, gameId, pluginVersion, `vs-computer:${duelId}`, playerId, botId, seat2, seat3,
-          JSON.stringify(initialState), spawned.seed, JSON.stringify(resolvedTimeControl)]
+          JSON.stringify(initialState), spawned.seed, JSON.stringify(resolvedTimeControl), JSON.stringify(initialClockState)]
       );
       return { ok: true, duelId, botId };
     },

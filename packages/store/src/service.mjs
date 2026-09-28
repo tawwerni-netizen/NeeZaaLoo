@@ -15,8 +15,17 @@ export function createStoreService(db, {
   
   async function ledgerPost(key, purpose, actorType, actorId, legsJson, asset, memo) {
     return db.query(
-      `SELECT ledger_post($1, $2, $3, $4, $5::json, $6, $7)`,
+      `SELECT * FROM ledger_post($1, $2, $3::ledger_actor_type, $4, $5::jsonb, $6, $7)`,
       [key, purpose, actorType, actorId, legsJson, asset, memo]
+    );
+  }
+
+  async function ensureCoinAccount(playerId) {
+    await db.query(
+      `INSERT INTO ledger_account (key, owner_type, owner_id, account_type, normal_side, allow_negative, asset)
+       VALUES ($1, 'USER', $2, 'LIABILITY', 'CREDIT', FALSE, 'COIN')
+       ON CONFLICT (key, asset) DO NOTHING`,
+      [`user:${playerId}:available`, playerId]
     );
   }
 
@@ -51,6 +60,8 @@ export function createStoreService(db, {
     const pack = COIN_PACKS[packId];
     if (!pack) return { ok: false, reason: StoreError.UNKNOWN_ITEM };
 
+    await ensureCoinAccount(playerId);
+
     const idempotencyUsdt = `store:buy:usdt:${playerId}:${packId}:${now()}:${randomUUID()}`;
     const idempotencyCoin = `store:buy:coin:${playerId}:${packId}:${now()}:${randomUUID()}`;
 
@@ -62,14 +73,14 @@ export function createStoreService(db, {
         "USER",
         playerId,
         JSON.stringify([
-          { account: `user:${playerId}:available`, amount: -pack.cost },
-          { account: `platform:store:revenue`, amount: pack.cost }
+          { account: `user:${playerId}:available`, amount: pack.cost },
+          { account: `platform:store:revenue`, amount: -pack.cost }
         ]),
         pack.asset,
         "Bought coin pack"
       );
     } catch (e) {
-      if (e.message && e.message.includes("violates check constraint \"ledger_account_users_never_negative\"")) {
+      if (e.message && (e.message.includes("insufficient funds") || e.message.includes("never_negative"))) {
         return { ok: false, reason: StoreError.INSUFFICIENT_FUNDS };
       }
       throw e;
@@ -82,8 +93,8 @@ export function createStoreService(db, {
       "SYSTEM",
       "store",
       JSON.stringify([
-        { account: `platform:store:issuance`, amount: -pack.yields },
-        { account: `user:${playerId}:available`, amount: pack.yields }
+        { account: `platform:store:issuance`, amount: pack.yields },
+        { account: `user:${playerId}:available`, amount: -pack.yields }
       ]),
       "COIN",
       "Issued coins for pack"
@@ -96,6 +107,8 @@ export function createStoreService(db, {
     const item = COSMETICS[itemId];
     if (!item) return { ok: false, reason: StoreError.UNKNOWN_ITEM };
 
+    await ensureCoinAccount(playerId);
+
     const idempotency = `store:buy:cosmetic:${playerId}:${itemId}:${now()}:${randomUUID()}`;
 
     // 1. Deduct COIN
@@ -106,14 +119,14 @@ export function createStoreService(db, {
         "USER",
         playerId,
         JSON.stringify([
-          { account: `user:${playerId}:available`, amount: -item.cost },
-          { account: `platform:store:revenue`, amount: item.cost }
+          { account: `user:${playerId}:available`, amount: item.cost },
+          { account: `platform:store:revenue`, amount: -item.cost }
         ]),
         "COIN",
         `Bought cosmetic ${itemId}`
       );
     } catch (e) {
-      if (e.message && e.message.includes("violates check constraint \"ledger_account_users_never_negative\"")) {
+      if (e.message && (e.message.includes("insufficient funds") || e.message.includes("never_negative"))) {
         return { ok: false, reason: StoreError.INSUFFICIENT_FUNDS };
       }
       throw e;
@@ -128,9 +141,6 @@ export function createStoreService(db, {
     }
 
     if (awardRes && !awardRes.awarded) {
-      // Best effort compensation: refund the coin? 
-      // In a real app we might refund if they already own it, but ledger_post refund would be ideal.
-      // For simplicity, return already owned.
       return { ok: false, reason: StoreError.ALREADY_OWNED };
     }
 
@@ -145,6 +155,9 @@ export function createStoreService(db, {
     if (!res.ok) {
       if (res.reason === "INSUFFICIENT_FUNDS") {
         return { ok: false, reason: StoreError.INSUFFICIENT_FUNDS };
+      }
+      if (res.reason === "ALREADY_PREMIUM") {
+        return { ok: false, reason: StoreError.ALREADY_OWNED };
       }
       return { ok: false, reason: res.reason };
     }
