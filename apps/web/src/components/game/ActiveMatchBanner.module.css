@@ -161,4 +161,28 @@
   }
 }
 
-.actionButtons { display: flex; align-items: center; gap: 8px; } .resignBtn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; } .resignBtn:hover { background: rgba(239, 68, 68, 0.2); } .resignBtnConfirm { background: #ef4444; color: #fff; border: 1px solid #dc2626; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; animation: pulseRed 1s infinite; } @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+.actionButtons { display: flex; align-items: center; gap: 8px; }
+.resignBtn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.resignBtn:hover { background: rgba(239, 68, 68, 0.2); }
+.resignBtnConfirm { background: #ef4444; color: #fff; border: 1px solid #dc2626; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; animation: pulseRed 1s infinite; }
+@keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+.dismissBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.dismissBtn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
+}
+

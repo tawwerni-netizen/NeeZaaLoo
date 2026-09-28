@@ -94,13 +94,26 @@ export function CheckersPieceSvg({ isKing, seat }: { isKing: boolean; seat: "0" 
   );
 }
 
+function labelToSquare(label: string): { row: number; col: number } | null {
+  if (label.length !== 2) return null;
+  const col = FILES.indexOf(label[0] ?? "");
+  const rank = Number(label[1]);
+  if (col < 0 || isNaN(rank) || rank < 1 || rank > 8) return null;
+  return { row: 8 - rank, col };
+}
+
 export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat, canMove, onMove }: Props) {
   const { t, locale } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
+  const [optimisticBoard, setOptimisticBoard] = useState<number[][]>(board);
   const [selected, setSelected] = useState<string | null>(null);
   const [crownedSquare, setCrownedSquare] = useState<string | null>(null);
   const [showCoronationBanner, setShowCoronationBanner] = useState<boolean>(false);
   const prevKingsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    setOptimisticBoard(board);
+  }, [board]);
 
   // Detect newly crowned kings across the whole board
   useEffect(() => {
@@ -168,6 +181,32 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
     return Math.abs(FILES.indexOf(to[0] ?? "") - FILES.indexOf(from[0] ?? "")) === 2;
   }
 
+  function applyOptimisticMove(fromSqLabel: string, toSqLabel: string) {
+    const fromSq = labelToSquare(fromSqLabel);
+    const toSq = labelToSquare(toSqLabel);
+    if (!fromSq || !toSq) return;
+
+    setOptimisticBoard((prev) => {
+      const next = prev.map((r) => [...r]);
+      const moving = next[fromSq.row]?.[fromSq.col] ?? (mySeat === 0 ? 1 : -1);
+      const isCoronation = (mySeat === 0 && toSq.row === 0) || (mySeat === 1 && toSq.row === 7);
+      const crowned = isCoronation ? (mySeat === 0 ? 2 : -2) : moving;
+
+      const fromRow = next[fromSq.row];
+      const toRow = next[toSq.row];
+      if (fromRow) fromRow[fromSq.col] = 0;
+      if (toRow) toRow[toSq.col] = crowned;
+
+      if (Math.abs(toSq.row - fromSq.row) === 2) {
+        const midR = (fromSq.row + toSq.row) / 2;
+        const midC = (fromSq.col + toSq.col) / 2;
+        const midRow = next[midR];
+        if (midRow) midRow[midC] = 0;
+      }
+      return next;
+    });
+  }
+
   function handleClick(row: number, col: number) {
     if (!canMove) return;
     const sq = squareLabel(row, col);
@@ -179,6 +218,7 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
         } else {
           playCheckersMoveSound();
         }
+        applyOptimisticMove(forcedFrom, sq);
         onMove(`${forcedFrom}${sq}`);
       }
       return;
@@ -200,12 +240,13 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
       } else {
         playCheckersMoveSound();
       }
+      applyOptimisticMove(selected, sq);
       onMove(`${selected}${sq}`);
       setSelected(null);
       return;
     }
 
-    const piece = board[row]?.[col] ?? 0;
+    const piece = optimisticBoard[row]?.[col] ?? 0;
     const isMine = mySeat === 0 ? piece > 0 : piece < 0;
     if (isMine && legalMoves.some((m) => m.startsWith(sq))) {
       setSelected(sq === selected ? null : sq);
@@ -242,7 +283,7 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
           <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>
             {displayRows.map((row) =>
               displayCols.map((col) => {
-                const piece = board[row]?.[col] ?? 0;
+                const piece = optimisticBoard[row]?.[col] ?? 0;
                 const sq = squareLabel(row, col);
                 const isDark = (row + col) % 2 === 1;
                 const isSelected = selected === sq;

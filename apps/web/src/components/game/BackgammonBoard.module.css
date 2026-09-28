@@ -269,6 +269,17 @@
   opacity: 0.4;
 }
 
+.checkerMovable {
+  filter: drop-shadow(0 0 8px rgba(255, 234, 0, 0.95)) brightness(1.2);
+  animation: movableBounce 1.2s infinite alternate ease-in-out;
+  cursor: pointer;
+}
+
+@keyframes movableBounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+
 .overflowLabel {
   font-family: var(--nz-font-num);
   font-size: 11px;

@@ -65,10 +65,15 @@ function DieFace({ value }: { value: number }) {
   );
 }
 
-function BackgammonChecker({ seat, muted = false, isPinned = false }: { seat: 0 | 1; muted?: boolean; isPinned?: boolean }) {
+function BackgammonChecker({ seat, muted = false, isPinned = false, isMovable = false }: { seat: 0 | 1; muted?: boolean; isPinned?: boolean; isMovable?: boolean }) {
   const isWhite = seat === 0;
   return (
-    <div className={[styles.checker3d, isWhite ? styles.checkerWhite : styles.checkerBlack, muted ? styles.checkerMuted : ""].join(" ")}>
+    <div className={[
+      styles.checker3d,
+      isWhite ? styles.checkerWhite : styles.checkerBlack,
+      muted ? styles.checkerMuted : "",
+      isMovable ? styles.checkerMovable : ""
+    ].join(" ")}>
       <div className={styles.checkerInnerRim} />
       {isPinned && <span className={styles.pinnedCheckerOverlay} title="قرص محبوس">🔒</span>}
     </div>
@@ -383,6 +388,13 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
     prevDiceRef.current = diceStr;
   }, [dice]);
 
+  // Auto-select BAR if current player has checkers trapped on the bar
+  useEffect(() => {
+    if (canMove && mySeat !== null && bar[mySeat] > 0 && sourcesWithLegalMove.has("BAR") && selected === null) {
+      setSelected("BAR");
+    }
+  }, [canMove, mySeat, bar, sourcesWithLegalMove, selected]);
+
   function handlePointClick(idx: number) {
     if (!canMove || !legalActions) return;
     const { seat, count } = pointOwnerAndCount(idx);
@@ -407,6 +419,10 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
     }
     if (seat === mySeat && sourcesWithLegalMove.has(String(idx))) {
       setSelected(idx === selected ? null : idx);
+      return;
+    }
+    if (selected !== null) {
+      setSelected(null);
     }
   }
 
@@ -455,7 +471,12 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
         <div className={styles.pointTriangle} />
         <div className={styles.checkerStack}>
           {seat !== null && Array.from({ length: shown }).map((_, i) => (
-            <BackgammonChecker key={i} seat={seat} isPinned={isPinned && i === 0} />
+            <BackgammonChecker
+              key={i}
+              seat={seat}
+              isPinned={isPinned && i === 0}
+              isMovable={isSelectable && i === shown - 1}
+            />
           ))}
           {overflow > 0 && <span className={styles.overflowLabel}>+{overflow}</span>}
         </div>

@@ -36,6 +36,7 @@ const SPEED_MATH_I18N: Record<
     correct: string;
     acc: string;
     notice: string;
+    submitBtn: string;
   }
 > = {
   ar: {
@@ -49,6 +50,7 @@ const SPEED_MATH_I18N: Record<
     correct: "صحيحة",
     acc: "دقة",
     notice: "🔒 الأسئلة مشفرة أثناء البث المباشر لمنع أي تسريب وضمان النزاهة التامة",
+    submitBtn: "إرسال ↵",
   },
   en: {
     tied: "Tied Match 🔥",
@@ -61,6 +63,7 @@ const SPEED_MATH_I18N: Record<
     correct: "correct",
     acc: "acc",
     notice: "🔒 Questions hidden during live stream to maintain competitive integrity",
+    submitBtn: "Submit ↵",
   },
   es: {
     tied: "Empate emocionante 🔥",
@@ -73,6 +76,7 @@ const SPEED_MATH_I18N: Record<
     correct: "correctas",
     acc: "precisión",
     notice: "🔒 Preguntas ocultas durante la transmisión en vivo para garantizar la integridad",
+    submitBtn: "Enviar ↵",
   },
   fr: {
     tied: "Égalité palpitante 🔥",
@@ -85,6 +89,7 @@ const SPEED_MATH_I18N: Record<
     correct: "correctes",
     acc: "précision",
     notice: "🔒 Questions masquées pendant le direct pour garantir l'intégrité compétitive",
+    submitBtn: "Valider ↵",
   },
   hi: {
     tied: "रोमांचक मुकाबला टाई 🔥",
@@ -97,6 +102,7 @@ const SPEED_MATH_I18N: Record<
     correct: "सही",
     acc: "सटीकता",
     notice: "🔒 निष्पक्षता बनाए रखने के लिए लाइव स्ट्रीम के दौरान प्रश्न छुपाए गए हैं",
+    submitBtn: "दर्ज करें ↵",
   },
   zh: {
     tied: "激烈战平 🔥",
@@ -109,8 +115,24 @@ const SPEED_MATH_I18N: Record<
     correct: "正确",
     acc: "准确率",
     notice: "🔒 直播期间题目加密隐藏，以保障绝对公平的竞技环境",
+    submitBtn: "提交 ↵",
   },
 };
+
+function normalizeNumberInput(input: string): string {
+  return input
+    .replace(/[٠۰]/g, "0")
+    .replace(/[١۱]/g, "1")
+    .replace(/[٢۲]/g, "2")
+    .replace(/[٣۳]/g, "3")
+    .replace(/[٤۴]/g, "4")
+    .replace(/[٥۵]/g, "5")
+    .replace(/[٦۶]/g, "6")
+    .replace(/[٧۷]/g, "7")
+    .replace(/[٨۸]/g, "8")
+    .replace(/[٩۹]/g, "9")
+    .replace(/[^\d-]/g, "");
+}
 
 export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }: Props) {
   const { t, locale } = useI18n();
@@ -151,11 +173,37 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
   }, [current?.index, canMove]);
 
   function submit() {
-    if (!canMove || draft.trim() === "") return;
+    if (!canMove || draft.trim() === "" || draft.trim() === "-") return;
     const answer = Number(draft);
     if (!Number.isFinite(answer)) return;
     onMove({ answer: Math.trunc(answer) });
     setDraft("");
+  }
+
+  function handleKeypadDigit(digit: string) {
+    if (!canMove) return;
+    setDraft((prev) => {
+      if (prev === "0") return digit;
+      if (prev.length >= 7) return prev;
+      return prev + digit;
+    });
+    inputRef.current?.focus();
+  }
+
+  function handleKeypadBackspace() {
+    if (!canMove) return;
+    setDraft((prev) => prev.slice(0, -1));
+    inputRef.current?.focus();
+  }
+
+  function handleKeypadToggleSign() {
+    if (!canMove) return;
+    setDraft((prev) => {
+      if (prev.startsWith("-")) return prev.slice(1);
+      if (prev.length > 0) return "-" + prev;
+      return "-";
+    });
+    inputRef.current?.focus();
   }
 
   // Dedicated Spectator View: Real-Time Race HUD & Telemetry
@@ -257,9 +305,12 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
     );
   }
 
-  const myScore = mySeat !== null ? scores.correct[mySeat] : null;
+  const myScore = mySeat !== null ? scores.correct[mySeat] : 0;
   const opponentSeat = mySeat === 0 ? 1 : mySeat === 1 ? 0 : null;
-  const opponentScore = opponentSeat !== null ? scores.correct[opponentSeat] : null;
+  const opponentScore = opponentSeat !== null ? scores.correct[opponentSeat] : 0;
+  const totalQuestions = scores.total || 60;
+  const myPct = Math.min(100, Math.round(((myScore ?? 0) / totalQuestions) * 100));
+  const oppPct = Math.min(100, Math.round(((opponentScore ?? 0) / totalQuestions) * 100));
 
   return (
     <div className={styles.wrap}>
@@ -325,18 +376,106 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
               autoComplete="off"
               value={draft}
               disabled={!canMove}
-              onChange={(e) => setDraft(e.target.value.replace(/[^0-9-]/g, ""))}
+              onChange={(e) => {
+                const clean = normalizeNumberInput(e.target.value);
+                if (clean === "-" || /^-?\d*$/.test(clean)) {
+                  setDraft(clean);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submit();
+                }
+              }}
               aria-label={t("game.speed_math.answer_label")}
               placeholder="?"
             />
             <button
               type="submit"
               className={styles.submitButton}
-              disabled={!canMove || draft.trim() === ""}
+              disabled={!canMove || draft.trim() === "" || draft.trim() === "-"}
             >
               ↵
             </button>
           </form>
+
+          {/* Prominent Glowing Submit Button */}
+          <button
+            type="button"
+            className={styles.bigSubmitBtn}
+            onClick={submit}
+            disabled={!canMove || draft.trim() === "" || draft.trim() === "-"}
+          >
+            ⚡ {mathDict.submitBtn}
+          </button>
+
+          {/* Virtual On-Screen Numpad */}
+          <div className={styles.keypadSection}>
+            <div className={styles.keypadGrid}>
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
+                <button
+                  key={digit}
+                  type="button"
+                  className={styles.keypadBtn}
+                  onClick={() => handleKeypadDigit(digit)}
+                  disabled={!canMove}
+                >
+                  {digit}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={[styles.keypadBtn, styles.keypadBtnAction].join(" ")}
+                onClick={handleKeypadToggleSign}
+                disabled={!canMove}
+                title="Negative / Positive"
+              >
+                ±
+              </button>
+              <button
+                type="button"
+                className={styles.keypadBtn}
+                onClick={() => handleKeypadDigit("0")}
+                disabled={!canMove}
+              >
+                0
+              </button>
+              <button
+                type="button"
+                className={[styles.keypadBtn, styles.keypadBtnAction].join(" ")}
+                onClick={handleKeypadBackspace}
+                disabled={!canMove || draft.length === 0}
+                title="Backspace"
+              >
+                ⌫
+              </button>
+            </div>
+          </div>
+
+          {/* In-Match Live Race Telemetry */}
+          <div className={styles.inGameRaceTrack}>
+            <div className={styles.inGameTrackRow}>
+              <span className={styles.inGameTrackLabel}>{t("matchmaking.you")}</span>
+              <div className={styles.inGameTrackBar}>
+                <div
+                  className={styles.inGameTrackFill0}
+                  style={{ width: `${Math.max(4, myPct)}%` }}
+                />
+              </div>
+              <span className={`nz-num ${styles.inGameTrackScore}`}>{myScore ?? 0}</span>
+            </div>
+            <div className={styles.inGameTrackRow}>
+              <span className={styles.inGameTrackLabel}>{t("matchmaking.opponent")}</span>
+              <div className={styles.inGameTrackBar}>
+                <div
+                  className={styles.inGameTrackFill1}
+                  style={{ width: `${Math.max(4, oppPct)}%` }}
+                />
+              </div>
+              <span className={`nz-num ${styles.inGameTrackScore}`}>{opponentScore ?? 0}</span>
+            </div>
+          </div>
         </div>
       </div>
 

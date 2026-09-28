@@ -5,10 +5,9 @@ import { usePathname } from "next/navigation";
 import { LocaleLink } from "@/components/LocaleLink";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n/context";
-import { get } from "@/lib/api";
+import { get, post } from "@/lib/api";
 import { getGame } from "@/lib/games";
 import { useVisibilityAwareInterval } from "@/lib/use-interval";
-import { useDuelSocket } from "@/lib/use-duel-socket";
 import styles from "./ActiveMatchBanner.module.css";
 
 type ActiveDuelInfo = {
@@ -17,6 +16,7 @@ type ActiveDuelInfo = {
   status: string;
   opponentNickname?: string;
   startedAt?: string;
+  isVsComputer?: boolean;
 };
 
 const BANNER_I18N: Record<
@@ -94,6 +94,7 @@ export function ActiveMatchBanner() {
   const pathname = usePathname();
 
   const [activeDuel, setActiveDuel] = useState<ActiveDuelInfo | null>(null);
+  const dismissedDuelIdRef = useRef<string | null>(null);
   const audioPlayedRef = useRef(false);
 
   const isAdmin = pathname.includes("/admin");
@@ -107,6 +108,9 @@ export function ActiveMatchBanner() {
     try {
       const res = await get<{ active: boolean; duel?: ActiveDuelInfo }>("/v1/me/active-duel");
       if (res.active && res.duel) {
+        if (dismissedDuelIdRef.current === res.duel.id) {
+          return;
+        }
         setActiveDuel(res.duel);
         if (!audioPlayedRef.current) {
           audioPlayedRef.current = true;
@@ -159,11 +163,26 @@ export function ActiveMatchBanner() {
         </div>
 
         <div className={styles.actionButtons}>
-          <ResignButton duelId={activeDuel.id} bannerDict={bannerDict} onResigned={() => setActiveDuel(null)} />
+          <ResignButton duelId={activeDuel.id} bannerDict={bannerDict} onResigned={() => {
+            dismissedDuelIdRef.current = activeDuel.id;
+            setActiveDuel(null);
+          }} />
           <LocaleLink href={`/game/${activeDuel.id}`} className={styles.returnBtn}>
             <span>{bannerDict.returnToMatch}</span>
             <span aria-hidden="true">→</span>
           </LocaleLink>
+          <button
+            type="button"
+            className={styles.dismissBtn}
+            onClick={() => {
+              dismissedDuelIdRef.current = activeDuel.id;
+              setActiveDuel(null);
+            }}
+            aria-label="Dismiss banner"
+            title="إخفاء التنبيه"
+          >
+            ✕
+          </button>
         </div>
       </div>
     </div>
@@ -179,20 +198,23 @@ function ResignButton({
   bannerDict: typeof BANNER_I18N["en"];
   onResigned: () => void;
 }) {
-  const { resign } = useDuelSocket(duelId);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  async function handleResign() {
+    setBusy(true);
+    try {
+      await post("/v1/me/active-duel/resign", { duelId });
+    } catch {}
+    setBusy(false);
+    onResigned();
+  }
 
   if (confirming) {
     return (
       <button
-        onClick={async () => {
-          setBusy(true);
-          try {
-            resign?.();
-          } catch {}
-          onResigned();
-        }}
+        type="button"
+        onClick={handleResign}
         className={styles.resignBtnConfirm}
         disabled={busy}
       >
@@ -202,7 +224,7 @@ function ResignButton({
   }
 
   return (
-    <button onClick={() => setConfirming(true)} className={styles.resignBtn}>
+    <button type="button" onClick={() => setConfirming(true)} className={styles.resignBtn}>
       {bannerDict.resign}
     </button>
   );

@@ -858,6 +858,9 @@ export async function createGateway({
   function scheduleBotMoveIfNeeded(duel, plugin) {
     if (duel.status !== DuelState.LIVE) return;
     if (duel.clock.model === "SHARED") return scheduleBotAnswerIfNeeded(duel, plugin);
+    if (typeof duel.state?.turn === "number" && duel.clock.toMove !== duel.state.turn) {
+      duel.clock.toMove = duel.state.turn;
+    }
     const bot = getBotSeat(duel, duel.clock.toMove);
     if (!bot) {
       const existing = aiTimers.get(duel.duelId);
@@ -885,6 +888,12 @@ export async function createGateway({
       ? 500 + Math.floor(Math.random() * 300)
       : duel.gameId === "ludo"
       ? 850 + Math.floor(Math.random() * 450)
+      : duel.gameId === "seega" && duel.state?.phase === "PLACEMENT"
+      ? 100 + Math.floor(Math.random() * 60)
+      : duel.gameId === "seega"
+      ? 260 + Math.floor(Math.random() * 100)
+      : duel.gameId === "checkers"
+      ? 150 + Math.floor(Math.random() * 80)
       : 250 + Math.floor(Math.random() * 200);
 
     const timer = setTimeout(async () => {

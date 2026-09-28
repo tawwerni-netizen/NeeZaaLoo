@@ -112,17 +112,19 @@ export const DominoesPlugin = {
       };
     }
 
-    const tile = intent.tile;
+    const rawTile = intent.tile;
     const keys = Object.keys(intent).filter((k) => k !== "tile" && k !== "end");
     if (
       keys.length !== 0 ||
-      !Array.isArray(tile) || tile.length !== 2 ||
-      !Number.isInteger(tile[0]) || !Number.isInteger(tile[1]) ||
-      tile[0] < 0 || tile[0] > 6 || tile[1] < 0 || tile[1] > 6 || tile[0] > tile[1] ||
+      !Array.isArray(rawTile) || rawTile.length !== 2 ||
+      !Number.isInteger(rawTile[0]) || !Number.isInteger(rawTile[1]) ||
+      rawTile[0] < 0 || rawTile[0] > 6 || rawTile[1] < 0 || rawTile[1] > 6 ||
+      rawTile[0] > rawTile[1] ||
       (intent.end !== undefined && intent.end !== "LEFT" && intent.end !== "RIGHT")
     ) {
       return { ok: false, reason: "MALFORMED" };
     }
+    const tile = rawTile;
 
     const idx = hand.findIndex((t) => sameTile(t, tile));
     if (idx === -1) return { ok: false, reason: "ILLEGAL" };

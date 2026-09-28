@@ -24,8 +24,13 @@ type Props = {
   onMove: (intent: { tile: Tile; end?: "LEFT" | "RIGHT" } | { pass: true }) => void;
 };
 
-function sameTile(a: Tile, b: Tile) {
-  return a[0] === b[0] && a[1] === b[1];
+function sameTile(a: Tile | null | undefined, b: Tile | null | undefined): boolean {
+  if (!a || !b) return false;
+  return (a[0] === b[0] && a[1] === b[1]) || (a[0] === b[1] && a[1] === b[0]);
+}
+
+function canonicalTile(t: Tile): Tile {
+  return t[0] <= t[1] ? [t[0], t[1]] : [t[1], t[0]];
 }
 
 function legalEndsFor(tile: Tile, line?: Line): Array<"LEFT" | "RIGHT" | "ANY"> {
@@ -150,6 +155,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
   const [p0Score, setP0Score] = useState(0);
   const [p1Score, setP1Score] = useState(0);
   const [scoreToast, setScoreToast] = useState<{ points: number; text: string } | null>(null);
+  const [openingWarning, setOpeningWarning] = useState<string | null>(null);
 
   function triggerSlam() {
     setSlam(true);
@@ -188,7 +194,14 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
 
   function handleTileClick(tile: Tile) {
     if (!canMove) return;
-    if (mustPlayTile && !sameTile(tile, mustPlayTile)) return;
+    if (mustPlayTile && !sameTile(tile, mustPlayTile)) {
+      const msg = locale === "ar"
+        ? `يجب البدء بقطعة الدوش: [${mustPlayTile[0]}-${mustPlayTile[1]}]`
+        : `Must open with double: [${mustPlayTile[0]}-${mustPlayTile[1]}]`;
+      setOpeningWarning(msg);
+      setTimeout(() => setOpeningWarning(null), 3200);
+      return;
+    }
     // Allow deselecting the active tile
     if (selected && sameTile(tile, selected)) {
       setSelected(null);
@@ -196,18 +209,19 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
     }
     const ends = legalEndsFor(tile, line);
     if (ends.length === 0) return;
+    const sendTile = canonicalTile(tile);
     if (ends[0] === "ANY") {
       triggerSlam();
       playDominoTileClickSound();
       checkAllFivesScore(tile);
-      onMove({ tile });
+      onMove({ tile: sendTile });
       return;
     }
     if (ends.length === 1) {
       triggerSlam();
       playDominoTileClickSound();
       checkAllFivesScore(tile, ends[0] as "LEFT" | "RIGHT");
-      onMove({ tile, end: ends[0] as "LEFT" | "RIGHT" });
+      onMove({ tile: sendTile, end: ends[0] as "LEFT" | "RIGHT" });
       return;
     }
     setSelected(tile);
@@ -222,7 +236,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
     triggerSlam();
     playDominoTileClickSound();
     checkAllFivesScore(selected, end);
-    onMove({ tile: selected, end });
+    onMove({ tile: canonicalTile(selected), end });
     setSelected(null);
   }
 
@@ -284,12 +298,27 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
         </div>
       )}
 
+      {/* Opening Constraint / Action Banner */}
+      {openingWarning && (
+        <div className={styles.openingHintBadge}>
+          {openingWarning}
+        </div>
+      )}
+
       {/* 3D Felt Table Surface */}
       <div className={[styles.tableContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         <div className={[styles.tableFelt, slam ? styles.boardSlam : ""].join(" ")} onClick={() => setSelected(null)}>
           <div className={styles.lineViewport} dir="ltr">
             <div className={styles.line} onClick={(e) => e.stopPropagation()}>
-              {safeTiles.length === 0 && <span className={styles.emptyHint}>{t("game.dominoes.empty_line")}</span>}
+              {safeTiles.length === 0 && (
+                <span className={styles.emptyHint}>
+                  {mustPlayTile
+                    ? (locale === "ar"
+                        ? `⚡ ابدأ بإنزال الدوش: [${mustPlayTile[0]}-${mustPlayTile[1]}]`
+                        : `⚡ Play opening double: [${mustPlayTile[0]}-${mustPlayTile[1]}]`)
+                    : t("game.dominoes.empty_line")}
+                </span>
+              )}
               {safeTiles.map((lt, i) => {
                 const isLeftEnd = i === 0 && selected && selectedEnds.includes("LEFT");
                 const isRightEnd = i === safeTiles.length - 1 && selected && selectedEnds.includes("RIGHT");
@@ -344,7 +373,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
             <AnimatePresence initial={false}>
               {hand.map((tile) => {
                 const forced = mustPlayTile !== null;
-                const isForcedTile = forced && sameTile(tile, mustPlayTile!);
+                const isForcedTile = forced && sameTile(tile, mustPlayTile);
                 const legal = !forced || isForcedTile;
                 const ends = legalEndsFor(tile, line);
                 const playable = canMove && legal && ends.length > 0;
@@ -360,12 +389,12 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
                     whileHover={{ y: playable ? -8 : 0 }}
                     whileTap={{ scale: playable ? 0.96 : 1 }}
                     transition={transition.ui}
-                    className={styles.handTile}
+                    className={[styles.handTile, isForcedTile ? styles.forcedTileGlow : ""].join(" ")}
                     disabled={!playable}
                     onClick={() => handleTileClick(tile)}
                     aria-pressed={isSelected}
                   >
-                    <DominoTile values={tile} size="lg" faded={!playable} glow={isSelected} playable={playable} />
+                    <DominoTile values={tile} size="lg" faded={!playable} glow={isSelected || isForcedTile} playable={playable} />
                   </motion.button>
                 );
               })}

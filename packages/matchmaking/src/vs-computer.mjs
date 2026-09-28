@@ -89,9 +89,22 @@ export function createVsComputerService(db) {
       const seat2 = is4p ? `${botId}-2` : null;
       const seat3 = is4p ? `${botId}-3` : null;
 
+      let initialToMove = 0;
+      try {
+        if (gameId === "backgammon") {
+          const { BackgammonPlugin } = await import("../../game-backgammon/src/plugin.mjs");
+          const ch = BackgammonPlugin.rehydrate(initialState);
+          if (typeof ch?.state?.turn === "number") initialToMove = ch.state.turn;
+        } else if (gameId === "dominoes") {
+          const { DominoesPlugin } = await import("../../game-dominoes/src/plugin.mjs");
+          const ch = DominoesPlugin.rehydrate(initialState);
+          if (typeof ch?.state?.turn === "number") initialToMove = ch.state.turn;
+        }
+      } catch {}
+
       const nowMs = Date.now();
       const initialClockState = {
-        toMove: 0,
+        toMove: initialToMove,
         initialMs: resolvedTimeControl.initialMs,
         incrementMs: resolvedTimeControl.incrementMs ?? 0,
         remaining: is4p

@@ -71,6 +71,13 @@ export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, 
   const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<number | null>(null);
   const [ambushText, setAmbushText] = useState<string | null>(null);
+  const [optimisticBoard, setOptimisticBoard] = useState<number[] | null>(null);
+
+  useEffect(() => {
+    setOptimisticBoard(null);
+  }, [board]);
+
+  const displayBoard = optimisticBoard ?? board;
 
   const stoneCount = useMemo(() => board.filter((b) => b !== 0).length, [board]);
   const prevStoneCount = useRef<number>(stoneCount);
@@ -98,6 +105,10 @@ export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, 
     if (phase === "PLACEMENT") {
       if (legalPlacements.includes(idx)) {
         playSeegaMoveSound();
+        const myPiece = mySeat === 0 ? 1 : -1;
+        const next = [...(optimisticBoard ?? board)];
+        next[idx] = myPiece;
+        setOptimisticBoard(next);
         onMove({ place: idx });
       }
       return;
@@ -135,9 +146,9 @@ export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, 
         )}
         <div className={styles.sandstoneSlab}>
           <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>
-            {board.map((mark, idx) => {
+            {displayBoard.map((mark, idx) => {
               const isCenter = idx === CENTER;
-              const isPlaceable = phase === "PLACEMENT" && legalPlacements.includes(idx);
+              const isPlaceable = phase === "PLACEMENT" && legalPlacements.includes(idx) && mark === 0;
               const isSelected = selected === idx;
               const isDestination = destinationsFromSelected.has(idx);
               const isSelectableSource =
@@ -172,12 +183,13 @@ export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, 
                     <motion.div
                       {...(quality !== "low" ? { layoutId: `seega-piece-${idx}` } : {})}
                       className={styles.stoneWrap}
-                      initial={false}
+                      initial={{ scale: 0.6, opacity: 0 }}
                       animate={{
                         scale: isSelected ? 1.15 : 1,
+                        opacity: 1,
                         y: isSelected ? -8 : 0,
                       }}
-                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                      transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
                     >
                       <SeegaStoneSvg seat={mark > 0 ? "0" : "1"} />
                     </motion.div>

@@ -104,7 +104,7 @@ export function useDuelSocket(duelId: string) {
       if (socketRef.current?.readyState !== WebSocket.OPEN) {
         void syncHttp();
       }
-    }, 750);
+    }, 2000);
 
     async function connect() {
       let { accessToken } = getTokens();

@@ -2509,8 +2509,24 @@ function buildRoutes(storeSvc) {
     { method: "GET", path: "/v1/me/active-duel", action: "duel.play.free",
       owner: ({ actor }) => actor.id,
       handler: async ({ actor, db }) => {
+        // Auto-complete stale or abandoned matches (older than 10 minutes or abandoned vs-computer matches)
+        await db.query(
+          `UPDATE duel
+              SET status = 'COMPLETED'::duel_status,
+                  result = '0-1',
+                  termination_reason = 'ABANDONED',
+                  completed_at = now()
+            WHERE (seat_0 = $1 OR seat_1 = $1)
+              AND status IN ('LIVE', 'READY', 'RESERVED')
+              AND (
+                created_at < now() - interval '10 minutes'
+                OR (is_vs_computer = TRUE AND (started_at < now() - interval '4 minutes' OR created_at < now() - interval '4 minutes'))
+              )`,
+          [actor.id]
+        ).catch(() => {});
+
         const r = await db.query(
-          `SELECT d.id, d.game_id, d.status, d.seat_0, d.seat_1, d.started_at,
+          `SELECT d.id, d.game_id, d.status, d.seat_0, d.seat_1, d.started_at, d.is_vs_computer,
                   p0.handle AS seat_0_handle, p1.handle AS seat_1_handle
              FROM duel d
              LEFT JOIN player p0 ON p0.id = d.seat_0
@@ -2534,9 +2550,34 @@ function buildRoutes(storeSvc) {
               status: row.status,
               opponentNickname: opponentHandle,
               startedAt: row.started_at,
+              isVsComputer: Boolean(row.is_vs_computer),
             },
           },
         };
+      } },
+
+    { method: "POST", path: "/v1/me/active-duel/resign", action: "duel.play.free",
+      owner: ({ actor }) => actor.id,
+      handler: async ({ actor, body, db }) => {
+        const duelId = body?.duelId;
+        const query = duelId
+          ? `UPDATE duel
+                SET status = 'COMPLETED'::duel_status,
+                    result = CASE WHEN seat_0 = $1 THEN '0-1' ELSE '1-0' END,
+                    termination_reason = 'RESIGNATION',
+                    completed_at = now()
+              WHERE id = $2 AND (seat_0 = $1 OR seat_1 = $1) AND status IN ('LIVE', 'READY', 'RESERVED')
+              RETURNING id`
+          : `UPDATE duel
+                SET status = 'COMPLETED'::duel_status,
+                    result = CASE WHEN seat_0 = $1 THEN '0-1' ELSE '1-0' END,
+                    termination_reason = 'RESIGNATION',
+                    completed_at = now()
+              WHERE (seat_0 = $1 OR seat_1 = $1) AND status IN ('LIVE', 'READY', 'RESERVED')
+              RETURNING id`;
+        const params = duelId ? [actor.id, duelId] : [actor.id];
+        const r = await db.query(query, params);
+        return { body: { ok: true, resignedDuels: r.rows.map((row) => row.id) } };
       } },
 
     // --- Customer support tickets (Slice 8) -------------------------------------

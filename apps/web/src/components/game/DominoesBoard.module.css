@@ -78,8 +78,45 @@
 
 .emptyHint {
   font-size: var(--nz-text-sm);
-  color: rgba(255, 255, 255, 0.5);
-  font-style: italic;
+  color: #ffd700;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: var(--nz-radius-pill, 999px);
+  border: 1px dashed rgba(255, 215, 0, 0.4);
+}
+
+.openingHintBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 6px 18px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: linear-gradient(135deg, rgba(255, 234, 0, 0.25) 0%, rgba(255, 140, 0, 0.35) 100%);
+  border: 1.5px solid #ffea00;
+  color: #ffea00;
+  font-size: var(--nz-text-xs);
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(255, 234, 0, 0.5);
+  animation: pulseHint 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes pulseHint {
+  from { transform: scale(1); box-shadow: 0 0 10px rgba(255, 234, 0, 0.4); }
+  to { transform: scale(1.04); box-shadow: 0 0 25px rgba(255, 234, 0, 0.8); }
+}
+
+.forcedTileGlow {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.9), inset 0 0 15px rgba(255, 215, 0, 0.5) !important;
+  animation: pulseForcedTile 1s infinite alternate ease-in-out !important;
+}
+
+@keyframes pulseForcedTile {
+  from { transform: translateY(0); }
+  to { transform: translateY(-8px); }
 }
 
 /* 3D Tile Primitives */

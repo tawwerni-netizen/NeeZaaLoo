@@ -12,7 +12,7 @@
   justify-content: center;
   gap: var(--nz-space-4);
   width: 100%;
-  max-width: 440px;
+  max-width: 680px;
 }
 
 .scorePod {
@@ -127,7 +127,7 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  max-width: 440px;
+  max-width: 680px;
   transition: transform var(--nz-dur-base) var(--nz-ease-settle);
 }
 
@@ -152,7 +152,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--nz-space-6);
+  gap: var(--nz-space-5);
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   animation: hologramFloat 4s ease-in-out infinite;
@@ -191,10 +191,10 @@
   align-items: center;
   justify-content: center;
   gap: var(--nz-space-4);
-  font-size: clamp(48px, 11vw, 68px);
+  font-size: clamp(54px, 12vw, 84px);
   font-weight: 900;
   color: #ffffff;
-  min-height: 80px;
+  min-height: 96px;
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 0, 255, 0.4);
 }
 
@@ -219,15 +219,15 @@
   display: flex;
   gap: var(--nz-space-3);
   width: 100%;
-  max-width: 280px;
+  max-width: 440px;
 }
 
 .answerInput {
   flex: 1;
-  font-size: var(--nz-text-2xl);
+  font-size: var(--nz-text-3xl);
   font-weight: 800;
   text-align: center;
-  padding: var(--nz-space-3);
+  padding: var(--nz-space-3) var(--nz-space-4);
   background: #000;
   border: 2px solid #ff00ff;
   border-radius: var(--nz-radius-lg);
@@ -235,6 +235,173 @@
   box-shadow: inset 0 0 15px rgba(255, 0, 255, 0.3), 0 0 15px rgba(255, 0, 255, 0.2);
   transition: all var(--nz-dur-fast) var(--nz-ease-out);
   font-family: var(--nz-font-num);
+}
+
+.answerInput:focus {
+  outline: none;
+  border-color: #00ffcc;
+  box-shadow: inset 0 0 20px rgba(0, 255, 204, 0.4), 0 0 25px rgba(0, 255, 204, 0.6);
+  color: #00ffcc;
+}
+
+/* Virtual On-Screen Numpad for Touch / Quick Clicks */
+.keypadSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 440px;
+  margin-top: 4px;
+}
+
+.keypadGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.keypadBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  font-family: var(--nz-font-num);
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(180deg, #241432 0%, #12081c 100%);
+  border: 1.5px solid rgba(255, 0, 255, 0.35);
+  border-radius: var(--nz-radius-lg);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.keypadBtn:hover:not(:disabled) {
+  border-color: #ff00ff;
+  background: linear-gradient(180deg, #381a52 0%, #1c0c2e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(255, 0, 255, 0.4);
+}
+
+.keypadBtn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.keypadBtnAction {
+  background: linear-gradient(180deg, #321a24 0%, #1c0c14 100%);
+  border-color: rgba(255, 140, 0, 0.4);
+  color: #ffaa44;
+}
+
+.keypadBtnAction:hover:not(:disabled) {
+  border-color: #ff8c00;
+  background: linear-gradient(180deg, #4d2432 0%, #26101a 100%);
+  box-shadow: 0 6px 14px rgba(255, 140, 0, 0.4);
+}
+
+.bigSubmitBtn {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-base);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  border-radius: var(--nz-radius-lg);
+  background: linear-gradient(135deg, #00ffcc 0%, #00b386 100%);
+  border: 2px solid #aaffea;
+  color: #002b20;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.5);
+  transition: all 0.15s ease;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.bigSubmitBtn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 255, 204, 0.7), 0 0 35px rgba(0, 255, 204, 0.5);
+}
+
+.bigSubmitBtn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+}
+
+.bigSubmitBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  filter: grayscale(0.7);
+  box-shadow: none;
+}
+
+/* In-Match Live Race Telemetry */
+.inGameRaceTrack {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--nz-radius-lg);
+  margin-top: 4px;
+}
+
+.inGameTrackRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.inGameTrackLabel {
+  width: 65px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--nz-text-2);
+  white-space: nowrap;
+}
+
+.inGameTrackBar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--nz-radius-pill);
+  overflow: hidden;
+  position: relative;
+}
+
+.inGameTrackFill0 {
+  height: 100%;
+  background: linear-gradient(90deg, #ff8c00 0%, #ffea00 100%);
+  border-radius: var(--nz-radius-pill);
+  box-shadow: 0 0 10px rgba(255, 140, 0, 0.8);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inGameTrackFill1 {
+  height: 100%;
+  background: linear-gradient(90deg, #ff0055 0%, #ff00cc 100%);
+  border-radius: var(--nz-radius-pill);
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.8);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inGameTrackScore {
+  font-family: var(--nz-font-num);
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 28px;
+  text-align: right;
+  color: #fff;
 }
 
 .answerInput:focus {
