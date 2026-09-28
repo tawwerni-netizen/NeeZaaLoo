@@ -95,20 +95,72 @@ const QUICK_STAKES = [
   },
 ];
 
+
+type LocalizedText = {
+  ar: string;
+  en: string;
+  es: string;
+  fr: string;
+  hi: string;
+  zh: string;
+};
+
+const HERO_I18N = {
+  netWin: {
+    ar: "تكسب صافي:",
+    en: "Net Win:",
+    es: "Ganancia neta:",
+    fr: "Gain net :",
+    hi: "शुद्ध जीत:",
+    zh: "净收益:",
+  },
+  fairPlay100: {
+    ar: "100% لعب عادل",
+    en: "100% FAIR PLAY",
+    es: "100% JUEGO LIMPIO",
+    fr: "100% JEU ÉQUITABLE",
+    hi: "100% निष्पक्ष खेल",
+    zh: "100% 公平对决",
+  },
+  prevSlide: {
+    ar: "الشريحة السابقة",
+    en: "Previous slide",
+    es: "Diapositiva anterior",
+    fr: "Diapositive précédente",
+    hi: "पिछली स्लाइड",
+    zh: "上一张",
+  },
+  nextSlide: {
+    ar: "الشريحة التالية",
+    en: "Next slide",
+    es: "Diapositiva siguiente",
+    fr: "Diapositive suivante",
+    hi: "अगली स्लाइड",
+    zh: "下一张",
+  },
+  startDuel: (stake: number): Record<string, string> => ({
+    ar: `بدء نزال بقيمة ${stake} USDT`,
+    en: `Start a ${stake} USDT duel`,
+    es: `Iniciar duelo de ${stake} USDT`,
+    fr: `Lancer un duel à ${stake} USDT`,
+    hi: `${stake} USDT का मुकाबला शुरू करें`,
+    zh: `发起 ${stake} USDT 对局`,
+  }),
+};
+
+const getSlideText = (field: LocalizedText, loc: string): string => {
+  return (field as Record<string, string>)[loc] || field.en || "";
+};
+
 type ShowcaseSlide = {
   id: string;
   gameId: string;
   image: string;
-  superAr: string;
-  superEn: string;
-  titleAr: string;
-  titleEn: string;
-  metaAr: string;
-  metaEn: string;
-  badgeAr: string;
-  badgeEn: string;
-  tagAr: string;
-  tagEn: string;
+  superText: LocalizedText;
+  titleText: LocalizedText;
+  metaText: LocalizedText;
+  badgeText: LocalizedText;
+  tagText: LocalizedText;
   targetHref: string;
 };
 
@@ -117,176 +169,506 @@ const SHOWCASE_SLIDES: ShowcaseSlide[] = [
     id: "chess",
     gameId: "chess",
     image: "/images/hero-showcase/showcase-chess-blitz.jpg",
-    superAr: "بطولة الشطرنج الخاطف",
-    superEn: "CHESS BLITZ ARENA",
-    titleAr: "مواجهات الشطرنج الخاطف 1v1",
-    titleEn: "1v1 Grandmaster Chess Blitz",
-    metaAr: "تسوية فورية • خوارزمية مكافحة الغش • تصنيف ELO معتمد",
-    metaEn: "Instant Settlement • Certified Anti-Cheat • FIDE ELO Standard",
-    badgeAr: "ميدان مباشر",
-    badgeEn: "LIVE SKILL ARENA",
-    tagAr: "تحدَّ الآن ↗",
-    tagEn: "PLAY BLITZ ↗",
+    superText: {
+      ar: "بطولة الشطرنج الخاطف",
+      en: "CHESS BLITZ ARENA",
+      es: "ARENA DE AJEDREZ BLITZ",
+      fr: "ARÈNE D'ÉCHECS BLITZ",
+      hi: "शतरंज ब्लिट्ज अखाड़ा",
+      zh: "快棋竞技场",
+    },
+    titleText: {
+      ar: "مواجهات الشطرنج الخاطف 1v1",
+      en: "1v1 Grandmaster Chess Blitz",
+      es: "Duelo 1v1 de Ajedrez Relámpago",
+      fr: "Duels 1v1 Échecs Blitz",
+      hi: "1v1 ग्रैंडमास्टर शतरंज ब्लिट्ज",
+      zh: "1v1 国际象棋特级大师快棋",
+    },
+    metaText: {
+      ar: "تسوية فورية • خوارزمية مكافحة الغش • تصنيف ELO معتمد",
+      en: "Instant Settlement • Certified Anti-Cheat • FIDE ELO Standard",
+      es: "Liquidación Inmediata • Anti-Trampas Certificado • ELO FIDE",
+      fr: "Règlement Immédiat • Anti-Triche Certifié • Standard ELO FIDE",
+      hi: "तत्काल भुगतान • प्रमाणित एंटी-चीट • FIDE ELO मानक",
+      zh: "秒级结算 • 权威反作弊 • FIDE 官方 ELO 标准",
+    },
+    badgeText: {
+      ar: "ميدان مباشر",
+      en: "LIVE SKILL ARENA",
+      es: "ARENA EN VIVO",
+      fr: "ARÈNE EN DIRECT",
+      hi: "लाइव अखाड़ा",
+      zh: "实时竞技场",
+    },
+    tagText: {
+      ar: "تحدَّ الآن ↗",
+      en: "PLAY BLITZ ↗",
+      es: "JUGAR BLITZ ↗",
+      fr: "JOUER BLITZ ↗",
+      hi: "ब्लिट्ज खेलें ↗",
+      zh: "即刻对决 ↗",
+    },
     targetHref: "/play/chess",
   },
   {
     id: "dominoes",
     gameId: "dominoes",
     image: "/images/hero-showcase/showcase-dominoes-clash.jpg",
-    superAr: "مواجهات الدومينو التكتيكية",
-    superEn: "DOMINOES CLASH",
-    titleAr: "تحديات أساتذة الدومينو الكلاسيكي",
-    titleEn: "Classic Dominoes Clash",
-    metaAr: "حساب دقيق للنقاط • خالية من الحظ • جولات سريعة",
-    metaEn: "Precision Tile Engine • Deterministic State • Fast Rounds",
-    badgeAr: "أرينا حية",
-    badgeEn: "LIVE ARENA",
-    tagAr: "العب الآن ↗",
-    tagEn: "PLAY NOW ↗",
+    superText: {
+      ar: "مواجهات الدومينو التكتيكية",
+      en: "DOMINOES CLASH",
+      es: "DUELO DE DOMINÓ",
+      fr: "CHOC DE DOMINOS",
+      hi: "डोमिनोज़ क्लैश",
+      zh: "多米诺对决",
+    },
+    titleText: {
+      ar: "تحديات أساتذة الدومينو الكلاسيكي",
+      en: "Classic Dominoes Clash",
+      es: "Choque de Dominó Clásico",
+      fr: "Choc de Dominos Classique",
+      hi: "क्लासिक डोमिनोज़ मुकाबला",
+      zh: "经典多米诺大师对决",
+    },
+    metaText: {
+      ar: "حساب دقيق للنقاط • خالية من الحظ • جولات سريعة",
+      en: "Precision Tile Engine • Deterministic State • Fast Rounds",
+      es: "Cálculo Preciso • Estado Determinista • Rondas Rápidas",
+      fr: "Calcul Précis des Tuiles • État Déterministe • Manches Rapides",
+      hi: "सटीक टाइल इंजन • बिना किसी भाग्य के • तेज़ राउंड",
+      zh: "精准骨牌计算 • 纯技术确定性 • 节奏快局",
+    },
+    badgeText: {
+      ar: "أرينا حية",
+      en: "LIVE ARENA",
+      es: "ARENA EN VIVO",
+      fr: "ARÈNE EN DIRECT",
+      hi: "लाइव अखाड़ा",
+      zh: "实时竞技场",
+    },
+    tagText: {
+      ar: "العب الآن ↗",
+      en: "PLAY NOW ↗",
+      es: "JUGAR AHORA ↗",
+      fr: "JOUER ↗",
+      hi: "अभी खेलें ↗",
+      zh: "即刻开局 ↗",
+    },
     targetHref: "/play/dominoes",
   },
   {
     id: "ludo",
     gameId: "ludo",
     image: "/images/hero-showcase/showcase-ludo-legends.jpg",
-    superAr: "لودو الأساطير",
-    superEn: "LUDO OF LEGENDS",
-    titleAr: "بطولة لودو الكبرى المباشرة",
-    titleEn: "Grand Ludo Live Championship",
-    metaAr: "4 لاعبين • تنافس استراتيجي عالي • جوائز ضخمة",
-    metaEn: "4 Players • High Tactical Competition • Massive Prizes",
-    badgeAr: "ميدان حي 24/7",
-    badgeEn: "LIVE ARENA 24/7",
-    tagAr: "العب لودو الآن ↗",
-    tagEn: "PLAY LUDO NOW ↗",
+    superText: {
+      ar: "لودو الأساطير",
+      en: "LUDO OF LEGENDS",
+      es: "LUDO DE LEYENDAS",
+      fr: "LUDO DES LÉGENDES",
+      hi: "लूडो लीजेंड्स",
+      zh: "传奇飞行棋",
+    },
+    titleText: {
+      ar: "بطولة لودو الكبرى المباشرة",
+      en: "Grand Ludo Live Championship",
+      es: "Gran Campeonato en Vivo de Ludo",
+      fr: "Grand Championnat de Ludo en Direct",
+      hi: "ग्रैंड लूडो लाइव चैंपियनशिप",
+      zh: "传奇飞行棋线上大奖赛",
+    },
+    metaText: {
+      ar: "4 لاعبين • تنافس استراتيجي عالي • جوائز ضخمة",
+      en: "4 Players • High Tactical Competition • Massive Prizes",
+      es: "4 Jugadores • Alta Táctica • Grandes Premios",
+      fr: "4 Joueurs • Haute Compétition Tactique • Gros Lots",
+      hi: "4 खिलाड़ी • उच्च सामरिक मुकाबला • विशाल पुरस्कार",
+      zh: "4人对战 • 高度战术博弈 • 丰厚奖池",
+    },
+    badgeText: {
+      ar: "ميدان حي 24/7",
+      en: "LIVE ARENA 24/7",
+      es: "ARENA 24/7",
+      fr: "ARÈNE 24/7",
+      hi: "लाइव अखाड़ा 24/7",
+      zh: "24/7 竞技场",
+    },
+    tagText: {
+      ar: "العب لودو الآن ↗",
+      en: "PLAY LUDO NOW ↗",
+      es: "JUGAR LUDO YA ↗",
+      fr: "JOUER AU LUDO ↗",
+      hi: "लूडो खेलें ↗",
+      zh: "即刻飞翔 ↗",
+    },
     targetHref: "/play/ludo",
   },
   {
     id: "backgammon",
     gameId: "backgammon",
     image: "/images/hero-showcase/showcase-backgammon-masters.jpg",
-    superAr: "بطولة طاولة الزهر الكبرى",
-    superEn: "BACKGAMMON MASTERS",
-    titleAr: "بطولة طاولة الزهر الإمبراطورية",
-    titleEn: "Imperial Backgammon Cup",
-    metaAr: "أدوار متسلسلة • عدالة رقمية كاملة • أرينا المحترفين",
-    metaEn: "High-Stakes Tawla • Provably Fair Clock • Pro Arena",
-    badgeAr: "مباشر الآن",
-    badgeEn: "ACTIVE ARENA",
-    tagAr: "ادخل الأرينا ↗",
-    tagEn: "ENTER ARENA ↗",
+    superText: {
+      ar: "بطولة طاولة الزهر الكبرى",
+      en: "BACKGAMMON MASTERS",
+      es: "MAESTROS DE BACKGAMMON",
+      fr: "MAÎTRES DU BACKGAMMON",
+      hi: "बैकगैमौन मास्टर्स",
+      zh: "双陆棋大师赛",
+    },
+    titleText: {
+      ar: "بطولة طاولة الزهر الإمبراطورية",
+      en: "Imperial Backgammon Cup",
+      es: "Copa Imperial de Backgammon",
+      fr: "Coupe Impériale de Backgammon",
+      hi: "इंपीरियल बैकगैमौन कप",
+      zh: "双陆棋帝国冠军杯",
+    },
+    metaText: {
+      ar: "أدوار متسلسلة • عدالة رقمية كاملة • أرينا المحترفين",
+      en: "High-Stakes Tawla • Provably Fair Clock • Pro Arena",
+      es: "Tawla de Altos Vuelos • Reloj Provablemente Justo • Arena Pro",
+      fr: "Tawla à Forts Enjeux • Horloge Équitable • Arène Pro",
+      hi: "उच्च दांव वाली तावला • प्रमाणित निष्पक्ष घड़ी • प्रो अखाड़ा",
+      zh: "高额局 Tawla • 绝对公平倒计时 • 职业竞技场",
+    },
+    badgeText: {
+      ar: "مباشر الآن",
+      en: "ACTIVE ARENA",
+      es: "ARENA ACTIVA",
+      fr: "ARÈNE ACTIVE",
+      hi: "सक्रिय अखाड़ा",
+      zh: "火热进行中",
+    },
+    tagText: {
+      ar: "ادخل الأرينا ↗",
+      en: "ENTER ARENA ↗",
+      es: "ENTRAR A LA ARENA ↗",
+      fr: "ENTRER DANS L'ARÈNE ↗",
+      hi: "अखाड़े में प्रवेश करें ↗",
+      zh: "进入赛场 ↗",
+    },
     targetHref: "/play/backgammon",
   },
   {
     id: "math",
     gameId: "speed-math",
     image: "/images/hero-showcase/showcase-math-olympiad.jpg",
-    superAr: "أولمبياد الحساب الذهني",
-    superEn: "SPEED MATH OLYMPIAD",
-    titleAr: "أولمبياد الحساب والسرعة الذهنية",
-    titleEn: "Speed Math Mind Olympiad",
-    metaAr: "معادلات متتالية • وقت متسارع • أعلى معدل ذكاء",
-    metaEn: "Mental Arithmetic • Clock Pressure • Pure Calculation",
-    badgeAr: "تحدي العقول",
-    badgeEn: "MIND BATTLE",
-    tagAr: "اختبر سرعتك ↗",
-    tagEn: "TEST SPEED ↗",
+    superText: {
+      ar: "أولمبياد الحساب الذهني",
+      en: "SPEED MATH OLYMPIAD",
+      es: "OLIMPIADA DE CÁLCULO",
+      fr: "OLYMPIADE DE CALCUL RAPIDE",
+      hi: "स्पीड मैथ ओलंपियाड",
+      zh: "极限心算擂台",
+    },
+    titleText: {
+      ar: "أولمبياد الحساب والسرعة الذهنية",
+      en: "Speed Math Mind Olympiad",
+      es: "Olimpiada Mental de Cálculo Rápido",
+      fr: "Olympiades de Calcul Mental Rapide",
+      hi: "स्पीड मैथ मानसिक ओलंपियाड",
+      zh: "极限心算奥林匹克",
+    },
+    metaText: {
+      ar: "معادلات متتالية • وقت متسارع • أعلى معدل ذكاء",
+      en: "Mental Arithmetic • Clock Pressure • Pure Calculation",
+      es: "Aritmética Mental • Presión de Reloj • Cálculo Puro",
+      fr: "Calcul Mental • Pression du Chrono • Calcul Pur",
+      hi: "मानसिक अंकगणित • समय का दबाव • शुद्ध गणना",
+      zh: "连环心算题 • 极速倒计时 • 纯粹脑力决战",
+    },
+    badgeText: {
+      ar: "تحدي العقول",
+      en: "MIND BATTLE",
+      es: "BATALLA MENTAL",
+      fr: "DÉFI MENTAL",
+      hi: "दिमागी मुकाबला",
+      zh: "最强大脑",
+    },
+    tagText: {
+      ar: "اختبر سرعتك ↗",
+      en: "TEST SPEED ↗",
+      es: "PROBAR VELOCIDAD ↗",
+      fr: "TESTER LA RAPIDITÉ ↗",
+      hi: "गति परखें ↗",
+      zh: "测测手速 ↗",
+    },
     targetHref: "/play/speed-math",
   },
   {
     id: "xo",
     gameId: "xo",
     image: "/images/hero-showcase/showcase-xo-speed.jpg",
-    superAr: "مبارزات إكس أو الخاطفة",
-    superEn: "XO BLITZ BATTLE",
-    titleAr: "تحدي السرعة القصوى XO",
-    titleEn: "XO Ultra Speed Arena",
-    metaAr: "جولات 60 ثانية • سرعة بديهة مطلقة • مباريات فورية",
-    metaEn: "60-Second Blitz • Lightning Reflexes • Instant Match",
-    badgeAr: "سرعة فائقة",
-    badgeEn: "LIGHTNING SPEED",
-    tagAr: "العب في ثوانٍ ↗",
-    tagEn: "PLAY NOW ↗",
+    superText: {
+      ar: "مبارزات إكس أو الخاطفة",
+      en: "XO BLITZ BATTLE",
+      es: "BATALLA BLITZ XO",
+      fr: "BATAILLE BLITZ XO",
+      hi: "XO ब्लिट्ज लड़ाई",
+      zh: "XO 闪电战",
+    },
+    titleText: {
+      ar: "تحدي السرعة القصوى XO",
+      en: "XO Ultra Speed Arena",
+      es: "Arena de Ultra Velocidad XO",
+      fr: "Arène Ultra Rapide XO",
+      hi: "XO अल्ट्रा स्पीड एरिना",
+      zh: "XO 极速井字棋角斗场",
+    },
+    metaText: {
+      ar: "جولات 60 ثانية • سرعة بديهة مطلقة • مباريات فورية",
+      en: "60-Second Blitz • Lightning Reflexes • Instant Match",
+      es: "Partidas de 60s • Reflejos Rápidos • Partida Instantánea",
+      fr: "Parties en 60s • Réflexes Éclair • Match Immédiat",
+      hi: "60-सेकंड ब्लिट्ज • तीव्र सजगता • त्वरित मैच",
+      zh: "60秒快速局 • 极限反应力 • 秒级配对",
+    },
+    badgeText: {
+      ar: "سرعة فائقة",
+      en: "LIGHTNING SPEED",
+      es: "VELOCIDAD RELÁMPAGO",
+      fr: "VITESSE ÉCLAIR",
+      hi: "बिजली जैसी गति",
+      zh: "闪电极速",
+    },
+    tagText: {
+      ar: "العب في ثوانٍ ↗",
+      en: "PLAY NOW ↗",
+      es: "JUGAR YA ↗",
+      fr: "JOUER ↗",
+      hi: "तुरंत खेलें ↗",
+      zh: "即刻对战 ↗",
+    },
     targetHref: "/play/xo",
   },
   {
     id: "connect4",
     gameId: "connect-four",
     image: "/images/hero-showcase/showcase-connect4-matrix.jpg",
-    superAr: "تحدي المصفوفة الرأسي",
-    superEn: "MATRIX ARENA",
-    titleAr: "أربعة على التوالي - الصراع السريع",
-    titleEn: "Connect Four Speed Matrix",
-    metaAr: "تفكير استراتيجي فوري • خروج المغلوب • تصفيات مباشرة",
-    metaEn: "Vertical Tactical Grid • Instant Matchmaking • Zero RNG",
-    badgeAr: "مبارزة 1v1",
-    badgeEn: "1v1 DUEL",
-    tagAr: "تحدَّ الخصم ↗",
-    tagEn: "CHALLENGE ↗",
+    superText: {
+      ar: "تحدي المصفوفة الرأسي",
+      en: "MATRIX ARENA",
+      es: "ARENA DE LA MATRIZ",
+      fr: "ARÈNE MATRICE",
+      hi: "मैट्रिक्स अखाड़ा",
+      zh: "矩阵竞技场",
+    },
+    titleText: {
+      ar: "أربعة على التوالي - الصراع السريع",
+      en: "Connect Four Speed Matrix",
+      es: "Conecta Cuatro Matriz Rápida",
+      fr: "Puissance 4 Matrice Rapide",
+      hi: "कनेक्ट फोर स्पीड मैट्रिक्स",
+      zh: "四子棋极速矩阵对决",
+    },
+    metaText: {
+      ar: "تفكير استراتيجي فوري • خروج المغلوب • تصفيات مباشرة",
+      en: "Vertical Tactical Grid • Instant Matchmaking • Zero RNG",
+      es: "Cuadrícula Táctica • Emparejamiento Rápido • Cero RNG",
+      fr: "Grille Tactique Verticale • Matchmaking Instantané • Zéro RNG",
+      hi: "ऊर्ध्वाधर सामरिक ग्रिड • त्वरित मिलान • शून्य RNG",
+      zh: "垂直重力棋盘 • 秒级智能匹配 • 零随机数",
+    },
+    badgeText: {
+      ar: "مبارزة 1v1",
+      en: "1v1 DUEL",
+      es: "DUELO 1v1",
+      fr: "DUEL 1v1",
+      hi: "1v1 मुकाबला",
+      zh: "1v1 对决",
+    },
+    tagText: {
+      ar: "تحدَّ الخصم ↗",
+      en: "CHALLENGE ↗",
+      es: "DESAFIAR ↗",
+      fr: "DÉFIER ↗",
+      hi: "चुनौती दें ↗",
+      zh: "发起挑战 ↗",
+    },
     targetHref: "/play/connect-four",
   },
   {
     id: "checkers",
     gameId: "checkers",
     image: "/images/hero-showcase/showcase-checkers-crown.jpg",
-    superAr: "تصفيات تاج الداما",
-    superEn: "CROWN MASTERS",
-    titleAr: "بطولة الداما التكتيكية الكلاسيكية",
-    titleEn: "Checkers Crown Elimination",
-    metaAr: "قوانين دولية معتمدة • ترقية الملوك • حسم مهاري",
-    metaEn: "Official Standard • Crown Promotion • Pure Skill Duel",
-    badgeAr: "جولة حاسمة",
-    badgeEn: "KNOCKOUT ROUND",
-    tagAr: "ابدأ التحدي ↗",
-    tagEn: "START DUEL ↗",
+    superText: {
+      ar: "تصفيات تاج الداما",
+      en: "CROWN MASTERS",
+      es: "MAESTROS DE LA CORONA",
+      fr: "MAÎTRES DE LA COURONNE",
+      hi: "क्राउन मास्टर्स",
+      zh: "王冠大师",
+    },
+    titleText: {
+      ar: "بطولة الداما التكتيكية الكلاسيكية",
+      en: "Checkers Crown Elimination",
+      es: "Eliminatoria de Corona de Damas",
+      fr: "Élimination Couronne de Dames",
+      hi: "चेकर्स क्राउन एलिमिनेशन",
+      zh: "西洋跳棋王冠淘汰赛",
+    },
+    metaText: {
+      ar: "قوانين دولية معتمدة • ترقية الملوك • حسم مهاري",
+      en: "Official Standard • Crown Promotion • Pure Skill Duel",
+      es: "Estándar Oficial • Coronación • Duelo de Habilidad",
+      fr: "Norme Officielle • Promotion des Dames • Duel d'Habileté",
+      hi: "आधिकारिक मानक • राजा का ताज • शुद्ध कौशल मुकाबला",
+      zh: "国际官方规则 • 王棋加冕 • 纯技术攻防",
+    },
+    badgeText: {
+      ar: "جولة حاسمة",
+      en: "KNOCKOUT ROUND",
+      es: "RONDA ELIMINATORIA",
+      fr: "MANCHE ÉLIMINATOIRE",
+      hi: "नॉकआउट राउंड",
+      zh: "淘汰生死局",
+    },
+    tagText: {
+      ar: "ابدأ التحدي ↗",
+      en: "START DUEL ↗",
+      es: "INICIAR DUELO ↗",
+      fr: "LANCER LE DÉFI ↗",
+      hi: "मुकाबला शुरू करें ↗",
+      zh: "开始对决 ↗",
+    },
     targetHref: "/play/checkers",
   },
   {
     id: "reversi",
     gameId: "reversi",
     image: "/images/hero-showcase/showcase-reversi-arena.jpg",
-    superAr: "كأس ريفيرسي الإستراتيجي",
-    superEn: "REVERSI CHAMPIONSHIP",
-    titleAr: "ريفيرسي: تكتيك قلب الأوبسيديان",
-    titleEn: "Reversi Obsidian Flip Cup",
-    metaAr: "انقلاب الموازين في ثوانٍ • تحكم استراتيجي بالأطراف",
-    metaEn: "Dynamic Flipping • Corner Strategy • High Skill Ceiling",
-    badgeAr: "استراتيجية عميقة",
-    badgeEn: "DEEP STRATEGY",
-    tagAr: "تحدَّ الآن ↗",
-    tagEn: "PLAY REVERSI ↗",
+    superText: {
+      ar: "كأس ريفيرسي الإستراتيجي",
+      en: "REVERSI CHAMPIONSHIP",
+      es: "CAMPEONATO DE REVERSI",
+      fr: "CHAMPIONNAT DE REVERSI",
+      hi: "रिवर्सी चैंपियनशिप",
+      zh: "黑白棋锦标赛",
+    },
+    titleText: {
+      ar: "ريفيرسي: تكتيك قلب الأوبسيديان",
+      en: "Reversi Obsidian Flip Cup",
+      es: "Copa de Volteo Obsidiana Reversi",
+      fr: "Coupe de Reversi d'Obsidienne",
+      hi: "रिवर्सी ओब्सीडियन फ्लिप कप",
+      zh: "黑白棋黑曜石翻转锦标赛",
+    },
+    metaText: {
+      ar: "انقلاب الموازين في ثوانٍ • تحكم استراتيجي بالأطراف",
+      en: "Dynamic Flipping • Corner Strategy • High Skill Ceiling",
+      es: "Volteo Dinámico • Estrategia de Esquinas • Alto Nivel",
+      fr: "Retournements Dynamiques • Stratégie des Coins • Haute Maîtrise",
+      hi: "गतिशील फ़्लिपिंग • कोनों का नियंत्रण • उच्च कौशल क्षमता",
+      zh: "瞬间逆转战局 • 边角控盘战略 • 极高竞技上限",
+    },
+    badgeText: {
+      ar: "استراتيجية عميقة",
+      en: "DEEP STRATEGY",
+      es: "ESTRATEGIA PROFUNDA",
+      fr: "STRATÉGIE PROFONDE",
+      hi: "गहन रणनीति",
+      zh: "深度策略",
+    },
+    tagText: {
+      ar: "تحدَّ الآن ↗",
+      en: "PLAY REVERSI ↗",
+      es: "JUGAR REVERSI ↗",
+      fr: "JOUER À REVERSI ↗",
+      hi: "रिवर्सी खेलें ↗",
+      zh: "即刻落子 ↗",
+    },
     targetHref: "/play/reversi",
   },
   {
     id: "gomoku",
     gameId: "gomoku",
     image: "/images/hero-showcase/showcase-gomoku-cup.jpg",
-    superAr: "بطولة غوموكو الدولية",
-    superEn: "GOMOKU ZEN CUP",
-    titleAr: "غوموكو: محاذاة الأحجار الخمسة",
-    titleEn: "Gomoku Five-in-a-Row Cup",
-    metaAr: "هجوم ودفاع متزامن • رقعة 15×15 • مهارة نقية",
-    metaEn: "Five-Stone Alignment • 15x15 Matrix • Pure Tactical Duel",
-    badgeAr: "نخبة الأرينا",
-    badgeEn: "ELITE ARENA",
-    tagAr: "خض المنافسة ↗",
-    tagEn: "ENTER CUP ↗",
+    superText: {
+      ar: "بطولة غوموكو الدولية",
+      en: "GOMOKU ZEN CUP",
+      es: "COPA ZEN GOMOKU",
+      fr: "COUPE ZEN GOMOKU",
+      hi: "गोमोकु ज़ेन कप",
+      zh: "五子棋禅境杯",
+    },
+    titleText: {
+      ar: "غوموكو: محاذاة الأحجار الخمسة",
+      en: "Gomoku Five-in-a-Row Cup",
+      es: "Copa Gomoku Cinco en Línea",
+      fr: "Coupe Gomoku Cinq Aligné",
+      hi: "गोमोकु फाइव-इन-ए-रो कप",
+      zh: "五子连珠国际禅宗杯",
+    },
+    metaText: {
+      ar: "هجوم ودفاع متزامن • رقعة 15×15 • مهارة نقية",
+      en: "Five-Stone Alignment • 15x15 Matrix • Pure Tactical Duel",
+      es: "Alineación de Cinco Piedras • Matriz 15x15 • Duelo Táctico Puro",
+      fr: "Alignement de Cinq Pierres • Matrice 15x15 • Duel Tactique Pur",
+      hi: "पांच पत्थरों का संरेखण • 15x15 ग्रिड • शुद्ध सामरिक द्वंद्व",
+      zh: "五子连珠 • 15x15 纵横棋盘 • 纯粹攻守战术",
+    },
+    badgeText: {
+      ar: "نخبة الأرينا",
+      en: "ELITE ARENA",
+      es: "ARENA ÉLITE",
+      fr: "ARÈNE D'ÉLITE",
+      hi: "अभिजात वर्ग अखाड़ा",
+      zh: "精英竞技场",
+    },
+    tagText: {
+      ar: "خض المنافسة ↗",
+      en: "ENTER CUP ↗",
+      es: "ENTRAR A LA COPA ↗",
+      fr: "PARTICIPER À LA COUPE ↗",
+      hi: "कप में भाग लें ↗",
+      zh: "角逐冠军 ↗",
+    },
     targetHref: "/play/gomoku",
   },
   {
     id: "seega",
     gameId: "seega",
     image: "/images/hero-showcase/showcase-seega-championship.jpg",
-    superAr: "بطولة السيجة التراثية",
-    superEn: "SEEGA GRAND ARENA",
-    titleAr: "السيجة: صراع الذكاء التراثي الكلاسيكي",
-    titleEn: "Seega Desert Strategy Arena",
-    metaAr: "تراث شرقي عريق • حصار القطع • منافسات بطولية",
-    metaEn: "Heritage Tactics • Stone Encirclement • Tournament Standard",
-    badgeAr: "تراث ومهارة",
-    badgeEn: "HERITAGE SKILL",
-    tagAr: "العب السيجة ↗",
-    tagEn: "PLAY SEEGA ↗",
+    superText: {
+      ar: "بطولة السيجة التراثية",
+      en: "SEEGA GRAND ARENA",
+      es: "GRAN ARENA DE SEEGA",
+      fr: "GRANDE ARÈNE DE SEEGA",
+      hi: "सीगा ग्रैंड एरिना",
+      zh: "塞加古韵竞技场",
+    },
+    titleText: {
+      ar: "السيجة: صراع الذكاء التراثي الكلاسيكي",
+      en: "Seega Desert Strategy Arena",
+      es: "Arena Táctica del Desierto Seega",
+      fr: "Arène Stratégique du Désert Seega",
+      hi: "सीगा डेजर्ट स्ट्रैटेजी एरिना",
+      zh: "古埃及塞加沙漠围棋争霸",
+    },
+    metaText: {
+      ar: "تراث شرقي عريق • حصار القطع • منافسات بطولية",
+      en: "Heritage Tactics • Stone Encirclement • Tournament Standard",
+      es: "Tácticas Ancestrales • Captura por Encierro • Nivel Torneo",
+      fr: "Tactique Ancestrale • Prise en Prise Sandwiche • Standard Tournoi",
+      hi: "प्राचीन रणनीति • पत्थरों की घेराबंदी • टूर्नामेंट मानक",
+      zh: "千年古老智慧 • 三明治夹击吃子 • 锦标赛水准",
+    },
+    badgeText: {
+      ar: "تراث ومهارة",
+      en: "HERITAGE SKILL",
+      es: "HABILIDAD ANCESTRAL",
+      fr: "SAVOIR-FAIRE ANCESTRAL",
+      hi: "पारंपरिक कौशल",
+      zh: "古韵与技巧",
+    },
+    tagText: {
+      ar: "العب السيجة ↗",
+      en: "PLAY SEEGA ↗",
+      es: "JUGAR SEEGA ↗",
+      fr: "JOUER À LA SEEGA ↗",
+      hi: "सीगा खेलें ↗",
+      zh: "即刻对弈 ↗",
+    },
     targetHref: "/play/seega",
   },
 ];
@@ -299,7 +681,7 @@ const stage = (index: number, reduceMotion: boolean | null) => ({
 
 export function Hero() {
   const reduceMotion = useReducedMotion();
-  const { t, dir } = useI18n();
+  const { t, dir, locale } = useI18n();
   const isRtl = dir === "rtl";
   const featured = listGames().slice(0, FEATURED_COUNT);
 
@@ -436,7 +818,7 @@ export function Hero() {
                     triggerDopamineExplosion();
                     playDifficultySelectSound(qs.soundLevel);
                   }}
-                  title={isRtl ? `بدء نزال بقيمة ${qs.stake} USDT` : `Start a ${qs.stake} USDT duel`}
+                  title={HERO_I18N.startDuel(qs.stake)[locale] || HERO_I18N.startDuel(qs.stake).en}
                 >
                   <div className={styles.cardGlowLine} style={{ background: `linear-gradient(90deg, ${qs.accentColor}, transparent)` }} />
                   <div className={styles.cardTopRow}>
@@ -452,7 +834,7 @@ export function Hero() {
                     <span className={styles.stakeAmountCurrency}>USDT</span>
                   </div>
                   <div className={styles.quickStakePrizeBox}>
-                    <span className={styles.prizePrefix}>{isRtl ? "تكسب صافي:" : "Net Win:"}</span>
+                    <span className={styles.prizePrefix}>{HERO_I18N.netWin[locale] || HERO_I18N.netWin.en}</span>
                     <span className={styles.prizeNumber}>${qs.prize.toFixed(2)}</span>
                     <span className={styles.prizeCurrency}>USDT</span>
                   </div>
@@ -492,7 +874,7 @@ export function Hero() {
                       <source srcSet={webpSrc} type="image/webp" />
                       <img
                         src={slide.image}
-                        alt={isRtl ? slide.titleAr : slide.titleEn}
+                        alt={getSlideText(slide.titleText, locale)}
                         className={styles.bannerImg}
                         width={1240}
                         height={520}
@@ -519,7 +901,7 @@ export function Hero() {
               {/* Dynamic Badge */}
               <div className={styles.badgeArena}>
                 <span className={styles.pulsingDot} />
-                <span>{isRtl ? currentSlide.badgeAr : currentSlide.badgeEn}</span>
+                <span>{getSlideText(currentSlide.badgeText, locale)}</span>
               </div>
 
               <div className={styles.badgeCertified}>
@@ -527,7 +909,7 @@ export function Hero() {
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   <polyline points="9 12 11 14 15 10" />
                 </svg>
-                <span>{isRtl ? "100% لعب عادل" : "100% FAIR PLAY"}</span>
+                <span>{HERO_I18N.fairPlay100[locale] || HERO_I18N.fairPlay100.en}</span>
               </div>
 
               {/* Dynamic Bottom Bar */}
@@ -536,18 +918,18 @@ export function Hero() {
                   <div className={styles.showcaseTagRow}>
                     <span className={styles.trophyIcon}>🏆</span>
                     <span className={styles.showcaseSuper}>
-                      {isRtl ? currentSlide.superAr : currentSlide.superEn}
+                      {getSlideText(currentSlide.superText, locale)}
                     </span>
                   </div>
                   <h3 className={styles.showcaseTitle}>
-                    {isRtl ? currentSlide.titleAr : currentSlide.titleEn}
+                    {getSlideText(currentSlide.titleText, locale)}
                   </h3>
                   <p className={styles.showcaseMeta}>
-                    {isRtl ? currentSlide.metaAr : currentSlide.metaEn}
+                    {getSlideText(currentSlide.metaText, locale)}
                   </p>
                 </div>
                 <span className={styles.tagFairPlay}>
-                  {isRtl ? currentSlide.tagAr : currentSlide.tagEn}
+                  {getSlideText(currentSlide.tagText, locale)}
                 </span>
               </div>
             </LocaleLink>
@@ -564,7 +946,7 @@ export function Hero() {
                 if (isRtl) nextSlide();
                 else prevSlide();
               }}
-              aria-label={isRtl ? "الشريحة السابقة" : "Previous slide"}
+              aria-label={HERO_I18N.prevSlide[locale] || HERO_I18N.prevSlide.en}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="15 18 9 12 15 6" />
@@ -582,7 +964,7 @@ export function Hero() {
                 if (isRtl) prevSlide();
                 else nextSlide();
               }}
-              aria-label={isRtl ? "الشريحة التالية" : "Next slide"}
+              aria-label={HERO_I18N.nextSlide[locale] || HERO_I18N.nextSlide.en}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="9 18 15 12 9 6" />
@@ -597,7 +979,7 @@ export function Hero() {
                   type="button"
                   role="tab"
                   aria-selected={idx === currentIdx}
-                  aria-label={`${isRtl ? slide.titleAr : slide.titleEn} (${idx + 1}/${SHOWCASE_SLIDES.length})`}
+                  aria-label={`${getSlideText(slide.titleText, locale)} (${idx + 1}/${SHOWCASE_SLIDES.length})`}
                   className={`${styles.indicatorBar} ${idx === currentIdx ? styles.indicatorBarActive : ""}`}
                   onMouseEnter={() => playCardHoverSound()}
                   onClick={(e) => {
@@ -624,18 +1006,18 @@ export function Hero() {
               <div className={styles.metricIconWrap}>⚔️</div>
               <span className={styles.metricBadgeLive}>
                 <span className={styles.statPulseDot} />
-                {isRtl ? "ميدان حي 24/7" : "Live Arena 24/7"}
+                {t("home.hero.guarantees.card_ai_badge")}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                {isRtl ? "فوري 24/7" : "Instant 24/7"}
+                {t("home.hero.guarantees.card_ai_metric")}
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "نزالات حية ومنافسات حقيقية 1v1" : "Live 1v1 Member Showdowns"}
+                {t("home.hero.guarantees.card_ai_title")}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "نافس لاعبين مهرة من مختلف الدول بتطابق فوري، أو تحدَّ أصدقاءك برابط مباشر" : "Instant matchmaking against active players or challenge friends via direct link"}
+                {t("home.hero.guarantees.card_ai_sub")}
               </div>
             </div>
           </div>
@@ -649,18 +1031,18 @@ export function Hero() {
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>⚡</div>
               <span className={styles.metricBadgeOnline}>
-                ⚡ {isRtl ? "سحب فوري" : "Instant Cashout"}
+                ⚡ {t("home.hero.guarantees.card_payout_badge")}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                <bdi dir="ltr">&lt; 60s</bdi>
+                <bdi dir="ltr">{t("home.hero.guarantees.card_payout_metric")}</bdi>
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "سحب كاش فوري وتلقائي" : "Instant Automated Cashout"}
+                {t("home.hero.guarantees.card_payout_title")}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "سحب مباشر لمحفظتك بالـ USDT (TRC20 / BEP20) أو وسائل الدفع المعتمدة بدون أي انتظار" : "Direct to your USDT wallet with zero waiting time or holds"}
+                {t("home.hero.guarantees.card_payout_sub")}
               </div>
             </div>
           </div>
@@ -674,18 +1056,18 @@ export function Hero() {
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>🏆</div>
               <span className={styles.metricBadgePayout}>
-                💎 {isRtl ? "عمولة 12% فقط" : "12% Platform Fee"}
+                💎 {t("home.hero.guarantees.card_rate_badge")}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                88%
+                {t("home.hero.guarantees.card_rate_metric")}
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "حصة الفائز من وعاء النزال" : "Winner's Share of Prize Pool"}
+                {t("home.hero.guarantees.card_rate_title")}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "أعلى نسبة توزيع أرباح للاعبين المهرة؛ الفائز يحصد الجائزة كاملة فور إعلان النتيجة" : "Highest skill gaming payout rate in the region with instant prize credit"}
+                {t("home.hero.guarantees.card_rate_sub")}
               </div>
             </div>
           </div>
@@ -699,18 +1081,18 @@ export function Hero() {
             <div className={styles.metricCardHeader}>
               <div className={styles.metricIconWrap}>🛡️</div>
               <span className={styles.metricBadgeFair}>
-                🔒 {isRtl ? "تحكيم حتمي 100%" : "100% Provably Fair"}
+                🔒 {t("home.hero.guarantees.card_fair_badge")}
               </span>
             </div>
             <div className={styles.metricCardBody}>
               <div className={styles.metricNumber}>
-                <bdi dir="ltr">100% {isRtl ? "مهارة" : "Skill"}</bdi>
+                <bdi dir="ltr">{t("home.hero.guarantees.card_fair_metric")}</bdi>
               </div>
               <div className={styles.metricTitle}>
-                {isRtl ? "مهارة خالصة، خوارزميات عادلة، حماية ضد الغش" : "100% Pure Skill, Deterministic, Anti-Cheat"}
+                {t("home.hero.guarantees.card_fair_title")}
               </div>
               <div className={styles.metricSub}>
-                {isRtl ? "خوادم مشفرة وقواعد حتمية تضمن انتصار الأذكى تكتيكياً بدون أي تحيز" : "Deterministic server verification guarantees integrity and fair play"}
+                {t("home.hero.guarantees.card_fair_sub")}
               </div>
             </div>
           </div>

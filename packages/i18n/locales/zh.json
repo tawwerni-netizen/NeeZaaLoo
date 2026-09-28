@@ -23,7 +23,9 @@
     "admin": "管理后台",
     "arena": "竞技场",
     "clans": "战队",
-    "deposit": "充值"
+    "deposit": "充值",
+    "store": "商城",
+    "battle_pass": "通行证"
   },
   "footer": {
     "learn": "了解",
@@ -132,6 +134,11 @@
         "description": "在对手之前率先连成五子——横、竖、斜,棋盘上任何位置皆可。",
         "duration": "10–20 分钟",
         "mode": "1对1 · 排位或休闲"
+      },
+      "ludo": {
+        "description": "冲向中心的终极竞速！避开陷阱，带领棋子在飞行棋霸主中赢得胜利。",
+        "mode": "战术竞速",
+        "duration": "15-30 分钟"
       }
     },
     "how": {
@@ -238,7 +245,8 @@
       "backgammon": "西洋双陆棋",
       "seega": "塞加棋",
       "reversi": "黑白棋",
-      "gomoku": "五子棋"
+      "gomoku": "五子棋",
+      "ludo": "飞行棋霸主"
     },
     "unknown_game": "未知游戏。"
   },
@@ -527,6 +535,11 @@
       "desc_american": "美式（All-Fives）：开放端点数和为5的倍数即可得分。",
       "traditional": "传统模式",
       "american": "美式模式 (All-Fives)"
+    },
+    "ludo": {
+      "variant_heading": "对局人数",
+      "desc_2p": "经典 1对1 对决",
+      "desc_4p": "4人大混战"
     }
   },
   "dashboard": {
@@ -617,7 +630,11 @@
       "GAMMON": "一击(Gammon)",
       "BACKGAMMON": "双倍一击(Backgammon)",
       "ALL_CAPTURED": "全部棋子被吃",
-      "FIVE_IN_A_ROW": "五子连珠"
+      "FIVE_IN_A_ROW": "五子连珠",
+      "DOUBLE_DROPPED": "对手拒绝加倍并弃权认输",
+      "ALL_FIVES_TARGET_REACHED": "达成All-Fives目标分数",
+      "LUDO_FINISHED": "全部棋子已成功进入终点三角区",
+      "MAHBOUSA_CAPTURED": "敌方棋子全部被封锁或出盘"
     },
     "rematch": "再战一局",
     "new_opponent": "更换对手",
@@ -1391,7 +1408,8 @@
     "mode_ai": "AI 演练",
     "mode_duel": "1v1 对决",
     "mode_tournaments": "锦标赛",
-    "start_game": "开始游戏"
+    "start_game": "开始游戏",
+    "meta_ludo": "飞行棋传奇 • 速度与激情"
   },
   "upcoming_tournaments": {
     "badge": "⚔️ 顶级电竞赛场 • 官方认证锦标赛",

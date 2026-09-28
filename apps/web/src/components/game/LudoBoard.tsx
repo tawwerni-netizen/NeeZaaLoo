@@ -104,6 +104,127 @@ function DicePips({ value }: { value: number }) {
   );
 }
 
+const LUDO_I18N: Record<string, {
+  knockout: string;
+  mode1v1: string;
+  mode4p: string;
+  searching4p: string;
+  matchFound4p: string;
+  rollDice: string;
+  clickToRoll: string;
+  extraRoll: string;
+  pickToken: string;
+  opponentRolling: string;
+  opponentMoving: string;
+  you: string;
+  spectator: string;
+  playerPrefix: string;
+  colors: [string, string, string, string];
+}> = {
+  ar: {
+    knockout: "💥 أكل قاطعة وإعادتها للقاعدة!",
+    mode1v1: "👤 1 ضد 1 (مبارزة خاطفة)",
+    mode4p: "👥 4 لاعبين (طابور أونلاين رباعي)",
+    searching4p: "📡 جاري البحث عن 4 لاعبين أونلاين... (3/4)",
+    matchFound4p: "🟢 اكتملت الغرفة الرباعية! انطلاق السباق الأسطوري!",
+    rollDice: "ارْمِ النرد",
+    clickToRoll: "اضغط لرمي النرد",
+    extraRoll: "🔥 ٦! رمية إضافية",
+    pickToken: "🎯 اختر قاطعة للتحريك",
+    opponentRolling: "الخصم يرمي النرد...",
+    opponentMoving: "الخصم يحرّك قاطعته...",
+    you: "أنت",
+    spectator: "متفرّج",
+    playerPrefix: "اللاعب",
+    colors: ["الفوشيا", "السيان", "العنبر", "الليموني"],
+  },
+  en: {
+    knockout: "💥 KNOCKOUT TO BASE!",
+    mode1v1: "👤 1 vs 1 Blitz Duel",
+    mode4p: "👥 4-Player Online Queue",
+    searching4p: "📡 Searching for 4 online players... (3/4)",
+    matchFound4p: "🟢 4-Player Match Found! Race Started!",
+    rollDice: "ROLL DICE",
+    clickToRoll: "Click to roll dice",
+    extraRoll: "🔥 6! Extra Roll",
+    pickToken: "🎯 Pick token to move",
+    opponentRolling: "Opponent rolling...",
+    opponentMoving: "Opponent moving...",
+    you: "You",
+    spectator: "Spectator",
+    playerPrefix: "Player",
+    colors: ["Fuchsia", "Cyan", "Amber", "Lime"],
+  },
+  es: {
+    knockout: "💥 ¡FICHA CAPTURADA A LA BASE!",
+    mode1v1: "👤 1 vs 1 Duelo Rápido",
+    mode4p: "👥 Cola online de 4 jugadores",
+    searching4p: "📡 Buscando 4 jugadores online... (3/4)",
+    matchFound4p: "🟢 ¡Partida de 4 jugadores encontrada! ¡Comienza la carrera!",
+    rollDice: "TIRAR DADO",
+    clickToRoll: "Haz clic para tirar el dado",
+    extraRoll: "🔥 ¡6! Tirada extra",
+    pickToken: "🎯 Elige ficha para mover",
+    opponentRolling: "El rival lanza el dado...",
+    opponentMoving: "El rival mueve ficha...",
+    you: "Tú",
+    spectator: "Espectador",
+    playerPrefix: "Jugador",
+    colors: ["Fucsia", "Cian", "Ámbar", "Lima"],
+  },
+  fr: {
+    knockout: "💥 PION RENVOYÉ À LA BASE !",
+    mode1v1: "👤 Duel Éclair 1 c. 1",
+    mode4p: "👥 File en ligne à 4 joueurs",
+    searching4p: "📡 Recherche de 4 joueurs en ligne... (3/4)",
+    matchFound4p: "🟢 Partie à 4 trouvée ! La course commence !",
+    rollDice: "LANCER LE DÉ",
+    clickToRoll: "Cliquez pour lancer le dé",
+    extraRoll: "🔥 6 ! Lancer bonus",
+    pickToken: "🎯 Choisissez un pion à déplacer",
+    opponentRolling: "L'adversaire lance le dé...",
+    opponentMoving: "L'adversaire déplace son pion...",
+    you: "Vous",
+    spectator: "Spectateur",
+    playerPrefix: "Joueur",
+    colors: ["Fuchsia", "Cyan", "Ambre", "Lime"],
+  },
+  hi: {
+    knockout: "💥 गोटी कटकर बेस में वापस!",
+    mode1v1: "👤 1 बनाम 1 त्वरित द्वंद्व",
+    mode4p: "👥 4-खिलाड़ी ऑनलाइन कतार",
+    searching4p: "📡 4 ऑनलाइन खिलाड़ियों की तलाश... (3/4)",
+    matchFound4p: "🟢 4-खिलाड़ी मैच मिला! रेस शुरू!",
+    rollDice: "पासा फेंकें",
+    clickToRoll: "पासा फेंकने के लिए क्लिक करें",
+    extraRoll: "🔥 6! अतिरिक्त चाल",
+    pickToken: "🎯 चलने के लिए गोटी चुनें",
+    opponentRolling: "विरोधी पासा फेंक रहा है...",
+    opponentMoving: "विरोधी गोटी चल रहा है...",
+    you: "आप",
+    spectator: "दर्शक",
+    playerPrefix: "खिलाड़ी",
+    colors: ["गुलाबी", "सियान", "अंबर", "हरा"],
+  },
+  zh: {
+    knockout: "💥 成功截击打回停机坪！",
+    mode1v1: "👤 1对1 极速对决",
+    mode4p: "👥 4人在线队列",
+    searching4p: "📡 正在匹配4名在线玩家... (3/4)",
+    matchFound4p: "🟢 4人房间已满！竞速开赛！",
+    rollDice: "掷骰子",
+    clickToRoll: "点击掷骰",
+    extraRoll: "🔥 6点！再掷一次",
+    pickToken: "🎯 请选择要移动的棋子",
+    opponentRolling: "对手正在掷骰...",
+    opponentMoving: "对手正在走子...",
+    you: "你",
+    spectator: "旁观者",
+    playerPrefix: "玩家",
+    colors: ["洋红", "青蓝", "琥珀", "青柠"],
+  },
+};
+
 export function LudoBoard({
   turn,
   phase,
@@ -116,6 +237,7 @@ export function LudoBoard({
   onMove,
 }: LudoBoardProps) {
   const { locale } = useI18n();
+  const strings = (LUDO_I18N[locale] ?? LUDO_I18N["en"])!;
   const isMyTurn = mySeat === turn && canMove;
   const [isRolling, setIsRolling] = useState(false);
   const [lastDisplayedRoll, setLastDisplayedRoll] = useState<number>(6);
@@ -131,7 +253,7 @@ export function LudoBoard({
             const prevPos = prevPlayerTokens[tIdx];
             if (prevPos !== undefined && prevPos > 0 && prevPos < 52 && pos === 0) {
               try { playCheckerHitSound(); } catch {}
-              setKnockoutEvent(locale === "ar" ? "💥 أكل قاطعة وإعادتها للقاعدة!" : "💥 KNOCKOUT TO BASE!");
+              setKnockoutEvent(strings.knockout);
               setTimeout(() => setKnockoutEvent(null), 2000);
             }
           });
@@ -139,7 +261,7 @@ export function LudoBoard({
       });
     }
     prevTokensRef.current = tokens ? tokens.map(arr => [...arr]) : null;
-  }, [tokens, locale]);
+  }, [tokens, strings.knockout]);
 
   useEffect(() => {
     if (currentRoll !== null) {
@@ -211,10 +333,10 @@ export function LudoBoard({
   function handleModeChange(mode: "1v1" | "4p") {
     setLudoMode(mode);
     if (mode === "4p") {
-      setMatchmakingStatus(locale === "ar" ? "📡 جاري البحث عن 4 لاعبين أونلاين... (3/4)" : "📡 Searching for 4 online players... (3/4)");
+      setMatchmakingStatus(strings.searching4p);
       setTimeout(() => {
         playLudoMatchFoundSound();
-        setMatchmakingStatus(locale === "ar" ? "🟢 اكتملت الغرفة الرباعية! انطلاق السباق الأسطوري!" : "🟢 4-Player Match Found! Race Started!");
+        setMatchmakingStatus(strings.matchFound4p);
         setTimeout(() => setMatchmakingStatus(null), 3000);
       }, 1200);
     } else {
@@ -227,8 +349,7 @@ export function LudoBoard({
   const opponents = Array.from({ length: numPlayers }).map((_, i) => i).filter(p => p !== myPlayerIndex);
 
   const getPlayerName = (p: number, vis: number) => {
-    const colors = ["Fuchsia", "Cyan", "Amber", "Lime"];
-    return `Player ${p + 1} (${colors[vis]})`;
+    return `${strings.playerPrefix} ${p + 1} (${strings.colors[vis] ?? strings.colors[0]})`;
   };
 
   return (
@@ -240,14 +361,14 @@ export function LudoBoard({
           className={[styles.ludoModeTab, ludoMode === "1v1" ? styles.ludoModeTabActive : ""].join(" ")}
           onClick={() => handleModeChange("1v1")}
         >
-          {locale === "ar" ? "👤 1 ضد 1 (مبارزة خاطفة)" : "👤 1 vs 1 Blitz Duel"}
+          {strings.mode1v1}
         </button>
         <button
           type="button"
           className={[styles.ludoModeTab, ludoMode === "4p" ? styles.ludoModeTabActive : ""].join(" ")}
           onClick={() => handleModeChange("4p")}
         >
-          {locale === "ar" ? "👥 4 لاعبين (طابور أونلاين رباعي)" : "👥 4-Player Online Queue"}
+          {strings.mode4p}
         </button>
       </div>
 
@@ -402,7 +523,7 @@ export function LudoBoard({
               <div className={`${styles.playerInfo} ${turn === myPlayerIndex ? styles.playerInfoActive : ""} ${styles[`color${vis}`]}`}>
                 <div className={styles.playerDot}></div>
                 <span className={styles.playerName}>
-                  {mySeat !== null ? getPlayerName(myPlayerIndex, vis) + " (You)" : "Spectator"}
+                  {mySeat !== null ? `${getPlayerName(myPlayerIndex, vis)} (${strings.you})` : strings.spectator}
                 </span>
               </div>
             );
@@ -429,7 +550,7 @@ export function LudoBoard({
                   transition: { repeat: Infinity, duration: 1.4, ease: "easeInOut" }
                 } : { scale: 1 }}
                 transition={{ duration: 0.55, ease: "easeOut" }}
-                title={isMyTurn && phase === "ROLL" ? (locale === "ar" ? "اضغط لرمي النرد" : "Click to roll dice") : undefined}
+                title={isMyTurn && phase === "ROLL" ? strings.clickToRoll : undefined}
                 aria-label="Roll Dice"
               >
                 <div className={styles.diceFace}>
@@ -450,7 +571,7 @@ export function LudoBoard({
               >
                 <span className={styles.rollActionIcon}>🎲</span>
                 <span className={styles.rollActionText}>
-                  {locale === "ar" ? "ارْمِ النرد" : "ROLL DICE"}
+                  {strings.rollDice}
                 </span>
               </button>
             )}
@@ -459,11 +580,11 @@ export function LudoBoard({
               <div className={styles.movePromptPill}>
                 {currentRoll === 6 && (
                   <span className={styles.sixBadge}>
-                    🔥 {locale === "ar" ? "٦! رمية إضافية" : "6! Extra Roll"}
+                    {strings.extraRoll}
                   </span>
                 )}
                 <span className={styles.moveText}>
-                  🎯 {locale === "ar" ? "اختر قاطعة للتحريك" : "Pick token to move"}
+                  {strings.pickToken}
                 </span>
               </div>
             )}
@@ -473,8 +594,8 @@ export function LudoBoard({
                 <span className={styles.opponentDot} />
                 <span>
                   {phase === "ROLL" 
-                    ? (locale === "ar" ? "الخصم يرمي النرد..." : "Opponent rolling...") 
-                    : (locale === "ar" ? "الخصم يحرّك قاطعته..." : "Opponent moving...")}
+                    ? strings.opponentRolling
+                    : strings.opponentMoving}
                 </span>
               </div>
             )}

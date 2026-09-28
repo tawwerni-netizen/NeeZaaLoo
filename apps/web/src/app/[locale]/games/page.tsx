@@ -30,7 +30,7 @@ import styles from "./games.module.css";
 type Filter = "ALL" | "ALTERNATING" | "SIMULTANEOUS";
 
 export default function GamesPage() {
-  const { t, dir } = useI18n();
+  const { t, dir, locale } = useI18n();
   const isRtl = dir === "rtl";
   const games = listGames();
   const [filter, setFilter] = useState<Filter>("ALL");
@@ -39,6 +39,46 @@ export default function GamesPage() {
     () => (filter === "ALL" ? games : games.filter((g) => g.turnModel === filter)),
     [games, filter]
   );
+
+  const ARENA_BANNER_I18N: Record<string, { title: string; desc: string; cta: string; rulesCta: string }> = {
+    ar: {
+      title: "ساحة الأرينا المباشرة للنزالات والجوائز",
+      desc: "نافس لاعبين حقيقيين فوراً بـ USDT واسحب أرباحك خلال ثوانٍ!",
+      cta: "ادخل الأرينا وابدأ اللعب",
+      rulesCta: "القواعد والاستراتيجية",
+    },
+    en: {
+      title: "Live Duel Arena & Instant Prizes",
+      desc: "Compete against real players for instant USDT prizes and fast payouts!",
+      cta: "Enter Arena & Play",
+      rulesCta: "Rules & Guide",
+    },
+    es: {
+      title: "Arena en Vivo de Duelos y Premios al Instante",
+      desc: "¡Compite contra jugadores reales por premios USDT y retiros rápidos!",
+      cta: "Entrar a la Arena y Jugar",
+      rulesCta: "Reglas y Guía",
+    },
+    fr: {
+      title: "Arène en Direct & Récompenses Instantanées",
+      desc: "Affrontez de vrais joueurs pour des prix en USDT et des retraits rapides !",
+      cta: "Entrer dans l'Arène et Jouer",
+      rulesCta: "Règles & Stratégie",
+    },
+    hi: {
+      title: "लाइव द्वंद्व अरीना और तत्काल पुरस्कार",
+      desc: "USDT पुरस्कारों और त्वरित निकासी के लिए वास्तविक खिलाड़ियों से मुकाबला करें!",
+      cta: "अरीना में प्रवेश करें और खेलें",
+      rulesCta: "नियम और रणनीति",
+    },
+    zh: {
+      title: "实时决斗竞技场与即时奖金",
+      desc: "与真实在线玩家极速角逐 USDT 现金大奖，收益数秒即刻到账！",
+      cta: "进入竞技场即刻开战",
+      rulesCta: "规则与进阶攻略",
+    },
+  };
+  const arenaStrings = (ARENA_BANNER_I18N[locale] ?? ARENA_BANNER_I18N["en"])!;
 
   return (
     <>
@@ -63,10 +103,10 @@ export default function GamesPage() {
         }}>
           <div>
             <div style={{ fontWeight: 800, fontSize: "15px", color: "var(--nz-accent, #c9a96e)", marginBottom: "4px" }}>
-              ⚔️ {isRtl ? "ساحة الأرينا المباشرة للنزالات والجوائز" : "Live Duel Arena & Instant Prizes"}
+              ⚔️ {arenaStrings.title}
             </div>
             <div style={{ fontSize: "13px", color: "var(--nz-text-2)" }}>
-              {isRtl ? "نافس لاعبين حقيقيين فوراً بـ USDT واسحب أرباحك خلال ثوانٍ!" : "Compete against real players for instant USDT prizes and fast payouts!"}
+              {arenaStrings.desc}
             </div>
           </div>
           <LocaleLink
@@ -85,7 +125,7 @@ export default function GamesPage() {
             }}
           >
             <span>⚔️</span>
-            <span>{isRtl ? "ادخل الأرينا وابدأ اللعب" : "Enter Arena & Play"}</span>
+            <span>{arenaStrings.cta}</span>
           </LocaleLink>
         </div>
 
@@ -152,7 +192,13 @@ function GameCard({ game }: { game: GamePlugin }) {
           <span>⚔️</span> {t("gamesPage.play_cta", { name })}
         </LocaleLink>
         <LocaleLink href={`/games/${game.id}`} className={styles.rulesCta}>
-          <span>📖</span> {locale === "ar" ? "القواعد والاستراتيجية" : "Rules & Guide"}
+          <span>📖</span> {
+            locale === "ar" ? "القواعد والاستراتيجية" :
+            locale === "es" ? "Reglas y Guía" :
+            locale === "fr" ? "Règles & Stratégie" :
+            locale === "hi" ? "नियम और रणनीति" :
+            locale === "zh" ? "规则与进阶攻略" : "Rules & Guide"
+          }
         </LocaleLink>
       </div>
     </div>

@@ -23,8 +23,98 @@ type Props = {
 
 const OP_GLYPH: Record<Question["op"], string> = { "+": "+", "-": "−", "*": "×", "/": "÷" };
 
+const SPEED_MATH_I18N: Record<
+  string,
+  {
+    tied: string;
+    p1Leading: (diff: number) => string;
+    p2Leading: (diff: number) => string;
+    player1: string;
+    player2: string;
+    answered: string;
+    liveBadge: string;
+    correct: string;
+    acc: string;
+    notice: string;
+  }
+> = {
+  ar: {
+    tied: "تعادل حماسي 🔥",
+    p1Leading: (diff) => `اللاعب 1 متقدم (+${diff}) ⚡`,
+    p2Leading: (diff) => `اللاعب 2 متقدم (+${diff}) ⚡`,
+    player1: "اللاعب 1",
+    player2: "اللاعب 2",
+    answered: "سؤال",
+    liveBadge: "بث مباشر • سباق الحساب السريع",
+    correct: "صحيحة",
+    acc: "دقة",
+    notice: "🔒 الأسئلة مشفرة أثناء البث المباشر لمنع أي تسريب وضمان النزاهة التامة",
+  },
+  en: {
+    tied: "Tied Match 🔥",
+    p1Leading: (diff) => `Player 1 leading (+${diff}) ⚡`,
+    p2Leading: (diff) => `Player 2 leading (+${diff}) ⚡`,
+    player1: "Player 1",
+    player2: "Player 2",
+    answered: "answered",
+    liveBadge: "LIVE STREAM • Speed Math",
+    correct: "correct",
+    acc: "acc",
+    notice: "🔒 Questions hidden during live stream to maintain competitive integrity",
+  },
+  es: {
+    tied: "Empate emocionante 🔥",
+    p1Leading: (diff) => `Jugador 1 lidera (+${diff}) ⚡`,
+    p2Leading: (diff) => `Jugador 2 lidera (+${diff}) ⚡`,
+    player1: "Jugador 1",
+    player2: "Jugador 2",
+    answered: "respondidas",
+    liveBadge: "EN VIVO • Carrera de Cálculo Rápido",
+    correct: "correctas",
+    acc: "precisión",
+    notice: "🔒 Preguntas ocultas durante la transmisión en vivo para garantizar la integridad",
+  },
+  fr: {
+    tied: "Égalité palpitante 🔥",
+    p1Leading: (diff) => `Joueur 1 en tête (+${diff}) ⚡`,
+    p2Leading: (diff) => `Joueur 2 en tête (+${diff}) ⚡`,
+    player1: "Joueur 1",
+    player2: "Joueur 2",
+    answered: "répondues",
+    liveBadge: "EN DIRECT • Course de Calcul Rapide",
+    correct: "correctes",
+    acc: "précision",
+    notice: "🔒 Questions masquées pendant le direct pour garantir l'intégrité compétitive",
+  },
+  hi: {
+    tied: "रोमांचक मुकाबला टाई 🔥",
+    p1Leading: (diff) => `खिलाड़ी 1 आगे (+${diff}) ⚡`,
+    p2Leading: (diff) => `खिलाड़ी 2 आगे (+${diff}) ⚡`,
+    player1: "खिलाड़ी 1",
+    player2: "खिलाड़ी 2",
+    answered: "उत्तर दिए",
+    liveBadge: "लाइव स्ट्रीम • स्पीड मैथ रेस",
+    correct: "सही",
+    acc: "सटीकता",
+    notice: "🔒 निष्पक्षता बनाए रखने के लिए लाइव स्ट्रीम के दौरान प्रश्न छुपाए गए हैं",
+  },
+  zh: {
+    tied: "激烈战平 🔥",
+    p1Leading: (diff) => `玩家 1 领先 (+${diff}) ⚡`,
+    p2Leading: (diff) => `玩家 2 领先 (+${diff}) ⚡`,
+    player1: "玩家 1",
+    player2: "玩家 2",
+    answered: "已答",
+    liveBadge: "实时直播 • 极速心算对决",
+    correct: "正确",
+    acc: "准确率",
+    notice: "🔒 直播期间题目加密隐藏，以保障绝对公平的竞技环境",
+  },
+};
+
 export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }: Props) {
   const { t, locale } = useI18n();
+  const mathDict = (SPEED_MATH_I18N[locale] ?? SPEED_MATH_I18N["en"])!;
   const { perspective3D } = useVisualSettings();
   const [draft, setDraft] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
@@ -80,17 +170,13 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
     const p0Acc = p0Answered > 0 ? Math.round((p0Correct / p0Answered) * 100) : 0;
     const p1Acc = p1Answered > 0 ? Math.round((p1Correct / p1Answered) * 100) : 0;
 
-    let leadStatus = locale === "ar" ? "تعادل حماسي 🔥" : "Tied Match 🔥";
+    let leadStatus = mathDict.tied;
     if (p0Correct > p1Correct) {
       const diff = p0Correct - p1Correct;
-      leadStatus = locale === "ar"
-        ? `اللاعب 1 متقدم (+${diff}) ⚡`
-        : `Player 1 leading (+${diff}) ⚡`;
+      leadStatus = mathDict.p1Leading(diff);
     } else if (p1Correct > p0Correct) {
       const diff = p1Correct - p0Correct;
-      leadStatus = locale === "ar"
-        ? `اللاعب 2 متقدم (+${diff}) ⚡`
-        : `Player 2 leading (+${diff}) ⚡`;
+      leadStatus = mathDict.p2Leading(diff);
     }
 
     return (
@@ -98,20 +184,20 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
         {/* Spectator Telemetry HUD */}
         <div className={styles.telemetryHud}>
           <div className={[styles.scorePod, styles.podPlayer0].join(" ")}>
-            <span className={styles.podLabel}>{locale === "ar" ? "اللاعب 1" : "Player 1"}</span>
+            <span className={styles.podLabel}>{mathDict.player1}</span>
             <span className={`nz-num ${styles.podValue}`}>{p0Correct}</span>
             <span className={styles.podSubText}>
-              {p0Answered} / {total} {locale === "ar" ? "سؤال" : "answered"}
+              {p0Answered} / {total} {mathDict.answered}
             </span>
           </div>
 
           <div className={styles.vsDivider}>VS</div>
 
           <div className={[styles.scorePod, styles.podPlayer1].join(" ")}>
-            <span className={styles.podLabel}>{locale === "ar" ? "اللاعب 2" : "Player 2"}</span>
+            <span className={styles.podLabel}>{mathDict.player2}</span>
             <span className={`nz-num ${styles.podValue}`}>{p1Correct}</span>
             <span className={styles.podSubText}>
-              {p1Answered} / {total} {locale === "ar" ? "سؤال" : "answered"}
+              {p1Answered} / {total} {mathDict.answered}
             </span>
           </div>
         </div>
@@ -122,7 +208,7 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
             <div className={styles.spectatorHeader}>
               <span className={styles.spectatorLiveBadge}>
                 <span className={styles.spectatorPulseDot} />
-                {locale === "ar" ? "بث مباشر • سباق الحساب السريع" : "LIVE STREAM • Speed Math"}
+                {mathDict.liveBadge}
               </span>
               <span className={styles.leadStatusBadge}>{leadStatus}</span>
             </div>
@@ -132,9 +218,9 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
               {/* Player 1 Track */}
               <div className={styles.raceRow}>
                 <div className={styles.raceMeta}>
-                  <span className={styles.raceName}>{locale === "ar" ? "اللاعب 1" : "Player 1"}</span>
+                  <span className={styles.raceName}>{mathDict.player1}</span>
                   <span className={styles.raceStat}>
-                    <strong className="nz-num">{p0Correct}</strong> {locale === "ar" ? "صحيحة" : "correct"} • <strong className="nz-num">{p0Acc}%</strong> {locale === "ar" ? "دقة" : "acc"}
+                    <strong className="nz-num">{p0Correct}</strong> {mathDict.correct} • <strong className="nz-num">{p0Acc}%</strong> {mathDict.acc}
                   </span>
                 </div>
                 <div className={styles.trackBar}>
@@ -148,9 +234,9 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
               {/* Player 2 Track */}
               <div className={styles.raceRow}>
                 <div className={styles.raceMeta}>
-                  <span className={styles.raceName}>{locale === "ar" ? "اللاعب 2" : "Player 2"}</span>
+                  <span className={styles.raceName}>{mathDict.player2}</span>
                   <span className={styles.raceStat}>
-                    <strong className="nz-num">{p1Correct}</strong> {locale === "ar" ? "صحيحة" : "correct"} • <strong className="nz-num">{p1Acc}%</strong> {locale === "ar" ? "دقة" : "acc"}
+                    <strong className="nz-num">{p1Correct}</strong> {mathDict.correct} • <strong className="nz-num">{p1Acc}%</strong> {mathDict.acc}
                   </span>
                 </div>
                 <div className={styles.trackBar}>
@@ -163,7 +249,7 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
             </div>
 
             <div className={styles.spectatorNotice}>
-              <span>🔒 {locale === "ar" ? "الأسئلة مشفرة أثناء البث المباشر لمنع أي تسريب وضمان النزاهة التامة" : "Questions hidden during live stream to maintain competitive integrity"}</span>
+              <span>{mathDict.notice}</span>
             </div>
           </div>
         </div>
@@ -258,7 +344,7 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
         <div className={styles.progressFooter}>
           <span>{t("game.speed_math.answered")}: <strong className="nz-num">{you.answered}</strong></span>
           <span className={styles.accuracyTag}>
-            {you.answered > 0 ? `${Math.round((you.correct / you.answered) * 100)}% Acc` : "0% Acc"}
+            {you.answered > 0 ? `${Math.round((you.correct / you.answered) * 100)}% ${mathDict.acc}` : `0% ${mathDict.acc}`}
           </span>
         </div>
       )}

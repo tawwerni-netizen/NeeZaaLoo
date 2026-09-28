@@ -89,8 +89,18 @@ export function XOMarkSvg({ mark }: { mark: number }) {
   );
 }
 
+const XO_I18N: Record<string, { blitzBadge: string }> = {
+  ar: { blitzBadge: "⚡ دور 5 ثوانٍ خاطف • موت مفاجئ" },
+  en: { blitzBadge: "⚡ 5s Sudden Death • Blitz Turn" },
+  es: { blitzBadge: "⚡ Muerte súbita de 5s • Turno relámpago" },
+  fr: { blitzBadge: "⚡ Mort subite 5s • Tour éclair" },
+  hi: { blitzBadge: "⚡ 5 सेकंड सडन डेथ • ब्लिट्ज़ टर्न" },
+  zh: { blitzBadge: "⚡ 5秒猝死闪击回合" },
+};
+
 export function XOBoard({ board, lastMove, legalCells, mySeat, canMove, onMove }: Props) {
   const { t, locale } = useI18n();
+  const xoDict = (XO_I18N[locale] ?? XO_I18N["en"])!;
   const { perspective3D } = useVisualSettings();
   const [hoverCell, setHoverCell] = useState<number | null>(null);
   const winLine = useMemo(() => winningLine(board, lastMove), [board, lastMove]);
@@ -107,7 +117,7 @@ export function XOBoard({ board, lastMove, legalCells, mySeat, canMove, onMove }
       <div className={styles.blitzHeader}>
         <span className={styles.blitzChip}>
           <span className={styles.blitzPulseDot} />
-          <span>{locale === "ar" ? "⚡ دور 5 ثوانٍ خاطف • موت مفاجئ" : "⚡ 5s Sudden Death • Blitz Turn"}</span>
+          <span>{xoDict.blitzBadge}</span>
         </span>
       </div>
 

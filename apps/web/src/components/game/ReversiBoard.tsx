@@ -50,8 +50,18 @@ export function ReversiDiscSvg({ isBlack }: { isBlack: boolean }) {
   );
 }
 
+const REVERSI_I18N: Record<string, { cascadeFlip: (n: number) => string }> = {
+  ar: { cascadeFlip: (n) => `🌊 شلال دوران الأقراص (${n}) قرصاً!` },
+  en: { cascadeFlip: (n) => `🌊 CASCADE FLIP (${n}) Discs!` },
+  es: { cascadeFlip: (n) => `🌊 ¡VOLTEO EN CASCADA (${n}) fichas!` },
+  fr: { cascadeFlip: (n) => `🌊 CASCADE DE RETOURNEMENTS (${n}) pions !` },
+  hi: { cascadeFlip: (n) => `🌊 कैस्केड फ्लिप (${n}) डिस्क!` },
+  zh: { cascadeFlip: (n) => `🌊 连锁翻转 (${n}) 棋子!` },
+};
+
 export function ReversiBoard({ board, legalMoves, lastMove, canMove, onMove }: Props) {
   const { t, locale } = useI18n();
+  const reversiDict = (REVERSI_I18N[locale] ?? REVERSI_I18N["en"])!;
   const { perspective3D } = useVisualSettings();
   const flipped = new Set(lastMove?.action === "PLACE" ? lastMove.flipped : []);
   const justPlaced = lastMove?.action === "PLACE" ? lastMove.place : null;
@@ -73,11 +83,7 @@ export function ReversiBoard({ board, legalMoves, lastMove, canMove, onMove }: P
       {lastMove && lastMove.action === "PLACE" && lastMove.flipped.length >= 4 && (
         <div className={styles.cascadeBanner}>
           <span className={styles.cascadeDot} />
-          <span>
-            {locale === "ar"
-              ? `🌊 شلال دوران الأقراص (${lastMove.flipped.length}) قرصاً!`
-              : `🌊 CASCADE FLIP (${lastMove.flipped.length}) Discs!`}
-          </span>
+          <span>{reversiDict.cascadeFlip(lastMove.flipped.length)}</span>
         </div>
       )}
 

@@ -16,7 +16,7 @@ import { GameThumbnail } from "@/components/game/GameThumbnail";
 import styles from "./GameModes.module.css";
 
 export function GameModes() {
-  const { t, dir } = useI18n();
+  const { t, dir, locale } = useI18n();
   const games = listGames();
 
   return (
@@ -62,44 +62,86 @@ export function GameModes() {
           })}
 
 
-          <div className={styles.arenaCard}>
-            <div className={styles.arenaThumbnailWrapper}>
-              <picture style={{ width: "100%", height: "100%", display: "block" }}>
-                <source srcSet="/images/banners/arena-tournaments-card.webp" type="image/webp" />
-                <img
-                  src="/images/banners/arena-tournaments-card.jpg"
-                  alt={dir === "rtl" ? "بطولات الأرينا والتحديات المباشرة" : "Pro Tournaments & Live Duels"}
-                  className={styles.arenaThumbnailImg}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </picture>
-              <span className={styles.arenaLiveBadgeOverlay}>
-                <span className={styles.pulseDot} />
-                {dir === "rtl" ? "أرينا حية" : "LIVE ARENA"}
-              </span>
-            </div>
+          {(() => {
+            const ARENA_CARD_I18N: Record<string, { title: string; badge: string; desc: string; cta: string }> = {
+              ar: {
+                title: "بطولات الأرينا والتحديات المباشرة",
+                badge: "أرينا حية",
+                desc: "انضم إلى جولات تنافسية بنظام خروج المغلوب، وتحدَّ نخبة لاعبي المنصة في منافسات مهارية خالية من الحظ مع تصنيفات ELO رسمية.",
+                cta: "دخول صالة البطولات ←",
+              },
+              en: {
+                title: "Pro Tournaments & Live Duels",
+                badge: "LIVE ARENA",
+                desc: "Compete in single-elimination tournament brackets, challenge online members, and build your Global Skill rating.",
+                cta: "Enter Tournament Arena →",
+              },
+              es: {
+                title: "Torneos Pro y Duelos en Vivo",
+                badge: "ARENA EN VIVO",
+                desc: "Compite en cuadros de eliminación directa, desafía a jugadores online y mejora tu clasificación ELO.",
+                cta: "Entrar a la Arena de Torneos →",
+              },
+              fr: {
+                title: "Tournois Pro & Duels en Direct",
+                badge: "ARÈNE EN DIRECT",
+                desc: "Participez à des tournois à élimination directe, défiez des joueurs en ligne et forgez votre classement ELO.",
+                cta: "Entrer dans l'Arène des Tournois →",
+              },
+              hi: {
+                title: "प्रो टूर्नामेंट और लाइव द्वंद्व",
+                badge: "लाइव अरीना",
+                desc: "सिंगल-एलिमिनेशन टूर्नामेंट में भाग लें, ऑनलाइन खिलाड़ियों को चुनौती दें और अपनी वैश्विक रेटिंग बढ़ाएं।",
+                cta: "टूर्नामेंट अरीना में प्रवेश करें →",
+              },
+              zh: {
+                title: "职业锦标赛与实时决斗",
+                badge: "实时竞技场",
+                desc: "参与单败淘汰锦标赛晋级战，向全球各路在线高手发起挑战，赢取官方天梯 ELO 战力认证。",
+                cta: "进入锦标赛大厅 →",
+              },
+            };
+            const arenaStrings = (ARENA_CARD_I18N[locale] ?? ARENA_CARD_I18N["en"])!;
 
-            <div className={styles.arenaCardHeader}>
-              <h3 className={styles.cardTitle}>
-                <LocaleLink href="/tournaments">
-                  {dir === "rtl" ? "بطولات الأرينا والتحديات المباشرة" : "Pro Tournaments & Live Duels"}
-                </LocaleLink>
-              </h3>
-            </div>
-            <p className={styles.cardDescription}>
-              {dir === "rtl"
-                ? "انضم إلى جولات تنافسية بنظام خروج المغلوب، وتحدَّ نخبة لاعبي المنصة في منافسات مهارية خالية من الحظ مع تصنيفات ELO رسمية."
-                : "Compete in single-elimination tournament brackets, challenge online members, and build your Global Skill rating."}
-            </p>
-            <div className={styles.arenaCardFooter}>
-              <LocaleLink href="/tournaments">
-                <Button variant="primary">
-                  {dir === "rtl" ? "دخول صالة البطولات ←" : "Enter Tournament Arena →"}
-                </Button>
-              </LocaleLink>
-            </div>
-          </div>
+            return (
+              <div className={styles.arenaCard}>
+                <div className={styles.arenaThumbnailWrapper}>
+                  <picture style={{ width: "100%", height: "100%", display: "block" }}>
+                    <source srcSet="/images/banners/arena-tournaments-card.webp" type="image/webp" />
+                    <img
+                      src="/images/banners/arena-tournaments-card.jpg"
+                      alt={arenaStrings.title}
+                      className={styles.arenaThumbnailImg}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
+                  <span className={styles.arenaLiveBadgeOverlay}>
+                    <span className={styles.pulseDot} />
+                    {arenaStrings.badge}
+                  </span>
+                </div>
+
+                <div className={styles.arenaCardHeader}>
+                  <h3 className={styles.cardTitle}>
+                    <LocaleLink href="/tournaments">
+                      {arenaStrings.title}
+                    </LocaleLink>
+                  </h3>
+                </div>
+                <p className={styles.cardDescription}>
+                  {arenaStrings.desc}
+                </p>
+                <div className={styles.arenaCardFooter}>
+                  <LocaleLink href="/tournaments">
+                    <Button variant="primary">
+                      {arenaStrings.cta}
+                    </Button>
+                  </LocaleLink>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </section>

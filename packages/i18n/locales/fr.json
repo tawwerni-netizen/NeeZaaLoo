@@ -23,7 +23,9 @@
     "admin": "Administration",
     "arena": "Arène",
     "clans": "Clans",
-    "deposit": "Dépôt"
+    "deposit": "Dépôt",
+    "store": "Boutique",
+    "battle_pass": "Passe de Combat"
   },
   "footer": {
     "learn": "Découvrir",
@@ -132,6 +134,11 @@
         "description": "Cinq pierres alignées — droite, diagonale, n'importe où sur le plateau — avant votre adversaire.",
         "duration": "10–20 min",
         "mode": "1 contre 1 · Classé ou libre"
+      },
+      "ludo": {
+        "description": "La course ultime vers le centre ! Évitez les pièges et menez vos pions à la victoire dans Ludo Royale.",
+        "mode": "Tactique",
+        "duration": "15-30 min"
       }
     },
     "how": {
@@ -238,7 +245,8 @@
       "backgammon": "Backgammon",
       "seega": "Seega",
       "reversi": "Reversi",
-      "gomoku": "Gomoku"
+      "gomoku": "Gomoku",
+      "ludo": "Ludo Royale"
     },
     "unknown_game": "Jeu inconnu."
   },
@@ -527,6 +535,11 @@
       "desc_american": "Américain (All-Fives) : Marquer des multiples de 5 sur les extrémités ouvertes.",
       "traditional": "Traditionnel",
       "american": "Américain (All-Fives)"
+    },
+    "ludo": {
+      "variant_heading": "Joueurs",
+      "desc_2p": "Duel Classique 1c1",
+      "desc_4p": "Mêlée à 4 Joueurs"
     }
   },
   "dashboard": {
@@ -617,7 +630,11 @@
       "GAMMON": "Gammon",
       "BACKGAMMON": "Backgammon",
       "ALL_CAPTURED": "Toutes les pièces capturées",
-      "FIVE_IN_A_ROW": "Cinq alignés"
+      "FIVE_IN_A_ROW": "Cinq alignés",
+      "DOUBLE_DROPPED": "Double refusé par l'adversaire / Concession",
+      "ALL_FIVES_TARGET_REACHED": "Score cible atteint à All-Fives",
+      "LUDO_FINISHED": "Tous les pions ont atteint le triangle d'arrivée",
+      "MAHBOUSA_CAPTURED": "Tous les pions adverses bloqués ou sortis"
     },
     "rematch": "Revanche",
     "new_opponent": "Nouvel adversaire",
@@ -1391,7 +1408,8 @@
     "mode_ai": "IA",
     "mode_duel": "Duel 1v1",
     "mode_tournaments": "Tournois",
-    "start_game": "Lancer la partie"
+    "start_game": "Lancer la partie",
+    "meta_ludo": "Légendes du Ludo • Course & Frissons"
   },
   "upcoming_tournaments": {
     "badge": "⚔️ Grande Arène Esports • Tournois Officiels",

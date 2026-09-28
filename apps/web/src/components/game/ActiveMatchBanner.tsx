@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { get } from "@/lib/api";
 import { getGame } from "@/lib/games";
 import { useVisibilityAwareInterval } from "@/lib/use-interval";
+import { useDuelSocket } from "@/lib/use-duel-socket";
 import styles from "./ActiveMatchBanner.module.css";
 
 type ActiveDuelInfo = {
@@ -18,9 +19,78 @@ type ActiveDuelInfo = {
   startedAt?: string;
 };
 
+const BANNER_I18N: Record<
+  string,
+  {
+    opponentFallback: string;
+    activePrefix: string;
+    vsLabel: string;
+    returnToMatch: string;
+    resign: string;
+    confirmResign: string;
+    resigning: string;
+  }
+> = {
+  ar: {
+    opponentFallback: "الخصم",
+    activePrefix: "لديك مباراة جارية الآن في ",
+    vsLabel: "ضد: ",
+    returnToMatch: "العودة للمباراة",
+    resign: "إستسلام",
+    confirmResign: "تأكيد الإستسلام",
+    resigning: "جارٍ الإستسلام...",
+  },
+  en: {
+    opponentFallback: "Opponent",
+    activePrefix: "Active match in ",
+    vsLabel: "vs ",
+    returnToMatch: "Return to Match",
+    resign: "Resign",
+    confirmResign: "Confirm Resign",
+    resigning: "Resigning...",
+  },
+  es: {
+    opponentFallback: "Oponente",
+    activePrefix: "Partida activa en ",
+    vsLabel: "vs ",
+    returnToMatch: "Volver a la partida",
+    resign: "Rendirse",
+    confirmResign: "Confirmar rendición",
+    resigning: "Rindiéndose...",
+  },
+  fr: {
+    opponentFallback: "Adversaire",
+    activePrefix: "Partie active sur ",
+    vsLabel: "vs ",
+    returnToMatch: "Retourner au match",
+    resign: "Abandonner",
+    confirmResign: "Confirmer l'abandon",
+    resigning: "Abandon en cours...",
+  },
+  hi: {
+    opponentFallback: "विरोधी",
+    activePrefix: "सक्रिय मैच चल रहा है ",
+    vsLabel: "बनाम: ",
+    returnToMatch: "मैच पर वापस लौटें",
+    resign: "हार मानें",
+    confirmResign: "हार की पुष्टि करें",
+    resigning: "हार मान रहे हैं...",
+  },
+  zh: {
+    opponentFallback: "对手",
+    activePrefix: "当前正在进行对局：",
+    vsLabel: "对阵: ",
+    returnToMatch: "返回对局",
+    resign: "认输",
+    confirmResign: "确认认输",
+    resigning: "正在认输...",
+  },
+};
+
 export function ActiveMatchBanner() {
   const { player } = useAuth();
   const { t, locale } = useI18n();
+  const bannerDict = (BANNER_I18N[locale] ?? BANNER_I18N["en"])!;
   const pathname = usePathname();
 
   const [activeDuel, setActiveDuel] = useState<ActiveDuelInfo | null>(null);
@@ -68,7 +138,7 @@ export function ActiveMatchBanner() {
   const isAr = locale === "ar";
   const gameDef = getGame(activeDuel.gameId);
   const gameName = gameDef ? t(`common.game_names.${gameDef.nameKey}`) : activeDuel.gameId;
-  const opponent = activeDuel.opponentNickname || (isAr ? "الخصم" : "Opponent");
+  const opponent = activeDuel.opponentNickname || bannerDict.opponentFallback;
 
   return (
     <div className={styles.bannerWrapper} role="alert" dir={isAr ? "rtl" : "ltr"}>
@@ -80,34 +150,18 @@ export function ActiveMatchBanner() {
           </div>
           <div className={styles.textGroup}>
             <span className={styles.headline}>
-              {isAr ? (
-                <>
-                  لديك مباراة جارية الآن في <span className={styles.gameNameHighlight}>{gameName}</span>
-                </>
-              ) : (
-                <>
-                  Active match in <span className={styles.gameNameHighlight}>{gameName}</span>
-                </>
-              )}
+              {bannerDict.activePrefix}<span className={styles.gameNameHighlight}>{gameName}</span>
             </span>
             <span className={styles.subDetails}>
-              {isAr ? (
-                <>
-                  ضد: <span className={styles.opponentSpan}>{opponent}</span>
-                </>
-              ) : (
-                <>
-                  vs <span className={styles.opponentSpan}>{opponent}</span>
-                </>
-              )}
+              {bannerDict.vsLabel}<span className={styles.opponentSpan}>{opponent}</span>
             </span>
           </div>
         </div>
 
         <div className={styles.actionButtons}>
-          <ResignButton duelId={activeDuel.id} isAr={isAr} onResigned={() => setActiveDuel(null)} />
+          <ResignButton duelId={activeDuel.id} bannerDict={bannerDict} onResigned={() => setActiveDuel(null)} />
           <LocaleLink href={`/game/${activeDuel.id}`} className={styles.returnBtn}>
-            <span>{isAr ? "العودة للمباراة" : "Return to Match"}</span>
+            <span>{bannerDict.returnToMatch}</span>
             <span aria-hidden="true">→</span>
           </LocaleLink>
         </div>
@@ -116,9 +170,15 @@ export function ActiveMatchBanner() {
   );
 }
 
-import { useDuelSocket } from "@/lib/use-duel-socket";
-
-function ResignButton({ duelId, isAr, onResigned }: { duelId: string; isAr: boolean; onResigned: () => void }) {
+function ResignButton({
+  duelId,
+  bannerDict,
+  onResigned,
+}: {
+  duelId: string;
+  bannerDict: typeof BANNER_I18N["en"];
+  onResigned: () => void;
+}) {
   const { resign } = useDuelSocket(duelId);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -136,14 +196,14 @@ function ResignButton({ duelId, isAr, onResigned }: { duelId: string; isAr: bool
         className={styles.resignBtnConfirm}
         disabled={busy}
       >
-        {busy ? (isAr ? "جارٍ الإستسلام..." : "Resigning...") : (isAr ? "تأكيد الإستسلام" : "Confirm Resign")}
+        {busy ? bannerDict.resigning : bannerDict.confirmResign}
       </button>
     );
   }
 
   return (
     <button onClick={() => setConfirming(true)} className={styles.resignBtn}>
-      {isAr ? "إستسلام" : "Resign"}
+      {bannerDict.resign}
     </button>
   );
 }

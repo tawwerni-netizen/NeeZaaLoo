@@ -137,8 +137,130 @@ function DoublingCubeFace({
   );
 }
 
+const BACKGAMMON_I18N: Record<string, {
+  initialStake: string;
+  doublingOffered: (stake: number) => string;
+  opponentAccepted: (stake: number) => string;
+  opponentDropped: (stake: number | string) => string;
+  modalTitle: (stake: number) => string;
+  modalDesc: string;
+  modalAccept: (stake: number) => string;
+  modalDrop: string;
+  classicActive: string;
+  mahbousaActive: string;
+  tawla31Active: string;
+  btnClassic: string;
+  btnMahbousa: string;
+  btnTawla31: string;
+  doubleBadge: (d: number) => string;
+}> = {
+  ar: {
+    initialStake: "🎲 مكعب المضاعفة: الرهان الأساسي 1x",
+    doublingOffered: (s) => `⏳ تم طلب مضاعفة الرهان إلى ${s}x... بانتظار رد الخصم!`,
+    opponentAccepted: (s) => `✅ الخصم قبل التحدي! الرهان أصبح ${s}x!`,
+    opponentDropped: (s) => `🏳️ الخصم رفض المضاعفة وانسحب! فوز بالضربة القاضية برهان ${s}x!`,
+    modalTitle: (s) => `⚡ طلب مضاعفة الرهان إلى ${s}x!`,
+    modalDesc: "يعرض عليك الخصم رفع قيمة الرهان الحالي للجولة. إذا قبلت، يستمر اللعب بضعف القيمة، وإذا انسحبت، يخسر رهانك الحالي فقط.",
+    modalAccept: (s) => `✅ قبول المضاعفة (${s}x)`,
+    modalDrop: "🏳️ انسحاب وتنازل",
+    classicActive: "🎲 تم تفعيل: طاولة كلاسيكية (قواعد عالمية)",
+    mahbousaActive: "🔒 تم تفعيل: طاولة محبوسة (حَبْس القرص بدون أكل للبار)",
+    tawla31Active: "👑 تم تفعيل: طاولة 31 (سباق تجميع البيادق)",
+    btnClassic: "🎲 كلاسيكية",
+    btnMahbousa: "🔒 محبوسة مصرية",
+    btnTawla31: "👑 طاولة 31",
+    doubleBadge: (d) => `⚡ دبل ${d}-${d} • ٤ حركات!`,
+  },
+  en: {
+    initialStake: "🎲 Doubling Cube: Initial Stakes 1x",
+    doublingOffered: (s) => `⏳ Doubling offered to ${s}x... awaiting response!`,
+    opponentAccepted: (s) => `✅ Opponent accepted! Stakes are now ${s}x!`,
+    opponentDropped: (s) => `🏳️ Opponent dropped the double! Victory claim at ${s}x stakes!`,
+    modalTitle: (s) => `⚡ Doubling Stakes Challenge: ${s}x!`,
+    modalDesc: "The opponent offers to double the current round stakes. Accept to fight at doubled stakes, or drop to forfeit current flat stake.",
+    modalAccept: (s) => `✅ Accept (${s}x)`,
+    modalDrop: "🏳️ Drop / Concede",
+    classicActive: "🎲 Classic Backgammon Active",
+    mahbousaActive: "🔒 Egyptian Mahbousa Active",
+    tawla31Active: "👑 Tawla 31 Active",
+    btnClassic: "🎲 Classic",
+    btnMahbousa: "🔒 Mahbousa",
+    btnTawla31: "👑 Tawla 31",
+    doubleBadge: (d) => `⚡ DOUBLE ${d}-${d} • 4 MOVES!`,
+  },
+  es: {
+    initialStake: "🎲 Dado de doblar: Apuesta inicial 1x",
+    doublingOffered: (s) => `⏳ Se ofreció doblar a ${s}x... ¡esperando respuesta!`,
+    opponentAccepted: (s) => `✅ ¡El rival aceptó! ¡La apuesta es ahora ${s}x!`,
+    opponentDropped: (s) => `🏳️ ¡El rival rechazó el doble y se retiró! Victoria reclamada a ${s}x!`,
+    modalTitle: (s) => `⚡ ¡Desafío de doblar la apuesta a ${s}x!`,
+    modalDesc: "El rival propone doblar la apuesta de la ronda. Acepta para luchar con la apuesta doblada, o retírate para perder solo la apuesta actual.",
+    modalAccept: (s) => `✅ Aceptar (${s}x)`,
+    modalDrop: "🏳️ Retirarse / Ceder",
+    classicActive: "🎲 Backgammon Clásico Activo",
+    mahbousaActive: "🔒 Mahbousa Egipcia Activa",
+    tawla31Active: "👑 Tawla 31 Activa",
+    btnClassic: "🎲 Clásico",
+    btnMahbousa: "🔒 Mahbousa",
+    btnTawla31: "👑 Tawla 31",
+    doubleBadge: (d) => `⚡ DOBLE ${d}-${d} • ¡4 MOVIMIENTOS!`,
+  },
+  fr: {
+    initialStake: "🎲 Videau : Enjeu initial 1x",
+    doublingOffered: (s) => `⏳ Double proposé à ${s}x... en attente de réponse !`,
+    opponentAccepted: (s) => `✅ L'adversaire a accepté ! L'enjeu est désormais ${s}x !`,
+    opponentDropped: (s) => `🏳️ L'adversaire a refusé le double ! Victoire revendiquée à ${s}x !`,
+    modalTitle: (s) => `⚡ Défi de doublement de l'enjeu à ${s}x !`,
+    modalDesc: "L'adversaire propose de doubler l'enjeu de la manche. Acceptez pour continuer à enjeu doublé, ou abandonnez pour ne concéder que l'enjeu actuel.",
+    modalAccept: (s) => `✅ Accepter (${s}x)`,
+    modalDrop: "🏳️ Refuser / Concéder",
+    classicActive: "🎲 Backgammon Classique Actif",
+    mahbousaActive: "🔒 Mahbousa Égyptienne Active",
+    tawla31Active: "👑 Tawla 31 Active",
+    btnClassic: "🎲 Classique",
+    btnMahbousa: "🔒 Mahbousa",
+    btnTawla31: "👑 Tawla 31",
+    doubleBadge: (d) => `⚡ DOUBLE ${d}-${d} • 4 COUPS !`,
+  },
+  hi: {
+    initialStake: "🎲 डबलिंग क्यूब: प्रारंभिक दांव 1x",
+    doublingOffered: (s) => `⏳ दांव ${s}x करने का प्रस्ताव... उत्तर की प्रतीक्षा!`,
+    opponentAccepted: (s) => `✅ विरोधी ने स्वीकार किया! दांव अब ${s}x है!`,
+    opponentDropped: (s) => `🏳️ विरोधी ने मना किया और समर्पण कर दिया! ${s}x पर विजय!`,
+    modalTitle: (s) => `⚡ दांव दोगुना करने की चुनौती: ${s}x!`,
+    modalDesc: "विरोधी ने वर्तमान राउंड के दांव को दोगुना करने की पेशकश की है। दोगुने दांव पर खेलने के लिए स्वीकार करें, या वर्तमान दांव छोड़कर हार मानें।",
+    modalAccept: (s) => `✅ स्वीकार करें (${s}x)`,
+    modalDrop: "🏳️ समर्पण करें",
+    classicActive: "🎲 क्लासिक बैकगैमौन सक्रिय",
+    mahbousaActive: "🔒 मिस्र महबूसा सक्रिय",
+    tawla31Active: "👑 तावला 31 सक्रिय",
+    btnClassic: "🎲 क्लासिक",
+    btnMahbousa: "🔒 महबूसा",
+    btnTawla31: "👑 तावला 31",
+    doubleBadge: (d) => `⚡ डबल ${d}-${d} • 4 चालें!`,
+  },
+  zh: {
+    initialStake: "🎲 加倍骰子：初始赌注 1x",
+    doublingOffered: (s) => `⏳ 已提议加倍至 ${s}x... 等待对手回应！`,
+    opponentAccepted: (s) => `✅ 对手已接受！当前赌注增至 ${s}x！`,
+    opponentDropped: (s) => `🏳️ 对手拒绝加倍并弃权！斩获 ${s}x 胜利！`,
+    modalTitle: (s) => `⚡ 加倍挑战提议：${s}x！`,
+    modalDesc: "对手提议将本轮赌注翻倍。接受则继续在双倍赌注下较量，拒绝则直接弃权并结算当前基础赌注。",
+    modalAccept: (s) => `✅ 接受加倍 (${s}x)`,
+    modalDrop: "🏳️ 弃权认输",
+    classicActive: "🎲 经典步步高 已激活",
+    mahbousaActive: "🔒 埃及封锁棋 (Mahbousa) 已激活",
+    tawla31Active: "👑 塔夫拉31 已激活",
+    btnClassic: "🎲 经典",
+    btnMahbousa: "🔒 封锁棋",
+    btnTawla31: "👑 塔夫拉31",
+    doubleBadge: (d) => `⚡ 豹子双骰 ${d}-${d} • 4次走子！`,
+  },
+};
+
 export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, canMove, onMove }: Props) {
   const { t, locale } = useI18n();
+  const strings = (BACKGAMMON_I18N[locale] ?? BACKGAMMON_I18N["en"])!;
   const { perspective3D } = useVisualSettings();
   const [selected, setSelected] = useState<number | "BAR" | null>(null);
   const [variant, setVariant] = useState<BackgammonVariant>("classic");
@@ -156,7 +278,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
 
     if (nextStake === 64) {
       setDoublingStakeIndex(0);
-      const label = locale === "ar" ? "🎲 مكعب المضاعفة: الرهان الأساسي 1x" : "🎲 Doubling Cube: Initial Stakes 1x";
+      const label = strings.initialStake;
       setDoublingBannerText(label);
       setTimeout(() => setDoublingBannerText((prev) => (prev === label ? null : prev)), 3000);
       return;
@@ -167,9 +289,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
     setDoublingOffer({ proposer: proposerSeat, nextStake });
 
     // If local game / vs computer, simulate intelligent opponent response
-    const label = locale === "ar"
-      ? `⏳ تم طلب مضاعفة الرهان إلى ${nextStake}x... بانتظار رد الخصم!`
-      : `⏳ Doubling offered to ${nextStake}x... awaiting response!`;
+    const label = strings.doublingOffered(nextStake);
     setDoublingBannerText(label);
 
     setTimeout(() => {
@@ -178,14 +298,10 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
       if (willAccept) {
         setDoublingStakeIndex(nextIdx);
         playDoublingCubeClack();
-        const acceptMsg = locale === "ar"
-          ? `✅ الخصم قبل التحدي! الرهان أصبح ${nextStake}x!`
-          : `✅ Opponent accepted! Stakes are now ${nextStake}x!`;
+        const acceptMsg = strings.opponentAccepted(nextStake);
         setDoublingBannerText(acceptMsg);
       } else {
-        const dropMsg = locale === "ar"
-          ? `🏳️ الخصم رفض المضاعفة وانسحب! فوز بالضربة القاضية برهان ${currentStake === 64 ? "1" : currentStake}x!`
-          : `🏳️ Opponent dropped the double! Victory claim at ${currentStake === 64 ? "1" : currentStake}x stakes!`;
+        const dropMsg = strings.opponentDropped(currentStake === 64 ? "1" : currentStake);
         setDoublingBannerText(dropMsg);
       }
       setDoublingOffer(null);
@@ -342,29 +458,29 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
             setTimeout(() => setDoublingBannerText(null), 2500);
           }}
         >
-          {locale === "ar" ? "🎲 كلاسيكية" : "🎲 Classic"}
+          {strings.btnClassic}
         </button>
         <button
           type="button"
           className={[styles.variantBtn, variant === "mahbousa" ? styles.variantBtnActive : ""].join(" ")}
           onClick={() => {
             setVariant("mahbousa");
-            setDoublingBannerText(locale === "ar" ? "🔒 تم تفعيل: طاولة محبوسة (حَبْس القرص بدون أكل للبار)" : "🔒 Egyptian Mahbousa Active");
+            setDoublingBannerText(strings.mahbousaActive);
             setTimeout(() => setDoublingBannerText(null), 2500);
           }}
         >
-          {locale === "ar" ? "🔒 محبوسة مصرية" : "🔒 Mahbousa"}
+          {strings.btnMahbousa}
         </button>
         <button
           type="button"
           className={[styles.variantBtn, variant === "tawla31" ? styles.variantBtnActive : ""].join(" ")}
           onClick={() => {
             setVariant("tawla31");
-            setDoublingBannerText(locale === "ar" ? "👑 تم تفعيل: طاولة 31 (سباق تجميع البيادق)" : "👑 Tawla 31 Active");
+            setDoublingBannerText(strings.tawla31Active);
             setTimeout(() => setDoublingBannerText(null), 2500);
           }}
         >
-          {locale === "ar" ? "👑 طاولة 31" : "👑 Tawla 31"}
+          {strings.btnTawla31}
         </button>
       </div>
 
@@ -378,7 +494,7 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
         </AnimatePresence>
         {dice.length >= 2 && dice[0] === dice[1] && (
           <span className={styles.doubleBadge}>
-            ⚡ DOUBLE {dice[0]}-{dice[0]} • 4 MOVES!
+            {strings.doubleBadge(dice[0] ?? 1)}
           </span>
         )}
       </div>
@@ -413,19 +529,17 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
               exit={{ scale: 0.85, y: 16 }}
             >
               <h3 className={styles.doublingOfferTitle}>
-                {locale === "ar" ? `⚡ طلب مضاعفة الرهان إلى ${doublingOffer.nextStake}x!` : `⚡ Doubling Stakes Challenge: ${doublingOffer.nextStake}x!`}
+                {strings.modalTitle(doublingOffer.nextStake)}
               </h3>
               <p className={styles.doublingOfferDesc}>
-                {locale === "ar"
-                  ? "يعرض عليك الخصم رفع قيمة الرهان الحالي للجولة. إذا قبلت، يستمر اللعب بضعف القيمة، وإذا انسحبت، يخسر رهانك الحالي فقط."
-                  : "The opponent offers to double the current round stakes. Accept to fight at doubled stakes, or drop to forfeit current flat stake."}
+                {strings.modalDesc}
               </p>
               <div className={styles.doublingOfferActions}>
                 <button type="button" className={styles.doublingAcceptBtn} onClick={handleAcceptDouble}>
-                  {locale === "ar" ? `✅ قبول المضاعفة (${doublingOffer.nextStake}x)` : `✅ Accept (${doublingOffer.nextStake}x)`}
+                  {strings.modalAccept(doublingOffer.nextStake)}
                 </button>
                 <button type="button" className={styles.doublingDropBtn} onClick={handleDropDouble}>
-                  {locale === "ar" ? "🏳️ انسحاب وتنازل" : "🏳️ Drop / Concede"}
+                  {strings.modalDrop}
                 </button>
               </div>
             </motion.div>

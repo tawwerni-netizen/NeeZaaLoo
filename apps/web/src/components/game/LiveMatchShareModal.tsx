@@ -60,8 +60,9 @@ const LANG_CONFIG: Record<
 
 const GAME_EMOJIS: Record<string, string> = {
   chess: "♟️",
-  backgammon: "🎲",
   dominoes: "🀄",
+  ludo: "🎲",
+  backgammon: "🎲",
   checkers: "⚪",
   "connect-four": "🔴",
   xo: "⚔️",
@@ -69,6 +70,57 @@ const GAME_EMOJIS: Record<string, string> = {
   reversi: "⚫",
   gomoku: "⭕",
   seega: "🏜️",
+};
+
+const SHARE_MODAL_I18N: Record<string, Record<string, string>> = {
+  title: {
+    ar: "مشاركة البث المباشر للنزال",
+    en: "Share Live Match Stream",
+    es: "Compartir Transmisión en Vivo",
+    fr: "Partager le Stream en Direct",
+    hi: "लाइव मैच स्ट्रीम साझा करें",
+    zh: "分享实时对战直播",
+  },
+  subtitle: {
+    ar: "ادعُ أصدقاءك ومتابعيك لمشاهدة المباراة مباشرة بلحظتها",
+    en: "Invite friends to spectate this live clash in real time",
+    es: "Invita amigos a presenciar este duelo en tiempo real",
+    fr: "Invitez des amis à regarder ce duel en direct et en temps réel",
+    hi: "वास्तविक समय में इस लाइव मुकाबले को देखने के लिए दोस्तों को आमंत्रित करें",
+    zh: "邀请好友与粉丝进入直播间，实时围观巅峰对决",
+  },
+  liveNow: {
+    ar: "مباشر الآن",
+    en: "LIVE NOW",
+    es: "EN VIVO",
+    fr: "EN DIRECT",
+    hi: "लाइव अभी",
+    zh: "正在直播",
+  },
+  langLabel: {
+    ar: "اختر لغة رسالة الدعوة:",
+    en: "Select invite message language:",
+    es: "Idioma del mensaje de invitación:",
+    fr: "Langue du message d'invitation :",
+    hi: "निमंत्रण संदेश की भाषा चुनें:",
+    zh: "选择邀请函文案语言：",
+  },
+  copied: {
+    ar: "✓ تم النسخ!",
+    en: "✓ Copied!",
+    es: "✓ ¡Copiado!",
+    fr: "✓ Copié !",
+    hi: "✓ कॉपी किया गया!",
+    zh: "✓ 已复制！",
+  },
+  copyLink: {
+    ar: "نسخ الرابط",
+    en: "Copy Link",
+    es: "Copiar Enlace",
+    fr: "Copier le Lien",
+    hi: "लिंक कॉपी करें",
+    zh: "复制链接",
+  },
 };
 
 export function LiveMatchShareModal({
@@ -143,12 +195,10 @@ export function LiveMatchShareModal({
             <div className={styles.shareIconPulse}>📡</div>
             <div>
               <h3 className={styles.modalTitle}>
-                {isRtl ? "مشاركة البث المباشر للنزال" : "Share Live Match Stream"}
+                {SHARE_MODAL_I18N.title?.[locale] || SHARE_MODAL_I18N.title?.en}
               </h3>
               <p className={styles.modalSubtitle}>
-                {isRtl
-                  ? "ادعُ أصدقاءك ومتابعيك لمشاهدة المباراة مباشرة بلحظتها"
-                  : "Invite friends to spectate this live clash in real time"}
+                {SHARE_MODAL_I18N.subtitle?.[locale] || SHARE_MODAL_I18N.subtitle?.en}
               </p>
             </div>
           </div>
@@ -172,14 +222,14 @@ export function LiveMatchShareModal({
           </div>
           <span className={styles.liveTag}>
             <span className={styles.liveDot} />
-            {isRtl ? "مباشر الآن" : "LIVE NOW"}
+            {SHARE_MODAL_I18N.liveNow?.[locale] || SHARE_MODAL_I18N.liveNow?.en}
           </span>
         </div>
 
         {/* Language Tabs */}
         <div className={styles.langSelectorRow}>
           <span className={styles.langLabel}>
-            {isRtl ? "اختر لغة رسالة الدعوة:" : "Select invite message language:"}
+            {SHARE_MODAL_I18N.langLabel?.[locale] || SHARE_MODAL_I18N.langLabel?.en}
           </span>
           <div className={styles.langTabs} dir="ltr">
             {(Object.keys(LANG_CONFIG) as SupportedShareLang[]).map((lang) => (
@@ -231,7 +281,9 @@ export function LiveMatchShareModal({
             className={`${styles.copyBtn} ${copied ? styles.copyBtnCopied : ""}`}
             onClick={handleCopyLink}
           >
-            {copied ? (isRtl ? "✓ تم النسخ!" : "✓ Copied!") : (isRtl ? "نسخ الرابط" : "Copy Link")}
+            {copied
+              ? (SHARE_MODAL_I18N.copied?.[locale] || SHARE_MODAL_I18N.copied?.en)
+              : (SHARE_MODAL_I18N.copyLink?.[locale] || SHARE_MODAL_I18N.copyLink?.en)}
           </button>
         </div>
       </div>

@@ -30,6 +30,65 @@ const BOT_DIFFICULTY: Record<string, string> = {
   "ai-easy": "EASY", "ai-medium": "MEDIUM", "ai-hard": "HARD", "ai-expert": "EXPERT",
 };
 
+const DUEL_SHELL_I18N = {
+  spectator: {
+    ar: "مشاهد مباشر (قراءة فقط)",
+    en: "Live Spectator (Read-Only)",
+    es: "Espectador en Vivo (Solo Lectura)",
+    fr: "Spectateur en Direct (Lecture Seule)",
+    hi: "लाइव दर्शक (केवल पढ़ने के लिए)",
+    zh: "实时观战模式（只读）",
+  },
+  winnerCash: (amount: string): Record<string, string> => ({
+    ar: `الجائزة النقدية: $${amount} USDT`,
+    en: `Winner Cash: $${amount} USDT`,
+    es: `Premio al Ganador: $${amount} USDT`,
+    fr: `Prix du Vainqueur : $${amount} USDT`,
+    hi: `विजेता नकद: $${amount} USDT`,
+    zh: `获胜者现金奖金: $${amount} USDT`,
+  }),
+  waitingOpponent: {
+    ar: "في انتظار لعب الخصم...",
+    en: "Waiting for opponent's move...",
+    es: "Esperando movimiento del rival...",
+    fr: "En attente du coup adverse...",
+    hi: "प्रतिद्वंद्वी की चाल का इंतज़ार...",
+    zh: "等待对手落子...",
+  },
+  shareLive: {
+    ar: "مشاركة البث",
+    en: "Share Live",
+    es: "Compartir Directo",
+    fr: "Partager Direct",
+    hi: "लाइव शेयर करें",
+    zh: "分享直播",
+  },
+  shareLiveTooltip: {
+    ar: "مشاركة البث المباشر بـ 6 لغات",
+    en: "Share live duel across 6 languages",
+    es: "Compartir duelo en 6 idiomas",
+    fr: "Partager le duel en 6 langues",
+    hi: "6 भाषाओं में लाइव मुकाबला साझा करें",
+    zh: "支持6种语言的多语种对战直播分享",
+  },
+  chat: {
+    ar: "الشات",
+    en: "Chat",
+    es: "Chat",
+    fr: "Chat",
+    hi: "चैट",
+    zh: "聊天",
+  },
+  undoMove: {
+    ar: "تراجع عن الحركة",
+    en: "Undo Move",
+    es: "Deshacer Jugada",
+    fr: "Annuler le Coup",
+    hi: "चाल वापस लें",
+    zh: "悔棋撤销",
+  },
+};
+
 export function DuelShell({ duelId }: { duelId: string }) {
   const { player } = useAuth();
   const { t, locale } = useI18n();
@@ -293,21 +352,21 @@ export function DuelShell({ duelId }: { duelId: string }) {
             <span className={connected ? styles.live : styles.offline}>{connectionLabel}</span>
             {isSpectator && (
               <>
-                <span className={styles.spectatorBadge} title="مشاهد مباشر (قراءة فقط)">
-                  👁️ {locale === "ar" ? "مشاهد مباشر (قراءة فقط)" : "Live Spectator (Read-Only)"}
+                <span className={styles.spectatorBadge} title={DUEL_SHELL_I18N.spectator[locale] || DUEL_SHELL_I18N.spectator.en}>
+                  👁️ {DUEL_SHELL_I18N.spectator[locale] || DUEL_SHELL_I18N.spectator.en}
                 </span>
                 {duelMeta?.winnerCash != null && duelMeta.winnerCash > 0 && (
-                  <span className={styles.spectatorPrizeBadge} title="الجائزة النقدية للفائز">
+                  <span className={styles.spectatorPrizeBadge} title={DUEL_SHELL_I18N.winnerCash(duelMeta.winnerCash.toFixed(2))[locale] || DUEL_SHELL_I18N.winnerCash(duelMeta.winnerCash.toFixed(2)).en}>
                     <span className={styles.prizePulseDot} />
-                    💰 {locale === "ar" ? `الجائزة النقدية: $${duelMeta.winnerCash.toFixed(2)} USDT` : `Winner Cash: $${duelMeta.winnerCash.toFixed(2)} USDT`}
+                    💰 {DUEL_SHELL_I18N.winnerCash(duelMeta.winnerCash.toFixed(2))[locale] || DUEL_SHELL_I18N.winnerCash(duelMeta.winnerCash.toFixed(2)).en}
                   </span>
                 )}
               </>
             )}
             {!vsComputer && opponentSeat !== null && !completed && clock?.toMove === opponentSeat && (
-              <span className={styles.waitingBadge} title="في انتظار الخصم ليلعب">
+              <span className={styles.waitingBadge} title={DUEL_SHELL_I18N.waitingOpponent[locale] || DUEL_SHELL_I18N.waitingOpponent.en}>
                 <span className={styles.waitingDot} />
-                {locale === "ar" ? "في انتظار لعب الخصم..." : "Waiting for opponent's move..."}
+                {DUEL_SHELL_I18N.waitingOpponent[locale] || DUEL_SHELL_I18N.waitingOpponent.en}
               </span>
             )}
           </span>
@@ -316,11 +375,11 @@ export function DuelShell({ duelId }: { duelId: string }) {
               type="button"
               className={styles.shareLiveBtn}
               onClick={() => setShareModalOpen(true)}
-              aria-label={locale === "ar" ? "مشاركة البث المباشر" : "Share Live Stream"}
-              title={locale === "ar" ? "مشاركة البث المباشر بـ 6 لغات" : "Share live duel across 6 languages"}
+              aria-label={DUEL_SHELL_I18N.shareLive[locale] || DUEL_SHELL_I18N.shareLive.en}
+              title={DUEL_SHELL_I18N.shareLiveTooltip[locale] || DUEL_SHELL_I18N.shareLiveTooltip.en}
             >
               <span className={styles.shareIcon}>📡</span>
-              <span className={styles.shareLabel}>{locale === "ar" ? "مشاركة البث" : "Share Live"}</span>
+              <span className={styles.shareLabel}>{DUEL_SHELL_I18N.shareLive[locale] || DUEL_SHELL_I18N.shareLive.en}</span>
             </button>
 
             {!isSpectator && seat !== undefined && (
@@ -328,11 +387,11 @@ export function DuelShell({ duelId }: { duelId: string }) {
                 type="button"
                 className={[styles.chatBtn, chatOpen ? styles.chatBtnActive : ""].join(" ")}
                 onClick={() => setChatOpen((prev) => !prev)}
-                aria-label={locale === "ar" ? "الدردشة" : "Chat"}
-                title={locale === "ar" ? "شات المباراة" : "Match Chat"}
+                aria-label={DUEL_SHELL_I18N.chat[locale] || DUEL_SHELL_I18N.chat.en}
+                title={DUEL_SHELL_I18N.chat[locale] || DUEL_SHELL_I18N.chat.en}
               >
                 <span className={styles.chatIcon}>💬</span>
-                <span className={styles.chatLabel}>{locale === "ar" ? "الشات" : "Chat"}</span>
+                <span className={styles.chatLabel}>{DUEL_SHELL_I18N.chat[locale] || DUEL_SHELL_I18N.chat.en}</span>
                 {chatUnread > 0 && (
                   <span className={styles.chatBadge}>{chatUnread > 9 ? "9+" : chatUnread}</span>
                 )}
@@ -435,7 +494,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
                     }}
                     disabled={!canMove}
                   >
-                    ↩ {locale === "ar" ? "تراجع عن الحركة" : "Undo Move"}
+                    ↩ {DUEL_SHELL_I18N.undoMove[locale] || DUEL_SHELL_I18N.undoMove.en}
                   </Button>
                 )}
                 {plugin.supportsDraw && (

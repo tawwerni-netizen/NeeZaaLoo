@@ -280,22 +280,54 @@ export function DifficultySelect({
     return obj[locale] || obj.en || obj.ar || fallback;
   };
 
+  const HEADER_TEXTS: Record<string, { badge: string; heading: string; subtitle: string }> = {
+    ar: {
+      badge: "⚔️ مواجهة الذكاء الاصطناعي (AI Match)",
+      heading: "اختر مستوى الصعوبة",
+      subtitle: "حدد مستوى قوة الذكاء الاصطناعي الذي ترغب في مواجهته، واختبر مهاراتك التكتيكية واستراتيجيتك.",
+    },
+    en: {
+      badge: "⚔️ Single-Player AI Duel",
+      heading: "Select Difficulty Level",
+      subtitle: "Choose the AI strength you want to face and put your tactical thinking to the ultimate test.",
+    },
+    es: {
+      badge: "⚔️ Duelo Individual contra IA",
+      heading: "Selecciona el Nivel de Dificultad",
+      subtitle: "Elige la fuerza de la IA a la que deseas enfrentarte y pon a prueba tu pensamiento táctico.",
+    },
+    fr: {
+      badge: "⚔️ Duel Solo contre l'IA",
+      heading: "Sélectionnez le Niveau de Difficulté",
+      subtitle: "Choisissez la force de l'IA que vous souhaitez affronter et mettez votre sens tactique à l'épreuve.",
+    },
+    hi: {
+      badge: "⚔️ एकल-खिलाड़ी AI द्वंद्व",
+      heading: "कठिनाई स्तर चुनें",
+      subtitle: "उस AI शक्ति का चयन करें जिसका आप सामना करना चाहते हैं और अपनी सामरिक सोच का परीक्षण करें।",
+    },
+    zh: {
+      badge: "⚔️ 单人对战 AI 引擎",
+      heading: "选择难度等级",
+      subtitle: "选择你希望挑战的 AI 引擎算力等级，检验并升华你的战术推演与终局运筹。",
+    },
+  };
+  const headerStrings = (HEADER_TEXTS[locale] ?? HEADER_TEXTS["en"])!;
+
   return (
     <div className={styles.container}>
       {/* Header section with modern badge and title */}
       <div className={styles.header}>
         <div className={styles.categoryBadge}>
           <span className={styles.badgePulse} />
-          <span>{isRtl ? "⚔️ مواجهة الذكاء الاصطناعي (AI Match)" : "⚔️ Single-Player AI Duel"}</span>
+          <span>{headerStrings.badge}</span>
         </div>
         <h1 className={styles.heading}>
-          {isRtl ? "اختر مستوى الصعوبة" : "Select Difficulty Level"}
+          {headerStrings.heading}
           {gameName ? <span className={styles.gameHighlight}> • {gameName}</span> : null}
         </h1>
         <p className={styles.subtitle}>
-          {isRtl
-            ? "حدد مستوى قوة الذكاء الاصطناعي الذي ترغب في مواجهته، واختبر مهاراتك التكتيكية واستراتيجيتك."
-            : "Choose the AI strength you want to face and put your tactical thinking to the ultimate test."}
+          {headerStrings.subtitle}
         </p>
       </div>
 
@@ -312,32 +344,168 @@ export function DifficultySelect({
 
           if (plugin.id === "ludo") {
             if (d === "EASY") {
-              tierText = isRtl ? "مبتدئ • Casual" : "Beginner • Casual";
-              descText = isRtl ? "خصم يعتمد على الحظ ويحرك قطعه عشوائياً. مثالي للاسترخاء والمتعة." : "An opponent relying on luck with random moves. Perfect for relaxation.";
+              tierText = getLang({
+                ar: "مبتدئ • Casual",
+                en: "Beginner • Casual",
+                es: "Principiante • Casual",
+                fr: "Débutant • Détendu",
+                hi: "शुरुआती • अनौपचारिक",
+                zh: "新手 • 轻松对弈",
+              });
+              descText = getLang({
+                ar: "خصم يعتمد على الحظ ويحرك قطعه عشوائياً. مثالي للاسترخاء والمتعة.",
+                en: "An opponent relying on luck with random moves. Perfect for relaxation.",
+                es: "Un rival que depende del azar y mueve fichas aleatoriamente. Ideal para relajarse.",
+                fr: "Un adversaire qui compte sur la chance avec des coups aléatoires. Idéal pour se détendre.",
+                hi: "किस्मत पर निर्भर और बेतरतीब चालें चलने वाला विरोधी। आरामदेह खेल के लिए उत्तम।",
+                zh: "纯靠运气的随性对手，随机走子，非常适合轻松休闲与热身对局。",
+              });
               specs = [
-                { icon: "🎲", text: { ar: "تحركات عشوائية تماماً", en: "Completely random moves", es: "", fr: "", hi: "", zh: "" } },
-                { icon: "🌱", text: { ar: "فرصة كبيرة للفوز", en: "High chance of winning", es: "", fr: "", hi: "", zh: "" } }
+                {
+                  icon: "🎲",
+                  text: {
+                    ar: "تحركات عشوائية تماماً",
+                    en: "Completely random moves",
+                    es: "Movimientos totalmente aleatorios",
+                    fr: "Mouvements totalement aléatoires",
+                    hi: "पूरी तरह से यादृच्छिक चालें",
+                    zh: "完全随机的走子选择",
+                  },
+                },
+                {
+                  icon: "🌱",
+                  text: {
+                    ar: "فرصة كبيرة للفوز",
+                    en: "High chance of winning",
+                    es: "Gran probabilidad de ganar",
+                    fr: "Forte chance de l'emporter",
+                    hi: "जीतने की उच्च संभावना",
+                    zh: "超高胜率，适合新手",
+                  },
+                },
               ];
             } else if (d === "MEDIUM") {
-              tierText = isRtl ? "متوازن • Balanced" : "Balanced";
-              descText = isRtl ? "خصم يفكر قليلاً قبل التحرك. يحاول حماية قطعه وأكل قطعك إذا سنحت الفرصة." : "An opponent that thinks slightly before moving. Tries to protect its pieces and eat yours.";
+              tierText = getLang({
+                ar: "متوازن • Balanced",
+                en: "Balanced • Tactical",
+                es: "Equilibrado • Táctico",
+                fr: "Équilibré • Tactique",
+                hi: "संतुलित • रणनीतिक",
+                zh: "平衡稳健 • 战术兼备",
+              });
+              descText = getLang({
+                ar: "خصم يفكر قليلاً قبل التحرك. يحاول حماية قطعه وأكل قطعك إذا سنحت الفرصة.",
+                en: "An opponent that thinks slightly before moving. Tries to protect its pieces and eat yours.",
+                es: "Un rival que piensa antes de mover. Intenta proteger sus fichas y capturar las tuyas.",
+                fr: "Un adversaire réfléchi. Il cherche à protéger ses pions et capture les vôtres si possible.",
+                hi: "चाल चलने से पहले सोचने वाला विरोधी। अपनी गोटियां बचाता है और मौका मिलने पर आपकी काटता है।",
+                zh: "具备基础战术考量，懂得优先护送关键棋子并在有机会时发起有效截击。",
+              });
               specs = [
-                { icon: "🧠", text: { ar: "يلعب ببعض الاستراتيجية", en: "Plays with some strategy", es: "", fr: "", hi: "", zh: "" } },
-                { icon: "🎯", text: { ar: "ينتهز الفرص الواضحة", en: "Takes obvious chances", es: "", fr: "", hi: "", zh: "" } }
+                {
+                  icon: "🧠",
+                  text: {
+                    ar: "يلعب ببعض الاستراتيجية",
+                    en: "Plays with solid strategy",
+                    es: "Juega con estrategia sólida",
+                    fr: "Stratégie solide et mesurée",
+                    hi: "रणनीतिक समझ के साथ खेल",
+                    zh: "兼具攻守的基本策略",
+                  },
+                },
+                {
+                  icon: "🎯",
+                  text: {
+                    ar: "ينتهز الفرص الواضحة",
+                    en: "Takes obvious chances",
+                    es: "Aprovecha oportunidades claras",
+                    fr: "Saisit les opportunités évidentes",
+                    hi: "स्पष्ट अवसरों का लाभ",
+                    zh: "精准捕捉明显击退战机",
+                  },
+                },
               ];
             } else if (d === "HARD") {
-              tierText = isRtl ? "استراتيجي • Strategic" : "Strategic";
-              descText = isRtl ? "خصم ذكي يخطط لخطواته ويسعى دائماً لإرجاعك للبداية." : "A smart opponent that plans moves and always tries to send you back to start.";
+              tierText = getLang({
+                ar: "استراتيجي • Strategic",
+                en: "Strategic • Aggressive",
+                es: "Estratégico • Agresivo",
+                fr: "Stratégique • Agressif",
+                hi: "रणनीतिक • आक्रामक",
+                zh: "战术大师 • 攻势凌厉",
+              });
+              descText = getLang({
+                ar: "خصم ذكي يخطط لخطواته ويسعى دائماً لإرجاعك للبداية.",
+                en: "A smart opponent that plans moves and always tries to send you back to start.",
+                es: "Un rival inteligente que planea movimientos y siempre busca enviarte al inicio.",
+                fr: "Un adversaire affûté qui anticipe ses coups et cherche toujours à vous renvoyer à la base.",
+                hi: "एक चतुर विरोधी जो चालों की योजना बनाता है और आपको शुरुआत में भेजने का प्रयास करता है।",
+                zh: "深谋远虑的强力对手，步步设伏，随时寻找机会将你打回停机坪基地。",
+              });
               specs = [
-                { icon: "⚡", text: { ar: "لا يفوت فرصة لأكلك", en: "Never misses a chance to eat your pieces", es: "", fr: "", hi: "", zh: "" } },
-                { icon: "🛡️", text: { ar: "يؤمن قطعه بذكاء", en: "Secures its pieces smartly", es: "", fr: "", hi: "", zh: "" } }
+                {
+                  icon: "⚡",
+                  text: {
+                    ar: "لا يفوت فرصة لأكلك",
+                    en: "Never misses a capture opportunity",
+                    es: "Nunca pierde opción de captura",
+                    fr: "Ne manque jamais une capture",
+                    hi: "गोटी काटने का कोई मौका नहीं चूकता",
+                    zh: "绝不放过任何截击机会",
+                  },
+                },
+                {
+                  icon: "🛡️",
+                  text: {
+                    ar: "يؤمن قطعه بذكاء",
+                    en: "Secures its pieces smartly",
+                    es: "Protege sus fichas inteligentemente",
+                    fr: "Sécurise ses pions avec rigueur",
+                    hi: "अपनी गोटियों की होशियारी से सुरक्षा",
+                    zh: "善用安全格巧妙避险",
+                  },
+                },
               ];
             } else if (d === "EXPERT") {
-              tierText = isRtl ? "ملك اللودو • Ludo King" : "Ludo King";
-              descText = isRtl ? "لا يرحم! يستغل كل رقم في النرد بأفضل طريقة ممكنة. حظاً موفقاً!" : "Ruthless! Exploits every dice roll in the best possible way. Good luck!";
+              tierText = getLang({
+                ar: "ملك اللودو • Ludo King",
+                en: "Ludo King • Grandmaster",
+                es: "Rey del Ludo • Gran Maestro",
+                fr: "Roi du Ludo • Grand Maître",
+                hi: "लूडो किंग • ग्रैंडमास्टर",
+                zh: "飞行棋霸主 • 巅峰神级",
+              });
+              descText = getLang({
+                ar: "لا يرحم! يستغل كل رقم في النرد بأفضل طريقة ممكنة. حظاً موفقاً!",
+                en: "Ruthless! Exploits every dice roll in the best possible way. Good luck!",
+                es: "¡Despiadado! Aprovecha cada número del dado al máximo. ¡Buena suerte!",
+                fr: "Impitoyable ! Optimise chaque point du dé à la perfection. Bonne chance !",
+                hi: "निर्दयी! पासे के हर अंक का सर्वोत्तम उपयोग करता है। शुभकामनाएं!",
+                zh: "极尽冷酷精准！将每次骰子点数的数学期望发挥到极致，顶级挑战！",
+              });
               specs = [
-                { icon: "🔥", text: { ar: "أفضل استغلال للنرد", en: "Best dice exploitation", es: "", fr: "", hi: "", zh: "" } },
-                { icon: "👑", text: { ar: "محترف في عرقلة خصومه", en: "Pro at blocking opponents", es: "", fr: "", hi: "", zh: "" } }
+                {
+                  icon: "🔥",
+                  text: {
+                    ar: "أفضل استغلال للنرد",
+                    en: "Peak dice mathematical exploitation",
+                    es: "Máximo aprovechamiento del dado",
+                    fr: "Optimisation absolue du dé",
+                    hi: "पासे का सर्वोत्तम गणितीय उपयोग",
+                    zh: "巅峰级骰点收益数学期望",
+                  },
+                },
+                {
+                  icon: "👑",
+                  text: {
+                    ar: "محترف في عرقلة خصومه",
+                    en: "Pro at blocking & board lockdown",
+                    es: "Experto en bloqueo y control del tablero",
+                    fr: "Expert en verrouillage de plateau",
+                    hi: "बोर्ड नियंत्रण और अवरोध में माहिर",
+                    zh: "控盘封锁与围追堵截的宗师",
+                  },
+                },
               ];
             }
           }

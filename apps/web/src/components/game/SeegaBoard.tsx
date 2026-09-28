@@ -56,8 +56,18 @@ export function SeegaStoneSvg({ seat }: { seat: "0" | "1" }) {
   );
 }
 
+const SEEGA_I18N: Record<string, { ambush: string }> = {
+  ar: { ambush: "⚔️ إطباق تكتيكي فرعوني! تم أسر حجر الخصم بالحصر" },
+  en: { ambush: "⚔️ Pharaonic Ambush! Opponent stone captured!" },
+  es: { ambush: "⚔️ ¡Emboscada Faraónica! ¡Piedra rival capturada!" },
+  fr: { ambush: "⚔️ Embuscade pharaonique ! Pierre adverse capturée !" },
+  hi: { ambush: "⚔️ फिरऔनी जाल! विरोधी का पत्थर घेराबंदी में पकड़ा गया!" },
+  zh: { ambush: "⚔️ 法老包围战术！成功夹击围困吃子！" },
+};
+
 export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, canMove, onMove }: Props) {
   const { t, locale } = useI18n();
+  const strings = (SEEGA_I18N[locale] ?? SEEGA_I18N["en"])!;
   const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<number | null>(null);
   const [ambushText, setAmbushText] = useState<string | null>(null);
@@ -68,14 +78,12 @@ export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, 
   useEffect(() => {
     if (phase === "MOVEMENT" && prevStoneCount.current > stoneCount) {
       playSeegaCaptureSound();
-      const text = locale === "ar"
-        ? "⚔️ إطباق تكتيكي فرعوني! تم أسر حجر الخصم بالحصر"
-        : "⚔️ Pharaonic Ambush! Opponent stone captured!";
+      const text = strings.ambush;
       setAmbushText(text);
       setTimeout(() => setAmbushText(null), 2800);
     }
     prevStoneCount.current = stoneCount;
-  }, [stoneCount, phase, locale]);
+  }, [stoneCount, phase, strings.ambush]);
 
   const destinationsFromSelected = useMemo(() => {
     if (selected === null) return new Set<number>();

@@ -52,6 +52,15 @@ export function richestCoin(_balances: CoinBalances | null): StakeAsset {
   return "USDT";
 }
 
+const AVAILABLE_BALANCE_I18N: Record<string, string> = {
+  ar: "الرصيد المتاح:",
+  en: "Available Balance:",
+  es: "Saldo disponible:",
+  fr: "Solde disponible :",
+  hi: "उपलब्ध शेष राशि:",
+  zh: "可用余额:",
+};
+
 export function CoinPicker({
   value = "USDT",
   onChange,
@@ -63,7 +72,7 @@ export function CoinPicker({
   balances: CoinBalances | null;
   label?: string;
 }) {
-  const { dir } = useI18n();
+  const { dir, locale } = useI18n();
   const isRtl = dir === "rtl";
 
   return (
@@ -85,7 +94,9 @@ export function CoinPicker({
             </div>
           </div>
           <div className={styles.balanceWrap}>
-            <span className={styles.balanceLabel}>{isRtl ? "الرصيد المتاح:" : "Available Balance:"}</span>
+            <span className={styles.balanceLabel}>
+              {AVAILABLE_BALANCE_I18N[locale] || AVAILABLE_BALANCE_I18N.en}
+            </span>
             <span className={`${styles.balanceVal} nz-num`}>
               {balances ? `${balances.USDT.toFixed(2)} USDT` : "…"}
             </span>

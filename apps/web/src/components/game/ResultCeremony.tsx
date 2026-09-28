@@ -27,6 +27,89 @@ type Props = {
   rematchSent?: boolean;
 };
 
+const CEREMONY_REASON_BADGES: Record<string, Record<string, string>> = {
+  BACKGAMMON: {
+    ar: "👑 انتصار باكغامون إمبراطوري ثلاثي (3x)!",
+    en: "👑 Imperial Backgammon Win (3x)!",
+    es: "👑 ¡Victoria imperial de Backgammon (3x)!",
+    fr: "👑 Victoire impériale au Backgammon (3x) !",
+    hi: "👑 बैकगैमौन शाही जीत (3x)!",
+    zh: "👑 步步高帝国级大胜 (3x)！",
+  },
+  GAMMON: {
+    ar: "🔥 انتصار غامون مضاعف ساحق (2x)!",
+    en: "🔥 Crushing Gammon Win (2x)!",
+    es: "🔥 ¡Victoria aplastante de Gammon (2x)!",
+    fr: "🔥 Victoire écrasante au Gammon (2x) !",
+    hi: "🔥 भारी गैमन विजय (2x)!",
+    zh: "🔥 全盘大胜 (2x)！",
+  },
+  DOUBLE_DROPPED: {
+    ar: "⚡ استسلام الخصم بعد مضاعفة الرهان!",
+    en: "⚡ Opponent Conceded to Double!",
+    es: "⚡ ¡El rival se rindió ante la duplicación!",
+    fr: "⚡ L'adversaire a concédé sur le double !",
+    hi: "⚡ दांव दोगुना होने पर विरोधी ने हार मानी!",
+    zh: "⚡ 对手因加倍弃权认输！",
+  },
+  CHECKMATE: {
+    ar: "👑 كش مات! سقوط الملك بالضربة القاضية",
+    en: "👑 Checkmate! King Knockout",
+    es: "👑 ¡Jaque mate! Caída del Rey",
+    fr: "👑 Échec et mat ! Chute du Roi",
+    hi: "👑 शह और मात! राजा धराशायी",
+    zh: "👑 将死！国王绝杀",
+  },
+  DOMINO_OUT: {
+    ar: "🀄 دومينو خارج! تفريغ البلاطات بالكامل",
+    en: "🀄 Domino Out! Hand Cleared",
+    es: "🀄 ¡Dominó fuera! Mano vacía",
+    fr: "🀄 Domino posé ! Main vidée",
+    hi: "🀄 डोमिनोज़ आउट! सभी गोटियां खत्म",
+    zh: "🀄 多米诺出尽！手牌清空",
+  },
+  ALL_FIVES_TARGET_REACHED: {
+    ar: "⚡ انتصار ساحق بسقف نقاط الخمسات 55!",
+    en: "⚡ All-Fives Target Score Victory!",
+    es: "⚡ ¡Victoria por objetivo en All-Fives 55!",
+    fr: "⚡ Victoire au score cible All-Fives 55 !",
+    hi: "⚡ ऑल-फाइव्स 55 लक्ष्य स्कोर विजय!",
+    zh: "⚡ 5的倍数 55分目标达成大胜！",
+  },
+  LUDO_FINISHED: {
+    ar: "🏆 تتويج أسطوري! وصول القواطع للمثلث الذهبي",
+    en: "🏆 Ludo Champion! All Tokens Home",
+    es: "🏆 ¡Campeón de Ludo! Todas las fichas en meta",
+    fr: "🏆 Champion de Ludo ! Tous les pions au centre",
+    hi: "🏆 लूडो चैंपियन! सभी गोटियां घर पहुंचीं",
+    zh: "🏆 飞行棋冠军！全部棋子到达终点",
+  },
+  MAHBOUSA_CAPTURED: {
+    ar: "🔒 حَبْس واستنزاف كافة أقراص الخصم!",
+    en: "🔒 All Checkers Pinned & Borne Off!",
+    es: "🔒 ¡Todas las fichas rivales bloqueadas y retiradas!",
+    fr: "🔒 Tous les pions adverses bloqués et sortis !",
+    hi: "🔒 विरोधी के सभी मोहरे बंद और बाहर!",
+    zh: "🔒 封锁并吃尽所有敌方棋子！",
+  },
+  FOUR_IN_A_ROW: {
+    ar: "🎯 رباعية نصر تكتيكية بالجاذبية",
+    en: "🎯 Connect Four Victory!",
+    es: "🎯 ¡Victoria en Conecta Cuatro!",
+    fr: "🎯 Victoire Puissance 4 !",
+    hi: "🎯 कनेक्ट फोर विजय!",
+    zh: "🎯 四子连珠战术大胜！",
+  },
+  FIVE_IN_A_ROW: {
+    ar: "☯️ خمسة أحجار زن متصلة",
+    en: "☯️ 5-in-a-row Zen Master!",
+    es: "☯️ ¡Maestro Zen 5 en línea!",
+    fr: "☯️ Maître Zen du 5 en ligne !",
+    hi: "☯️ ज़ेन मास्टर 5-इन-ए-रो!",
+    zh: "☯️ 五子连珠 禅意宗师！",
+  },
+};
+
 export function ResultCeremony({
   isSpectator, outcome, result, reason, vsComputer, duelId, gameId = "game", delta, onRematch, rematchBusy, rematchSent,
 }: Props) {
@@ -136,16 +219,8 @@ export function ResultCeremony({
       {!isSpectator && reason && (
         <div className={styles.reasonBadgeWrap}>
           <span className={styles.reasonBadge}>
-            {reason === "BACKGAMMON" ? (locale === "ar" ? "👑 انتصار باكغامون إمبراطوري ثلاثي (3x)!" : "👑 Imperial Backgammon Win (3x)!") :
-             reason === "GAMMON" ? (locale === "ar" ? "🔥 انتصار غامون مضاعف ساحق (2x)!" : "🔥 Crushing Gammon Win (2x)!") :
-             reason === "DOUBLE_DROPPED" ? (locale === "ar" ? "⚡ استسلام الخصم بعد مضاعفة الرهان!" : "⚡ Opponent Conceded to Double!") :
-             reason === "CHECKMATE" ? (locale === "ar" ? "👑 كش مات! سقوط الملك بالضربة القاضية" : "👑 Checkmate! King Knockout") :
-             reason === "DOMINO_OUT" ? (locale === "ar" ? "🀄 دومينو خارج! تفريغ البلاطات بالكامل" : "🀄 Domino Out! Hand Cleared") :
-             reason === "ALL_FIVES_TARGET_REACHED" ? (locale === "ar" ? "⚡ انتصار ساحق بسقف نقاط الخمسات 55!" : "⚡ All-Fives Target Score Victory!") :
-             reason === "LUDO_FINISHED" ? (locale === "ar" ? "🏆 تتويج أسطوري! وصول القواطع للمثلث الذهبي" : "🏆 Ludo Champion! All Tokens Home") :
-             reason === "MAHBOUSA_CAPTURED" ? (locale === "ar" ? "🔒 حَبْس واستنزاف كافة أقراص الخصم!" : "🔒 All Checkers Pinned & Borne Off!") :
-             reason === "FOUR_IN_A_ROW" ? (locale === "ar" ? "🎯 رباعية نصر تكتيكية بالجاذبية" : "🎯 Connect Four Victory!") :
-             reason === "FIVE_IN_A_ROW" ? (locale === "ar" ? "☯️ خمسة أحجار زن متصلة" : "☯️ 5-in-a-row Zen Master!") :
+            {CEREMONY_REASON_BADGES[reason]?.[locale] ??
+             CEREMONY_REASON_BADGES[reason]?.en ??
              t(`game.reason.${reason}`)}
           </span>
         </div>

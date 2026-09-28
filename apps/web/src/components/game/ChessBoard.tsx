@@ -23,6 +23,25 @@ type Props = {
 
 const PROMO_PIECES = ["q", "r", "b", "n"] as const;
 
+const CHESS_I18N: Record<string, Record<string, string>> = {
+  checkmate: {
+    ar: "👑 كش مات! سقوط الملك وانتصار ساحق بالضربة القاضية • CHECKMATE! 👑",
+    en: "👑 CHECKMATE! THE KING HAS FALLEN! 👑",
+    es: "👑 ¡JAQUE MATE! ¡EL REY HA CAÍDO! 👑",
+    fr: "👑 ÉCHEC ET MAT ! LE ROI EST TOMBÉ ! 👑",
+    hi: "👑 शह और मात! राजा गिर चुका है! 👑",
+    zh: "👑 将死！国王倾覆，胜负已定！ 👑",
+  },
+  check: {
+    ar: "⚠️ كش ملك! خطر يهدد الملك • CHECK!",
+    en: "⚠️ CHECK! THE KING IS THREATENED!",
+    es: "⚠️ ¡JAQUE! ¡EL REY ESTÁ EN PELIGRO!",
+    fr: "⚠️ ÉCHEC ! LE ROI EST EN DANGER !",
+    hi: "⚠️ शह! राजा खतरे में है!",
+    zh: "⚠️ 将军！国王正受到致命威胁！",
+  },
+};
+
 export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove, onMove }: Props) {
   const { t, locale } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
@@ -198,7 +217,7 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: ease.snap }}
         >
-          <span>👑 {locale === "ar" ? "كش مات! سقوط الملك وانتصار ساحق بالضربة القاضية • CHECKMATE!" : "CHECKMATE! THE KING HAS FALLEN!"} 👑</span>
+          <span>{CHESS_I18N.checkmate?.[locale] || CHESS_I18N.checkmate?.en}</span>
         </motion.div>
       ) : inCheck ? (
         <motion.div
@@ -207,7 +226,7 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: ease.snap }}
         >
-          <span>⚠️ {locale === "ar" ? "كش ملك! خطر يهدد الملك • CHECK!" : "CHECK! THE KING IS THREATENED!"}</span>
+          <span>{CHESS_I18N.check?.[locale] || CHESS_I18N.check?.en}</span>
         </motion.div>
       ) : null}
 

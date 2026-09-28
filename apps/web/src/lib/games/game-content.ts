@@ -517,6 +517,302 @@ export const GAMES_CONTENT: Record<string, GameContentRegistryItem> = {
           latencyProtection: "Real-time sync to protect turns.",
           fairPlayEngine: "Continuous monitoring against time abuse or collusion."
         }
+      },
+      es: {
+        title: "Ludo Competitivo (Ludo Royale)",
+        tagline: "Lanzamiento de dados táctico y la carrera hacia la seguridad",
+        coreCta: "DEMUESTRA. JUEGA. GANA.",
+        legalPrizeNotice: "Gana premios mediante competiciones de habilidad elegibles",
+        overview: [
+          "Ludo en Nizalo combina cálculo de probabilidades con tácticas avanzadas al mover fichas para asegurar tu camino y bloquear a tus rivales.",
+          "Todas las tiradas de dados están gobernadas por algoritmos criptográficos RNG para garantizar una imparcialidad total."
+        ],
+        rules: {
+          objective: "Llevar las 4 fichas al área de meta antes que tus oponentes.",
+          setup: "4 fichas por jugador en su respectiva base inicial.",
+          mechanics: [
+            "Lanza el dado para avanzar.",
+            "Obtener un 6 otorga un turno adicional y permite sacar una ficha de la base.",
+            "Aterrizar en la casilla de una ficha rival la envía de regreso a su base."
+          ],
+          victoryConditions: [
+            "Llevar todas las fichas con éxito a la meta.",
+            "Rendición del oponente."
+          ]
+        },
+        beginner: {
+          coreTips: [
+            "Mueve varias fichas en lugar de concentrarte en una sola para reducir riesgos.",
+            "Aprovecha las casillas seguras (con estrella) para proteger tus fichas."
+          ],
+          commonMistakes: [
+            "Dejar fichas vulnerables justo delante de fichas enemigas activas.",
+            "No planificar estratégicamente las tiradas extra de 6."
+          ]
+        },
+        strategy: {
+          openingPrinciples: [
+            "Despliega tantas fichas como sea posible al inicio del juego.",
+            "Distribuye el riesgo por todo el circuito del tablero."
+          ],
+          tacticalPatterns: [
+            "Sigue de cerca a los rivales para mantener una amenaza constante.",
+            "Forma barreras estratégicas para frenar el avance oponente."
+          ],
+          midgameCoordination: [
+            "Equilibra la agresión (capturas) con la defensa (carrera hacia la meta)."
+          ]
+        },
+        advancedStrategy: {
+          deepCalculation: [
+            "Calcula probabilidades de dados y distancias para minimizar riesgos.",
+            "Anticipa las trayectorias de avance de los rivales."
+          ],
+          clockManagement: [
+            "Juega con rapidez para evitar perder por tiempo en carreras finales ajustadas."
+          ],
+          endgameTechnique: [
+            "Mantén las fichas cerca de la recta final y minimiza movimientos expuestos."
+          ]
+        },
+        faq: [
+          {
+            question: "¿Cómo se garantiza la imparcialidad del dado?",
+            answer: "Utilizamos algoritmos RNG criptográficamente seguros y legalmente certificados."
+          }
+        ],
+        tournament: {
+          format: "Cuadros de eliminación directa y duelos rápidos de desafío.",
+          tieBreakers: "Muerte súbita basada en puntos totales de progreso.",
+          prizeDistribution: "Distribución automatizada de premios al finalizar la partida."
+        },
+        livePlay: {
+          matchmaking: "Emparejamiento por puntuación y nivel de habilidad garantizado.",
+          latencyProtection: "Sincronización en tiempo real para proteger cada turno.",
+          fairPlayEngine: "Monitoreo continuo contra el abuso de tiempo o colusión."
+        }
+      },
+      fr: {
+        title: "Ludo Compétitif (Ludo Royale)",
+        tagline: "Lancers de dés tactiques et course effrénée vers la victoire",
+        coreCta: "PROUVEZ. JOUEZ. GAGNEZ.",
+        legalPrizeNotice: "Gagnez des prix lors de compétitions d'adresse éligibles",
+        overview: [
+          "Le Ludo sur Nizalo fusionne chance calculée et tactiques affûtées dans le déplacement des pions pour sécuriser votre voie et barrer la route aux adversaires.",
+          "Tous les lancers de dés sont régis par un générateur de nombres aléatoires (RNG) cryptographique pour une équité absolue."
+        ],
+        rules: {
+          objective: "Amener ses 4 pions au triangle d'arrivée avant ses adversaires.",
+          setup: "4 pions par joueur dans leur base de départ respective.",
+          mechanics: [
+            "Lancez le dé pour avancer sur le parcours.",
+            "Obtenir un 6 donne un tour supplémentaire et libère un pion de la base.",
+            "Atterrir sur un pion adverse le renvoie directement à sa base de départ."
+          ],
+          victoryConditions: [
+            "Acheminer l'ensemble de ses pions dans le triangle d'arrivée.",
+            "Abandon de l'adversaire."
+          ]
+        },
+        beginner: {
+          coreTips: [
+            "Avancez plusieurs pions de front plutôt qu'un seul pour limiter la casse.",
+            "Exploitez les cases sécurisées (étoiles) pour mettre vos pions à l'abri."
+          ],
+          commonMistakes: [
+            "Laisser des pions vulnérables à portée de frappe de l'ennemi.",
+            "Négliger l'anticipation lors des lancers bonus consécutifs."
+          ]
+        },
+        strategy: {
+          openingPrinciples: [
+            "Sortir le maximum de pions dès l'obtention d'un 6.",
+            "Répartir les risques sur les différents quadrants du plateau."
+          ],
+          tacticalPatterns: [
+            "Emboîter le pas à l'adversaire pour maintenir une pression permanente.",
+            "Créer des barrages lorsque possible pour verrouiller le passage."
+          ],
+          midgameCoordination: [
+            "Doser subtilement l'agressivité (capture) et la prudence (course au centre)."
+          ]
+        },
+        advancedStrategy: {
+          deepCalculation: [
+            "Calculer les probabilités de tirage et les écarts de cases.",
+            "Prévoir les lignes de fuite et les angles morts de l'adversaire."
+          ],
+          clockManagement: [
+            "Maintenir une cadence dynamique pour ne pas se faire surprendre par le chrono."
+          ],
+          endgameTechnique: [
+            "Gérer méthodiquement les derniers pas vers le triangle d'arrivée sans s'exposer."
+          ]
+        },
+        faq: [
+          {
+            question: "Comment l'équité des dés est-elle garantie ?",
+            answer: "Nous utilisons un algorithme RNG cryptographique certifié sans aucune manipulation."
+          }
+        ],
+        tournament: {
+          format: "Arbres à élimination directe et défis rapides.",
+          tieBreakers: "Mort subite départagée aux points d'avancement.",
+          prizeDistribution: "Paiement instantané et automatique via notre registre sécurisé."
+        },
+        livePlay: {
+          matchmaking: "Appariement équilibré selon le classement et l'indice de performance.",
+          latencyProtection: "Synchronisation serveur en temps réel garantissant chaque tour.",
+          fairPlayEngine: "Surveillance algorithmique active contre l'obstruction ou la collusion."
+        }
+      },
+      hi: {
+        title: "प्रतियोगी लूडो (Ludo Royale)",
+        tagline: "पासे की रणनीतिक चाल और जीत की सुरक्षित दौड़",
+        coreCta: "साबित करें। खेलें। जीतें।",
+        legalPrizeNotice: "पात्र कौशल प्रतियोगिताओं के माध्यम से पुरस्कार अर्जित करें",
+        overview: [
+          "Nizalo पर लूडो गणितीय संभावनाओं और उच्च स्तरीय रणनीतिक चालों का संगम है, जहां हर गोटी की सुरक्षा और प्रतिद्वंद्वी को रोकना महत्वपूर्ण है।",
+          "पासे के सभी परिणाम क्रिप्टोग्राफ़िक रूप से सुरक्षित RNG द्वारा पूरी निष्पक्षता के साथ निर्धारित किए जाते हैं।"
+        ],
+        rules: {
+          objective: "अपने सभी 4 मोहरों को विरोधियों से पहले गृह (Home) त्रिभुज तक पहुंचाना।",
+          setup: "प्रत्येक खिलाड़ी के लिए उनके बेस में 4 मोहरे।",
+          mechanics: [
+            "आगे बढ़ने के लिए पासा फेंकें।",
+            "6 आने पर अतिरिक्त चाल मिलती है और बेस से गोटी बाहर निकलती है।",
+            "विरोधी की गोटी पर उतरने से वह कटकर पुनः बेस में लौट जाती है।"
+          ],
+          victoryConditions: [
+            "सभी 4 मोहरों को सफलतापूर्वक होम में पहुंचाना।",
+            "विरोधी का खेल छोड़ना (Resignation)।"
+          ]
+        },
+        beginner: {
+          coreTips: [
+            "एक ही गोटी पर ध्यान देने के बजाय कई मोहरों को आगे बढ़ाएं।",
+            "सुरक्षित खानों (स्टार) का उपयोग करके अपनी गोटियों को बचाएं।"
+          ],
+          commonMistakes: [
+            "सक्रिय विरोधी मोहरों के ठीक सामने अपनी गोटी असुरक्षित छोड़ना।",
+            "अतिरिक्त चालों का रणनीतिक लाभ न उठाना।"
+          ]
+        },
+        strategy: {
+          openingPrinciples: [
+            "6 आने पर जल्द से जल्द अधिक से अधिक गोटियां बाहर निकालें।",
+            "बोर्ड पर विभिन्न स्थानों पर जोखिम का संतुलन बनाएं।"
+          ],
+          tacticalPatterns: [
+            "विरोधी की गोटी का लगातार पीछा करना और दबाव बनाए रखना।",
+            "आगे बढ़ने से रोकने के लिए अवरोध बनाना।"
+          ],
+          midgameCoordination: [
+            "आक्रमण (गोटी काटना) और रक्षा (घर की ओर दौड़) के बीच संतुलन।"
+          ]
+        },
+        advancedStrategy: {
+          deepCalculation: [
+            "पासे की संभावनाओं और दूरियों की सटीक गणना।",
+            "विरोधी के संभावित रास्तों का पूर्वानुमान।"
+          ],
+          clockManagement: [
+            "समय समाप्ति से बचने के लिए समय पर सटीक और त्वरित निर्णय लें।"
+          ],
+          endgameTechnique: [
+            "अंतिम चरण में गोटियों को सुरक्षित रखते हुए अंतिम त्रिभुज में प्रवेश कराएं।"
+          ]
+        },
+        faq: [
+          {
+            question: "पासे की निष्पक्षता कैसे सुनिश्चित की जाती है?",
+            answer: "हम कानूनी रूप से प्रमाणित और क्रिप्टोग्राफ़िक रूप से सुरक्षित RNG एल्गोरिदम का उपयोग करते हैं।"
+          }
+        ],
+        tournament: {
+          format: "सिंगल एलिमिनेशन ब्रैकेट और त्वरित चुनौती मुकाबले।",
+          tieBreakers: "प्रगति अंकों के आधार पर सडन डेथ निर्णय।",
+          prizeDistribution: "मैच पूर्ण होते ही स्वचालित पुरस्कार वितरण।"
+        },
+        livePlay: {
+          matchmaking: "सटीक रेटिंग और कौशल स्तर के आधार पर संतुलित मैच।",
+          latencyProtection: "कम लेटेंसी और सुरक्षित टर्न सिंक्रोनाइज़ेशन।",
+          fairPlayEngine: "समय के दुरुपयोग और मिलीभगत के खिलाफ निरंतर निगरानी।"
+        }
+      },
+      zh: {
+        title: "竞技飞行棋霸主 (Ludo Royale)",
+        tagline: "精准骰术与直捣黄龙的战术竞速",
+        coreCta: "PROVE. PLAY. WIN.",
+        legalPrizeNotice: "earn prizes through eligible skill competitions",
+        overview: [
+          "Nizalo 飞行棋完美融合了运筹帷幄的概率计算与棋子调度的高端策略，保护前行路线并精准围剿截击对手。",
+          "所有骰子点数均由高标准密码学可验证随机数引擎（RNG）裁决，百分之百保障公平竞技。"
+        ],
+        rules: {
+          objective: "抢在对手之前，将全部4枚棋子安全护送至中央大本营终点三角区。",
+          setup: "对阵双方在各自停机坪基地分别部署4枚专属战棋。",
+          mechanics: [
+            "掷骰决定步数按顺时针航道前行。",
+            "掷出6点获得一次额外掷骰机会，并可起飞一枚基地棋子至起跑点。",
+            "落子在敌方棋子所在格可实施击退，将其打回停机坪基地重新起跑。"
+          ],
+          victoryConditions: [
+            "全部4枚战棋均成功抵达终点大本营。",
+            "对手弃权认输。"
+          ]
+        },
+        beginner: {
+          coreTips: [
+            "多子协同推进，避免孤军深入导致中途受挫。",
+            "充分依托星号安全保护格（Safe Squares）规避敌方火力截击。"
+          ],
+          commonMistakes: [
+            "在敌方活跃棋子射程内暴露无保护的单兵弱子。",
+            "连续掷出6点时未做全局收益最优分配。"
+          ]
+        },
+        strategy: {
+          openingPrinciples: [
+            "尽早掷出6点起飞多枚战棋，盘活全局棋力。",
+            "分散全图风险，避免被对手单一卡位造成全盘停滞。"
+          ],
+          tacticalPatterns: [
+            "紧咬敌方尾部形成持续击退威胁。",
+            "在安全关键隘口构筑路障，拖延对手冲刺节奏。"
+          ],
+          midgameCoordination: [
+            "权衡猎杀敌子与全速冲刺终点的大局节奏。"
+          ]
+        },
+        advancedStrategy: {
+          deepCalculation: [
+            "深度推演骰子概率与前后格间距，选择数学期望最高的落子决策。",
+            "预判对手走子路线，提前设卡封堵。"
+          ],
+          clockManagement: [
+            "保持敏锐明快的思考节奏，确保决胜残局保有充裕用时。"
+          ],
+          endgameTechnique: [
+            "精准计算进舱步数，规避走空浪费回合。"
+          ]
+        },
+        faq: [
+          {
+            question: "如何确保骰子绝对公平？",
+            answer: "系统采用国际认证的工业级加密 RNG 随机数生成器，杜绝任何本地或人为操控。"
+          }
+        ],
+        tournament: {
+          format: "单败淘汰赛制与极速夺宝挑战对局。",
+          tieBreakers: "根据棋子推进总点数进行平局猝死决胜。",
+          prizeDistribution: "对局结束后由智能账本即时结算并派发奖金。"
+        },
+        livePlay: {
+          matchmaking: "基于天梯 ELO 实力评分的毫秒级公平匹配。",
+          latencyProtection: "权威服务器时钟同频防回滚机制。",
+          fairPlayEngine: "全天候防拖延与防作弊守护引擎。"
+        }
       }
     }
   },

@@ -23,7 +23,9 @@
     "admin": "Administración",
     "arena": "Arena",
     "clans": "Clanes",
-    "deposit": "Depositar"
+    "deposit": "Depositar",
+    "store": "Tienda",
+    "battle_pass": "Pase de Batalla"
   },
   "footer": {
     "learn": "Aprender",
@@ -132,6 +134,11 @@
         "description": "Cinco fichas en línea — recta, diagonal, en cualquier parte del tablero — antes que tu rival.",
         "duration": "10–20 min",
         "mode": "1v1 · Clasificatoria o libre"
+      },
+      "ludo": {
+        "description": "¡La carrera definitiva al centro! Evita trampas y lleva tus fichas a la victoria en Ludo Royale.",
+        "mode": "Táctico",
+        "duration": "15-30 mins"
       }
     },
     "how": {
@@ -238,7 +245,8 @@
       "backgammon": "Backgammón",
       "seega": "Seega",
       "reversi": "Reversi",
-      "gomoku": "Gomoku"
+      "gomoku": "Gomoku",
+      "ludo": "Ludo Royale"
     },
     "unknown_game": "Juego desconocido."
   },
@@ -527,6 +535,11 @@
       "desc_american": "Americano (All-Fives): Puntúa múltiplos de 5 en extremos abiertos.",
       "traditional": "Tradicional",
       "american": "Americano (All-Fives)"
+    },
+    "ludo": {
+      "variant_heading": "Jugadores",
+      "desc_2p": "Duelo Clásico 1vs1",
+      "desc_4p": "Todos contra Todos (4 Jugadores)"
     }
   },
   "dashboard": {
@@ -617,7 +630,11 @@
       "GAMMON": "Gammon",
       "BACKGAMMON": "Backgammon",
       "ALL_CAPTURED": "Todas las fichas capturadas",
-      "FIVE_IN_A_ROW": "Cinco en línea"
+      "FIVE_IN_A_ROW": "Cinco en línea",
+      "DOUBLE_DROPPED": "El rival rechazó la duplicación / Concedido",
+      "ALL_FIVES_TARGET_REACHED": "Puntuación objetivo de All-Fives alcanzada",
+      "LUDO_FINISHED": "Todas las fichas llegaron al triángulo de meta",
+      "MAHBOUSA_CAPTURED": "Todas las fichas rivales atrapadas o retiradas"
     },
     "rematch": "Revancha",
     "new_opponent": "Nuevo rival",
@@ -1391,7 +1408,8 @@
     "mode_ai": "IA",
     "mode_duel": "Duelo 1v1",
     "mode_tournaments": "Torneos",
-    "start_game": "Iniciar juego"
+    "start_game": "Iniciar juego",
+    "meta_ludo": "Leyendas de Ludo • Carrera y Emoción"
   },
   "upcoming_tournaments": {
     "badge": "⚔️ Gran Arena Esports • Torneos Oficiales",

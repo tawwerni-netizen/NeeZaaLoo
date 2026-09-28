@@ -89,8 +89,60 @@ function DominoTile({
   );
 }
 
+const DOMINOES_I18N: Record<string, {
+  scoreToast: (points: number) => string;
+  you: string;
+  opponent: string;
+  tabClassic: string;
+  tabAllFives: string;
+}> = {
+  ar: {
+    scoreToast: (p) => `🔥 +${p} نقطة مضاعف خمسات!`,
+    you: "👤 نقاطك:",
+    opponent: "🤖 الخصم:",
+    tabClassic: "🀄 سحب وتنزيل (عادي)",
+    tabAllFives: "⚡ ضمنة أمريكاني (All-Fives 55)",
+  },
+  en: {
+    scoreToast: (p) => `🔥 +${p} All-Fives Multiplier!`,
+    you: "👤 You:",
+    opponent: "🤖 Opponent:",
+    tabClassic: "🀄 Draw / Block (Classic)",
+    tabAllFives: "⚡ American All-Fives 55",
+  },
+  es: {
+    scoreToast: (p) => `🔥 +${p} ¡Multiplicador All-Fives!`,
+    you: "👤 Tú:",
+    opponent: "🤖 Rival:",
+    tabClassic: "🀄 Robo / Bloqueo (Clásico)",
+    tabAllFives: "⚡ All-Fives 55 Americano",
+  },
+  fr: {
+    scoreToast: (p) => `🔥 +${p} Multiplicateur All-Fives !`,
+    you: "👤 Vous :",
+    opponent: "🤖 Adversaire :",
+    tabClassic: "🀄 Pioche / Blocage (Classique)",
+    tabAllFives: "⚡ All-Fives 55 Américain",
+  },
+  hi: {
+    scoreToast: (p) => `🔥 +${p} ऑल-फाइव्स गुणक!`,
+    you: "👤 आप:",
+    opponent: "🤖 विरोधी:",
+    tabClassic: "🀄 ड्रॉ / ब्लॉक (क्लासिक)",
+    tabAllFives: "⚡ अमेरिकन ऑल-फाइव्स 55",
+  },
+  zh: {
+    scoreToast: (p) => `🔥 +${p} 5的倍数得分！`,
+    you: "👤 你的积分:",
+    opponent: "🤖 对手积分:",
+    tabClassic: "🀄 摸牌 / 封牌 (传统)",
+    tabAllFives: "⚡ 美式倍数 (All-Fives 55)",
+  },
+};
+
 export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, mySeat, canMove, onMove }: Props) {
   const { t, locale } = useI18n();
+  const strings = (DOMINOES_I18N[locale] ?? DOMINOES_I18N["en"])!;
   const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<Tile | null>(null);
   const [slam, setSlam] = useState(false);
@@ -123,7 +175,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
       playAllFivesScoreSound(sum);
       if (mySeat === 0) setP0Score((s) => s + sum);
       else setP1Score((s) => s + sum);
-      const text = locale === "ar" ? `🔥 +${sum} نقطة مضاعف خمسات!` : `🔥 +${sum} All-Fives Multiplier!`;
+      const text = strings.scoreToast(sum);
       setScoreToast({ points: sum, text });
       setTimeout(() => setScoreToast(null), 3000);
     }
@@ -189,14 +241,14 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
           className={[styles.variantTab, variant === "classic" ? styles.variantTabActive : ""].join(" ")}
           onClick={() => setVariant("classic")}
         >
-          {locale === "ar" ? "🀄 ضمنة عادية (Draw/Block)" : "🀄 Classic Draw & Block"}
+          {strings.tabClassic}
         </button>
         <button
           type="button"
           className={[styles.variantTab, variant === "all_fives" ? styles.variantTabActive : ""].join(" ")}
           onClick={() => setVariant("all_fives")}
         >
-          {locale === "ar" ? "⚡ ضمنة أمريكاني (All-Fives 55)" : "⚡ American All-Fives 55"}
+          {strings.tabAllFives}
         </button>
       </div>
 
@@ -204,7 +256,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
       {variant === "all_fives" && (
         <div className={styles.scoreboard55}>
           <div className={styles.scoreItem}>
-            <span>{locale === "ar" ? "👤 نقاطك:" : "👤 You:"}</span>
+            <span>{strings.you}</span>
             <span className={styles.scoreNumber}>{mySeat === 0 ? p0Score : p1Score}</span>
             <span className={styles.scoreTarget}>/ 50</span>
           </div>
@@ -214,7 +266,7 @@ export function DominoesBoard({ line, handCounts, hand, mustPlayTile, canPass, m
             </div>
           )}
           <div className={styles.scoreItem}>
-            <span>{locale === "ar" ? "🤖 الخصم:" : "🤖 Opponent:"}</span>
+            <span>{strings.opponent}</span>
             <span className={styles.scoreNumber}>{mySeat === 0 ? p1Score : p0Score}</span>
             <span className={styles.scoreTarget}>/ 50</span>
           </div>

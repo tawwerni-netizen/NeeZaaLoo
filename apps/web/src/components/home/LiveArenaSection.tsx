@@ -23,9 +23,35 @@ type LiveMatch = {
 const POLL_MS = 10000;
 const PREVIEW_LIMIT = 6;
 
+const EMPTY_ARENA_I18N = {
+  title: {
+    ar: "الميدان التنافسي بانتظار بطله الأول!",
+    en: "The Arena Awaits Its First Champion!",
+    es: "¡La arena competitiva espera a su primer campeón!",
+    fr: "L'arène compétitive attend son premier champion !",
+    hi: "प्रतिस्पर्धी अखाड़ा अपने पहले चैंपियन की प्रतीक्षा कर रहा है!",
+    zh: "竞技擂台正在等待首位霸主登顶！",
+  },
+  sub: {
+    ar: "لا توجد مباريات جارية في هذه اللحظة. أطلق أول نزال بمبلغ 5$ واكسب 8.80$ فوراً!",
+    en: "No live duels active right now. Launch a challenge with $5 and win $8.80 instantly!",
+    es: "No hay duelos activos en este momento. ¡Lanza un desafío con $5 y gana $8.80 al instante!",
+    fr: "Aucun duel actif pour l'instant. Lancez un défi avec 5 $ et gagnez instantanément 8,80 $ !",
+    hi: "इस समय कोई सीधा मुकाबला सक्रिय नहीं है। $5 से चुनौती शुरू करें और तुरंत $8.80 जीतें!",
+    zh: "当前暂无进行中的比赛。立即用 $5 发起挑战，赢取 $8.80 丰厚奖金！",
+  },
+  cta: {
+    ar: "⚡ ادخل ميدان التحديات واكسب الجائزة",
+    en: "⚡ Enter Arena & Win Now",
+    es: "⚡ Entrar a la Arena y Ganar Ahora",
+    fr: "⚡ Entrer dans l'Arène et Gagner",
+    hi: "⚡ अखाड़े में प्रवेश करें और अभी जीतें",
+    zh: "⚡ 即刻进入赛场赢取大奖",
+  },
+};
+
 export function LiveArenaSection() {
-  const { t, dir } = useI18n();
-  const isRtl = dir === "rtl";
+  const { t, locale } = useI18n();
   const [matches, setMatches] = useState<LiveMatch[] | null>(null);
 
   useEffect(() => {
@@ -40,6 +66,10 @@ export function LiveArenaSection() {
     const interval = setInterval(load, POLL_MS);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
+
+  const emptyTitle = (EMPTY_ARENA_I18N.title as Record<string, string>)[locale] || EMPTY_ARENA_I18N.title.en;
+  const emptySub = (EMPTY_ARENA_I18N.sub as Record<string, string>)[locale] || EMPTY_ARENA_I18N.sub.en;
+  const emptyCta = (EMPTY_ARENA_I18N.cta as Record<string, string>)[locale] || EMPTY_ARENA_I18N.cta.en;
 
   return (
     <section className={styles.section}>
@@ -62,17 +92,11 @@ export function LiveArenaSection() {
           <div className={styles.emptyCard}>
             <div className={styles.emptyIcon}>⚔️</div>
             <div className={styles.emptyContent}>
-              <h3 className={styles.emptyTitle}>
-                {isRtl ? "الميدان التنافسي بانتظار بطله الأول!" : "The Arena Awaits Its First Champion!"}
-              </h3>
-              <p className={styles.emptySub}>
-                {isRtl
-                  ? "لا توجد مباريات جارية في هذه اللحظة. أطلق أول نزال بمبلغ 5$ واكسب 8.80$ فوراً!"
-                  : "No live duels active right now. Launch a challenge with $5 and win $8.80 instantly!"}
-              </p>
+              <h3 className={styles.emptyTitle}>{emptyTitle}</h3>
+              <p className={styles.emptySub}>{emptySub}</p>
             </div>
             <LocaleLink href="/play" className={styles.emptyCta}>
-              <span>{isRtl ? "⚡ ادخل ميدان التحديات واكسب الجائزة" : "⚡ Enter Arena & Win Now"}</span>
+              <span>{emptyCta}</span>
             </LocaleLink>
           </div>
         ) : (

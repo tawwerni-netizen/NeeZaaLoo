@@ -21,6 +21,25 @@ type Props = {
   onMove: (move: string) => void;
 };
 
+const CHECKERS_I18N: Record<string, Record<string, string>> = {
+  multiJump: {
+    ar: "🔥 أكل متتالي إجباري • MULTI-JUMP",
+    en: "🔥 MANDATORY MULTI-JUMP CHAIN!",
+    es: "🔥 ¡CADENA DE CAPTURA OBLIGATORIA!",
+    fr: "🔥 RAFLE OBLIGATOIRE EN CHAÎNE !",
+    hi: "🔥 अनिवार्य बहु-कूद श्रृंखला!",
+    zh: "🔥 强制连跳吃子连击！",
+  },
+  coronation: {
+    ar: "👑 تتويج ملكي! ظهور ملك جديد في المعركة • KING CROWNED! 👑",
+    en: "👑 ROYAL CORONATION! A NEW KING ARISES! 👑",
+    es: "👑 ¡CORONACIÓN REAL! ¡SURGE UN NUEVO REY! 👑",
+    fr: "👑 COURONNEMENT ROYAL ! UN NOUVEAU ROI S'ÉLÈVE ! 👑",
+    hi: "👑 शाही राज्याभिषेक! एक नया राजा उभरा है! 👑",
+    zh: "👑 王者加冕！新棋王傲视全场！ 👑",
+  },
+};
+
 export function CheckersPieceSvg({ isKing, seat }: { isKing: boolean; seat: "0" | "1" }) {
   const isRed = seat === "0";
   const gradId = isRed ? "chk-red-grad" : "chk-dark-grad";
@@ -200,7 +219,7 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
       {forcedFrom && (
         <div className={styles.multiJumpBanner}>
           <span className={styles.multiJumpPulseDot} />
-          <span>{locale === "ar" ? "🔥 أكل متتالي إجباري • MULTI-JUMP" : "🔥 MANDATORY MULTI-JUMP CHAIN!"}</span>
+          <span>{CHECKERS_I18N.multiJump?.[locale] || CHECKERS_I18N.multiJump?.en}</span>
         </div>
       )}
 
@@ -213,7 +232,7 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
             exit={{ opacity: 0, scale: 0.8, y: -10 }}
             transition={{ duration: 0.3 }}
           >
-            <span>👑 {locale === "ar" ? "تتويج ملكي! ظهور ملك جديد في المعركة • KING CROWNED!" : "ROYAL CORONATION! A NEW KING ARISES!"} 👑</span>
+            <span>{CHECKERS_I18N.coronation?.[locale] || CHECKERS_I18N.coronation?.en}</span>
           </motion.div>
         )}
       </AnimatePresence>
