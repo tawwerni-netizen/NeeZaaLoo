@@ -22,6 +22,7 @@ coverage/
 data/
 .neon
 .server.pid
+.nizalo-master.pid
 .claude/
 *.apk
 !apps/web/public/*.apk

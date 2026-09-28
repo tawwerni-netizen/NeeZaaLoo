@@ -173,16 +173,47 @@ const children = {};
 let isShuttingDown = false;
 let isLeader = false;
 let leaderWatcherTimer = null;
+let leaderHeartbeatTimer = null;
+let consecutiveRefusedErrors = 0;
 
 const LOCK_FILE = path.join(here, ".nizalo-master.pid");
+const LOCK_TIMEOUT_MS = 6000; // 6 seconds without heartbeat = stale leader lock
 
 function isPidAlive(pid) {
-  if (!pid || typeof pid !== "number") return false;
+  if (!pid || typeof pid !== "number" || isNaN(pid) || pid <= 0) return false;
   try {
     process.kill(pid, 0);
-    return true;
   } catch {
     return false;
+  }
+  if (process.platform === "linux") {
+    try {
+      const status = fs.readFileSync(`/proc/${pid}/status`, "utf8");
+      // Check for zombie state 'State: Z (zombie)'
+      if (/State:\s+[Zz]/i.test(status)) return false;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
+function startLeaderHeartbeat() {
+  if (leaderHeartbeatTimer) clearInterval(leaderHeartbeatTimer);
+  leaderHeartbeatTimer = setInterval(() => {
+    if (isShuttingDown || !isLeader) {
+      clearInterval(leaderHeartbeatTimer);
+      leaderHeartbeatTimer = null;
+      return;
+    }
+    try {
+      fs.writeFileSync(LOCK_FILE, JSON.stringify({ pid: process.pid, time: Date.now() }));
+    } catch (e) {
+      console.warn("[master] Failed to write leader heartbeat:", e.message);
+    }
+  }, 2000);
+  if (typeof leaderHeartbeatTimer.unref === "function") {
+    leaderHeartbeatTimer.unref();
   }
 }
 
@@ -194,9 +225,10 @@ function isPidAlive(pid) {
  * Follower proxy workers forwarding requests without port collisions.
  */
 function acquireLeaderLock() {
+  const now = Date.now();
   try {
     const fd = fs.openSync(LOCK_FILE, "wx");
-    fs.writeFileSync(fd, JSON.stringify({ pid: process.pid, time: Date.now() }));
+    fs.writeFileSync(fd, JSON.stringify({ pid: process.pid, time: now }));
     fs.closeSync(fd);
     return { isLeader: true };
   } catch (err) {
@@ -204,16 +236,21 @@ function acquireLeaderLock() {
       try {
         const raw = fs.readFileSync(LOCK_FILE, "utf8");
         const data = JSON.parse(raw);
-        if (data && data.pid && isPidAlive(data.pid)) {
+        if (data && data.pid) {
+          const alive = isPidAlive(data.pid);
+          const recent = data.time && (now - data.time < LOCK_TIMEOUT_MS);
           if (data.pid === process.pid) return { isLeader: true };
-          return { isLeader: false, leaderPid: data.pid };
+          if (alive && recent) {
+            return { isLeader: false, leaderPid: data.pid };
+          }
+          console.warn(`[master] Stale leader lock detected (PID ${data.pid}, alive=${alive}, age=${now - (data.time || 0)}ms). Reclaiming leadership.`);
         }
       } catch {}
-      // Lock file is stale (previous leader died)
+      // Lock file is stale (previous leader died or stopped heartbeating)
       try { fs.unlinkSync(LOCK_FILE); } catch {}
       try {
         const fd = fs.openSync(LOCK_FILE, "wx");
-        fs.writeFileSync(fd, JSON.stringify({ pid: process.pid, time: Date.now() }));
+        fs.writeFileSync(fd, JSON.stringify({ pid: process.pid, time: now }));
         fs.closeSync(fd);
         return { isLeader: true };
       } catch {
@@ -471,6 +508,9 @@ function shutdown() {
     if (leaderWatcherTimer) clearInterval(leaderWatcherTimer);
   } catch {}
   try {
+    if (leaderHeartbeatTimer) clearInterval(leaderHeartbeatTimer);
+  } catch {}
+  try {
     if (isLeader && fs.existsSync(LOCK_FILE)) {
       const raw = fs.readFileSync(LOCK_FILE, "utf8");
       const data = JSON.parse(raw);
@@ -550,7 +590,7 @@ function proxyHttp(req, res, targetPort, attempt = 1) {
   }
 
   const isGetOrHead = req.method === "GET" || req.method === "HEAD";
-  const maxRetries = 20; // 20 * 200ms = 4000ms buffer for warm-up/startup
+  const maxRetries = 25; // 25 * 200ms = 5000ms buffer for warm-up/startup
 
   const proxyReq = http.request(
     {
@@ -563,6 +603,7 @@ function proxyHttp(req, res, targetPort, attempt = 1) {
       agent:    keepAliveAgent,
     },
     (proxyRes) => {
+      consecutiveRefusedErrors = 0;
       if (proxyRes.statusCode >= 400 || process.env.DEBUG_PROXY === "1") {
         console.log(`[HTTP ${proxyRes.statusCode}] ${req.method} ${req.url}`);
       }
@@ -599,13 +640,31 @@ function proxyHttp(req, res, targetPort, attempt = 1) {
       return;
     }
 
+    // Follower self-healing: if repeated ECONNREFUSED occurs on backend ports, check if leader is dead
+    if (err.code === "ECONNREFUSED" && !isLeader && !isShuttingDown) {
+      consecutiveRefusedErrors++;
+      if (consecutiveRefusedErrors >= 6) {
+        consecutiveRefusedErrors = 0;
+        console.warn(`[master] 6 consecutive ECONNREFUSED on port ${targetPort}. Checking if supervisor died...`);
+        const status = acquireLeaderLock();
+        if (status.isLeader) {
+          if (leaderWatcherTimer) { clearInterval(leaderWatcherTimer); leaderWatcherTimer = null; }
+          console.log(`[master] Promoted to leader supervisor (PID ${process.pid}) after backend connection failures. Booting services.`);
+          bootServicesAsLeader();
+        }
+      }
+    }
+
     console.error(`[Proxy->${targetPort} Error] (attempt ${attempt}) ${req.method} ${req.url}:`, err.message);
     if (!res.headersSent && !res.writableEnded) {
       const acceptsHtml = req.headers["accept"] && req.headers["accept"].includes("text/html");
-      if (acceptsHtml && req.method === "GET") {
-        res.writeHead(502, {
+      const isRootOrHtml = req.method === "GET" && (req.url === "/" || acceptsHtml);
+      if (isRootOrHtml) {
+        // Return 200 OK so Hostinger and Cloudflare watchdogs recognize the web service as alive and do NOT abort the deployment
+        res.writeHead(200, {
           "Content-Type": "text/html; charset=utf-8",
           "Retry-After": "2",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
         });
         res.end(`<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -632,8 +691,12 @@ function proxyHttp(req, res, targetPort, attempt = 1) {
 </body>
 </html>`);
       } else {
-        res.writeHead(502, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: { code: "BAD_GATEWAY", message: "Service starting up, please retry" } }));
+        res.writeHead(503, {
+          "Content-Type": "application/json",
+          "Retry-After": "2",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+        });
+        res.end(JSON.stringify({ error: { code: "SERVICE_WARMING_UP", message: "Platform is starting up, please retry in 2 seconds" } }));
       }
     }
   });
@@ -940,12 +1003,20 @@ function bootServicesAsLeader() {
   if (isShuttingDown) return;
   isLeader = true;
   console.log(`[master] Elected as leader supervisor (PID ${process.pid}). Initializing child services.`);
+  startLeaderHeartbeat();
   evictStaleOrphans();
 
-  startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
+  // Stagger child service startup to eliminate CPU/IO starvation
   startProcess("API",     apiScript,    apiPort);
-  startProcess("Gateway", gwScript,     gwPort);
-  startProcess("Worker",  workerScript, workerPort);
+  setTimeout(() => {
+    if (!isShuttingDown) startProcess("Next.js", nextScript, nextPort, path.dirname(nextScript));
+  }, 350);
+  setTimeout(() => {
+    if (!isShuttingDown) startProcess("Gateway", gwScript,   gwPort);
+  }, 700);
+  setTimeout(() => {
+    if (!isShuttingDown) startProcess("Worker",  workerScript, workerPort);
+  }, 1050);
 }
 
 function startFollowerWatcher() {
@@ -953,6 +1024,7 @@ function startFollowerWatcher() {
   leaderWatcherTimer = setInterval(() => {
     if (isShuttingDown) {
       clearInterval(leaderWatcherTimer);
+      leaderWatcherTimer = null;
       return;
     }
     const status = acquireLeaderLock();
@@ -962,7 +1034,7 @@ function startFollowerWatcher() {
       console.log(`[master] Promoted to leader supervisor (PID ${process.pid}). Starting child services...`);
       bootServicesAsLeader();
     }
-  }, 3000);
+  }, 2000);
   if (typeof leaderWatcherTimer.unref === "function") {
     leaderWatcherTimer.unref();
   }
