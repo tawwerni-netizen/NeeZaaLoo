@@ -71,6 +71,24 @@
   margin: 0;
 }
 
+.reasonBadgeWrap {
+  margin-top: 4px;
+}
+
+.reasonBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(201, 151, 46, 0.25) 100%);
+  border: 1.5px solid rgba(255, 215, 0, 0.6);
+  border-radius: var(--nz-radius-pill, 999px);
+  color: #ffd700;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
+}
+
 .achievements {
   display: flex;
   flex-direction: column;

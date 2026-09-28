@@ -133,7 +133,23 @@ export function ResultCeremony({
       >
         {isSpectator ? `${result} · ${reason ? t(`game.reason.${reason}`) : ""}` : t(titleKey)}
       </motion.h1>
-      {!isSpectator && reason && <p className={styles.reason}>{t(`game.reason.${reason}`)}</p>}
+      {!isSpectator && reason && (
+        <div className={styles.reasonBadgeWrap}>
+          <span className={styles.reasonBadge}>
+            {reason === "BACKGAMMON" ? (locale === "ar" ? "👑 انتصار باكغامون إمبراطوري ثلاثي (3x)!" : "👑 Imperial Backgammon Win (3x)!") :
+             reason === "GAMMON" ? (locale === "ar" ? "🔥 انتصار غامون مضاعف ساحق (2x)!" : "🔥 Crushing Gammon Win (2x)!") :
+             reason === "DOUBLE_DROPPED" ? (locale === "ar" ? "⚡ استسلام الخصم بعد مضاعفة الرهان!" : "⚡ Opponent Conceded to Double!") :
+             reason === "CHECKMATE" ? (locale === "ar" ? "👑 كش مات! سقوط الملك بالضربة القاضية" : "👑 Checkmate! King Knockout") :
+             reason === "DOMINO_OUT" ? (locale === "ar" ? "🀄 دومينو خارج! تفريغ البلاطات بالكامل" : "🀄 Domino Out! Hand Cleared") :
+             reason === "ALL_FIVES_TARGET_REACHED" ? (locale === "ar" ? "⚡ انتصار ساحق بسقف نقاط الخمسات 55!" : "⚡ All-Fives Target Score Victory!") :
+             reason === "LUDO_FINISHED" ? (locale === "ar" ? "🏆 تتويج أسطوري! وصول القواطع للمثلث الذهبي" : "🏆 Ludo Champion! All Tokens Home") :
+             reason === "MAHBOUSA_CAPTURED" ? (locale === "ar" ? "🔒 حَبْس واستنزاف كافة أقراص الخصم!" : "🔒 All Checkers Pinned & Borne Off!") :
+             reason === "FOUR_IN_A_ROW" ? (locale === "ar" ? "🎯 رباعية نصر تكتيكية بالجاذبية" : "🎯 Connect Four Victory!") :
+             reason === "FIVE_IN_A_ROW" ? (locale === "ar" ? "☯️ خمسة أحجار زن متصلة" : "☯️ 5-in-a-row Zen Master!") :
+             t(`game.reason.${reason}`)}
+          </span>
+        </div>
+      )}
 
       {!isSpectator && delta && delta.newAchievements.length > 0 && (
         <motion.div

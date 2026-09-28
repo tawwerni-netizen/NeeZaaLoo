@@ -642,7 +642,11 @@
       "GAMMON": "Gammon",
       "BACKGAMMON": "Backgammon",
       "ALL_CAPTURED": "All pieces captured",
-      "FIVE_IN_A_ROW": "Five in a row"
+      "FIVE_IN_A_ROW": "Five in a row",
+      "DOUBLE_DROPPED": "Doubling Stakes Dropped / Conceded",
+      "ALL_FIVES_TARGET_REACHED": "All-Fives Target Score Reached",
+      "LUDO_FINISHED": "All Tokens Reached Home Triangle",
+      "MAHBOUSA_CAPTURED": "All Enemy Checkers Pinned / Borne Off"
     },
     "rematch": "Rematch",
     "new_opponent": "New opponent",

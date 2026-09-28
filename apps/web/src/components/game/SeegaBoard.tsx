@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { useVisualSettings } from "./TableEnvironment";
 import { playSeegaMoveSound, playSeegaCaptureSound } from "@/lib/game-audio";
@@ -60,6 +60,22 @@ export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, 
   const { t, locale } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<number | null>(null);
+  const [ambushText, setAmbushText] = useState<string | null>(null);
+
+  const stoneCount = useMemo(() => board.filter((b) => b !== 0).length, [board]);
+  const prevStoneCount = useRef<number>(stoneCount);
+
+  useEffect(() => {
+    if (phase === "MOVEMENT" && prevStoneCount.current > stoneCount) {
+      playSeegaCaptureSound();
+      const text = locale === "ar"
+        ? "⚔️ إطباق تكتيكي فرعوني! تم أسر حجر الخصم بالحصر"
+        : "⚔️ Pharaonic Ambush! Opponent stone captured!";
+      setAmbushText(text);
+      setTimeout(() => setAmbushText(null), 2800);
+    }
+    prevStoneCount.current = stoneCount;
+  }, [stoneCount, phase, locale]);
 
   const destinationsFromSelected = useMemo(() => {
     if (selected === null) return new Set<number>();
@@ -104,6 +120,11 @@ export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, 
       </div>
 
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
+        {ambushText && (
+          <div className={styles.ambushBanner}>
+            {ambushText}
+          </div>
+        )}
         <div className={styles.sandstoneSlab}>
           <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>
             {board.map((mark, idx) => {

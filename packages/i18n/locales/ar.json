@@ -630,7 +630,11 @@
       "GAMMON": "غامون",
       "BACKGAMMON": "باكغامون",
       "ALL_CAPTURED": "تم أسر جميع القطع",
-      "FIVE_IN_A_ROW": "خمسة متتالية"
+      "FIVE_IN_A_ROW": "خمسة متتالية",
+      "DOUBLE_DROPPED": "انسحاب الخصم من مضاعفة الرهان",
+      "ALL_FIVES_TARGET_REACHED": "بلوغ سقف نقاط الخمسات (All-Fives)",
+      "LUDO_FINISHED": "إيصال كافة القواطع للمثلث الذهبي",
+      "MAHBOUSA_CAPTURED": "حَبْس واستنزاف كافة أقراص الخصم"
     },
     "rematch": "مباراة أخرى",
     "new_opponent": "خصم جديد",
