@@ -88,6 +88,7 @@ import {
 } from "../../../packages/observability/src/index.mjs";
 import fs from "node:fs";
 import path from "node:path";
+import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
   createObservabilityServer, installGracefulShutdown, requireEnv, loadOrGenerateKey, workerIdentity,
@@ -435,22 +436,37 @@ async function main() {
   const host = process.env.HOST || "0.0.0.0";
   const port = Number(process.env.PORT || 4000);
   // Retry binding on EADDRINUSE: Hostinger overlapping deployments may leave
-  // the old API holding port 4000 briefly. Wait up to 30s.
+  // the old API holding port 4000 briefly. Wait up to 60s.
   {
-    const deadline = Date.now() + 30_000;
+    api.server.setMaxListeners(100);
+    const deadline = Date.now() + 60_000;
     while (true) {
       try {
         await new Promise((resolve, reject) => {
-          api.server.removeAllListeners("error");
-          api.server.once("error", reject);
-          api.server.listen(port, host, () => resolve());
+          const onListening = () => {
+            api.server.removeListener("error", onError);
+            resolve();
+          };
+          const onError = (err) => {
+            api.server.removeListener("listening", onListening);
+            reject(err);
+          };
+          api.server.once("error", onError);
+          api.server.once("listening", onListening);
+          api.server.listen(port, host);
         });
         break; // bound successfully
       } catch (err) {
         if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
         const remaining = Math.round((deadline - Date.now()) / 1000);
-        console.warn(`[api] Port ${port} busy (EADDRINUSE), retrying for ${remaining}s more...`);
-        await new Promise(r => setTimeout(r, 500));
+        console.warn(`[api] Port ${port} busy (EADDRINUSE), evicting stale holder and retrying for ${remaining}s more...`);
+        if (process.platform !== "win32") {
+          try {
+            const cmd = `sh -c "fuser -k ${port}/tcp 2>/dev/null || (lsof -ti:${port} 2>/dev/null | xargs kill -9 2>/dev/null) || true"`;
+            execSync(cmd, { stdio: "ignore", timeout: 2000 });
+          } catch {}
+        }
+        await new Promise(r => setTimeout(r, 1000));
       }
     }
   }

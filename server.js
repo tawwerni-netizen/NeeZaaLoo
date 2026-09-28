@@ -171,20 +171,21 @@ const children = {};
 let isShuttingDown = false;
 
 /**
- * Evict any process currently holding `port` on Linux by using `fuser -k`.
+ * Evict any process currently holding `port` on Linux by using `fuser`, `lsof`, or `ss`.
  * This runs synchronously via execSync so the port is freed BEFORE we spawn
  * the child that needs it. Safe on Hostinger (Linux); a no-op on errors.
  */
 function evictPort(port) {
+  if (process.platform === "win32") return;
   try {
-    // fuser exits 0 if it killed something, 1 if nothing was using the port.
-    require("node:child_process").execSync(`fuser -k ${port}/tcp`, {
-      stdio: "pipe",
+    const cmd = `sh -c "fuser -k ${port}/tcp 2>/dev/null || (lsof -ti:${port} 2>/dev/null | xargs kill -9 2>/dev/null) || (ss -lptn 'sport = :${port}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs kill -9 2>/dev/null) || true"`;
+    require("node:child_process").execSync(cmd, {
+      stdio: "ignore",
       timeout: 3000,
     });
     console.log(`[evict] Cleared port ${port}`);
   } catch {
-    // Nothing was holding the port, or fuser is unavailable — both are fine.
+    // Nothing was holding the port, or eviction tool is unavailable — both are fine.
   }
 }
 
@@ -208,8 +209,12 @@ function startProcess(name, script, childPort, customCwd) {
   let failures = 0;
   let lastCrash = 0;
 
-  function launch() {
+  async function launch() {
     if (isShuttingDown) return;
+    if (name === "Next.js") {
+      evictPort(childPort);
+      await waitPortFree(childPort, 4000);
+    }
     console.log(`[${name}] Spawning on port ${childPort}...`);
     try {
       const baseEnv = name === "Next.js"
@@ -222,8 +227,8 @@ function startProcess(name, script, childPort, customCwd) {
           })
         : getEnv(childPort);
 
-      // Dedicated memory ceilings per process: 512MB for Next.js SSR, 384MB for API, 256MB for Gateway & Worker
-      const defaultOldSpace = name === "Next.js" ? "512" : name === "API" ? "384" : "256";
+      // Dedicated memory ceilings per process: 384MB for Next.js SSR, 256MB for API, 192MB for Gateway & Worker
+      const defaultOldSpace = name === "Next.js" ? "384" : name === "API" ? "256" : "192";
       const nodeOptions = process.env.NODE_OPTIONS
         ? `${process.env.NODE_OPTIONS} --max-old-space-size=${defaultOldSpace}`
         : `--max-old-space-size=${defaultOldSpace}`;
@@ -303,14 +308,24 @@ function shutdown() {
   for (const name of Object.keys(children)) {
     const child = children[name];
     if (child && child.pid) {
-      try { child.kill("SIGTERM"); } catch {}
+      try {
+        if (process.platform !== "win32") {
+          try { process.kill(-child.pid, "SIGTERM"); } catch {}
+        }
+        child.kill("SIGTERM");
+      } catch {}
     }
   }
   setTimeout(() => {
     for (const name of Object.keys(children)) {
       const child = children[name];
       if (child && child.pid) {
-        try { child.kill("SIGKILL"); } catch {}
+        try {
+          if (process.platform !== "win32") {
+            try { process.kill(-child.pid, "SIGKILL"); } catch {}
+          }
+          child.kill("SIGKILL");
+        } catch {}
       }
     }
     process.exit(0);
@@ -318,6 +333,8 @@ function shutdown() {
 }
 process.on("SIGINT",  shutdown);
 process.on("SIGTERM", shutdown);
+process.on("SIGHUP",  shutdown);
+process.on("SIGQUIT", shutdown);
 
 // ---------------------------------------------------------------------------
 // Reverse Proxy Helpers

@@ -11,7 +11,7 @@ export function installGracefulShutdown({
   gracefulShutdownMs = 10000,
   logger = null,
   exit = process.exit.bind(process),
-  signals = ["SIGTERM", "SIGINT"],
+  signals = ["SIGTERM", "SIGINT", "SIGHUP", "SIGQUIT"],
 } = {}) {
   let shuttingDown = false;
   const handler = (signal) => async () => {

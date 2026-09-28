@@ -12,6 +12,7 @@
  * the truth again.
  */
 import http from "node:http";
+import { execSync } from "node:child_process";
 import { WebSocketServer } from "ws";
 import {
   ClientMsg, ServerMsg, ErrorCode, parseClientFrame,
@@ -414,17 +415,23 @@ export async function createGateway({
 
   if (port != null) {
     // Retry binding on EADDRINUSE: Hostinger overlapping deployments may leave
-    // the old gateway holding port 3010 briefly. Wait up to 30s for it to
+    // the old gateway holding port 3010 briefly. Wait up to 60s for it to
     // release rather than crashing immediately.
-    httpServer.setMaxListeners(50); // many retry listeners are fine here
-    const deadline = Date.now() + 30_000;
+    httpServer.setMaxListeners(100);
+    const deadline = Date.now() + 60_000;
     while (true) {
       try {
         await new Promise((resolve, reject) => {
-          httpServer.removeAllListeners("error");
-          httpServer.removeAllListeners("listening");
-          httpServer.once("error", reject);
-          httpServer.once("listening", resolve);
+          const onListening = () => {
+            httpServer.removeListener("error", onError);
+            resolve();
+          };
+          const onError = (err) => {
+            httpServer.removeListener("listening", onListening);
+            reject(err);
+          };
+          httpServer.once("error", onError);
+          httpServer.once("listening", onListening);
           if (host) httpServer.listen(port, host);
           else httpServer.listen(port);
         });
@@ -432,8 +439,14 @@ export async function createGateway({
       } catch (err) {
         if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
         const remaining = Math.round((deadline - Date.now()) / 1000);
-        console.warn(`[gateway] Port ${port} busy (EADDRINUSE), retrying for ${remaining}s more...`);
-        await new Promise(r => setTimeout(r, 500));
+        console.warn(`[gateway] Port ${port} busy (EADDRINUSE), evicting stale holder and retrying for ${remaining}s more...`);
+        if (process.platform !== "win32") {
+          try {
+            const cmd = `sh -c "fuser -k ${port}/tcp 2>/dev/null || (lsof -ti:${port} 2>/dev/null | xargs kill -9 2>/dev/null) || true"`;
+            execSync(cmd, { stdio: "ignore", timeout: 2000 });
+          } catch {}
+        }
+        await new Promise(r => setTimeout(r, 1000));
       }
     }
   }

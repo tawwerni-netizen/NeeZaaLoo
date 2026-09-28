@@ -22,6 +22,7 @@
  */
 import { createServer } from "node:http";
 import { hostname } from "node:os";
+import { execSync } from "node:child_process";
 import { installGracefulShutdown } from "./graceful-shutdown.mjs";
 
 /**
@@ -146,23 +147,37 @@ export function createWorkerRuntime({
       httpServer = buildHttpServer();
       // Retry binding on EADDRINUSE: Hostinger spawns overlapping master
       // instances during deployment. The new child may encounter the old
-      // child still holding the port. We wait (up to 30s) instead of dying.
-      const deadline = Date.now() + 30_000;
+      // child still holding the port. We evict stale holders and wait (up to 60s) instead of dying.
+      const deadline = Date.now() + 60_000;
       while (true) {
         try {
           await new Promise((resolve, reject) => {
-            httpServer.removeAllListeners("error");
-            httpServer.once("error", reject);
-            httpServer.listen(port, () => resolve());
+            const onListening = () => {
+              httpServer.removeListener("error", onError);
+              resolve();
+            };
+            const onError = (err) => {
+              httpServer.removeListener("listening", onListening);
+              reject(err);
+            };
+            httpServer.once("error", onError);
+            httpServer.once("listening", onListening);
+            httpServer.listen(port);
           });
           break; // bound successfully
         } catch (err) {
           if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
           const remaining = Math.round((deadline - Date.now()) / 1000);
-          console.warn(`[runtime] Port ${port} busy (EADDRINUSE), retrying for ${remaining}s more...`);
+          console.warn(`[runtime] Port ${port} busy (EADDRINUSE), evicting stale holder and retrying for ${remaining}s more...`);
+          if (process.platform !== "win32") {
+            try {
+              const cmd = `sh -c "fuser -k ${port}/tcp 2>/dev/null || (lsof -ti:${port} 2>/dev/null | xargs kill -9 2>/dev/null) || true"`;
+              execSync(cmd, { stdio: "ignore", timeout: 2000 });
+            } catch {}
+          }
           // Recreate the server so the next listen() starts from a clean state
           httpServer = buildHttpServer();
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise(r => setTimeout(r, 1000));
         }
       }
       for (const { name, worker, intervalMs: perWorkerIntervalMs } of workers) {
