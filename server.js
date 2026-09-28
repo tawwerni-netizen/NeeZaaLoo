@@ -101,74 +101,10 @@ try { fs.mkdirSync(avatarDir, { recursive: true }); } catch {}
 
 const hostname = process.env.HOSTNAME || "0.0.0.0";
 const port     = parseInt(process.env.PORT,        10) || 3000;
-let nextPort   = parseInt(process.env.NEXT_PORT,   10) || 3002;
-let apiPort    = parseInt(process.env.API_PORT,    10) || 4000;
-let gwPort     = parseInt(process.env.WS_PORT,     10) || 3010;
-let workerPort = parseInt(process.env.WORKER_PORT, 10) || 4001;
-
-const usedPorts = new Set([port]);
-
-function getAvailablePort(preferredPort) {
-  return new Promise((resolve) => {
-    if (!usedPorts.has(preferredPort)) {
-      const tester = net.createServer();
-      tester.unref();
-      tester.once("error", () => {
-        findFreePort();
-      });
-      tester.listen(preferredPort, "127.0.0.1", () => {
-        tester.close(() => {
-          usedPorts.add(preferredPort);
-          resolve(preferredPort);
-        });
-      });
-      return;
-    }
-    findFreePort();
-
-    function findFreePort() {
-      const tester = net.createServer();
-      tester.unref();
-      tester.once("error", () => {
-        let p = preferredPort + 10;
-        while (usedPorts.has(p)) p++;
-        usedPorts.add(p);
-        resolve(p);
-      });
-      tester.listen(0, "127.0.0.1", () => {
-        const allocatedPort = tester.address().port;
-        tester.close(() => {
-          usedPorts.add(allocatedPort);
-          resolve(allocatedPort);
-        });
-      });
-    }
-  });
-}
-
-function waitForPort(portToWait, maxWaitMs = 6000) {
-  const startTime = Date.now();
-  return new Promise((resolve) => {
-    function check() {
-      if (isShuttingDown) return resolve(false);
-      const socket = net.createConnection({ port: portToWait, host: "127.0.0.1" });
-      socket.once("connect", () => {
-        socket.destroy();
-        resolve(true);
-      });
-      socket.once("error", () => {
-        socket.destroy();
-        if (Date.now() - startTime >= maxWaitMs) {
-          console.warn(`[boot] Port ${portToWait} did not open within ${maxWaitMs}ms, proceeding to bind master proxy...`);
-          resolve(false);
-        } else {
-          setTimeout(check, 100);
-        }
-      });
-    }
-    check();
-  });
-}
+const nextPort = parseInt(process.env.NEXT_PORT,   10) || 3002;
+const apiPort  = parseInt(process.env.API_PORT,    10) || 4000;
+const gwPort   = parseInt(process.env.WS_PORT,     10) || 3010;
+const workerPort = parseInt(process.env.WORKER_PORT, 10) || 4001;
 
 const nextScript   = path.join(here, "apps", "web", ".next", "hostinger", "server.js");
 const apiScript    = path.join(here, "apps", "api", "src", "index.mjs");
@@ -249,9 +185,8 @@ function startProcess(name, script, childPort, customCwd) {
           })
         : getEnv(childPort);
 
-      // Memory ceilings per process to stay strictly under CloudLinux LVE quota (~1.5GB):
-      // Next.js: 256MB, API: 160MB, Gateway: 128MB, Worker: 128MB (Total ~672MB)
-      const defaultOldSpace = name === "Next.js" ? "256" : name === "API" ? "160" : "128";
+      // Dedicated memory ceilings per process: 512MB for Next.js SSR, 384MB for API, 256MB for Gateway & Worker
+      const defaultOldSpace = name === "Next.js" ? "512" : name === "API" ? "384" : "256";
       const nodeOptions = process.env.NODE_OPTIONS
         ? `${process.env.NODE_OPTIONS} --max-old-space-size=${defaultOldSpace}`
         : `--max-old-space-size=${defaultOldSpace}`;
@@ -296,6 +231,11 @@ function startProcess(name, script, childPort, customCwd) {
   }
   launch();
 }
+
+startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
+startProcess("API",     apiScript,    apiPort);
+startProcess("Gateway", gwScript,     gwPort);
+startProcess("Worker",  workerScript, workerPort);
 
 function shutdown() {
   if (isShuttingDown) return;
@@ -746,39 +686,12 @@ server.on("error", (err) => {
   shutdown();
 });
 
-async function boot() {
-  console.log("[boot] Dynamically allocating internal process ports...");
-  nextPort   = await getAvailablePort(parseInt(process.env.NEXT_PORT,   10) || 3002);
-  apiPort    = await getAvailablePort(parseInt(process.env.API_PORT,    10) || 4000);
-  gwPort     = await getAvailablePort(parseInt(process.env.WS_PORT,     10) || 3010);
-  workerPort = await getAvailablePort(parseInt(process.env.WORKER_PORT, 10) || 4001);
-
-  console.log(`[boot] Assigned internal ports:`);
-  console.log(`  -> Next.js : 127.0.0.1:${nextPort}`);
-  console.log(`  -> API     : 127.0.0.1:${apiPort}`);
-  console.log(`  -> Gateway : 127.0.0.1:${gwPort}`);
-  console.log(`  -> Worker  : 127.0.0.1:${workerPort}`);
-
-  startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
-  startProcess("API",     apiScript,    apiPort);
-  startProcess("Gateway", gwScript,     gwPort);
-  startProcess("Worker",  workerScript, workerPort);
-
-  console.log(`[boot] Waiting for Next.js (port ${nextPort}) to be ready...`);
-  await waitForPort(nextPort, 6000);
-
-  server.listen(port, hostname, () => {
-    console.log(`========================================`);
-    console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
-    console.log(`  -> Next.js   : ${nextPort}`);
-    console.log(`  -> API       : ${apiPort}`);
-    console.log(`  -> Gateway   : ${gwPort}`);
-    console.log(`  -> Worker    : ${workerPort}`);
-    console.log(`========================================`);
-  });
-}
-
-boot().catch((err) => {
-  console.error("FATAL: Boot failed:", err);
-  process.exit(1);
+server.listen(port, hostname, () => {
+  console.log(`========================================`);
+  console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
+  console.log(`  -> Next.js   : ${nextPort}`);
+  console.log(`  -> API       : ${apiPort}`);
+  console.log(`  -> Gateway   : ${gwPort}`);
+  console.log(`  -> Worker    : ${workerPort}`);
+  console.log(`========================================`);
 });
