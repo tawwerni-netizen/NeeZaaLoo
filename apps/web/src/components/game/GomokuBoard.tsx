@@ -90,6 +90,16 @@ export function GomokuBoard({ board, lastMove, legalCells, mySeat, canMove, onMo
 
   return (
     <div className={styles.wrap}>
+      {winLine && winLine.length >= 5 && (
+        <motion.div
+          className={styles.zenBanner}
+          initial={{ scale: 0.85, opacity: 0, y: -8 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: ease.snap }}
+        >
+          <span>⛩️ خمسة في صف متصل! إتقان غوموكو الأسطوري • 5-IN-A-ROW!</span>
+        </motion.div>
+      )}
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         <div className={styles.kayaWoodTable}>
           <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>

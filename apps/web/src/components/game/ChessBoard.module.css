@@ -11,6 +11,29 @@
   width: 100%;
 }
 
+
+.checkBanner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(185, 28, 28, 0.3));
+  border: 1px solid rgba(239, 68, 68, 0.7);
+  border-radius: 999px;
+  color: #FCA5A5;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.5), inset 0 0 10px rgba(239, 68, 68, 0.3);
+  margin-bottom: 2px;
+  animation: pulseCheckGlow 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes pulseCheckGlow {
+  0% { box-shadow: 0 0 14px rgba(239, 68, 68, 0.4); transform: scale(0.98); }
+  100% { box-shadow: 0 0 28px rgba(239, 68, 68, 0.8); transform: scale(1.02); }
+}
 .boardContainer {
   position: relative;
   display: flex;

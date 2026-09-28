@@ -6,6 +6,29 @@
   width: 100%;
 }
 
+.victoryBanner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, rgba(245, 179, 36, 0.25), rgba(229, 57, 22, 0.25));
+  border: 1px solid rgba(245, 179, 36, 0.6);
+  border-radius: 999px;
+  color: #FFE885;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 24px rgba(245, 179, 36, 0.4), inset 0 0 12px rgba(245, 179, 36, 0.2);
+  margin-bottom: 8px;
+  animation: pulseGoldGlow 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulseGoldGlow {
+  0% { box-shadow: 0 0 16px rgba(245, 179, 36, 0.3); }
+  100% { box-shadow: 0 0 32px rgba(245, 179, 36, 0.7); }
+}
+
 .dropSelectorRow {
   display: grid;
   grid-template-columns: repeat(7, 1fr);

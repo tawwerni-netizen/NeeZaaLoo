@@ -101,6 +101,17 @@ export function ConnectFourBoard({ board, turn, lastMove, legalColumns, canMove,
 
   return (
     <div className={styles.wrap}>
+      {winLine && winLine.length >= 4 && (
+        <motion.div
+          className={styles.victoryBanner}
+          initial={{ scale: 0.85, opacity: 0, y: -8 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: ease.snap }}
+        >
+          <span>✨ أربعة في صف! روعة الإسقاط التكتيكي • 4-IN-A-ROW! ✨</span>
+        </motion.div>
+      )}
+
       {/* Top Column Drop Selector */}
       <div className={styles.dropSelectorRow} dir="ltr">
         {Array.from({ length: COLS }).map((_, col) => {

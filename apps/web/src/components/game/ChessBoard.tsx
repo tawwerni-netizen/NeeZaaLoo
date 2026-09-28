@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ease } from "@/lib/motion";
 import { parseFenBoard, squareAt, sideToMoveFromFen, FILES, applyMoveOptimistic, type Piece } from "./fen";
 import { ChessPieceSvg } from "./ChessPieceSvg";
 import { useI18n } from "@/lib/i18n/context";
@@ -174,6 +175,17 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
         </div>
         <ChessAmbientPlayer />
       </div>
+
+      {inCheck && (
+        <motion.div
+          className={styles.checkBanner}
+          initial={{ scale: 0.85, opacity: 0, y: -6 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: ease.snap }}
+        >
+          <span>⚠️ كش ملك! خطر يهدد الملك • CHECK!</span>
+        </motion.div>
+      )}
 
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         {/* Outer 3D Table Bevel Frame - strictly LTR for universal chess notation alignment */}
