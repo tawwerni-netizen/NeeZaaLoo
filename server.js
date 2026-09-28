@@ -900,15 +900,39 @@ const server = createServer((req, res) => {
       }
     }
 
-    function probe(targetPort) {
+    function probe(targetPort, host = "127.0.0.1") {
       return new Promise((resolve) => {
-        const s = net.createConnection({ host: "127.0.0.1", port: targetPort });
-        s.once("connect", () => { s.destroy(); resolve({ port: targetPort, open: true }); });
-        s.once("error", (e) => { s.destroy(); resolve({ port: targetPort, open: false, error: e.code }); });
+        const s = net.createConnection({ host, port: targetPort });
+        s.once("connect", () => { s.destroy(); resolve({ host, port: targetPort, open: true }); });
+        s.once("error", (e) => { s.destroy(); resolve({ host, port: targetPort, open: false, error: e.code }); });
       });
     }
 
-    Promise.all([probe(nextPort), probe(apiPort), probe(gwPort), probe(workerPort)]).then((ports) => {
+    const tcpListening = [];
+    if (process.platform === "linux") {
+      for (const f of ["/proc/net/tcp", "/proc/net/tcp6"]) {
+        try {
+          if (fs.existsSync(f)) {
+            const content = fs.readFileSync(f, "utf8");
+            for (const line of content.split("\n")) {
+              const parts = line.trim().split(/\s+/);
+              if (parts.length >= 10 && parts[3] === "0A") {
+                tcpListening.push({ file: f, local: parts[1], state: parts[3], inode: parts[9] });
+              }
+            }
+          }
+        } catch {}
+      }
+    }
+
+    Promise.all([
+      probe(nextPort, "127.0.0.1"),
+      probe(nextPort, "localhost"),
+      probe(apiPort, "127.0.0.1"),
+      probe(apiPort, "localhost"),
+      probe(gwPort, "127.0.0.1"),
+      probe(workerPort, "127.0.0.1"),
+    ]).then((ports) => {
       let lockData = null;
       try {
         lockData = JSON.parse(fs.readFileSync(LOCK_FILE, "utf8"));
@@ -932,6 +956,7 @@ const server = createServer((req, res) => {
         isLeader,
         lockData,
         ports,
+        tcpListening,
         children: childStatus,
         recentLogs: childLogsRingBuffer.slice(-40),
         uptime: process.uptime(),
@@ -1103,7 +1128,7 @@ function bootServicesAsLeader() {
 
 function startFollowerWatcher() {
   if (leaderWatcherTimer) return;
-  leaderWatcherTimer = setInterval(async () => {
+  leaderWatcherTimer = setInterval(() => {
     if (isShuttingDown) {
       clearInterval(leaderWatcherTimer);
       leaderWatcherTimer = null;
@@ -1115,25 +1140,7 @@ function startFollowerWatcher() {
       leaderWatcherTimer = null;
       console.log(`[master] Promoted to leader supervisor (PID ${process.pid}). Starting child services...`);
       bootServicesAsLeader();
-      return;
     }
-
-    // Proactive backend check: if we are follower, but both 4000 and 3002 are unreachable,
-    // the leader has failed or died without releasing lock. Take over immediately!
-    try {
-      const isApiUp = await checkPortLive(apiPort);
-      const isNextUp = await checkPortLive(nextPort);
-      if (!isApiUp && !isNextUp) {
-        console.warn(`[master] Both API (${apiPort}) and Next.js (${nextPort}) unreachable under current leader. Breaking lock and taking over.`);
-        try { fs.unlinkSync(LOCK_FILE); } catch {}
-        const newStatus = acquireLeaderLock();
-        if (newStatus.isLeader) {
-          clearInterval(leaderWatcherTimer);
-          leaderWatcherTimer = null;
-          bootServicesAsLeader();
-        }
-      }
-    } catch {}
   }, 2000);
   if (typeof leaderWatcherTimer.unref === "function") {
     leaderWatcherTimer.unref();
