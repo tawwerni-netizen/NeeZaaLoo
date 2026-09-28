@@ -6,6 +6,40 @@
   width: 100%;
 }
 
+.multiJumpBanner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.3) 100%);
+  border: 1.5px solid #ef4444;
+  color: #ff8c8c;
+  font-size: var(--nz-text-xs);
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  animation: pulseJump 0.8s infinite alternate ease-in-out;
+}
+
+.multiJumpPulseDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: dotFlash 0.5s infinite alternate;
+}
+
+@keyframes pulseJump {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+
+@keyframes dotFlash {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
 .boardContainer {
   position: relative;
   display: flex;

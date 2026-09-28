@@ -422,3 +422,29 @@
   }
 }
 
+.knockoutBanner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.95), 0 0 60px rgba(255, 215, 0, 0.6);
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.15rem;
+  padding: 12px 28px;
+  border-radius: var(--nz-radius-pill, 999px);
+  z-index: 60;
+  pointer-events: none;
+  animation: knockoutPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  white-space: nowrap;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+}
+
+@keyframes knockoutPop {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  70% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+

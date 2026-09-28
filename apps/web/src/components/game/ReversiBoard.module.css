@@ -6,6 +6,40 @@
   width: 100%;
 }
 
+.cascadeBanner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.25) 0%, rgba(56, 189, 248, 0.3) 100%);
+  border: 1.5px solid #00ffff;
+  color: #00ffff;
+  font-size: var(--nz-text-xs);
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  animation: pulseCascade 0.8s infinite alternate ease-in-out;
+}
+
+.cascadeDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ffff;
+  box-shadow: 0 0 8px #00ffff;
+  animation: dotFlash 0.5s infinite alternate;
+}
+
+@keyframes pulseCascade {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+
+@keyframes dotFlash {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
 .boardContainer {
   position: relative;
   display: flex;

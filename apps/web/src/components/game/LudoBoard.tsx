@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { playDiceRollSound, playCheckerSlideSound } from "@/lib/game-audio";
+import { playDiceRollSound, playCheckerSlideSound, playCheckerHitSound } from "@/lib/game-audio";
 import { useI18n } from "@/lib/i18n/context";
 import styles from "./LudoBoard.module.css";
 
@@ -119,6 +119,27 @@ export function LudoBoard({
   const isMyTurn = mySeat === turn && canMove;
   const [isRolling, setIsRolling] = useState(false);
   const [lastDisplayedRoll, setLastDisplayedRoll] = useState<number>(6);
+  const [knockoutEvent, setKnockoutEvent] = useState<string | null>(null);
+  const prevTokensRef = useRef<number[][] | null>(null);
+
+  useEffect(() => {
+    if (prevTokensRef.current && tokens) {
+      tokens.forEach((playerTokens, pIdx) => {
+        const prevPlayerTokens = prevTokensRef.current?.[pIdx];
+        if (prevPlayerTokens) {
+          playerTokens.forEach((pos, tIdx) => {
+            const prevPos = prevPlayerTokens[tIdx];
+            if (prevPos !== undefined && prevPos > 0 && prevPos < 52 && pos === 0) {
+              try { playCheckerHitSound(); } catch {}
+              setKnockoutEvent(locale === "ar" ? "💥 أكل قاطعة وإعادتها للقاعدة!" : "💥 KNOCKOUT TO BASE!");
+              setTimeout(() => setKnockoutEvent(null), 2000);
+            }
+          });
+        }
+      });
+    }
+    prevTokensRef.current = tokens ? tokens.map(arr => [...arr]) : null;
+  }, [tokens, locale]);
 
   useEffect(() => {
     if (currentRoll !== null) {
@@ -217,6 +238,11 @@ export function LudoBoard({
       {/* Cyberpunk Board Container */}
       <div className={styles.boardContainer}>
         <div className={styles.glowBackdrop}></div>
+        {knockoutEvent && (
+          <div className={styles.knockoutBanner}>
+            {knockoutEvent}
+          </div>
+        )}
         
         <div className={styles.grid}>
           {/* Bases as big blocks */}

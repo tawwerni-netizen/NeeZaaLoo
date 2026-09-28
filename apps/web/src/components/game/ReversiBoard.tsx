@@ -51,7 +51,7 @@ export function ReversiDiscSvg({ isBlack }: { isBlack: boolean }) {
 }
 
 export function ReversiBoard({ board, legalMoves, lastMove, canMove, onMove }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { perspective3D } = useVisualSettings();
   const flipped = new Set(lastMove?.action === "PLACE" ? lastMove.flipped : []);
   const justPlaced = lastMove?.action === "PLACE" ? lastMove.place : null;
@@ -70,6 +70,17 @@ export function ReversiBoard({ board, legalMoves, lastMove, canMove, onMove }: P
 
   return (
     <div className={styles.wrap}>
+      {lastMove && lastMove.action === "PLACE" && lastMove.flipped.length >= 4 && (
+        <div className={styles.cascadeBanner}>
+          <span className={styles.cascadeDot} />
+          <span>
+            {locale === "ar"
+              ? `🌊 شلال دوران الأقراص (${lastMove.flipped.length}) قرصاً!`
+              : `🌊 CASCADE FLIP (${lastMove.flipped.length}) Discs!`}
+          </span>
+        </div>
+      )}
+
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         <div className={styles.tableBevel}>
           <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>

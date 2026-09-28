@@ -57,7 +57,7 @@ export function SeegaStoneSvg({ seat }: { seat: "0" | "1" }) {
 }
 
 export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, canMove, onMove }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -97,7 +97,9 @@ export function SeegaBoard({ phase, board, legalPlacements, legalMoves, mySeat, 
       {/* Phase Badge */}
       <div className={styles.phaseIndicator}>
         <span className={styles.phaseBadge}>
-          {phase === "PLACEMENT" ? "Phase 1: Placement" : "Phase 2: Movement"}
+          {phase === "PLACEMENT"
+            ? (locale === "ar" ? "🏺 المرحلة الأولى: إنزال الحصى بالتناوب" : "🏺 Phase 1: Alternating Drop")
+            : (locale === "ar" ? "⚔️ المرحلة الثانية: التحريك والأكل بالحصر" : "⚔️ Phase 2: Movement & Ambush")}
         </span>
       </div>
 

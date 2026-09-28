@@ -187,6 +187,11 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
         <AnimatePresence mode="popLayout">
           {dice.map((d, i) => <DieFace key={`${dice.length}-${i}-${d}`} value={d} />)}
         </AnimatePresence>
+        {dice.length >= 2 && dice[0] === dice[1] && (
+          <span className={styles.doubleBadge}>
+            ⚡ DOUBLE {dice[0]}-{dice[0]} • 4 MOVES!
+          </span>
+        )}
       </div>
 
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>

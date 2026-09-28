@@ -76,7 +76,7 @@ export function CheckersPieceSvg({ isKing, seat }: { isKing: boolean; seat: "0" 
 }
 
 export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat, canMove, onMove }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -156,6 +156,13 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
 
   return (
     <div className={styles.wrap}>
+      {forcedFrom && (
+        <div className={styles.multiJumpBanner}>
+          <span className={styles.multiJumpPulseDot} />
+          <span>{locale === "ar" ? "🔥 أكل متتالي إجباري • MULTI-JUMP" : "🔥 MANDATORY MULTI-JUMP CHAIN!"}</span>
+        </div>
+      )}
+
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         <div className={styles.tableBevel}>
           <div className={styles.board} dir="ltr" role="grid" aria-label={t("game.move_history")}>
