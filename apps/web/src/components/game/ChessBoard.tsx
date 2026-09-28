@@ -24,7 +24,7 @@ type Props = {
 const PROMO_PIECES = ["q", "r", "b", "n"] as const;
 
 export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove, onMove }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
   const serverBoard = useMemo(() => parseFenBoard(fen), [fen]);
   const sideToMove = useMemo(() => sideToMoveFromFen(fen), [fen]);
@@ -32,6 +32,21 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
   const [pendingPromo, setPendingPromo] = useState<{ from: string; to: string } | null>(null);
   const [theme, setTheme] = useState<ChessBoardTheme>("emerald");
   const lastSoundMoveRef = useRef<string | null>(null);
+
+  const isCheckmate = inCheck && legalMoves.length === 0;
+
+  const matedKingSquare = useMemo(() => {
+    if (!isCheckmate) return null;
+    for (let f = 0; f < 8; f++) {
+      for (let r = 0; r < 8; r++) {
+        const p = squareAt(serverBoard, f, r);
+        if (p?.type === "k" && p.colour === sideToMove) {
+          return `${FILES[f]}${r + 1}`;
+        }
+      }
+    }
+    return null;
+  }, [isCheckmate, serverBoard, sideToMove]);
 
   // Optimistic UI state: updates the board with 0ms latency when the user plays
   const [optimisticState, setOptimisticState] = useState<{
@@ -176,16 +191,25 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
         <ChessAmbientPlayer />
       </div>
 
-      {inCheck && (
+      {isCheckmate ? (
+        <motion.div
+          className={styles.checkmateBanner}
+          initial={{ scale: 0.8, opacity: 0, y: -10 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: ease.snap }}
+        >
+          <span>👑 {locale === "ar" ? "كش مات! سقوط الملك وانتصار ساحق بالضربة القاضية • CHECKMATE!" : "CHECKMATE! THE KING HAS FALLEN!"} 👑</span>
+        </motion.div>
+      ) : inCheck ? (
         <motion.div
           className={styles.checkBanner}
           initial={{ scale: 0.85, opacity: 0, y: -6 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: ease.snap }}
         >
-          <span>⚠️ كش ملك! خطر يهدد الملك • CHECK!</span>
+          <span>⚠️ {locale === "ar" ? "كش ملك! خطر يهدد الملك • CHECK!" : "CHECK! THE KING IS THREATENED!"}</span>
         </motion.div>
-      )}
+      ) : null}
 
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         {/* Outer 3D Table Bevel Frame - strictly LTR for universal chess notation alignment */}
@@ -226,6 +250,12 @@ export function ChessBoard({ fen, legalMoves, lastMove, inCheck, mySeat, canMove
                     onClick={() => handleSquareClick(file, r)}
                     disabled={!effectiveCanMove}
                   >
+                    {matedKingSquare === sq && (
+                      <div className={styles.shockwaveOrigin}>
+                        <div className={styles.shockwaveRing} />
+                        <div className={styles.shockwaveRingDelay} />
+                      </div>
+                    )}
                     {piece && (
                       <motion.div
                         className={styles.pieceContainer}

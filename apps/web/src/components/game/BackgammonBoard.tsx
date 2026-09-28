@@ -72,10 +72,90 @@ function BackgammonChecker({ seat, muted = false }: { seat: 0 | 1; muted?: boole
   );
 }
 
+const DOUBLING_STAKES = [64, 2, 4, 8, 16, 32] as const;
+
+function DoublingCubeFace({
+  stake,
+  onRotate,
+}: {
+  stake: number;
+  onRotate: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={styles.doublingCubeBtn}
+      onClick={onRotate}
+      title={`مكعب المضاعفة (Doubling Cube) • ${stake === 64 ? "الرهان الأساسي (1x)" : `مضاعفة ${stake}x`}`}
+      aria-label="Doubling Cube"
+    >
+      <motion.div
+        className={styles.doublingCube3d}
+        key={stake}
+        initial={{ rotateY: -90, rotateX: 35, scale: 0.85 }}
+        animate={{ rotateY: 0, rotateX: 0, scale: 1 }}
+        transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+      >
+        <svg viewBox="0 0 100 100" className={styles.doublingCubeSvg}>
+          <defs>
+            <linearGradient id="cube-amber-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFF5E0" />
+              <stop offset="35%" stopColor="#F7DF94" />
+              <stop offset="70%" stopColor="#C9972E" />
+              <stop offset="100%" stopColor="#8A5B0B" />
+            </linearGradient>
+            <radialGradient id="cube-specular" cx="30%" cy="30%" r="50%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </radialGradient>
+          </defs>
+          <rect x="6" y="6" width="88" height="88" rx="16" fill="url(#cube-amber-grad)" stroke="#5B3A04" strokeWidth="2.5" />
+          <rect x="8" y="8" width="84" height="84" rx="14" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" />
+          <rect x="6" y="6" width="88" height="88" rx="16" fill="url(#cube-specular)" />
+          <text
+            x="50"
+            y={stake >= 16 ? "63" : "66"}
+            textAnchor="middle"
+            fill="#382103"
+            fontFamily="Arial, system-ui, sans-serif"
+            fontWeight="900"
+            fontSize={stake >= 16 ? "38" : "44"}
+            letterSpacing="-1"
+            filter="drop-shadow(0 1px 1px rgba(255,255,255,0.8))"
+          >
+            {stake}
+          </text>
+        </svg>
+      </motion.div>
+      <span className={styles.cubeLabel}>
+        {stake === 64 ? "1x" : `${stake}x`}
+      </span>
+    </button>
+  );
+}
+
 export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, canMove, onMove }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { perspective3D } = useVisualSettings();
   const [selected, setSelected] = useState<number | "BAR" | null>(null);
+  const [doublingStakeIndex, setDoublingStakeIndex] = useState<number>(0);
+  const [doublingBannerText, setDoublingBannerText] = useState<string | null>(null);
+
+  const currentStake = DOUBLING_STAKES[doublingStakeIndex] ?? 64;
+
+  function handleDoublingClick() {
+    const nextIdx = (doublingStakeIndex + 1) % DOUBLING_STAKES.length;
+    setDoublingStakeIndex(nextIdx);
+    playCheckerHitSound();
+    const nextStake = DOUBLING_STAKES[nextIdx] ?? 64;
+    const label = nextStake === 64
+      ? (locale === "ar" ? "🎲 مكعب المضاعفة: الرهان الأساسي 1x" : "🎲 Doubling Cube: Initial Stakes 1x")
+      : (locale === "ar" ? `🎲 مكعب المضاعفة: تم رفع الرهان إلى ${nextStake}x!` : `🎲 Doubling Cube: Stakes Doubled to ${nextStake}x!`);
+    setDoublingBannerText(label);
+    setTimeout(() => {
+      setDoublingBannerText((prev) => (prev === label ? null : prev));
+    }, 3000);
+  }
 
   const flip = mySeat === 1;
   const toAbsolute = (rel: number) => (flip ? 23 - rel : rel);
@@ -184,6 +264,10 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
   return (
     <div className={styles.wrap}>
       <div className={styles.diceRow}>
+        <DoublingCubeFace
+          stake={currentStake}
+          onRotate={handleDoublingClick}
+        />
         <AnimatePresence mode="popLayout">
           {dice.map((d, i) => <DieFace key={`${dice.length}-${i}-${d}`} value={d} />)}
         </AnimatePresence>
@@ -193,6 +277,20 @@ export function BackgammonBoard({ board, bar, off, dice, legalActions, mySeat, c
           </span>
         )}
       </div>
+
+      <AnimatePresence>
+        {doublingBannerText && (
+          <motion.div
+            className={styles.doublingBanner}
+            initial={{ opacity: 0, y: -8, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.9 }}
+            transition={{ duration: 0.25 }}
+          >
+            {doublingBannerText}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         <div className={styles.attacheCase} dir="ltr">

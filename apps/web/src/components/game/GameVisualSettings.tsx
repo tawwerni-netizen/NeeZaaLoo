@@ -1,13 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
-import { useVisualSettings, type TableTheme, type GraphicsQuality } from "./TableEnvironment";
+import { useVisualSettings, type TableTheme, type GraphicsQuality, type SoundMaterial } from "./TableEnvironment";
+import { playMaterialPreviewSound } from "@/lib/game-audio";
 import { useI18n } from "@/lib/i18n/context";
 import styles from "./GameVisualSettings.module.css";
 
 export function GameVisualSettings() {
-  const { t } = useI18n();
-  const { tableTheme, setTableTheme, quality, setQuality, perspective3D, setPerspective3D } = useVisualSettings();
+  const { t, locale } = useI18n();
+  const {
+    tableTheme,
+    setTableTheme,
+    quality,
+    setQuality,
+    perspective3D,
+    setPerspective3D,
+    soundMaterial,
+    setSoundMaterial,
+  } = useVisualSettings();
   const [isOpen, setIsOpen] = useState(false);
 
   const themes: { id: TableTheme; label: string; preview: string }[] = [
@@ -22,6 +32,18 @@ export function GameVisualSettings() {
     { id: "medium", label: "Medium" },
     { id: "low", label: "Low / 2D" },
   ];
+
+  const materials: { id: SoundMaterial; icon: string; nameAr: string; nameEn: string }[] = [
+    { id: "wood", icon: "🪵", nameAr: "خشب طبيعي", nameEn: "Wood" },
+    { id: "ceramic", icon: "🀄", nameAr: "خزف مصقول", nameEn: "Ceramic" },
+    { id: "glass", icon: "💎", nameAr: "زجاج بلوري", nameEn: "Glass" },
+    { id: "metal", icon: "⚙️", nameAr: "معدن ثقيل", nameEn: "Metal" },
+  ];
+
+  const handleSelectMaterial = (mat: SoundMaterial) => {
+    setSoundMaterial(mat);
+    playMaterialPreviewSound(mat);
+  };
 
   return (
     <div className={styles.container}>
@@ -41,7 +63,7 @@ export function GameVisualSettings() {
       {isOpen && (
         <div className={styles.popover}>
           <div className={styles.popoverHeader}>
-            <span className={styles.popoverTitle}>Visuals & Table</span>
+            <span className={styles.popoverTitle}>Visuals & Audio</span>
             <button type="button" className={styles.closeButton} onClick={() => setIsOpen(false)}>×</button>
           </div>
 
@@ -57,6 +79,26 @@ export function GameVisualSettings() {
                 >
                   <span className={styles.themeSwatch} style={{ backgroundColor: t.preview }} />
                   <span className={styles.themeName}>{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.section}>
+            <span className={styles.sectionLabel}>
+              {locale === "ar" ? "رنين خامات القطع" : "Piece Material Sound"}
+            </span>
+            <div className={styles.qualityRow}>
+              {materials.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={[styles.qualityOption, soundMaterial === m.id ? styles.selectedQuality : ""].join(" ")}
+                  onClick={() => handleSelectMaterial(m.id)}
+                  title={locale === "ar" ? m.nameAr : m.nameEn}
+                >
+                  <span style={{ marginRight: 4 }}>{m.icon}</span>
+                  {locale === "ar" ? m.nameAr : m.nameEn}
                 </button>
               ))}
             </div>

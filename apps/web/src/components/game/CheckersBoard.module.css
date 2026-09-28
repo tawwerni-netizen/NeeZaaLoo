@@ -40,6 +40,52 @@
   to { opacity: 1; }
 }
 
+.coronationBanner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(245, 158, 11, 0.35) 100%);
+  border: 2px solid #ffd700;
+  color: #fff;
+  font-size: var(--nz-text-xs);
+  font-weight: 900;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255, 215, 0, 0.3);
+  animation: coronationGlow 1s infinite alternate ease-in-out;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  z-index: 10;
+}
+
+@keyframes coronationGlow {
+  from { transform: scale(1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+  to { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 215, 0, 0.9); }
+}
+
+.coronationCrownDrop {
+  position: absolute;
+  inset: -10%;
+  pointer-events: none;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coronationAura {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, rgba(255, 215, 0, 0.2) 50%, transparent 75%);
+  animation: auraPulse 1.2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes auraPulse {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
 .boardContainer {
   position: relative;
   display: flex;

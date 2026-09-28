@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import { useVisualSettings } from "./TableEnvironment";
@@ -79,6 +79,41 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
   const { t, locale } = useI18n();
   const { perspective3D, quality } = useVisualSettings();
   const [selected, setSelected] = useState<string | null>(null);
+  const [crownedSquare, setCrownedSquare] = useState<string | null>(null);
+  const [showCoronationBanner, setShowCoronationBanner] = useState<boolean>(false);
+  const prevKingsRef = useRef<Set<string>>(new Set());
+
+  // Detect newly crowned kings across the whole board
+  useEffect(() => {
+    const currentKings = new Set<string>();
+    let newlyCrowned: string | null = null;
+
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (Math.abs(board[r]?.[c] ?? 0) === 2) {
+          const sq = squareLabel(r, c);
+          currentKings.add(sq);
+          if (!prevKingsRef.current.has(sq)) {
+            newlyCrowned = sq;
+          }
+        }
+      }
+    }
+
+    if (newlyCrowned && prevKingsRef.current.size > 0) {
+      setCrownedSquare(newlyCrowned);
+      setShowCoronationBanner(true);
+      playKingCrownedSound();
+      const tId = setTimeout(() => {
+        setCrownedSquare(null);
+        setShowCoronationBanner(false);
+      }, 2800);
+      prevKingsRef.current = currentKings;
+      return () => clearTimeout(tId);
+    }
+
+    prevKingsRef.current = currentKings;
+  }, [board]);
 
   useEffect(() => {
     setSelected(forcedFrom);
@@ -135,6 +170,12 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
       const isCoronation = (mySeat === 0 && sq[1] === "8") || (mySeat === 1 && sq[1] === "1");
       if (isCoronation) {
         playKingCrownedSound();
+        setCrownedSquare(sq);
+        setShowCoronationBanner(true);
+        setTimeout(() => {
+          setCrownedSquare(null);
+          setShowCoronationBanner(false);
+        }, 2800);
       } else if (isJump) {
         playCheckersJumpSound();
       } else {
@@ -162,6 +203,20 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
           <span>{locale === "ar" ? "🔥 أكل متتالي إجباري • MULTI-JUMP" : "🔥 MANDATORY MULTI-JUMP CHAIN!"}</span>
         </div>
       )}
+
+      <AnimatePresence>
+        {showCoronationBanner && (
+          <motion.div
+            className={styles.coronationBanner}
+            initial={{ opacity: 0, scale: 0.8, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <span>👑 {locale === "ar" ? "تتويج ملكي! ظهور ملك جديد في المعركة • KING CROWNED!" : "ROYAL CORONATION! A NEW KING ARISES!"} 👑</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className={[styles.boardContainer, perspective3D ? styles.perspective : ""].join(" ")}>
         <div className={styles.tableBevel}>
@@ -193,6 +248,31 @@ export function CheckersBoard({ board, forcedFrom, legalMoves, lastMove, mySeat,
                     disabled={!canMove || !isDark}
                   >
                     {isCaptured && <span key={lastMove} className={styles.captureFlash} aria-hidden="true" />}
+                    {crownedSquare === sq && (
+                      <div className={styles.coronationCrownDrop}>
+                        <div className={styles.coronationAura} />
+                        <motion.svg
+                          viewBox="0 0 100 100"
+                          width="80%"
+                          height="80%"
+                          initial={{ y: -50, scale: 2.2, opacity: 0 }}
+                          animate={{ y: 0, scale: 1.1, opacity: 1 }}
+                          transition={{ duration: 0.45, ease: [0.175, 0.885, 0.32, 1.275] }}
+                          filter="drop-shadow(0 0 10px #ffd700)"
+                        >
+                          <path
+                            d="M 20 70 L 80 70 L 76 40 L 62 52 L 50 30 L 38 52 L 24 40 Z"
+                            fill="#FFD700"
+                            stroke="#B8860B"
+                            strokeWidth="2.5"
+                            strokeLinejoin="round"
+                          />
+                          <circle cx="24" cy="38" r="3.5" fill="#FFF" />
+                          <circle cx="50" cy="28" r="4.5" fill="#FFF" />
+                          <circle cx="76" cy="38" r="3.5" fill="#FFF" />
+                        </motion.svg>
+                      </div>
+                    )}
                     {piece !== 0 && (
                       <motion.div
                         className={styles.piece}

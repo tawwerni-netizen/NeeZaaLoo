@@ -34,7 +34,86 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
-// -------------------------------------------------------------
+export type SoundMaterial = "wood" | "ceramic" | "glass" | "metal";
+
+let currentSoundMaterial: SoundMaterial = "wood";
+
+export function setSoundMaterial(mat: SoundMaterial) {
+  currentSoundMaterial = mat;
+}
+
+export function getSoundMaterial(): SoundMaterial {
+  return currentSoundMaterial;
+}
+
+export function playMaterialPreviewSound(mat: SoundMaterial) {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  if (mat === "wood") {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(340, now);
+    osc.frequency.exponentialRampToValueAtTime(110, now + 0.05);
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.07);
+  } else if (mat === "ceramic") {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(1250, now);
+    osc.frequency.exponentialRampToValueAtTime(450, now + 0.04);
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.06);
+  } else if (mat === "glass") {
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(2200, now);
+    osc.frequency.exponentialRampToValueAtTime(1900, now + 0.12);
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(3300, now);
+    osc2.frequency.exponentialRampToValueAtTime(2800, now + 0.08);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc2.start(now);
+    osc.stop(now + 0.13);
+    osc2.stop(now + 0.13);
+  } else if (mat === "metal") {
+    const osc = ctx.createOscillator();
+    const oscHarmonic = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.exponentialRampToValueAtTime(440, now + 0.08);
+    oscHarmonic.type = "sine";
+    oscHarmonic.frequency.setValueAtTime(1760, now);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.connect(gain);
+    oscHarmonic.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    oscHarmonic.start(now);
+    osc.stop(now + 0.16);
+    oscHarmonic.stop(now + 0.16);
+  }
+}
 // Backgammon & Dice
 // -------------------------------------------------------------
 
@@ -85,6 +164,7 @@ export function playCheckerSlideSound() {
   const ctx = getAudioContext();
   if (!ctx) return;
   const now = ctx.currentTime;
+  const mat = currentSoundMaterial;
 
   const bufferSize = ctx.sampleRate * 0.07;
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -98,8 +178,10 @@ export function playCheckerSlideSound() {
 
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.setValueAtTime(800, now);
-  filter.frequency.linearRampToValueAtTime(300, now + 0.06);
+  const startFreq = mat === "glass" ? 1800 : mat === "ceramic" ? 1300 : mat === "metal" ? 1000 : 800;
+  const endFreq = mat === "glass" ? 800 : mat === "ceramic" ? 500 : mat === "metal" ? 400 : 300;
+  filter.frequency.setValueAtTime(startFreq, now);
+  filter.frequency.linearRampToValueAtTime(endFreq, now + 0.06);
 
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0.35, now);
@@ -115,14 +197,17 @@ export function playCheckerHitSound() {
   const ctx = getAudioContext();
   if (!ctx) return;
   const now = ctx.currentTime;
+  const mat = currentSoundMaterial;
 
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(950, now);
-  osc.frequency.exponentialRampToValueAtTime(220, now + 0.04);
+  osc.type = mat === "metal" ? "square" : "sine";
+  const startFreq = mat === "glass" ? 2200 : mat === "ceramic" ? 1400 : mat === "metal" ? 750 : 950;
+  const endFreq = mat === "glass" ? 1100 : mat === "ceramic" ? 450 : mat === "metal" ? 280 : 220;
+  osc.frequency.setValueAtTime(startFreq, now);
+  osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.04);
 
-  gain.gain.setValueAtTime(0.55, now);
+  gain.gain.setValueAtTime(mat === "metal" ? 0.35 : 0.55, now);
   gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
 
   osc.connect(gain);

@@ -14,6 +14,67 @@
   justify-content: center;
 }
 
+.doublingCubeBtn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  margin-inline-end: var(--nz-space-3);
+  transition: transform var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.doublingCubeBtn:hover {
+  transform: scale(1.08);
+}
+
+.doublingCubeBtn:active {
+  transform: scale(0.95);
+}
+
+.doublingCube3d {
+  width: 44px;
+  height: 44px;
+  perspective: 600px;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(247, 223, 148, 0.4));
+}
+
+.doublingCubeSvg {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+.cubeLabel {
+  font-family: var(--nz-font-num);
+  font-size: 10px;
+  font-weight: 800;
+  color: #f7df94;
+  background: rgba(40, 25, 5, 0.85);
+  border: 1px solid #c9972e;
+  border-radius: 4px;
+  padding: 1px 6px;
+  line-height: 1.2;
+}
+
+.doublingBanner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: linear-gradient(135deg, rgba(201, 151, 46, 0.25) 0%, rgba(138, 91, 11, 0.35) 100%);
+  border: 1.5px solid #f7df94;
+  color: #fff;
+  font-size: var(--nz-text-xs);
+  font-weight: 800;
+  box-shadow: 0 0 16px rgba(247, 223, 148, 0.4);
+}
+
 .die3d {
   width: 48px;
   height: 48px;
@@ -314,6 +375,8 @@
   overflow: hidden;
 }
   .die3d { width: 40px; height: 40px; }
+  .doublingCube3d { width: 36px; height: 36px; }
+  .doublingCubeBtn { margin-inline-end: 6px; }
   .diceRow { min-height: 48px; gap: 8px; }
   .offTray { padding: 4px 10px; gap: 8px; }
 }

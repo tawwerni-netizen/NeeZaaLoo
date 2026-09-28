@@ -1,10 +1,12 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
+import { setSoundMaterial as setAudioMaterial, type SoundMaterial } from "@/lib/game-audio";
 import styles from "./TableEnvironment.module.css";
 
 export type TableTheme = "classic-felt" | "obsidian-arena" | "royal-walnut" | "midnight-neon";
 export type GraphicsQuality = "high" | "medium" | "low";
+export type { SoundMaterial };
 
 interface VisualSettingsContextType {
   tableTheme: TableTheme;
@@ -13,6 +15,8 @@ interface VisualSettingsContextType {
   setQuality: (quality: GraphicsQuality) => void;
   perspective3D: boolean;
   setPerspective3D: (enabled: boolean) => void;
+  soundMaterial: SoundMaterial;
+  setSoundMaterial: (mat: SoundMaterial) => void;
 }
 
 const VisualSettingsContext = createContext<VisualSettingsContextType>({
@@ -22,6 +26,8 @@ const VisualSettingsContext = createContext<VisualSettingsContextType>({
   setQuality: () => {},
   perspective3D: true,
   setPerspective3D: () => {},
+  soundMaterial: "wood",
+  setSoundMaterial: () => {},
 });
 
 export const useVisualSettings = () => useContext(VisualSettingsContext);
@@ -30,12 +36,14 @@ export function TableEnvironmentProvider({ children }: { children: React.ReactNo
   const [tableTheme, setTableTheme] = useState<TableTheme>("classic-felt");
   const [quality, setQuality] = useState<GraphicsQuality>("high");
   const [perspective3D, setPerspective3D] = useState<boolean>(true);
+  const [soundMaterial, setSoundMaterialState] = useState<SoundMaterial>("wood");
 
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem("nizalo_table_theme") as TableTheme | null;
       const savedQuality = localStorage.getItem("nizalo_graphics_quality") as GraphicsQuality | null;
       const saved3D = localStorage.getItem("nizalo_perspective_3d");
+      const savedMaterial = localStorage.getItem("nizalo_sound_material") as SoundMaterial | null;
 
       if (savedTheme && ["classic-felt", "obsidian-arena", "royal-walnut", "midnight-neon"].includes(savedTheme)) {
         setTableTheme(savedTheme);
@@ -45,6 +53,10 @@ export function TableEnvironmentProvider({ children }: { children: React.ReactNo
       }
       if (saved3D !== null) {
         setPerspective3D(saved3D === "true");
+      }
+      if (savedMaterial && ["wood", "ceramic", "glass", "metal"].includes(savedMaterial)) {
+        setSoundMaterialState(savedMaterial);
+        setAudioMaterial(savedMaterial);
       }
     } catch {
       // localStorage may fail in restricted environments
@@ -66,6 +78,12 @@ export function TableEnvironmentProvider({ children }: { children: React.ReactNo
     try { localStorage.setItem("nizalo_perspective_3d", String(enabled)); } catch {}
   };
 
+  const handleSetSoundMaterial = (mat: SoundMaterial) => {
+    setSoundMaterialState(mat);
+    setAudioMaterial(mat);
+    try { localStorage.setItem("nizalo_sound_material", mat); } catch {}
+  };
+
   const value = useMemo(() => ({
     tableTheme,
     setTableTheme: handleSetTableTheme,
@@ -73,7 +91,9 @@ export function TableEnvironmentProvider({ children }: { children: React.ReactNo
     setQuality: handleSetQuality,
     perspective3D,
     setPerspective3D: handleSetPerspective3D,
-  }), [tableTheme, quality, perspective3D]);
+    soundMaterial,
+    setSoundMaterial: handleSetSoundMaterial,
+  }), [tableTheme, quality, perspective3D, soundMaterial]);
 
   return (
     <VisualSettingsContext.Provider value={value}>
