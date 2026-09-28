@@ -10,6 +10,7 @@
  */
 const { createServer } = require("node:http");
 const http = require("node:http");
+const net = require("node:net");
 const { spawn } = require("node:child_process");
 const path = require("node:path");
 const fs = require("node:fs");
@@ -99,10 +100,75 @@ const avatarDir = process.env.AVATAR_STORAGE_DIR || path.join(here, "apps", "web
 try { fs.mkdirSync(avatarDir, { recursive: true }); } catch {}
 
 const hostname = process.env.HOSTNAME || "0.0.0.0";
-const port     = parseInt(process.env.PORT,      10) || 3000;
-const nextPort = parseInt(process.env.NEXT_PORT, 10) || 3002;
-const apiPort  = parseInt(process.env.API_PORT,  10) || 4000;
-const gwPort   = parseInt(process.env.WS_PORT,   10) || 3010;
+const port     = parseInt(process.env.PORT,        10) || 3000;
+let nextPort   = parseInt(process.env.NEXT_PORT,   10) || 3002;
+let apiPort    = parseInt(process.env.API_PORT,    10) || 4000;
+let gwPort     = parseInt(process.env.WS_PORT,     10) || 3010;
+let workerPort = parseInt(process.env.WORKER_PORT, 10) || 4001;
+
+const usedPorts = new Set([port]);
+
+function getAvailablePort(preferredPort) {
+  return new Promise((resolve) => {
+    if (!usedPorts.has(preferredPort)) {
+      const tester = net.createServer();
+      tester.unref();
+      tester.once("error", () => {
+        findFreePort();
+      });
+      tester.listen(preferredPort, "127.0.0.1", () => {
+        tester.close(() => {
+          usedPorts.add(preferredPort);
+          resolve(preferredPort);
+        });
+      });
+      return;
+    }
+    findFreePort();
+
+    function findFreePort() {
+      const tester = net.createServer();
+      tester.unref();
+      tester.once("error", () => {
+        let p = preferredPort + 10;
+        while (usedPorts.has(p)) p++;
+        usedPorts.add(p);
+        resolve(p);
+      });
+      tester.listen(0, "127.0.0.1", () => {
+        const allocatedPort = tester.address().port;
+        tester.close(() => {
+          usedPorts.add(allocatedPort);
+          resolve(allocatedPort);
+        });
+      });
+    }
+  });
+}
+
+function waitForPort(portToWait, maxWaitMs = 6000) {
+  const startTime = Date.now();
+  return new Promise((resolve) => {
+    function check() {
+      if (isShuttingDown) return resolve(false);
+      const socket = net.createConnection({ port: portToWait, host: "127.0.0.1" });
+      socket.once("connect", () => {
+        socket.destroy();
+        resolve(true);
+      });
+      socket.once("error", () => {
+        socket.destroy();
+        if (Date.now() - startTime >= maxWaitMs) {
+          console.warn(`[boot] Port ${portToWait} did not open within ${maxWaitMs}ms, proceeding to bind master proxy...`);
+          resolve(false);
+        } else {
+          setTimeout(check, 100);
+        }
+      });
+    }
+    check();
+  });
+}
 
 const nextScript   = path.join(here, "apps", "web", ".next", "hostinger", "server.js");
 const apiScript    = path.join(here, "apps", "api", "src", "index.mjs");
@@ -183,8 +249,9 @@ function startProcess(name, script, childPort, customCwd) {
           })
         : getEnv(childPort);
 
-      // Dedicated memory ceilings per process: 768MB for Next.js SSR, 512MB for backend services
-      const defaultOldSpace = name === "Next.js" ? "768" : "512";
+      // Memory ceilings per process to stay strictly under CloudLinux LVE quota (~1.5GB):
+      // Next.js: 256MB, API: 160MB, Gateway: 128MB, Worker: 128MB (Total ~672MB)
+      const defaultOldSpace = name === "Next.js" ? "256" : name === "API" ? "160" : "128";
       const nodeOptions = process.env.NODE_OPTIONS
         ? `${process.env.NODE_OPTIONS} --max-old-space-size=${defaultOldSpace}`
         : `--max-old-space-size=${defaultOldSpace}`;
@@ -192,7 +259,7 @@ function startProcess(name, script, childPort, customCwd) {
       const childEnv = Object.assign({}, baseEnv, {
         NODE_OPTIONS: nodeOptions,
         PORT: String(childPort),
-        OBSERVABILITY_PORT: String(childPort + 100),
+        OBSERVABILITY_PORT: "0",
       });
 
       const child = spawn(process.execPath, [script], {
@@ -230,11 +297,6 @@ function startProcess(name, script, childPort, customCwd) {
   launch();
 }
 
-startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
-startProcess("API",     apiScript,    apiPort);
-startProcess("Gateway", gwScript,     gwPort);
-startProcess("Worker",  workerScript, 4001);
-
 function shutdown() {
   if (isShuttingDown) return;
   isShuttingDown = true;
@@ -256,7 +318,7 @@ function shutdown() {
       }
     }
     process.exit(0);
-  }, 500);
+  }, 1000);
 }
 process.on("SIGINT",  shutdown);
 process.on("SIGTERM", shutdown);
@@ -285,7 +347,7 @@ function cleanHopByHopHeaders(headers) {
   return h;
 }
 
-function proxyHttp(req, res, targetPort) {
+function proxyHttp(req, res, targetPort, attempt = 1) {
   const pHeaders = cleanHopByHopHeaders(req.headers);
   const originalHost = req.headers["host"] || "nizalo.com";
   pHeaders["host"] = originalHost;
@@ -296,6 +358,9 @@ function proxyHttp(req, res, targetPort) {
       ? `${req.headers["x-forwarded-for"]}, ${req.socket.remoteAddress}`
       : req.socket.remoteAddress;
   }
+
+  const isGetOrHead = req.method === "GET" || req.method === "HEAD";
+  const maxRetries = 20; // 20 * 200ms = 4000ms buffer for warm-up/startup
 
   const proxyReq = http.request(
     {
@@ -334,8 +399,18 @@ function proxyHttp(req, res, targetPort) {
   });
 
   proxyReq.on("error", (err) => {
-    console.error(`[Proxy->${targetPort} Error] ${req.method} ${req.url}:`, err.message);
-    if (!res.headersSent) {
+    // If backend is still warming up (ECONNREFUSED / ECONNRESET) and request is GET/HEAD, buffer & retry
+    if ((err.code === "ECONNREFUSED" || err.code === "ECONNRESET") && isGetOrHead && attempt < maxRetries && !isShuttingDown) {
+      setTimeout(() => {
+        if (!res.writableEnded && !res.destroyed) {
+          proxyHttp(req, res, targetPort, attempt + 1);
+        }
+      }, 200);
+      return;
+    }
+
+    console.error(`[Proxy->${targetPort} Error] (attempt ${attempt}) ${req.method} ${req.url}:`, err.message);
+    if (!res.headersSent && !res.writableEnded) {
       const acceptsHtml = req.headers["accept"] && req.headers["accept"].includes("text/html");
       if (acceptsHtml && req.method === "GET") {
         res.writeHead(502, {
@@ -373,9 +448,11 @@ function proxyHttp(req, res, targetPort) {
     }
   });
 
-  if (req.method === "GET" || req.method === "HEAD") {
+  if (isGetOrHead) {
     proxyReq.end();
-    req.resume(); // CRITICAL: consume incoming stream so socket doesn't hang
+    if (attempt === 1) {
+      req.resume(); // CRITICAL: consume incoming stream so socket doesn't hang
+    }
   } else {
     req.pipe(proxyReq, { end: true });
   }
@@ -664,11 +741,44 @@ server.on("upgrade", (req, socket, head) => {
   socket.end();
 });
 
-server.listen(port, hostname, () => {
-  console.log(`========================================`);
-  console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
-  console.log(`  -> Next.js   : ${nextPort}`);
-  console.log(`  -> API       : ${apiPort}`);
-  console.log(`  -> Gateway   : ${gwPort}`);
-  console.log(`========================================`);
+server.on("error", (err) => {
+  console.error("FATAL: Master proxy error:", err.message);
+  shutdown();
+});
+
+async function boot() {
+  console.log("[boot] Dynamically allocating internal process ports...");
+  nextPort   = await getAvailablePort(parseInt(process.env.NEXT_PORT,   10) || 3002);
+  apiPort    = await getAvailablePort(parseInt(process.env.API_PORT,    10) || 4000);
+  gwPort     = await getAvailablePort(parseInt(process.env.WS_PORT,     10) || 3010);
+  workerPort = await getAvailablePort(parseInt(process.env.WORKER_PORT, 10) || 4001);
+
+  console.log(`[boot] Assigned internal ports:`);
+  console.log(`  -> Next.js : 127.0.0.1:${nextPort}`);
+  console.log(`  -> API     : 127.0.0.1:${apiPort}`);
+  console.log(`  -> Gateway : 127.0.0.1:${gwPort}`);
+  console.log(`  -> Worker  : 127.0.0.1:${workerPort}`);
+
+  startProcess("Next.js", nextScript,   nextPort, path.dirname(nextScript));
+  startProcess("API",     apiScript,    apiPort);
+  startProcess("Gateway", gwScript,     gwPort);
+  startProcess("Worker",  workerScript, workerPort);
+
+  console.log(`[boot] Waiting for Next.js (port ${nextPort}) to be ready...`);
+  await waitForPort(nextPort, 6000);
+
+  server.listen(port, hostname, () => {
+    console.log(`========================================`);
+    console.log(`> Nizalo Platform READY on http://${hostname}:${port}`);
+    console.log(`  -> Next.js   : ${nextPort}`);
+    console.log(`  -> API       : ${apiPort}`);
+    console.log(`  -> Gateway   : ${gwPort}`);
+    console.log(`  -> Worker    : ${workerPort}`);
+    console.log(`========================================`);
+  });
+}
+
+boot().catch((err) => {
+  console.error("FATAL: Boot failed:", err);
+  process.exit(1);
 });

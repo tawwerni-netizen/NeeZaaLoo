@@ -155,9 +155,6 @@ async function main() {
     ssl: { rejectUnauthorized: false },
     keepAlive: true,
   });
-  pool.on("connect", (client) => {
-    client.query("SET statement_timeout = 5000; SET lock_timeout = 3000; SET idle_in_transaction_session_timeout = 10000;").catch(() => {});
-  });
   pool.on("error", (err) => console.error("[api pg pool error]", err.message));
   const db = createPgAdapter(pool);
 
