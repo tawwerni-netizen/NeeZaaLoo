@@ -51,6 +51,16 @@
   font-weight: 600;
 }
 
+@media (max-width: 1350px) {
+  .langName {
+    display: none;
+  }
+  .triggerBtn {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+}
+
 .chevron {
   font-size: 0.75rem;
   color: var(--nz-text-3);

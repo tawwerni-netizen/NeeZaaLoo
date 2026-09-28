@@ -116,7 +116,10 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
 
   function handleMode(mode: PlayMode) {
     if (mode === "VS_COMPUTER") {
-      if (plugin!.difficulties.length > 0) {
+      if (gameId === "ludo") {
+        // Ludo has authentic relaxed turn timers and no artificial difficulty level
+        void startVsComputer(null, "STANDARD");
+      } else if (plugin!.difficulties.length > 0) {
         setStep({ name: "difficulty" });
       } else {
         setStep({ name: "time_control", difficulty: null });

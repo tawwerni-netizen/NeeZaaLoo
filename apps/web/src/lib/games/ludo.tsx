@@ -41,10 +41,10 @@ function LudoBoardAdapter({ view, mySeat, canMove, onMove }: BoardProps) {
 
 export const ludoPlugin: GamePlugin = {
   id: "ludo",
-  nameKey: "ludo", // Make sure this key exists in localization or is fine falling back
+  nameKey: "ludo",
   turnModel: "ALTERNATING",
   supportsAI: true,
-  difficulties: ["EASY", "MEDIUM", "HARD", "EXPERT"], // Same as dominoes
+  difficulties: [], // Ludo is dice/luck-driven, no artificial chess difficulty rating
   supportsDraw: false,
   cashEnabled: true,
   Board: LudoBoardAdapter,

@@ -1,7 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
+import { playDiceRollSound, playCheckerSlideSound } from "@/lib/game-audio";
+import { useI18n } from "@/lib/i18n/context";
 import styles from "./LudoBoard.module.css";
 
 export type LudoBoardProps = {
@@ -57,6 +60,50 @@ const HOME_COORDS = [
 
 const SAFE_SQUARES = [1, 9, 14, 22, 27, 35, 40, 48];
 
+function DicePips({ value }: { value: number }) {
+  const pipsMap: Record<number, Array<[number, number]>> = {
+    1: [[50, 50]],
+    2: [[26, 26], [74, 74]],
+    3: [[26, 26], [50, 50], [74, 74]],
+    4: [[26, 26], [74, 26], [26, 74], [74, 74]],
+    5: [[26, 26], [74, 26], [50, 50], [26, 74], [74, 74]],
+    6: [[26, 25], [26, 50], [26, 75], [74, 25], [74, 50], [74, 75]],
+  };
+
+  const coords = pipsMap[value] ?? pipsMap[6] ?? [];
+  const isOne = value === 1;
+
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full p-2 pointer-events-none">
+      <defs>
+        <radialGradient id="pipGlowOne" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#ff6b6b" />
+          <stop offset="60%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </radialGradient>
+        <radialGradient id="pipGlowWhite" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="60%" stopColor="#f1f5f9" />
+          <stop offset="100%" stopColor="#cbd5e1" />
+        </radialGradient>
+        <filter id="pipShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1.2" stdDeviation="1" floodColor="#000000" floodOpacity="0.75" />
+        </filter>
+      </defs>
+      {coords.map(([cx, cy], i) => (
+        <circle
+          key={i}
+          cx={cx}
+          cy={cy}
+          r={isOne ? 14 : 9.5}
+          fill={isOne ? "url(#pipGlowOne)" : "url(#pipGlowWhite)"}
+          filter="url(#pipShadow)"
+        />
+      ))}
+    </svg>
+  );
+}
+
 export function LudoBoard({
   turn,
   phase,
@@ -68,6 +115,29 @@ export function LudoBoard({
   canMove,
   onMove,
 }: LudoBoardProps) {
+  const { locale } = useI18n();
+  const isMyTurn = mySeat === turn && canMove;
+  const [isRolling, setIsRolling] = useState(false);
+  const [lastDisplayedRoll, setLastDisplayedRoll] = useState<number>(6);
+
+  useEffect(() => {
+    if (currentRoll !== null) {
+      setLastDisplayedRoll(currentRoll);
+    }
+  }, [currentRoll]);
+
+  useEffect(() => {
+    if (currentRoll === 6 && isMyTurn) {
+      try {
+        confetti({
+          particleCount: 25,
+          spread: 60,
+          origin: { y: 0.8 },
+          colors: ['#FFD700', '#FF5A2B', '#22C55E', '#00FFFF']
+        });
+      } catch {}
+    }
+  }, [currentRoll, rollCount, isMyTurn]);
   
   const getVisualPlayer = (player: number, totalPlayers: number) => {
     if (totalPlayers === 2) {
@@ -92,16 +162,24 @@ export function LudoBoard({
     return (ABSOLUTE_PATH[abs] as [number, number]) || [0, 0];
   };
 
-  const isMyTurn = mySeat === turn && canMove;
-  
   const handleRoll = () => {
-    if (isMyTurn && phase === "ROLL") {
+    if (isMyTurn && phase === "ROLL" && !isRolling) {
+      setIsRolling(true);
+      try {
+        playDiceRollSound();
+      } catch {}
       onMove({ action: "ROLL" });
+      setTimeout(() => {
+        setIsRolling(false);
+      }, 550);
     }
   };
 
   const handleMove = (tokenIndex: number) => {
     if (isMyTurn && phase === "MOVE" && legalMoves.includes(tokenIndex)) {
+      try {
+        playCheckerSlideSound();
+      } catch {}
       onMove({ action: "MOVE", tokenIndex });
     }
   };
@@ -263,32 +341,73 @@ export function LudoBoard({
           })()}
         </div>
         
-        <div className="flex flex-col items-end gap-2">
-          {/* Dice & Controls */}
-          <div className="flex items-center gap-4">
-            <AnimatePresence mode="popLayout">
-              {currentRoll !== null && (
-                <motion.div 
-                  key={`roll-${currentRoll}-${rollCount}`}
-                  initial={{ rotate: -180, scale: 0, opacity: 0 }}
-                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  className="w-14 h-14 bg-gray-900 border-2 border-indigo-500/50 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.3)]"
-                >
-                  <span className="text-3xl font-black text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{currentRoll}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        <div className="flex flex-col items-end gap-3">
+          {/* 3D Dice & Action Hub */}
+          <div className="flex items-center gap-3">
+            {/* 3D Neon Die Button */}
+            <div className={styles.diceZone}>
+              <motion.button
+                type="button"
+                onClick={handleRoll}
+                disabled={!isMyTurn || phase !== "ROLL"}
+                className={`${styles.diceBtn} ${isMyTurn && phase === "ROLL" ? styles.diceBtnActive : ""} ${currentRoll === 6 ? styles.diceBtnSix : ""}`}
+                animate={isRolling ? {
+                  rotateX: [0, 360, 720],
+                  rotateY: [0, -360, -720],
+                  rotateZ: [0, 90, 0],
+                  scale: [1, 1.25, 0.95, 1],
+                } : isMyTurn && phase === "ROLL" ? {
+                  scale: [1, 1.05, 1],
+                  transition: { repeat: Infinity, duration: 1.4, ease: "easeInOut" }
+                } : { scale: 1 }}
+                transition={{ duration: 0.55, ease: "easeOut" }}
+                title={isMyTurn && phase === "ROLL" ? (locale === "ar" ? "اضغط لرمي النرد" : "Click to roll dice") : undefined}
+                aria-label="Roll Dice"
+              >
+                <div className={styles.diceFace}>
+                  <DicePips value={currentRoll ?? lastDisplayedRoll} />
+                </div>
+                {isMyTurn && phase === "ROLL" && (
+                  <span className={styles.dicePulseRing} />
+                )}
+              </motion.button>
+            </div>
 
+            {/* Dynamic Status / Action CTA */}
             {isMyTurn && phase === "ROLL" && (
-              <button onClick={handleRoll} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.5)] border border-indigo-400 transition-all hover:scale-105 active:scale-95">
-                ROLL DICE
+              <button
+                type="button"
+                onClick={handleRoll}
+                className={styles.rollActionBtn}
+              >
+                <span className={styles.rollActionIcon}>🎲</span>
+                <span className={styles.rollActionText}>
+                  {locale === "ar" ? "ارْمِ النرد" : "ROLL DICE"}
+                </span>
               </button>
             )}
-            
+
             {isMyTurn && phase === "MOVE" && (
-              <div className="text-indigo-300 font-bold animate-pulse px-4">
-                Select Token
+              <div className={styles.movePromptPill}>
+                {currentRoll === 6 && (
+                  <span className={styles.sixBadge}>
+                    🔥 {locale === "ar" ? "٦! رمية إضافية" : "6! Extra Roll"}
+                  </span>
+                )}
+                <span className={styles.moveText}>
+                  🎯 {locale === "ar" ? "اختر قاطعة للتحريك" : "Pick token to move"}
+                </span>
+              </div>
+            )}
+
+            {!isMyTurn && (
+              <div className={styles.opponentTurnPill}>
+                <span className={styles.opponentDot} />
+                <span>
+                  {phase === "ROLL" 
+                    ? (locale === "ar" ? "الخصم يرمي النرد..." : "Opponent rolling...") 
+                    : (locale === "ar" ? "الخصم يحرّك قاطعته..." : "Opponent moving...")}
+                </span>
               </div>
             )}
           </div>

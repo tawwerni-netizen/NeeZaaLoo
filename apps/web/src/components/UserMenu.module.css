@@ -47,6 +47,16 @@
   white-space: nowrap;
 }
 
+@media (max-width: 1280px) {
+  .handleText {
+    max-width: 75px;
+  }
+  .trigger {
+    padding: 5px 8px;
+    gap: 5px;
+  }
+}
+
 .chevron {
   width: 12px;
   height: 12px;

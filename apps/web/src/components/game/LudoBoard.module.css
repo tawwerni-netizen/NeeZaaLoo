@@ -148,12 +148,25 @@
 
 .tokenMovable {
   cursor: pointer;
+  animation: pulseMovable 1.2s infinite ease-in-out;
 }
 .tokenMovable:hover {
-  transform: scale(1.1);
+  transform: scale(1.28);
   box-shadow: 
-    0 0 20px var(--neon),
+    0 0 28px var(--neon),
+    0 0 0 3px #FFD700,
     inset 0 0 25px var(--neon);
+}
+
+@keyframes pulseMovable {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 14px var(--neon), 0 0 0 2px #fff, inset 0 0 10px #fff;
+  }
+  50% {
+    transform: scale(1.22);
+    box-shadow: 0 0 32px var(--neon), 0 0 0 3px #FFD700, inset 0 0 20px #FFD700;
+  }
 }
 
 @keyframes pulseToken {
@@ -200,4 +213,186 @@
 
 
 @keyframes starPulse { 0% { transform: scale(0.9); box-shadow: 0 0 20px #FFD700; } 100% { transform: scale(1.1); box-shadow: 0 0 50px #FFD700, 0 0 80px #fff; } }
+
+/* ========================================================
+   3D NEON LUXURY CYBER-DIE
+   ======================================================== */
+.diceZone {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 900px;
+}
+
+.diceBtn {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #1c2336 0%, #0c101c 100%);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.28),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.8),
+    0 8px 24px rgba(0, 0, 0, 0.6);
+  cursor: default;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  outline: none;
+}
+
+.diceBtnActive {
+  cursor: pointer;
+  border-color: #FFD700 !important;
+  box-shadow: 
+    0 0 28px rgba(255, 215, 0, 0.55),
+    inset 0 0 16px rgba(255, 215, 0, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.45),
+    0 10px 28px rgba(0, 0, 0, 0.7);
+}
+
+.diceBtnActive:hover {
+  transform: translateY(-2px) scale(1.06);
+  border-color: #FFE55C !important;
+  box-shadow: 
+    0 0 40px rgba(255, 215, 0, 0.8),
+    inset 0 0 22px rgba(255, 215, 0, 0.35),
+    0 14px 32px rgba(0, 0, 0, 0.8);
+}
+
+.diceBtnActive:active {
+  transform: translateY(1px) scale(0.96);
+}
+
+.diceBtnSix {
+  border-color: #FFD700 !important;
+  animation: diceSixGlow 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes diceSixGlow {
+  0% {
+    box-shadow: 0 0 22px rgba(255, 215, 0, 0.6), inset 0 0 12px rgba(255, 215, 0, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.95), inset 0 0 28px rgba(255, 215, 0, 0.55);
+  }
+}
+
+.diceFace {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dicePulseRing {
+  position: absolute;
+  inset: -6px;
+  border-radius: 24px;
+  border: 2px solid rgba(255, 215, 0, 0.65);
+  animation: pulseRing 1.6s infinite ease-out;
+  pointer-events: none;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.24);
+    opacity: 0;
+  }
+}
+
+/* Roll Action Button */
+.rollActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: linear-gradient(135deg, #ff5a2b, #f59e0b);
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 90, 43, 0.4), 0 0 15px rgba(245, 158, 11, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.rollActionBtn:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 26px rgba(255, 90, 43, 0.6), 0 0 25px rgba(255, 215, 0, 0.5);
+}
+
+.rollActionBtn:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+.rollActionIcon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.movePromptPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: rgba(14, 19, 29, 0.95);
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
+.sixBadge {
+  font-size: 12px;
+  font-weight: 800;
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  padding: 2px 8px;
+  border-radius: var(--nz-radius-pill, 999px);
+  animation: starPulse 1.2s infinite alternate;
+}
+
+.moveText {
+  font-size: 13px;
+  font-weight: 700;
+  color: #a5b4fc;
+}
+
+.opponentTurnPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: rgba(15, 20, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.opponentDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: pulseBase 1.5s infinite alternate;
+}
 

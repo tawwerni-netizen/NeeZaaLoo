@@ -35,6 +35,7 @@ const GAME_METADATA: Record<string, {
 }> = {
   chess: { category: "strategy", metaKey: "play_page.meta_chess", activePlayers: 348 },
   dominoes: { category: "strategy", metaKey: "play_page.meta_dominoes", activePlayers: 292 },
+  ludo: { category: "classic", metaKey: "play_page.meta_ludo", activePlayers: 512 },
   backgammon: { category: "strategy", metaKey: "play_page.meta_backgammon", activePlayers: 218 },
   reversi: { category: "strategy", metaKey: "play_page.meta_reversi", activePlayers: 165 },
   "speed-math": { category: "speed", metaKey: "play_page.meta_speed_math", activePlayers: 210 },

@@ -45,7 +45,6 @@ export function Header() {
     { href: "/store", label: t("nav.store") || "Store", icon: "🛒" },
     { href: "/battle-pass", label: t("nav.battle_pass") || "Seasons", icon: "🎟️" },
     { href: "/rank", label: t("nav.rank"), icon: "👑" },
-    { href: "/wallet", label: t("nav.wallet"), icon: "💰" },
   ];
 
   const isActive = (href: string) => pathname === `/${locale}${href}`;

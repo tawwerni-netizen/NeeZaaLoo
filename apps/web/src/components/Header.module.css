@@ -14,27 +14,30 @@
 .inner {
   display: flex;
   align-items: center;
-  gap: clamp(8px, 1.2vw, 20px);
+  gap: clamp(6px, 1.2vw, 18px);
   height: 64px;
-  max-width: 1400px !important;
+  max-width: 1440px !important;
   width: 100%;
   margin: 0 auto;
-  padding-inline: clamp(14px, 2vw, 28px) !important;
+  padding-inline: clamp(10px, 1.8vw, 24px) !important;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .brand {
   display: flex;
   align-items: center;
   flex: none;
+  flex-shrink: 0;
 }
 
 .primaryNav {
   display: flex;
   align-items: center;
-  gap: clamp(4px, 0.6vw, 10px);
-  margin-inline-start: clamp(6px, 1vw, 14px);
+  gap: clamp(3px, 0.6vw, 10px);
+  margin-inline-start: clamp(4px, 0.8vw, 12px);
   flex: 1;
+  min-width: 0;
 }
 
 .navLink, .navLinkActive {
@@ -117,6 +120,8 @@
   align-items: center;
   gap: clamp(6px, 0.8vw, 12px);
   flex: none;
+  flex-shrink: 0;
+  min-width: max-content;
 }
 
 .walletPill {
@@ -775,23 +780,49 @@
   border-color: #ef4444;
 }
 
-@media (min-width: 961px) and (max-width: 1220px) {
-  .inner {
-    gap: var(--nz-space-3);
+@media (max-width: 1380px) {
+  .navIcon {
+    display: none;
+  }
+  .navLink, .navLinkActive {
+    padding: 6px 9px;
+    gap: 0;
+    font-size: 0.82rem;
   }
   .primaryNav {
-    gap: 10px;
+    gap: 4px;
     margin-inline-start: 6px;
   }
-  .navLink, .navActive {
-    font-size: 13px;
-    padding: var(--nz-space-1) 0;
+}
+
+@media (min-width: 961px) and (max-width: 1200px) {
+  .inner {
+    gap: 6px;
+    padding-inline: 10px !important;
+  }
+  .primaryNav {
+    gap: 3px;
+    margin-inline-start: 4px;
+  }
+  .navLink, .navLinkActive {
+    font-size: 12px;
+    padding: 5px 6px;
   }
   .secondary {
-    gap: 6px;
+    gap: 4px;
   }
-  .walletLabel {
+  .walletDepositLabel {
     display: none;
+  }
+  .walletDepositQuickBtn {
+    padding: 0 8px;
+  }
+  .walletBalanceMain {
+    padding: 0 8px;
+    gap: 5px;
+  }
+  .walletAmountNum {
+    font-size: 13px;
   }
 }
 
