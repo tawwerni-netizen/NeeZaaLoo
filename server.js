@@ -180,10 +180,15 @@ const LOCK_FILE = path.join(here, ".nizalo-master.pid");
 const LOCK_TIMEOUT_MS = 6000; // 6 seconds without heartbeat = stale leader lock
 
 const childLogsRingBuffer = [];
-function recordChildLog(msg) {
+const childLogsByService = { "Next.js": [], "API": [], "Gateway": [], "Worker": [] };
+function recordChildLog(msg, serviceName) {
   const line = `[${new Date().toISOString()}] ${msg}`;
   childLogsRingBuffer.push(line);
-  if (childLogsRingBuffer.length > 60) childLogsRingBuffer.shift();
+  if (childLogsRingBuffer.length > 100) childLogsRingBuffer.shift();
+  if (serviceName && childLogsByService[serviceName]) {
+    childLogsByService[serviceName].push(line);
+    if (childLogsByService[serviceName].length > 50) childLogsByService[serviceName].shift();
+  }
 }
 
 function checkPortLive(port) {
@@ -470,23 +475,23 @@ function startProcess(name, script, childPort, customCwd) {
       if (child.stdout) {
         child.stdout.on("data", (chunk) => {
           process.stdout.write(chunk);
-          recordChildLog(`[${name}] ` + chunk.toString().trim().slice(0, 300));
+          recordChildLog(`[${name}] ` + chunk.toString().trim().slice(0, 300), name);
         });
       }
       if (child.stderr) {
         child.stderr.on("data", (chunk) => {
           process.stderr.write(chunk);
-          recordChildLog(`[${name}:err] ` + chunk.toString().trim().slice(0, 300));
+          recordChildLog(`[${name}:err] ` + chunk.toString().trim().slice(0, 300), name);
         });
       }
 
       child.on("error", (err) => {
-        recordChildLog(`[${name}:spawn_err] ${err.message}`);
+        recordChildLog(`[${name}:spawn_err] ${err.message}`, name);
         console.error(`[${name}] Spawn error:`, err.message);
       });
 
       child.on("exit", (code, signal) => {
-        recordChildLog(`[${name}:exit] code=${code} signal=${signal}`);
+        recordChildLog(`[${name}:exit] code=${code} signal=${signal}`, name);
         if (isShuttingDown) return;
         delete children[name];
         const now = Date.now();
@@ -902,9 +907,67 @@ const server = createServer((req, res) => {
 
     function probe(targetPort, host = "127.0.0.1") {
       return new Promise((resolve) => {
-        const s = net.createConnection({ host, port: targetPort });
+        const s = net.createConnection({ host, port: targetPort, timeout: 1000 });
         s.once("connect", () => { s.destroy(); resolve({ host, port: targetPort, open: true }); });
         s.once("error", (e) => { s.destroy(); resolve({ host, port: targetPort, open: false, error: e.code }); });
+        s.once("timeout", () => { s.destroy(); resolve({ host, port: targetPort, open: false, error: "TIMEOUT" }); });
+      });
+    }
+
+    function httpProbe(targetPort, p, host = "127.0.0.1") {
+      return new Promise((resolve) => {
+        const req = http.get(`http://${host}:${targetPort}${p}`, { timeout: 1500 }, (res) => {
+          let b = "";
+          res.on("data", c => b += c);
+          res.on("end", () => resolve({ host, port: targetPort, status: res.statusCode, body: b.slice(0, 100) }));
+        });
+        req.on("error", (e) => resolve({ host, port: targetPort, error: e.code, message: e.message }));
+        req.on("timeout", () => { req.destroy(); resolve({ host, port: targetPort, error: "TIMEOUT" }); });
+      });
+    }
+
+    function testSelfLoopback(host = "127.0.0.1") {
+      return new Promise((resolve) => {
+        const srv = net.createServer((sock) => { sock.end("ok"); });
+        srv.listen(0, host, () => {
+          const p = srv.address().port;
+          const client = net.connect({ host, port: p, timeout: 1000 }, () => {
+            client.destroy();
+            srv.close(() => resolve({ host, port: p, success: true }));
+          });
+          client.on("error", (e) => {
+            srv.close(() => resolve({ host, port: p, success: false, error: e.code, message: e.message }));
+          });
+          client.on("timeout", () => {
+            client.destroy();
+            srv.close(() => resolve({ host, port: p, success: false, error: "TIMEOUT" }));
+          });
+        });
+        srv.on("error", (e) => resolve({ host, success: false, bindError: e.code, message: e.message }));
+      });
+    }
+
+    function testUnixSocket() {
+      return new Promise((resolve) => {
+        const sockPath = path.join(require("node:os").tmpdir(), `nizalo-test-${Date.now()}.sock`);
+        try { fs.unlinkSync(sockPath); } catch {}
+        const srv = net.createServer((sock) => { sock.end("ok"); });
+        srv.listen(sockPath, () => {
+          const client = net.connect(sockPath, () => {
+            client.destroy();
+            srv.close(() => {
+              try { fs.unlinkSync(sockPath); } catch {}
+              resolve({ success: true, path: sockPath });
+            });
+          });
+          client.on("error", (e) => {
+            srv.close(() => {
+              try { fs.unlinkSync(sockPath); } catch {}
+              resolve({ success: false, error: e.code, message: e.message });
+            });
+          });
+        });
+        srv.on("error", (e) => resolve({ success: false, bindError: e.code, message: e.message }));
       });
     }
 
@@ -925,30 +988,21 @@ const server = createServer((req, res) => {
       }
     }
 
-    function httpProbe(targetPort, p) {
-      return new Promise((resolve) => {
-        const req = http.get(`http://127.0.0.1:${targetPort}${p}`, { timeout: 3000 }, (res) => {
-          let b = "";
-          res.on("data", c => b += c);
-          res.on("end", () => resolve({ port: targetPort, status: res.statusCode, body: b.slice(0, 100) }));
-        });
-        req.on("error", (e) => resolve({ port: targetPort, error: e.code, message: e.message }));
-        req.on("timeout", () => { req.destroy(); resolve({ port: targetPort, error: "TIMEOUT" }); });
-      });
-    }
-
     Promise.all([
+      testSelfLoopback("127.0.0.1"),
+      testSelfLoopback("0.0.0.0"),
+      testUnixSocket(),
       probe(nextPort, "127.0.0.1"),
-      probe(nextPort, "localhost"),
+      probe(nextPort, "0.0.0.0"),
       probe(apiPort, "127.0.0.1"),
-      probe(apiPort, "localhost"),
+      probe(apiPort, "0.0.0.0"),
       probe(gwPort, "127.0.0.1"),
       probe(workerPort, "127.0.0.1"),
-      httpProbe(apiPort, "/v1/health"),
-      httpProbe(nextPort, "/"),
-    ]).then((probeResults) => {
-      const ports = probeResults.slice(0, 6);
-      const httpProbes = probeResults.slice(6);
+      httpProbe(apiPort, "/v1/health", "127.0.0.1"),
+      httpProbe(nextPort, "/", "127.0.0.1"),
+    ]).then(([loopback127, loopback0, unixSock, ...probes]) => {
+      const ports = probes.slice(0, 6);
+      const httpProbes = probes.slice(6);
       let lockData = null;
       try {
         lockData = JSON.parse(fs.readFileSync(LOCK_FILE, "utf8"));
@@ -963,8 +1017,16 @@ const server = createServer((req, res) => {
           try {
             const status = fs.readFileSync(`/proc/${ch.pid}/status`, "utf8");
             const stateLine = status.split("\n").find(l => l.startsWith("State:"));
-            const fds = fs.readdirSync(`/proc/${ch.pid}/fd`);
-            procInfo = { state: stateLine, fdCount: fds.length };
+            const fdNames = fs.readdirSync(`/proc/${ch.pid}/fd`);
+            const sockets = [];
+            for (const fd of fdNames) {
+              try {
+                const target = fs.readlinkSync(`/proc/${ch.pid}/fd/${fd}`);
+                if (target.startsWith("socket:")) sockets.push(target);
+              } catch {}
+            }
+            const cmd = fs.readFileSync(`/proc/${ch.pid}/cmdline`, "utf8").replace(/\0/g, " ");
+            procInfo = { state: stateLine, fdCount: fdNames.length, sockets, cmd };
           } catch (e) {
             procInfo = { error: e.message };
           }
@@ -975,6 +1037,7 @@ const server = createServer((req, res) => {
           exitCode: ch ? ch.exitCode : null,
           signalCode: ch ? ch.signalCode : null,
           procInfo,
+          logs: childLogsByService[name] || [],
         };
       }
 
@@ -984,11 +1047,17 @@ const server = createServer((req, res) => {
         uid: process.getuid ? process.getuid() : null,
         isLeader,
         lockData,
+        loopbackTests: {
+          tcp127: loopback127,
+          tcp0: loopback0,
+          unixSocket: unixSock,
+        },
         ports,
         httpProbes,
+        networkInterfaces: require("node:os").networkInterfaces(),
         tcpListening,
         children: childStatus,
-        recentLogs: childLogsRingBuffer.slice(-40),
+        recentLogs: childLogsRingBuffer.slice(-30),
         uptime: process.uptime(),
       }, null, 2));
     });
