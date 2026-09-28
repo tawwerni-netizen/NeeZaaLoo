@@ -122,7 +122,15 @@ function loadEnvFile(filePath) {
   }
 }
 
-async function main() {
+export async function createApiRuntime({
+  pool: customPool = null,
+  db: customDb = null,
+  signingKey: customSigningKey = null,
+  encryptionKey: customEncryptionKey = null,
+  logger: customLogger = null,
+  metrics: customMetrics = null,
+  standalone = false,
+} = {}) {
   loadEnvFile(path.resolve(process.cwd(), ".env"));
   loadEnvFile(path.resolve(process.cwd(), "apps/api/.env"));
   loadEnvFile(path.resolve(__dirname, "../../../.env"));
@@ -140,13 +148,15 @@ async function main() {
   requireEnv(["DATABASE_URL"]);
 
   const sink = process.env.LOG_FORMAT === "pretty" ? createConsoleSink() : createStructuredLogSink();
-  const logger = createLogger({ service: "api", sink });
-  const metrics = createMetricsRegistry();
+  const logger = customLogger || createLogger({ service: "api", sink });
+  const metrics = customMetrics || createMetricsRegistry();
 
-  const signingKey = loadOrGenerateKey("AUTH_SIGNING_KEY_B64", { bytes: 32, logger });
-  const encryptionKey = loadOrGenerateKey("AUTH_ENCRYPTION_KEY_B64", { bytes: 32, logger });
+  let signingKey = customSigningKey || loadOrGenerateKey("AUTH_SIGNING_KEY_B64", { bytes: 32, logger });
+  let encryptionKey = customEncryptionKey || loadOrGenerateKey("AUTH_ENCRYPTION_KEY_B64", { bytes: 32, logger });
+  if (typeof signingKey === "string") signingKey = Buffer.from(signingKey, "base64");
+  if (typeof encryptionKey === "string") encryptionKey = Buffer.from(encryptionKey, "base64");
 
-  const pool = new Pool({
+  const pool = customPool || new Pool({
     connectionString: process.env.DATABASE_URL,
     max: Number(process.env.DB_POOL_SIZE || 5),
     idleTimeoutMillis: 10000,
@@ -156,8 +166,8 @@ async function main() {
     ssl: { rejectUnauthorized: false },
     keepAlive: true,
   });
-  pool.on("error", (err) => console.error("[api pg pool error]", err.message));
-  const db = createPgAdapter(pool);
+  if (!customPool) pool.on("error", (err) => console.error("[api pg pool error]", err.message));
+  const db = customDb || createPgAdapter(pool);
 
   // Auto-apply pending migrations and seed personas asynchronously in background
   (async () => {
@@ -433,102 +443,117 @@ async function main() {
     corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:3000,http://127.0.0.1:3000,https://nizalo.com,https://app.nizalo.com").split(",").map((s) => s.trim()).filter(Boolean),
   });
 
-  const host = process.env.HOST || "127.0.0.1";
-  const port = Number(process.env.PORT || 4000);
-  // Retry binding on EADDRINUSE: Hostinger overlapping deployments may leave
-  // the old API holding port 4000 briefly. Wait up to 60s.
-  {
-    api.server.setMaxListeners(100);
-    const deadline = Date.now() + 60_000;
-    while (true) {
-      try {
-        await new Promise((resolve, reject) => {
-          const onListening = () => {
-            api.server.removeListener("error", onError);
-            resolve();
-          };
-          const onError = (err) => {
-            api.server.removeListener("listening", onListening);
-            reject(err);
-          };
-          api.server.once("error", onError);
-          api.server.once("listening", onListening);
-          api.server.listen(port, host);
-        });
-        break; // bound successfully
-      } catch (err) {
-        if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
-        const remaining = Math.round((deadline - Date.now()) / 1000);
-        console.warn(`[api] Port ${port} busy (EADDRINUSE), evicting stale holder and retrying for ${remaining}s more...`);
-        if (process.platform === "linux") {
-          try {
-            const hexPort = port.toString(16).toUpperCase().padStart(4, "0");
-            const inodes = new Set();
-            for (const f of ["/proc/net/tcp", "/proc/net/tcp6"]) {
-              if (!fs.existsSync(f)) continue;
-              for (const l of fs.readFileSync(f, "utf8").split("\n")) {
-                const parts = l.trim().split(/\s+/);
-                if (parts[1]?.endsWith(":" + hexPort) && parts[3] === "0A") {
-                  if (parts[9] && parts[9] !== "0") inodes.add(parts[9]);
+  if (standalone) {
+    const host = process.env.HOST || "127.0.0.1";
+    const port = Number(process.env.PORT || 4000);
+    // Retry binding on EADDRINUSE: Hostinger overlapping deployments may leave
+    // the old API holding port 4000 briefly. Wait up to 60s.
+    {
+      api.server.setMaxListeners(100);
+      const deadline = Date.now() + 60_000;
+      while (true) {
+        try {
+          await new Promise((resolve, reject) => {
+            const onListening = () => {
+              api.server.removeListener("error", onError);
+              resolve();
+            };
+            const onError = (err) => {
+              api.server.removeListener("listening", onListening);
+              reject(err);
+            };
+            api.server.once("error", onError);
+            api.server.once("listening", onListening);
+            api.server.listen(port, host);
+          });
+          break; // bound successfully
+        } catch (err) {
+          if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
+          const remaining = Math.round((deadline - Date.now()) / 1000);
+          console.warn(`[api] Port ${port} busy (EADDRINUSE), evicting stale holder and retrying for ${remaining}s more...`);
+          if (process.platform === "linux") {
+            try {
+              const hexPort = port.toString(16).toUpperCase().padStart(4, "0");
+              const inodes = new Set();
+              for (const f of ["/proc/net/tcp", "/proc/net/tcp6"]) {
+                if (!fs.existsSync(f)) continue;
+                for (const l of fs.readFileSync(f, "utf8").split("\n")) {
+                  const parts = l.trim().split(/\s+/);
+                  if (parts[1]?.endsWith(":" + hexPort) && parts[3] === "0A") {
+                    if (parts[9] && parts[9] !== "0") inodes.add(parts[9]);
+                  }
                 }
               }
-            }
-            if (inodes.size > 0) {
-              for (const entry of fs.readdirSync("/proc")) {
-                if (!/^\d+$/.test(entry)) continue;
-                const pid = parseInt(entry, 10);
-                if (pid === process.pid) continue;
-                const fdDir = `/proc/${pid}/fd`;
-                try {
-                  for (const fd of fs.readdirSync(fdDir)) {
-                    const link = fs.readlinkSync(`${fdDir}/${fd}`);
-                    for (const inode of inodes) {
-                      if (link.includes(`socket:[${inode}]`)) {
-                        process.kill(pid, "SIGKILL");
-                        break;
+              if (inodes.size > 0) {
+                for (const entry of fs.readdirSync("/proc")) {
+                  if (!/^\d+$/.test(entry)) continue;
+                  const pid = parseInt(entry, 10);
+                  if (pid === process.pid) continue;
+                  const fdDir = `/proc/${pid}/fd`;
+                  try {
+                    for (const fd of fs.readdirSync(fdDir)) {
+                      const link = fs.readlinkSync(`${fdDir}/${fd}`);
+                      for (const inode of inodes) {
+                        if (link.includes(`socket:[${inode}]`)) {
+                          process.kill(pid, "SIGKILL");
+                          break;
+                        }
                       }
                     }
-                  }
-                } catch {}
+                  } catch {}
+                }
               }
-            }
-          } catch {}
-          try {
-            const cmd = `sh -c "fuser -k ${port}/tcp 2>/dev/null || (lsof -ti:${port} 2>/dev/null | xargs kill -9 2>/dev/null) || true"`;
-            execSync(cmd, { stdio: "ignore", timeout: 2000 });
-          } catch {}
+            } catch {}
+            try {
+              const cmd = `sh -c "fuser -k ${port}/tcp 2>/dev/null || (lsof -ti:${port} 2>/dev/null | xargs kill -9 2>/dev/null) || true"`;
+              execSync(cmd, { stdio: "ignore", timeout: 2000 });
+            } catch {}
+          }
+          await new Promise(r => setTimeout(r, 1000));
         }
-        await new Promise(r => setTimeout(r, 1000));
       }
     }
-  }
-  logger.emit("worker.tick_started", { worker: "api", workerId: workerIdentity(), host, port });
+    logger.emit("worker.tick_started", { worker: "api", workerId: workerIdentity(), host, port });
 
-  let obs = null;
-  try {
-    obs = createObservabilityServer({
-      metrics,
-      checks: [{ name: "database", check: async () => { await db.query("SELECT 1"); return true; } }],
-      port: Number(process.env.OBSERVABILITY_PORT || 3001),
+    let obs = null;
+    try {
+      obs = createObservabilityServer({
+        metrics,
+        checks: [{ name: "database", check: async () => { await db.query("SELECT 1"); return true; } }],
+        port: Number(process.env.OBSERVABILITY_PORT || 3001),
+      });
+      const obsInfo = await obs.start();
+      logger.emit("worker.tick_started", { worker: "api-observability", port: obsInfo.port });
+    } catch (err) {
+      console.warn("[api-observability] Could not start observability server:", err.message);
+    }
+
+    installGracefulShutdown({
+      logger,
+      gracefulShutdownMs: Number(process.env.GRACEFUL_SHUTDOWN_MS || 10000),
+      stop: async () => {
+        await Promise.all([api.close(), obs?.stop(), chatBus.close()]);
+        await pool.end();
+      },
     });
-    const obsInfo = await obs.start();
-    logger.emit("worker.tick_started", { worker: "api-observability", port: obsInfo.port });
-  } catch (err) {
-    console.warn("[api-observability] Could not start observability server:", err.message);
   }
 
-  installGracefulShutdown({
+  return {
+    api,
+    db,
+    pool,
+    auth,
+    chatBus,
     logger,
-    gracefulShutdownMs: Number(process.env.GRACEFUL_SHUTDOWN_MS || 10000),
-    stop: async () => {
-      await Promise.all([api.close(), obs?.stop(), chatBus.close()]);
-      await pool.end();
-    },
-  });
+    metrics,
+  };
 }
 
-main().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error("api server failed to start", err);
-  process.exit(1);
-});
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+if (isDirectRun) {
+  createApiRuntime({ standalone: true }).catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("api server failed to start", err);
+    process.exit(1);
+  });
+}

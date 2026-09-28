@@ -52,6 +52,9 @@ import { ReversiPlugin } from "../../../packages/game-reversi/src/plugin.mjs";
 import { createReversiAiAdapter } from "../../../packages/game-reversi/src/ai.mjs";
 import { GomokuPlugin } from "../../../packages/game-gomoku/src/plugin.mjs";
 import { createGomokuAiAdapter } from "../../../packages/game-gomoku/src/ai.mjs";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createLogger, createMetricsRegistry, createConsoleSink, createStructuredLogSink,
 } from "../../../packages/observability/src/index.mjs";
@@ -60,8 +63,49 @@ import {
 } from "../../../packages/bootstrap/src/index.mjs";
 
 const { Pool } = pg;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-async function main() {
+function loadEnvFile(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
+      const lines = fs.readFileSync(filePath, "utf-8").split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
+export async function createGatewayRuntime({
+  pool: poolProvided = null,
+  db: dbProvided = null,
+  signingKey: signingKeyProvided = null,
+  encryptionKey: encryptionKeyProvided = null,
+  auth: authProvided = null,
+  chatBus: chatBusProvided = null,
+  logger: customLogger = null,
+  metrics: customMetrics = null,
+  standalone = false,
+} = {}) {
+  loadEnvFile(path.resolve(process.cwd(), ".env"));
+  loadEnvFile(path.resolve(process.cwd(), "apps/gateway/.env"));
+  loadEnvFile(path.resolve(__dirname, "../../../.env"));
+  loadEnvFile(path.resolve(__dirname, "../.env"));
+
   for (const k of Object.keys(process.env)) {
     if (typeof process.env[k] === "string") {
       const v = process.env[k].trim();
@@ -73,17 +117,19 @@ async function main() {
 
   requireEnv(["DATABASE_URL"]);
   const sink = process.env.LOG_FORMAT === "pretty" ? createConsoleSink() : createStructuredLogSink();
-  const logger = createLogger({ service: "gateway", sink });
-  const metrics = createMetricsRegistry();
+  const logger = customLogger || createLogger({ service: "gateway", sink });
+  const metrics = customMetrics || createMetricsRegistry();
 
-  const signingKey = loadOrGenerateKey("AUTH_SIGNING_KEY_B64", { bytes: 32, logger });
-  const encryptionKey = loadOrGenerateKey("AUTH_ENCRYPTION_KEY_B64", { bytes: 32, logger });
+  let signingKey = signingKeyProvided || loadOrGenerateKey("AUTH_SIGNING_KEY_B64", { bytes: 32, logger });
+  let encryptionKey = encryptionKeyProvided || loadOrGenerateKey("AUTH_ENCRYPTION_KEY_B64", { bytes: 32, logger });
+  if (typeof signingKey === "string") signingKey = Buffer.from(signingKey, "base64");
+  if (typeof encryptionKey === "string") encryptionKey = Buffer.from(encryptionKey, "base64");
   if (!process.env.DATABASE_URL) {
     logger.emit("system.error", { msg: "DATABASE_URL is required" });
     process.exit(1);
   }
 
-  const pool = new Pool({
+  const pool = poolProvided || new Pool({
     connectionString: process.env.DATABASE_URL,
     max: Number(process.env.DB_POOL_SIZE || 2),
     idleTimeoutMillis: 5000,
@@ -93,10 +139,12 @@ async function main() {
     ssl: { rejectUnauthorized: false },
     keepAlive: true,
   });
-  pool.on("error", (err) => console.error("[gw pg pool error]", err.message));
-  const db = createPgAdapter(pool);
+  if (!poolProvided) {
+    pool.on("error", (err) => console.error("[gw pg pool error]", err.message));
+  }
+  const db = dbProvided || createPgAdapter(pool);
 
-  const auth = createAuthService(db, { signingKey, encryptionKey });
+  const auth = authProvided || createAuthService(db, { signingKey, encryptionKey });
   const store = createDuelStore(db, { emit: logger.emit });
   // The SAME Fair Play Engine the API process's admin/case-review surface
   // already talks to -- this process only ever adds evidence to it
@@ -153,10 +201,10 @@ async function main() {
     publishErrors: metrics.counter("chat_bus_publish_errors_total", { help: "Failed attempts to publish a chat event onto the RealtimeBus" }),
     listenErrors: metrics.counter("chat_bus_listen_errors_total", { help: "RealtimeBus LISTEN connection errors/drops on this instance" }),
   } : null;
-  const chatBus = createPgBus({
+  const chatBus = chatBusProvided || createPgBus({
     pool,
     connect: async () => {
-      const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+      const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
       await client.connect();
       return client;
     },
@@ -166,7 +214,7 @@ async function main() {
 
   const gw = await createGateway({
     auth, duels, plugins, store, lease, ownerId, fairPlay, db,
-    port: Number(process.env.WS_PORT || 3010),
+    port: standalone ? Number(process.env.WS_PORT || 3010) : null,
     host: process.env.HOST || "127.0.0.1",
     // The same allowlist the REST API uses for CORS: a socket is just as
     // much a cross-origin surface, and is not covered by CORS at all.
@@ -239,29 +287,53 @@ async function main() {
     ],
     logger,
     metrics,
-    port: Number(process.env.OBSERVABILITY_PORT || 3011),
+    port: standalone ? Number(process.env.OBSERVABILITY_PORT || 3011) : null,
   });
 
   await runtime.start(1000);
   logger.emit("worker.tick_started", { worker: "gateway", workerId: ownerId, wsUrl: gw.url });
 
-  installGracefulShutdown({
+  if (standalone) {
+    installGracefulShutdown({
+      logger,
+      gracefulShutdownMs: Number(process.env.GRACEFUL_SHUTDOWN_MS || 10000),
+      stop: async () => {
+        await runtime.stop();
+        await gw.close();
+        // gw.close() only closes a bus it created itself -- this one was
+        // supplied by this process, so this process closes it (UNLISTEN +
+        // end the dedicated LISTEN connection, if one was ever opened).
+        if (!chatBusProvided) await chatBus.close();
+        if (!poolProvided) await pool.end();
+      },
+    });
+  }
+
+  return {
+    gw,
+    runtime,
+    chatBus,
+    duels,
+    ownerId,
+    pool,
+    db,
+    auth,
     logger,
-    gracefulShutdownMs: Number(process.env.GRACEFUL_SHUTDOWN_MS || 10000),
-    stop: async () => {
+    metrics,
+    close: async () => {
       await runtime.stop();
       await gw.close();
-      // gw.close() only closes a bus it created itself -- this one was
-      // supplied by this process, so this process closes it (UNLISTEN +
-      // end the dedicated LISTEN connection, if one was ever opened).
-      await chatBus.close();
-      await pool.end();
+      if (!chatBusProvided) await chatBus.close();
+      if (!poolProvided) await pool.end();
     },
-  });
+  };
 }
 
-main().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error("gateway failed to start", err);
-  process.exit(1);
-});
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+if (isDirectRun) {
+  createGatewayRuntime({ standalone: true }).catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("gateway failed to start", err);
+    process.exit(1);
+  });
+}

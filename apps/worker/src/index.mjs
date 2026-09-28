@@ -65,11 +65,51 @@ import {
 import {
   createWorkerRuntime, createTickLoop, installGracefulShutdown, workerIdentity,
 } from "../../../packages/bootstrap/src/index.mjs";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { runMaintenance } from "../../../scripts/periodic_vacuum_and_cleanup.mjs";
 
 const { Pool } = pg;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-async function main() {
+function loadEnvFile(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
+      const lines = fs.readFileSync(filePath, "utf-8").split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
+export async function createWorkerAppRuntime({
+  pool: poolProvided = null,
+  db: dbProvided = null,
+  logger: customLogger = null,
+  metrics: customMetrics = null,
+  standalone = false,
+} = {}) {
+  loadEnvFile(path.resolve(process.cwd(), ".env"));
+  loadEnvFile(path.resolve(process.cwd(), "apps/worker/.env"));
+  loadEnvFile(path.resolve(__dirname, "../../../.env"));
+  loadEnvFile(path.resolve(__dirname, "../.env"));
+
   for (const k of Object.keys(process.env)) {
     if (typeof process.env[k] === "string") {
       const v = process.env[k].trim();
@@ -82,7 +122,7 @@ async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("DATABASE_URL is required");
 
-  const pool = new Pool({
+  const pool = poolProvided || new Pool({
     connectionString: databaseUrl,
     max: Number(process.env.DB_POOL_SIZE || 3),
     idleTimeoutMillis: 5000,
@@ -92,14 +132,16 @@ async function main() {
     ssl: { rejectUnauthorized: false },
     keepAlive: true,
   });
-  pool.on("error", (err) => console.error("[worker pg pool error]", err.message));
-  const db = createPgAdapter(pool);
+  if (!poolProvided) {
+    pool.on("error", (err) => console.error("[worker pg pool error]", err.message));
+  }
+  const db = dbProvided || createPgAdapter(pool);
 
   // LOCAL (a developer's own terminal) wants readable output; every other
   // environment wants one JSON object per line for a real log shipper.
   const sink = process.env.LOG_FORMAT === "pretty" ? createConsoleSink() : createStructuredLogSink();
-  const logger = createLogger({ service: "worker", sink });
-  const metrics = createMetricsRegistry();
+  const logger = customLogger || createLogger({ service: "worker", sink });
+  const metrics = customMetrics || createMetricsRegistry();
 
   const plugins = new Map([
     ["chess", ChessPlugin], ["speed-math", SpeedMathPlugin],
@@ -355,24 +397,41 @@ async function main() {
     ],
     logger,
     metrics,
-    port: Number(process.env.PORT || 3001),
+    port: standalone ? Number(process.env.PORT || 3001) : null,
   });
 
   const { port } = await runtime.start(Number(process.env.TICK_INTERVAL_MS || 1000));
   logger.emit("worker.tick_started", { worker: "runtime", workerId: workerIdentity(), port });
 
-  installGracefulShutdown({
+  if (standalone) {
+    installGracefulShutdown({
+      logger,
+      gracefulShutdownMs: Number(process.env.GRACEFUL_SHUTDOWN_MS || 10000),
+      stop: async () => {
+        await runtime.stop();
+        if (!poolProvided) await pool.end();
+      },
+    });
+  }
+
+  return {
+    runtime,
+    pool,
+    db,
     logger,
-    gracefulShutdownMs: Number(process.env.GRACEFUL_SHUTDOWN_MS || 10000),
-    stop: async () => {
+    metrics,
+    close: async () => {
       await runtime.stop();
-      await pool.end();
+      if (!poolProvided) await pool.end();
     },
-  });
+  };
 }
 
-main().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error("worker failed to start", err);
-  process.exit(1);
-});
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+if (isDirectRun) {
+  createWorkerAppRuntime({ standalone: true }).catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("worker failed to start", err);
+    process.exit(1);
+  });
+}

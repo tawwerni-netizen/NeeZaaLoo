@@ -1521,12 +1521,15 @@ export async function createGateway({
       aiTimers.clear();
       for (const conn of connections) conn.socket.terminate();
       wss.close(() => {
-        httpServer.close(async () => {
-          // Only close a bus this instance created itself -- a caller-supplied
-          // bus may be shared with other code the caller still owns.
-          if (ownsChatBus) await bus.close();
-          resolve();
-        });
+        if (httpServer.listening) {
+          httpServer.close(async () => {
+            if (ownsChatBus) await bus.close();
+            resolve();
+          });
+        } else {
+          if (ownsChatBus) bus.close().then(resolve, resolve);
+          else resolve();
+        }
       });
     }),
   };

@@ -145,29 +145,30 @@ export function createWorkerRuntime({
     isReady,
 
     async start(intervalMs = 1000) {
-      httpServer = buildHttpServer();
-      // Retry binding on EADDRINUSE: Hostinger spawns overlapping master
-      // instances during deployment. The new child may encounter the old
-      // child still holding the port. We evict stale holders and wait (up to 60s) instead of dying.
-      const deadline = Date.now() + 60_000;
-      while (true) {
-        try {
-          await new Promise((resolve, reject) => {
-            const onListening = () => {
-              httpServer.removeListener("error", onError);
-              resolve();
-            };
-            const onError = (err) => {
-              httpServer.removeListener("listening", onListening);
-              reject(err);
-            };
-            httpServer.once("error", onError);
-            httpServer.once("listening", onListening);
-            httpServer.listen(port, "127.0.0.1");
-          });
-          break; // bound successfully
-        } catch (err) {
-          if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
+      if (port != null && port !== false) {
+        httpServer = buildHttpServer();
+        // Retry binding on EADDRINUSE: Hostinger spawns overlapping master
+        // instances during deployment. The new child may encounter the old
+        // child still holding the port. We evict stale holders and wait (up to 60s) instead of dying.
+        const deadline = Date.now() + 60_000;
+        while (true) {
+          try {
+            await new Promise((resolve, reject) => {
+              const onListening = () => {
+                httpServer.removeListener("error", onError);
+                resolve();
+              };
+              const onError = (err) => {
+                httpServer.removeListener("listening", onListening);
+                reject(err);
+              };
+              httpServer.once("error", onError);
+              httpServer.once("listening", onListening);
+              httpServer.listen(port, "127.0.0.1");
+            });
+            break; // bound successfully
+          } catch (err) {
+            if (err.code !== "EADDRINUSE" || Date.now() >= deadline) throw err;
           const remaining = Math.round((deadline - Date.now()) / 1000);
           console.warn(`[runtime] Port ${port} busy (EADDRINUSE), evicting stale holder and retrying for ${remaining}s more...`);
           if (process.platform === "linux") {
@@ -213,23 +214,24 @@ export function createWorkerRuntime({
           await new Promise(r => setTimeout(r, 1000));
         }
       }
-      for (const { name, worker, intervalMs: perWorkerIntervalMs } of workers) {
-        // A worker's own `intervalMs` (e.g. reconciliation wants minutes,
-        // not milliseconds) overrides the shared default passed to start();
-        // most workers just want the shared cadence and omit it.
-        const effectiveIntervalMs = perWorkerIntervalMs ?? intervalMs;
-        // `worker.tick` is looked up fresh on every firing (never a closed-
-        // over reference to the pre-wrap function), so this always invokes
-        // whichever version -- wrapped, here, for health tracking -- the
-        // property currently holds. The worker's OWN start()/stop(), if it
-        // has any, is never called: this runtime is the only scheduler.
-        const timer = setInterval(() => { worker.tick().catch(() => {}); }, effectiveIntervalMs);
-        if (typeof timer.unref === "function") timer.unref();
-        timers.push(timer);
-        logger?.emit("worker.tick_started", { worker: name, intervalMs: effectiveIntervalMs });
-      }
-      return { port: httpServer.address().port };
-    },
+    }
+    for (const { name, worker, intervalMs: perWorkerIntervalMs } of workers) {
+      // A worker's own `intervalMs` (e.g. reconciliation wants minutes,
+      // not milliseconds) overrides the shared default passed to start();
+      // most workers just want the shared cadence and omit it.
+      const effectiveIntervalMs = perWorkerIntervalMs ?? intervalMs;
+      // `worker.tick` is looked up fresh on every firing (never a closed-
+      // over reference to the pre-wrap function), so this always invokes
+      // whichever version -- wrapped, here, for health tracking -- the
+      // property currently holds. The worker's OWN start()/stop(), if it
+      // has any, is never called: this runtime is the only scheduler.
+      const timer = setInterval(() => { worker.tick().catch(() => {}); }, effectiveIntervalMs);
+      if (typeof timer.unref === "function") timer.unref();
+      timers.push(timer);
+      logger?.emit("worker.tick_started", { worker: name, intervalMs: effectiveIntervalMs });
+    }
+    return { port: httpServer ? httpServer.address()?.port : null };
+  },
 
     /**
      * Stop accepting new work and let in-flight ticks finish, bounded by
@@ -247,7 +249,7 @@ export function createWorkerRuntime({
       // forcing exit, not as a sleep in this method.
       for (const timer of timers.splice(0)) clearInterval(timer);
 
-      if (httpServer) {
+      if (httpServer && httpServer.listening) {
         await new Promise((resolve) => httpServer.close(() => resolve()));
         httpServer = null;
       }
