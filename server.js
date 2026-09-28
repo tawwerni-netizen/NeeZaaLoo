@@ -27,7 +27,10 @@ if (fs.existsSync(envPath)) {
       const eqIdx = trimmed.indexOf("=");
       if (eqIdx > 0) {
         const key = trimmed.slice(0, eqIdx).trim();
-        const val = trimmed.slice(eqIdx + 1).trim();
+        let val = trimmed.slice(eqIdx + 1).trim();
+        if (val.startsWith('"') && val.endsWith('"')) {
+          val = val.slice(1, -1);
+        }
         if (process.env[key] === undefined) {
           process.env[key] = val;
         }
