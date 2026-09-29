@@ -1,11 +1,6 @@
 # Nizalo Platform - Hostinger LiteSpeed / Apache Reverse Proxy Configuration
+Options -Indexes +FollowSymLinks
 DirectoryIndex index.html
-
-# Disable ModSecurity false-positive blocks on Hostinger
-<IfModule mod_security.c>
-  SecFilterEngine Off
-  SecFilterScanPOST Off
-</IfModule>
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
