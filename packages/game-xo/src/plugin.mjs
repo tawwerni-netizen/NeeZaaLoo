@@ -47,23 +47,24 @@ export const XOPlugin = {
   },
 
   applyIntent(state, intent, ctx) {
-    if (!Number.isInteger(intent) || intent < 0 || intent >= CELLS) {
+    const cell = typeof intent === "object" && intent !== null ? intent.cell : intent;
+    if (!Number.isInteger(cell) || cell < 0 || cell >= CELLS) {
       return { ok: false, reason: "MALFORMED" };
     }
     if (state.turn !== ctx.seat) return { ok: false, reason: "NOT_YOUR_TURN" };
-    if (state.board[intent] !== 0) return { ok: false, reason: "ILLEGAL" };
+    if (state.board[cell] !== 0) return { ok: false, reason: "ILLEGAL" };
 
     const next = cloneState(state);
-    next.board = place(state.board, intent, state.turn);
-    next.lastMove = intent;
-    next.moves.push(intent);
+    next.board = place(state.board, cell, state.turn);
+    next.lastMove = cell;
+    next.moves.push(cell);
     next.turn = state.turn === SEAT_0 ? SEAT_1 : SEAT_0;
 
     return {
       ok: true,
       state: next,
-      record: { cell: intent, seat: ctx.seat },
-      events: [{ type: "MARK", payload: { seat: ctx.seat, cell: intent } }],
+      record: { cell, seat: ctx.seat },
+      events: [{ type: "MARK", payload: { seat: ctx.seat, cell } }],
     };
   },
 

@@ -330,7 +330,7 @@ describe("ratings are written back", () => {
     assert.ok(res.ratings.bob.after < 1500, "the loser falls");
 
     const rows = await db.query(
-      "SELECT player_id, rating_x100, games_played, rd_x100 FROM rating ORDER BY player_id"
+      "SELECT player_id, rating_x100, games_played, rd_x100 FROM rating WHERE player_id IN ('alice', 'bob') ORDER BY player_id"
     );
     assert.equal(rows.rows.length, 2);
     assert.ok(rows.rows.every((r) => r.games_played === 1));

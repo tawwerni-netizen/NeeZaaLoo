@@ -41,6 +41,7 @@ const AUTOMATED_GAMES = [
   { id: 'seega', name: 'Seega', icon: '⚔️', defaultFee: '10.00' },
   { id: 'reversi', name: 'Reversi', icon: '⚫', defaultFee: '10.00' },
   { id: 'gomoku', name: 'Gomoku', icon: '⚪', defaultFee: '10.00' },
+  { id: 'ludo', name: 'Ludo Royale', icon: '👑', defaultFee: '10.00' },
 ];
 
 export default function AdminTournamentsPage() {

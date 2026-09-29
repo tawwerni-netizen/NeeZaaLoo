@@ -43,6 +43,7 @@ const AVAILABLE_GAMES = [
   { id: "gomoku", labelEn: "Gomoku", labelAr: "غوموكو" },
   { id: "seega", labelEn: "Seega", labelAr: "سيجة" },
   { id: "speed-math", labelEn: "Speed Math", labelAr: "الحساب السريع" },
+  { id: "ludo", labelEn: "Ludo Royale", labelAr: "لودو رويال" },
 ];
 
 export const QUICK_STAKES = [

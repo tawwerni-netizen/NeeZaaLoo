@@ -60,9 +60,9 @@ export const FAQ_DATA: LocalizedFAQ = {
     {
       id: "games-1",
       category: "games",
-      question: "ما هي الألعاب العشر المتاحة على منصة Nizalo؟",
-      answer: "تضم منصة Nizalo حالياً 10 ألعاب مهارة واستراتيجية كلاسيكية: الشطرنج، الداما، الدومينو، طاولة الزهر، سيجة، كونكت 4، إكس أو (تيك تاك تو)، الحساب السريع، ريفيرسي (عطيل)، وجوموكو. تتبع جميع الألعاب القواعد الرسمية المعترف بها دولياً مع تحكيم آلي حازم من الخادم.",
-      tags: ["الألعاب", "شطرنج", "داما", "دومينو", "طاولة الزهر", "سيجة", "كونكت 4", "إكس أو", "حساب سريع", "ريفيرسي", "جوموكو"]
+      question: "ما هي الألعاب الـ 11 المتاحة على منصة Nizalo؟",
+      answer: "تضم منصة Nizalo حالياً 11 لعبة مهارة واستراتيجية معتمدة: الشطرنج، الدومينو، لودو الأساطير، طاولة الزهر، الحساب السريع، إكس أو، كونكت 4، الداما، ريفيرسي، جوموكو، والسيجة. تتبع جميع الألعاب القواعد الرسمية المعترف بها دولياً مع تحكيم آلي حازم من الخادم.",
+      tags: ["الألعاب", "شطرنج", "دومينو", "لودو", "طاولة الزهر", "داما", "سيجة", "كونكت 4", "إكس أو", "حساب سريع", "ريفيرسي", "جوموكو"]
     },
     {
       id: "games-2",
@@ -353,9 +353,9 @@ export const FAQ_DATA: LocalizedFAQ = {
     {
       id: "games-1",
       category: "games",
-      question: "Which 10 games are available on Nizalo?",
-      answer: "Nizalo currently features 10 skill-based strategy games: Chess, Checkers, Dominoes, Backgammon, Seega, Connect Four, XO (Tic-Tac-Toe), Speed Math, Reversi (Othello), and Gomoku. All games use standard official rules with server-enforced validation.",
-      tags: ["games", "rules", "chess", "checkers", "dominoes", "backgammon", "seega", "connect four", "xo", "speed math", "reversi", "gomoku"]
+      question: "Which 11 games are available on Nizalo?",
+      answer: "Nizalo currently features 11 certified skill and mind sports: Chess, Dominoes, Ludo Royale, Backgammon, Speed Math, XO, Connect Four, Checkers, Reversi, Gomoku, and Seega. All games use standard official tournament rules with server-enforced validation.",
+      tags: ["games", "rules", "chess", "dominoes", "ludo", "backgammon", "speed math", "xo", "connect four", "checkers", "reversi", "gomoku", "seega"]
     },
     {
       id: "games-2",
@@ -377,7 +377,7 @@ export const FAQ_DATA: LocalizedFAQ = {
       id: "match-2",
       category: "matchmaking",
       question: "What is the Global Skill Score (GSS)?",
-      answer: "Your Global Skill Score is a real percentile-based aggregate metric calculated from your performance, win rate, accuracy, and duel volume across all 10 games.",
+      answer: "Your Global Skill Score is a real percentile-based aggregate metric calculated from your performance, win rate, accuracy, and duel volume across all 11 games.",
       tags: ["gss", "global skill score", "ranking", "leaderboard"]
     },
 

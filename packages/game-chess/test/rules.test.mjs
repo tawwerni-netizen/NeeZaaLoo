@@ -376,7 +376,9 @@ describe("duel lifecycle", () => {
 
   test("a timeout is claimable by the server with no client message", () => {
     const d = freshDuel(0, { initialMs: 5_000 });
-    const res = claimTimeout(d, ChessPlugin, 5_001);
+    runIntent(d, ChessPlugin, { playerId: "p1", intent: "e2e4" }, 1_000);
+    runIntent(d, ChessPlugin, { playerId: "p2", intent: "e7e5" }, 2_000);
+    const res = claimTimeout(d, ChessPlugin, 10_000);
     assert.equal(res.ok, true);
     assert.equal(d.outcome.reason, "TIMEOUT");
     assert.equal(d.outcome.result, "0-1", "white ran out");

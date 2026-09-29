@@ -154,7 +154,7 @@ export async function createWorkerAppRuntime({
   const mm = createMatchmakingService(db);
 
   const dispatchWorker = createDispatchWorker(db, {
-    settlement, store, plugins, mm, emit: logger.emit,
+    settlement, store, plugins, mm, emit: logger.emit, autoMarkLive: false,
   });
 
   // OxaPay provider when configured, otherwise Sandbox in dev/test ONLY.

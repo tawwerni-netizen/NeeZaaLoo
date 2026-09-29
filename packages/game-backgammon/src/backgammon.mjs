@@ -180,9 +180,6 @@ export function legalActionsForDie(state, seat, die) {
   return actions;
 }
 
-/** Every legal action for `seat` across all currently DISTINCT remaining
- * dice values (a double's repeats all behave identically at one instant,
- * so checking each distinct value once is exact, not an approximation). */
 export function legalActions(state, seat) {
   const distinct = [...new Set(state.dice)];
   const all = [];
@@ -190,8 +187,90 @@ export function legalActions(state, seat) {
   return all;
 }
 
+export function applyStep(state, seat, from, die) {
+  const next = {
+    ...state,
+    board: [...state.board],
+    bar: state.bar ? [...state.bar] : [0, 0],
+    off: state.off ? [...state.off] : [0, 0],
+  };
+  let dest = null;
+  let bearingOff = false;
+  if (from === "BAR") {
+    dest = entryDestination(seat, die);
+  } else {
+    const raw = destinationFor(seat, from, die);
+    if (isBearOffDestination(seat, raw)) {
+      bearingOff = true;
+    } else {
+      dest = raw;
+    }
+  }
+
+  if (from === "BAR") next.bar[seat] -= 1;
+  else next.board[from] -= seat === SEAT_0 ? 1 : -1;
+
+  if (bearingOff) {
+    next.off[seat] += 1;
+  } else {
+    const occupant = pointSeat(next.board[dest]);
+    if (occupant !== null && occupant !== seat) {
+      next.board[dest] = 0;
+      next.bar[other(seat)] += 1;
+    }
+    next.board[dest] += seat === SEAT_0 ? 1 : -1;
+  }
+  return next;
+}
+
+/**
+ * Forced Move Logic (WBF Standard):
+ * 1. A player must maximize the number of dice played. If one die permits
+ *    using both dice, while the other permits using only one, the player must
+ *    use the die that enables playing both.
+ * 2. If either die can be played, but NOT both, the player MUST play the LARGER die.
+ */
+export function legalActionsWithForcedRules(state, seat) {
+  if (!state.dice || state.dice.length === 0) return [];
+  if (state.dice.length !== 2 || state.dice[0] === state.dice[1]) {
+    return legalActions(state, seat);
+  }
+
+  const d1 = state.dice[0];
+  const d2 = state.dice[1];
+  const acts1 = legalActionsForDie(state, seat, d1);
+  const acts2 = legalActionsForDie(state, seat, d2);
+
+  if (acts1.length === 0) return acts2;
+  if (acts2.length === 0) return acts1;
+
+  const canPlayBothFrom1 = acts1.some((a) => {
+    const next = applyStep(state, seat, a.from, d1);
+    return legalActionsForDie(next, seat, d2).length > 0;
+  });
+
+  const canPlayBothFrom2 = acts2.some((a) => {
+    const next = applyStep(state, seat, a.from, d2);
+    return legalActionsForDie(next, seat, d1).length > 0;
+  });
+
+  if (canPlayBothFrom1 && canPlayBothFrom2) {
+    return [...acts1, ...acts2];
+  }
+  if (canPlayBothFrom1 && !canPlayBothFrom2) {
+    return acts1;
+  }
+  if (!canPlayBothFrom1 && canPlayBothFrom2) {
+    return acts2;
+  }
+
+  // Neither die allows both to be played; must play the larger die
+  const largerDie = Math.max(d1, d2);
+  return largerDie === d1 ? acts1 : acts2;
+}
+
 export function hasAnyLegalAction(state, seat) {
-  return legalActions(state, seat).length > 0;
+  return legalActionsWithForcedRules(state, seat).length > 0;
 }
 
 /**

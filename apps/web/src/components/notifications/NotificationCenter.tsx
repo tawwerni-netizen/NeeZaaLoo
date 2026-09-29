@@ -20,6 +20,10 @@ const GAME_NAME_KEY: Record<string, string> = {
   battleship: "battleship",
   tic_tac_toe: "tic_tac_toe",
   mancala: "mancala",
+  ludo: "ludo",
+  gomoku: "gomoku",
+  seega: "seega",
+  xo: "xo",
 };
 
 type IncomingChallenge = {

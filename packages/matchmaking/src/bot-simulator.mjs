@@ -7,7 +7,7 @@
  */
 const SIMULATOR_GAMES = [
   "chess", "checkers", "backgammon", "dominoes",
-  "connect-four", "gomoku", "reversi", "seega", "speed-math", "xo",
+  "connect-four", "gomoku", "reversi", "seega", "speed-math", "xo", "ludo",
 ];
 
 export function createBotMatchSimulator(db, { emit = () => {} } = {}) {

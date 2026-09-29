@@ -21,6 +21,9 @@ import {
   SEAT_0, SEAT_1, dealHands, determineOpening, initialLine,
   legalEndsForTile, handHasLegalMove, attach, pipSum, sameTile,
 } from "./dominoes.mjs";
+import {
+  createAllFivesState, applyAllFivesIntent, VARIANT_ALL_FIVES,
+} from "./all-fives.mjs";
 
 function other(seat) {
   return seat === SEAT_0 ? SEAT_1 : SEAT_0;
@@ -78,17 +81,27 @@ export const DominoesPlugin = {
    * players' own reconstructions of the public parts of the state.
    * `publicSeed` is null: the seed never leaves the server, because a
    * client holding it could reconstruct the opponent's hand. */
-  createChallenge(seed, _config = {}) {
+  createChallenge(seed, config = {}) {
+    if (config.variant === VARIANT_ALL_FIVES) {
+      return { state: createAllFivesState(seed, config.targetScore || 100), publicSeed: null };
+    }
     return { state: freshState(seed), publicSeed: null };
   },
 
   rehydrate(initial) {
+    if (initial.variant === VARIANT_ALL_FIVES) {
+      return { state: createAllFivesState(initial.seed, initial.targetScore || 100) };
+    }
     return { state: freshState(initial.seed) };
   },
 
   applyIntent(state, intent, ctx) {
     if (typeof intent !== "object" || intent === null) return { ok: false, reason: "MALFORMED" };
     if (state.turn !== ctx.seat) return { ok: false, reason: "NOT_YOUR_TURN" };
+
+    if (state.variant === VARIANT_ALL_FIVES) {
+      return applyAllFivesIntent(state, intent, ctx.seat);
+    }
 
     const hand = state.hands[ctx.seat];
 
@@ -168,10 +181,23 @@ export const DominoesPlugin = {
   },
 
   evaluate(state) {
+    if (state.variant === VARIANT_ALL_FIVES) {
+      if (!state.isOver) return null;
+      if (state.winner === SEAT_0) {
+        return { result: "1-0", reason: state.hands[SEAT_0].length === 0 ? "DOMINO_OUT" : "BLOCKED" };
+      }
+      if (state.winner === SEAT_1) {
+        return { result: "0-1", reason: state.hands[SEAT_1].length === 0 ? "DOMINO_OUT" : "BLOCKED" };
+      }
+      return { result: "1/2-1/2", reason: "BLOCKED" };
+    }
     return outcomeFor(state);
   },
 
   score(state) {
+    if (state.variant === VARIANT_ALL_FIVES) {
+      return [state.scores[0], state.scores[1]];
+    }
     const outcome = outcomeFor(state);
     if (!outcome) return [0, 0];
     if (outcome.result === "1-0") return [1, 0];
@@ -188,6 +214,29 @@ export const DominoesPlugin = {
    * tile they are forced to open with) is ever included.
    */
   project(state, viewer, seat = null) {
+    if (state.variant === VARIANT_ALL_FIVES) {
+      const base = {
+        variant: VARIANT_ALL_FIVES,
+        line: {
+          left: state.line.left,
+          right: state.line.right,
+          tiles: state.line.tiles.map((t) => ({ tile: t })),
+        },
+        turn: state.turn,
+        scores: [...state.scores],
+        targetScore: state.targetScore,
+        boneyardCount: state.boneyard.length,
+        handCounts: [state.hands[SEAT_0].length, state.hands[SEAT_1].length],
+      };
+      if (viewer === "spectator" || seat === null) return base;
+      return {
+        ...base,
+        hand: [...state.hands[seat]],
+        canDraw: state.boneyard.length > 2,
+        canPass: state.boneyard.length <= 2,
+      };
+    }
+
     const base = {
       line: {
         left: state.line.left,
@@ -235,6 +284,11 @@ export const DominoesPlugin = {
    * it regenerates the identical deal and opening leader, exactly like
    * Speed Math's own serializeReplay(). */
   serializeReplay(state, { initialOnly = false } = {}) {
+    if (state.variant === VARIANT_ALL_FIVES) {
+      return initialOnly
+        ? { seed: state.seed, variant: VARIANT_ALL_FIVES }
+        : { seed: state.seed, variant: VARIANT_ALL_FIVES, moves: state.moves };
+    }
     return initialOnly ? { seed: state.seed } : { seed: state.seed, moves: state.moves };
   },
 };

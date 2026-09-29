@@ -1,0 +1,135 @@
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  padding: var(--nz-space-2) var(--nz-space-3);
+  border-radius: var(--nz-radius-md);
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  transition: all var(--nz-dur-fast) ease;
+  min-width: 0;
+}
+
+.reverse {
+  flex-direction: row-reverse;
+  text-align: end;
+}
+
+.active {
+  background: rgba(255, 90, 43, 0.08);
+  border-color: var(--nz-accent);
+  box-shadow: 0 0 14px rgba(255, 90, 43, 0.2);
+}
+
+.avatarWrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--nz-surface-2);
+  border: 2px solid var(--nz-line);
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--nz-surface-2);
+  border: 2px solid var(--nz-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  color: var(--nz-text-2);
+}
+
+.statusDot {
+  position: absolute;
+  bottom: 0;
+  inset-inline-end: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 2px solid var(--nz-bg);
+}
+
+.statusOnline {
+  background: var(--nz-win);
+}
+
+.statusInGame {
+  background: var(--nz-accent);
+}
+
+.statusOffline {
+  background: var(--nz-text-3);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-1);
+  min-width: 0;
+}
+
+.reverse .nameRow {
+  justify-content: flex-end;
+}
+
+.flag {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.nickname {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  color: var(--nz-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+}
+
+.reverse .metaRow {
+  justify-content: flex-end;
+}
+
+.ping {
+  font-family: var(--nz-font-num);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+}
+
+.clockSlot {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
+
+.reverse .clockSlot {
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}

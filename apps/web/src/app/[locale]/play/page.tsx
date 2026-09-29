@@ -5,8 +5,8 @@
  * 
  * Clean, attractive, simple and beginner-friendly:
  * - High-end visual game cards with instant 1-click play buttons
- * - Quick category filters (All, Strategy, Speed, Classic)
- * - Live online player counts and procedural audio feedback
+ * - Quick category filters driven by canonical GameRegistry
+ * - Live online player benchmarks and procedural audio feedback
  * - Streamlined 1v1 Radar integration
  */
 import { Suspense, useState, useMemo } from "react";
@@ -17,50 +17,29 @@ import { LocaleLink } from "@/components/LocaleLink";
 import { LiveDuelLobby } from "@/components/play/LiveDuelLobby";
 import { GameThumbnail } from "@/components/game/GameThumbnail";
 import { useI18n } from "@/lib/i18n/context";
-import { listGames } from "@/lib/games";
+import { GameRegistry, type GameCategory } from "@/lib/games";
 import { playCardHoverSound, playButtonClickSound } from "@/lib/game-audio";
 import styles from "./play.module.css";
 
-const CATEGORIES = [
+const CATEGORIES: Array<{ id: GameCategory | "all"; labelKey: string }> = [
   { id: "all", labelKey: "play_page.cat_all" },
-  { id: "strategy", labelKey: "play_page.cat_strategy" },
-  { id: "speed", labelKey: "play_page.cat_speed" },
-  { id: "classic", labelKey: "play_page.cat_classic" },
+  { id: "STRATEGY", labelKey: "play_page.cat_strategy" },
+  { id: "SPEED", labelKey: "play_page.cat_speed" },
+  { id: "BOARD", labelKey: "play_page.cat_classic" },
 ];
-
-const GAME_METADATA: Record<string, {
-  category: "strategy" | "speed" | "classic";
-  metaKey: string;
-  activePlayers: number;
-}> = {
-  chess: { category: "strategy", metaKey: "play_page.meta_chess", activePlayers: 348 },
-  dominoes: { category: "strategy", metaKey: "play_page.meta_dominoes", activePlayers: 292 },
-  ludo: { category: "classic", metaKey: "play_page.meta_ludo", activePlayers: 512 },
-  backgammon: { category: "strategy", metaKey: "play_page.meta_backgammon", activePlayers: 218 },
-  reversi: { category: "strategy", metaKey: "play_page.meta_reversi", activePlayers: 165 },
-  "speed-math": { category: "speed", metaKey: "play_page.meta_speed_math", activePlayers: 210 },
-  xo: { category: "speed", metaKey: "play_page.meta_xo", activePlayers: 435 },
-  "connect-four": { category: "speed", metaKey: "play_page.meta_connect_four", activePlayers: 280 },
-  checkers: { category: "classic", metaKey: "play_page.meta_checkers", activePlayers: 194 },
-  seega: { category: "classic", metaKey: "play_page.meta_seega", activePlayers: 146 },
-  gomoku: { category: "classic", metaKey: "play_page.meta_gomoku", activePlayers: 172 },
-};
 
 function InnerPlayCatalogPage() {
   const { t, locale, dir } = useI18n();
   const searchParams = useSearchParams();
   const query = searchParams.toString() ? `?${searchParams.toString()}` : "";
   const isRtl = dir === "rtl";
-  const games = listGames();
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const allGames = useMemo(() => GameRegistry.getAll(), []);
+  const [selectedCategory, setSelectedCategory] = useState<GameCategory | "all">("all");
 
   const filteredGames = useMemo(() => {
-    if (selectedCategory === "all") return games;
-    return games.filter((g) => {
-      const meta = GAME_METADATA[g.id];
-      return meta?.category === selectedCategory;
-    });
-  }, [games, selectedCategory]);
+    if (selectedCategory === "all") return allGames;
+    return GameRegistry.filter(selectedCategory);
+  }, [allGames, selectedCategory]);
 
   const handleHover = () => {
     try { playCardHoverSound(); } catch {}
@@ -69,6 +48,8 @@ function InnerPlayCatalogPage() {
   const handleClick = () => {
     try { playButtonClickSound(); } catch {}
   };
+
+  const gameCount = GameRegistry.getCount();
 
   return (
     <>
@@ -85,8 +66,8 @@ function InnerPlayCatalogPage() {
           </h1>
           <p className={styles.heroSub}>
             {isRtl
-              ? "11 لعبة معتمدة بقواعد عالمية أصيلة وتوقيت تكتيكي فريد. نافس مباشرة في مبارزات 1v1، صقل تكتيكاتك، أو انضم للبطولات الكبرى بجوائز USDT كاش."
-              : "11 authentic games with global tournament rules and unique pacing. Duel in live 1v1 matches, hone tactics vs AI, or enter major cash cups with instant payouts."}
+              ? `${gameCount} لعبة معتمدة بقواعد عالمية أصيلة وتوقيت تكتيكي فريد. نافس مباشرة في مبارزات 1v1، صقل تكتيكاتك، أو انضم للبطولات الكبرى بجوائز USDT كاش.`
+              : `${gameCount} authentic games with global tournament rules and unique pacing. Duel in live 1v1 matches, hone tactics vs AI, or enter major cash cups with instant payouts.`}
           </p>
 
           {/* Quick Trust Chips */}
@@ -100,43 +81,38 @@ function InnerPlayCatalogPage() {
               <span>{t("play_page.trust_fairplay")}</span>
             </div>
             <div className={styles.trustChip}>
-              <span className={styles.trustIcon}>🏆</span>
-              <span>{t("play_page.trust_battles")}</span>
+              <span className={styles.trustIcon}>🤖</span>
+              <span>{t("play_page.trust_ai")}</span>
             </div>
           </div>
         </section>
 
-        {/* Real-Time Member-to-Member Live Dueling Lobby */}
-        <div className={styles.radarWrapper}>
-          <Suspense fallback={null}>
-            <LiveDuelLobby />
-          </Suspense>
-        </div>
+        {/* Live Lobby / Radar Widget */}
+        <LiveDuelLobby />
 
-        {/* Clean Category Filters */}
+        {/* Catalog Header & Filters */}
         <div className={styles.catalogHeader}>
-          <div className={styles.catalogHeadingRow}>
-            <h2 className={styles.catalogTitle}>
-              {t("play_page.catalog_title")}
-            </h2>
-            <span className={styles.gamesCountBadge}>
-              {t("play_page.games_available", { count: String(filteredGames.length) })}
+          <div className={styles.catalogTitleGroup}>
+            <h2 className={styles.catalogHeading}>{t("play_page.catalog_heading")}</h2>
+            <span className={styles.catalogCount}>
+              {filteredGames.length} {t("play_page.games_available")}
             </span>
           </div>
 
-          <div className={styles.categoryTabs}>
+          <div className={styles.categoryFilters} role="tablist">
             {CATEGORIES.map((cat) => {
               const active = selectedCategory === cat.id;
               return (
                 <button
                   key={cat.id}
                   type="button"
-                  className={[styles.catTab, active ? styles.catTabActive : ""].join(" ")}
+                  role="tab"
+                  aria-selected={active}
+                  className={active ? styles.categoryBtnActive : styles.categoryBtn}
                   onClick={() => {
-                    handleClick();
                     setSelectedCategory(cat.id);
+                    handleClick();
                   }}
-                  onMouseEnter={handleHover}
                 >
                   {t(cat.labelKey)}
                 </button>
@@ -146,15 +122,12 @@ function InnerPlayCatalogPage() {
         </div>
 
         {/* Visual & Intuitive Game Cards Grid */}
-                <div className={styles.grid}>
+        <div className={styles.grid}>
           {filteredGames.map((game) => {
-            const meta = GAME_METADATA[game.id] ?? {
-              category: "strategy" as const,
-              metaKey: "play_page.meta_chess",
-              activePlayers: 200,
-            };
-            const gameName = t(`common.game_names.${game.nameKey}`);
-            const speedLabel = t(meta.metaKey);
+            const gameName = t(`common.game_names.${game.nameKey}`) || game.id;
+            const subtitle = isRtl ? game.taglineAr : game.tagline;
+            const duration = isRtl ? game.typicalDurationAr : game.typicalDuration;
+            const activePlayers = game.availability.onlinePlayersBenchmark;
 
             return (
               <div
@@ -167,7 +140,7 @@ function InnerPlayCatalogPage() {
                   <GameThumbnail
                     gameId={game.id}
                     title={gameName}
-                    badge={speedLabel}
+                    duration={duration}
                   />
                   <div className={styles.thumbOverlay}>
                     <span className={styles.playNowOverlayBtn}>
@@ -181,17 +154,18 @@ function InnerPlayCatalogPage() {
                   <div className={styles.cardHeader}>
                     <h3 className={styles.cardTitle}>
                       <LocaleLink href={`/play/${game.id}${query}`} className={styles.titleLink} onClick={handleClick}>
+                        <span style={{ marginInlineEnd: "6px" }}>{game.icon}</span>
                         {gameName}
                       </LocaleLink>
                     </h3>
                     <span className={styles.activeChip}>
                       <span className={styles.activeDot} />
-                      {meta.activePlayers} {t("play_page.online")}
+                      {activePlayers} {t("play_page.online")}
                     </span>
                   </div>
 
                   <p className={styles.cardDesc}>
-                    {speedLabel}
+                    {subtitle}
                   </p>
 
                   <div className={styles.cardModes}>
@@ -220,8 +194,6 @@ function InnerPlayCatalogPage() {
     </>
   );
 }
-
-
 
 export default function PlayCatalogPage() {
   return (

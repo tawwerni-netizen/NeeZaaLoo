@@ -1,149 +1,322 @@
 "use client";
 
-// dynamic/revalidate route segment config does not take effect when
-// exported from a "use client" page itself in this Next.js/Turbopack
-// setup (verified: silently ignored, and `revalidate` outright breaks the
-// build -- see this route's own layout.tsx for where the real fix lives).
-
-/**
- * The public, crawlable games catalog -- distinct from /play (which
- * requires an account and starts the real mode-select/matchmaking flow).
- * This page's job is discovery: every real game, its actual duration,
- * mode, turn model, and AI difficulty levels, sourced entirely from
- * listGames() and the SAME i18n copy the homepage's compact strip and
- * /learn already use -- never a second, divergent description.
- *
- * The turn-model filter is genuine, not decorative: turnModel is a real
- * field on every GamePlugin (ALTERNATING vs SIMULTANEOUS), and today it
- * meaningfully separates nine turn-based games from Speed Math's shared
- * 60-second clock.
- */
 import { useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LocaleLink } from "@/components/LocaleLink";
 import { useI18n } from "@/lib/i18n/context";
-import { listGames, type GamePlugin } from "@/lib/games";
+import { GameRegistry, type GameDefinition, type GameCategory } from "@/lib/games";
 import { GameThumbnail } from "@/components/game/GameThumbnail";
 import styles from "./games.module.css";
 
-type Filter = "ALL" | "ALTERNATING" | "SIMULTANEOUS";
+const CATEGORIES_SPEC: Array<{ id: GameCategory; icon: string; labelEn: string; labelAr: string }> = [
+  { id: "ALL", icon: "🌟", labelEn: "All Games", labelAr: "جميع الألعاب" },
+  { id: "STRATEGY", icon: "🧠", labelEn: "Strategy", labelAr: "استراتيجية" },
+  { id: "SPEED", icon: "⚡", labelEn: "Speed & Reflexes", labelAr: "السرعة والبديهة" },
+  { id: "BOARD", icon: "🎲", labelEn: "Board & Tabletop", labelAr: "ألعاب الطاولة" },
+  { id: "CASUAL", icon: "🎯", labelEn: "Casual & Quick", labelAr: "سريعة وتنافسية" },
+  { id: "SKILL", icon: "🏆", labelEn: "Skill Games", labelAr: "ألعاب المهارة" },
+  { id: "FREE_TO_PLAY", icon: "🆓", labelEn: "Free to Play", labelAr: "لعب مجاني" },
+  { id: "CASH_ELIGIBLE", icon: "💰", labelEn: "Cash Eligible", labelAr: "مبارزات الجوائز" },
+  { id: "AVAILABLE_NOW", icon: "🟢", labelEn: "Available Now", labelAr: "متاحة الآن" },
+  { id: "POPULAR", icon: "🔥", labelEn: "Popular", labelAr: "الأكثر طلباً" },
+  { id: "NEW", icon: "✨", labelEn: "New Releases", labelAr: "إصدارات جديدة" },
+];
 
-export default function GamesPage() {
-  const { t, dir, locale } = useI18n();
+const ONBOARDING_I18N: Record<string, {
+  q1: string; a1: string;
+  q2: string; a2: string;
+  q3: string; a3: string;
+  searchPlaceholder: string;
+  clearSearch: string;
+  emptyTitle: string;
+  emptyDesc: string;
+  resetFilter: string;
+  durationLabel: string;
+  modeLabel: string;
+  skillLabel: string;
+  rngLabel: string;
+  playersInArena: string;
+  playCta: string;
+  rulesCta: string;
+  hubTitle: string;
+  hubSub: string;
+}> = {
+  ar: {
+    q1: "ماذا يمكنني أن ألعب؟",
+    a1: "11 لعبة ذهنية وتكتيكية معتمدة رسمياً. تحكيم آلي حازم، بدون أي أفضلية للدار، وتنافس عادل 100%.",
+    q2: "كم تبلغ تكلفة اللعب؟",
+    a2: "مجانية بالكامل للتدريب والنزالات الودية، أو مبارزات كاش تبدأ من 1$ إلى 100$ بسحب USDT فوري.",
+    q3: "كيف أبدأ الآن؟",
+    a3: "اختر لعبتك المفضلة أدناه، واضغط «العب الآن» للانضمام إلى نزال مباشر خلال أقل من 5 ثوانٍ.",
+    searchPlaceholder: "ابحث عن لعبة بالاسم أو الفئة...",
+    clearSearch: "مسح",
+    emptyTitle: "لا توجد ألعاب تطابق بحثك",
+    emptyDesc: "جرّب تغيير كلمات البحث أو إعادة تعيين الفلاتر لاستعراض جميع الألعاب الـ 11.",
+    resetFilter: "عرض جميع الألعاب",
+    durationLabel: "المدة",
+    modeLabel: "النمط",
+    skillLabel: "المستوى",
+    rngLabel: "النموذج",
+    playersInArena: "لاعب في الميدان",
+    playCta: "العب الآن",
+    rulesCta: "القواعد والاستراتيجية",
+    hubTitle: "مركز ألعاب نيزالو التنافسية",
+    hubSub: "11 رياضة ذهنية معتمدة. اختر لعبتك، تعرّف على قواعدها وتكتيكاتها، وانطلق في النزال فوراً.",
+  },
+  en: {
+    q1: "What can I play?",
+    a1: "11 authentic, certified mind sports & tabletop games. Deterministic rules, zero house edge, 100% player skill.",
+    q2: "How much does it cost?",
+    a2: "100% Free practice & friendly duels, or real Cash Duels from $1 to $100 with instant USDT payouts.",
+    q3: "How do I start?",
+    a3: "Pick any game below, click 'Play Now', and enter instant server-side matchmaking in under 5 seconds.",
+    searchPlaceholder: "Search games by name, category or rules...",
+    clearSearch: "Clear",
+    emptyTitle: "No games found matching your search",
+    emptyDesc: "Try adjusting your search query or reset the filter to browse all 11 games.",
+    resetFilter: "Show All Games",
+    durationLabel: "Duration",
+    modeLabel: "Mode",
+    skillLabel: "Skill Level",
+    rngLabel: "Engine",
+    playersInArena: "players in arena",
+    playCta: "Play Now",
+    rulesCta: "Rules & Tactics",
+    hubTitle: "Nizalo Game Hub",
+    hubSub: "11 authentic mind sports & tabletop games. Discover, master the rules, and enter the arena instantly.",
+  },
+  es: {
+    q1: "¿A qué puedo jugar?",
+    a1: "11 juegos mentales y de mesa certificados. Reglas oficiales, sin ventaja de la casa y 100% habilidad.",
+    q2: "¿Cuánto cuesta?",
+    a2: "100% gratis para practicar, o duelos con dinero real desde $1 hasta $100 con retiros USDT inmediatos.",
+    q3: "¿Cómo empiezo?",
+    a3: "Elige cualquier juego abajo, haz clic en 'Jugar Ahora' y entra al emparejamiento en menos de 5 segundos.",
+    searchPlaceholder: "Buscar por nombre o categoría...",
+    clearSearch: "Borrar",
+    emptyTitle: "No se encontraron juegos",
+    emptyDesc: "Intenta cambiar los términos de búsqueda o restablecer los filtros.",
+    resetFilter: "Ver todos los juegos",
+    durationLabel: "Duración",
+    modeLabel: "Modo",
+    skillLabel: "Nivel",
+    rngLabel: "Motor",
+    playersInArena: "jugadores en la arena",
+    playCta: "Jugar Ahora",
+    rulesCta: "Reglas y Guía",
+    hubTitle: "Centro de Juegos Nizalo",
+    hubSub: "11 deportes mentales auténticos. Elige un juego, comprende sus reglas y compite al instante.",
+  },
+  fr: {
+    q1: "À quoi puis-je jouer ?",
+    a1: "11 jeux cérébraux et de plateau certifiés. Règles authentiques, aucun avantage maison, 100% compétence.",
+    q2: "Combien cela coûte-t-il ?",
+    a2: "100% gratuit pour s'entraîner, ou duels en argent réel dès 1$ avec retraits instantanés en USDT.",
+    q3: "Comment démarrer ?",
+    a3: "Choisissez votre jeu ci-dessous, cliquez sur 'Jouer' et trouvez un adversaire en moins de 5 secondes.",
+    searchPlaceholder: "Rechercher par nom ou catégorie...",
+    clearSearch: "Effacer",
+    emptyTitle: "Aucun jeu trouvé",
+    emptyDesc: "Essayez de modifier votre recherche ou réinitialisez les filtres.",
+    resetFilter: "Afficher tous les jeux",
+    durationLabel: "Durée",
+    modeLabel: "Mode",
+    skillLabel: "Niveau",
+    rngLabel: "Moteur",
+    playersInArena: "joueurs dans l'arène",
+    playCta: "Jouer",
+    rulesCta: "Règles & Stratégie",
+    hubTitle: "Hub des Jeux Nizalo",
+    hubSub: "11 sports cérébraux de référence. Choisissez, découvrez les règles et entrez en duel.",
+  },
+  hi: {
+    q1: "मैं क्या खेल सकता हूँ?",
+    a1: "11 प्रमाणित माइंड स्पोर्ट्स और टेबलटॉप गेम। बिना किसी हाउस एज के 100% कौशल-आधारित खेल।",
+    q2: "इसकी लागत कितनी है?",
+    a2: "अभ्यास के लिए 100% मुफ़्त, या $1 से $100 तक नकद द्वंद्व और तत्काल USDT निकासी।",
+    q3: "मैं कैसे शुरुआत करूँ?",
+    a3: "नीचे से कोई भी खेल चुनें, 'अभी खेलें' पर क्लिक करें और 5 सेकंड से कम समय में मैच शुरू करें।",
+    searchPlaceholder: "खेल या श्रेणी खोजें...",
+    clearSearch: "हटाएं",
+    emptyTitle: "कोई खेल नहीं मिला",
+    emptyDesc: "कृपया अन्य कीवर्ड खोजें या फ़िल्टर रीसेट करें।",
+    resetFilter: "सभी खेल देखें",
+    durationLabel: "अवधि",
+    modeLabel: "मोड",
+    skillLabel: "स्तर",
+    rngLabel: "इंजन",
+    playersInArena: "मैदान में खिलाड़ी",
+    playCta: "अभी खेलें",
+    rulesCta: "नियम और रणनीति",
+    hubTitle: "निज़ालो गेम हब",
+    hubSub: "11 प्रामाणिक माइंड स्पोर्ट्स। खेल खोजें, नियम समझें और तुरंत खेलें।",
+  },
+  zh: {
+    q1: "我可以玩什么？",
+    a1: "11 款权威认证的智力竞技与经典桌游。绝对公平、无平台暗箱、100% 纯技术对抗。",
+    q2: "需要花费多少？",
+    a2: "完全免费练习与友谊赛，或参与 $1 至 $100 的现金争霸，USDT 秒级提现到账。",
+    q3: "如何立即开始？",
+    a3: "在下方选择心仪游戏，点击“即刻开战”，5秒内极速匹配真实在线对手。",
+    searchPlaceholder: "搜索游戏名称或分类...",
+    clearSearch: "清空",
+    emptyTitle: "未找到匹配的游戏",
+    emptyDesc: "请尝试更改搜索词或重置筛选条件浏览全部 11 款游戏。",
+    resetFilter: "浏览全部游戏",
+    durationLabel: "时长",
+    modeLabel: "模式",
+    skillLabel: "段位",
+    rngLabel: "判定引擎",
+    playersInArena: "在线竞技玩家",
+    playCta: "即刻开战",
+    rulesCta: "规则与进阶攻略",
+    hubTitle: "Nizalo 游戏探索中心",
+    hubSub: "11 款殿堂级智力竞技游戏。发现游戏、掌握战术、秒级开赛。",
+  },
+};
+
+export default function GamesHubPage() {
+  const { t, locale, dir } = useI18n();
   const isRtl = dir === "rtl";
-  const games = listGames();
-  const [filter, setFilter] = useState<Filter>("ALL");
+  const copy = ONBOARDING_I18N[locale] ?? ONBOARDING_I18N["en"]!;
 
-  const visible = useMemo(
-    () => (filter === "ALL" ? games : games.filter((g) => g.turnModel === filter)),
-    [games, filter]
-  );
+  const allGames = useMemo(() => GameRegistry.getAll(), []);
+  const [selectedCategory, setSelectedCategory] = useState<GameCategory>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const ARENA_BANNER_I18N: Record<string, { title: string; desc: string; cta: string; rulesCta: string }> = {
-    ar: {
-      title: "ساحة الأرينا المباشرة للنزالات والجوائز",
-      desc: "نافس لاعبين حقيقيين فوراً بـ USDT واسحب أرباحك خلال ثوانٍ!",
-      cta: "ادخل الأرينا وابدأ اللعب",
-      rulesCta: "القواعد والاستراتيجية",
-    },
-    en: {
-      title: "Live Duel Arena & Instant Prizes",
-      desc: "Compete against real players for instant USDT prizes and fast payouts!",
-      cta: "Enter Arena & Play",
-      rulesCta: "Rules & Guide",
-    },
-    es: {
-      title: "Arena en Vivo de Duelos y Premios al Instante",
-      desc: "¡Compite contra jugadores reales por premios USDT y retiros rápidos!",
-      cta: "Entrar a la Arena y Jugar",
-      rulesCta: "Reglas y Guía",
-    },
-    fr: {
-      title: "Arène en Direct & Récompenses Instantanées",
-      desc: "Affrontez de vrais joueurs pour des prix en USDT et des retraits rapides !",
-      cta: "Entrer dans l'Arène et Jouer",
-      rulesCta: "Règles & Stratégie",
-    },
-    hi: {
-      title: "लाइव द्वंद्व अरीना और तत्काल पुरस्कार",
-      desc: "USDT पुरस्कारों और त्वरित निकासी के लिए वास्तविक खिलाड़ियों से मुकाबला करें!",
-      cta: "अरीना में प्रवेश करें और खेलें",
-      rulesCta: "नियम और रणनीति",
-    },
-    zh: {
-      title: "实时决斗竞技场与即时奖金",
-      desc: "与真实在线玩家极速角逐 USDT 现金大奖，收益数秒即刻到账！",
-      cta: "进入竞技场即刻开战",
-      rulesCta: "规则与进阶攻略",
-    },
-  };
-  const arenaStrings = (ARENA_BANNER_I18N[locale] ?? ARENA_BANNER_I18N["en"])!;
+  const filteredGames = useMemo(() => {
+    let list = selectedCategory === "ALL" ? allGames : GameRegistry.filter(selectedCategory);
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((g) => {
+        const localizedName = t(`common.game_names.${g.nameKey}`).toLowerCase();
+        return (
+          localizedName.includes(q) ||
+          g.id.toLowerCase().includes(q) ||
+          g.tagline.toLowerCase().includes(q) ||
+          g.taglineAr.includes(q) ||
+          g.shortDescription.toLowerCase().includes(q) ||
+          g.shortDescriptionAr.includes(q)
+        );
+      });
+    }
+
+    return list;
+  }, [allGames, selectedCategory, searchQuery, t]);
 
   return (
     <>
       <Header />
       <main className="nz-container">
-        <header className={styles.head}>
-          <h1 className={styles.heading}>{t("gamesPage.heading")}</h1>
-          <p className={styles.subhead}>{t("gamesPage.subhead")}</p>
+        {/* Hub Header */}
+        <header className={styles.hubHeader}>
+          <h1 className={styles.heading}>{copy.hubTitle}</h1>
+          <p className={styles.subhead}>{copy.hubSub}</p>
         </header>
 
-        <div style={{
-          margin: "0 0 24px 0",
-          padding: "16px 20px",
-          background: "linear-gradient(135deg, rgba(201, 169, 110, 0.15) 0%, rgba(14, 19, 29, 0.9) 100%)",
-          border: "1px solid rgba(201, 169, 110, 0.35)",
-          borderRadius: "12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "12px",
-        }}>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: "15px", color: "var(--nz-accent, #c9a96e)", marginBottom: "4px" }}>
-              ⚔️ {arenaStrings.title}
+        {/* 5-Second Clarity Onboarding Banner: FIND A GAME → UNDERSTAND IT → PLAY IT */}
+        <section className={styles.journeyBanner} aria-label="First-time player guide">
+          <div className={styles.journeyGrid}>
+            <div className={styles.journeyPillar}>
+              <div className={styles.journeyPillarHead}>
+                <span className={styles.journeyIcon}>🎯</span>
+                <h2 className={styles.journeyQuestion}>{copy.q1}</h2>
+              </div>
+              <p className={styles.journeyAnswer}>{copy.a1}</p>
             </div>
-            <div style={{ fontSize: "13px", color: "var(--nz-text-2)" }}>
-              {arenaStrings.desc}
+
+            <div className={styles.journeyPillar}>
+              <div className={styles.journeyPillarHead}>
+                <span className={styles.journeyIcon}>💵</span>
+                <h2 className={styles.journeyQuestion}>{copy.q2}</h2>
+              </div>
+              <p className={styles.journeyAnswer}>{copy.a2}</p>
+            </div>
+
+            <div className={styles.journeyPillar}>
+              <div className={styles.journeyPillarHead}>
+                <span className={styles.journeyIcon}>🚀</span>
+                <h2 className={styles.journeyQuestion}>{copy.q3}</h2>
+              </div>
+              <p className={styles.journeyAnswer}>{copy.a3}</p>
             </div>
           </div>
-          <LocaleLink
-            href="/play"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 18px",
-              background: "linear-gradient(135deg, #ff5a2b, #f59e0b)",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: "13px",
-              borderRadius: "8px",
-              textDecoration: "none",
-            }}
-          >
-            <span>⚔️</span>
-            <span>{arenaStrings.cta}</span>
-          </LocaleLink>
-        </div>
+        </section>
 
-        <div className={styles.filters} role="group" aria-label={t("gamesPage.heading")}>
-          {(["ALL", "ALTERNATING", "SIMULTANEOUS"] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              className={filter === f ? styles.filterActive : styles.filter}
-              onClick={() => setFilter(f)}
-            >
-              {f === "ALL" ? t("gamesPage.filter_all") : f === "ALTERNATING" ? t("gamesPage.filter_turnbased") : t("gamesPage.filter_shared_clock")}
-            </button>
-          ))}
-        </div>
+        {/* Discovery & Filter Bar */}
+        <section className={styles.discoveryControls} aria-label="Game discovery filters">
+          {/* Quick Search Input */}
+          <div className={styles.searchBarWrap}>
+            <span className={styles.searchIcon}>🔍</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={copy.searchPlaceholder}
+              className={styles.searchInput}
+              aria-label="Search games"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className={styles.searchClearBtn}
+              >
+                ✕ {copy.clearSearch}
+              </button>
+            )}
+          </div>
 
+          {/* Canonical Category Taxonomy Pills */}
+          <div className={styles.categoryScroll} role="tablist" aria-label="Filter games by category">
+            {CATEGORIES_SPEC.map((cat) => {
+              const active = selectedCategory === cat.id;
+              const count = cat.id === "ALL" ? allGames.length : GameRegistry.filter(cat.id).length;
+              const label = isRtl ? cat.labelAr : cat.labelEn;
+
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={active ? styles.filterPillActive : styles.filterPill}
+                  onClick={() => setSelectedCategory(cat.id)}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{label}</span>
+                  <span className={styles.filterCount}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Dynamic Games Grid */}
         <div className={styles.grid}>
-          {visible.map((game) => <GameCard key={game.id} game={game} />)}
+          {filteredGames.length > 0 ? (
+            filteredGames.map((game) => (
+              <GameHubCard key={game.id} game={game} copy={copy} locale={locale} isRtl={isRtl} />
+            ))
+          ) : (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>🎲</div>
+              <h3 className={styles.emptyTitle}>{copy.emptyTitle}</h3>
+              <p className={styles.emptyDesc}>{copy.emptyDesc}</p>
+              <button
+                type="button"
+                className={styles.emptyResetBtn}
+                onClick={() => {
+                  setSelectedCategory("ALL");
+                  setSearchQuery("");
+                }}
+              >
+                {copy.resetFilter}
+              </button>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
@@ -151,56 +324,115 @@ export default function GamesPage() {
   );
 }
 
-function GameCard({ game }: { game: GamePlugin }) {
-  const { t, locale } = useI18n();
-  const name = t(`common.game_names.${game.nameKey}`);
-  const duration = t(`home.games.${game.nameKey}.duration`);
-  const mode = t(`home.games.${game.nameKey}.mode`);
+function GameHubCard({
+  game,
+  copy,
+  locale,
+  isRtl,
+}: {
+  game: GameDefinition;
+  copy: (typeof ONBOARDING_I18N)["en"];
+  locale: string;
+  isRtl: boolean;
+}) {
+  const { t } = useI18n();
+  const name = t(`common.game_names.${game.nameKey}`) || game.id;
+  const description = isRtl ? game.shortDescriptionAr : game.shortDescription;
+  const duration = isRtl ? game.typicalDurationAr : game.typicalDuration;
+  const mode = isRtl ? game.playerModeDisplayAr : game.playerModeDisplay;
+  const skill = isRtl ? game.skillLevelAr : game.skillLevel;
+  const rngEngine = game.rules.hasRng
+    ? (isRtl ? "نرد/قطع مشفرة CSPRNG" : "CSPRNG Dice/Tiles")
+    : (isRtl ? "حتمي 100% بدون أي حظ" : "100% Deterministic");
 
   return (
-    <div className={styles.card}>
-      <LocaleLink href={`/play/${game.id}`} className={styles.thumbnailLink}>
-        <GameThumbnail
-          gameId={game.id}
-          title={name}
-          duration={duration}
-          badge={game.turnModel === "SIMULTANEOUS" ? t("gamesPage.turn_model_simultaneous") : t("gamesPage.turn_model_alternating")}
-        />
-      </LocaleLink>
-      <div className={styles.cardHead}>
-        <h2 className={styles.cardTitle}>
-          <LocaleLink href={`/play/${game.id}`} className={styles.cardTitleLink}>{name}</LocaleLink>
-        </h2>
-        <span className={styles.turnTag}>
-          {game.turnModel === "SIMULTANEOUS" ? t("gamesPage.turn_model_simultaneous") : t("gamesPage.turn_model_alternating")}
-        </span>
-      </div>
-      <p className={styles.cardBody}>{t(`home.games.${game.nameKey}.description`)}</p>
-      <dl className={styles.meta}>
-        <div><dt>{t("home.games.duration_label")}</dt><dd>{duration}</dd></div>
-        <div><dt>{t("home.games.mode_label")}</dt><dd>{mode}</dd></div>
-      </dl>
-      {game.difficulties.length > 0 && (
-        <div className={styles.difficulties}>
-          {game.difficulties.map((d) => (
-            <span key={d} className={styles.difficultyBadge}>{t(`game.difficulty.${d}`)}</span>
-          ))}
+    <article className={styles.card}>
+      {/* Visual Thumbnail with Badges */}
+      <div className={styles.thumbnailWrap}>
+        <LocaleLink href={`/play/${game.id}`} aria-label={`${name} - ${copy.playCta}`}>
+          <GameThumbnail
+            gameId={game.id}
+            title={name}
+            duration={duration}
+            {...(game.turnModel === "SIMULTANEOUS" ? { badge: isRtl ? "متزامن" : "Simultaneous" } : {})}
+          />
+        </LocaleLink>
+        <div className={styles.cardBadgeOverlay}>
+          {game.isPopular && <span className={styles.popularBadge}>🔥 {isRtl ? "شائع" : "Popular"}</span>}
+          {game.isNew && <span className={styles.newBadge}>✨ {isRtl ? "جديد" : "New"}</span>}
         </div>
-      )}
-      <div className={styles.cardActions}>
-        <LocaleLink href={`/play/${game.id}`} className={styles.playCta}>
-          <span>⚔️</span> {t("gamesPage.play_cta", { name })}
-        </LocaleLink>
-        <LocaleLink href={`/games/${game.id}`} className={styles.rulesCta}>
-          <span>📖</span> {
-            locale === "ar" ? "القواعد والاستراتيجية" :
-            locale === "es" ? "Reglas y Guía" :
-            locale === "fr" ? "Règles & Stratégie" :
-            locale === "hi" ? "नियम और रणनीति" :
-            locale === "zh" ? "规则与进阶攻略" : "Rules & Guide"
-          }
-        </LocaleLink>
       </div>
-    </div>
+
+      <div className={styles.cardContent}>
+        {/* Card Header: Icon, Name, and Live Availability */}
+        <div className={styles.cardHeader}>
+          <div className={styles.cardTitleGroup}>
+            <span className={styles.cardIcon}>{game.icon}</span>
+            <h2 className={styles.cardTitle}>
+              <LocaleLink href={`/play/${game.id}`} className={styles.cardTitleLink}>
+                {name}
+              </LocaleLink>
+            </h2>
+          </div>
+          <div className={styles.livePlayerBadge}>
+            <span className={styles.pulseDot} />
+            <span>{game.availability.onlinePlayersBenchmark} {copy.playersInArena}</span>
+          </div>
+        </div>
+
+        {/* Stake Eligibility Badges */}
+        <div className={styles.stakeBadgeRow}>
+          {game.stakeEligibility.isCashEligible ? (
+            <>
+              <span className={styles.cashEligibleBadge}>
+                💰 {isRtl ? "نزالات كاش $1-$100" : "Cash Duels $1-$100"}
+              </span>
+              <span className={styles.freePlayBadge}>
+                🆓 {isRtl ? "لعب مجاني متاح" : "Free Play"}
+              </span>
+            </>
+          ) : (
+            <span className={styles.freeOnlyBadge} title={game.stakeEligibility.reasonIfNotEligible}>
+              🆓 {isRtl ? "مجاني بالكامل (لعبة محسومة)" : "100% Free Only (Solved Game)"}
+            </span>
+          )}
+        </div>
+
+        {/* Factual Short Description */}
+        <p className={styles.cardDescription}>{description}</p>
+
+        {/* Factual Game Metadata Specification Grid */}
+        <div className={styles.metaGrid}>
+          <div className={styles.metaItem}>
+            <span className={styles.metaLabel}>{copy.durationLabel}</span>
+            <span className={styles.metaValue}>{duration}</span>
+          </div>
+          <div className={styles.metaItem}>
+            <span className={styles.metaLabel}>{copy.modeLabel}</span>
+            <span className={styles.metaValue}>{mode}</span>
+          </div>
+          <div className={styles.metaItem}>
+            <span className={styles.metaLabel}>{copy.skillLabel}</span>
+            <span className={styles.metaValue}>{skill}</span>
+          </div>
+          <div className={styles.metaItem}>
+            <span className={styles.metaLabel}>{copy.rngLabel}</span>
+            <span className={styles.metaValue}>{rngEngine}</span>
+          </div>
+        </div>
+
+        {/* Actions: Primary Play CTA + Secondary Rules CTA */}
+        <div className={styles.cardActions}>
+          <LocaleLink href={`/play/${game.id}`} className={styles.playCta}>
+            <span>⚔️</span>
+            <span>{copy.playCta}</span>
+          </LocaleLink>
+          <LocaleLink href={`/games/${game.id}`} className={styles.rulesCta}>
+            <span>📖</span>
+            <span>{copy.rulesCta}</span>
+          </LocaleLink>
+        </div>
+      </div>
+    </article>
   );
 }

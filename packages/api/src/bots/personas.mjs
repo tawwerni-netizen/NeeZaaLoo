@@ -1,5 +1,5 @@
 /**
- * 600 AI Personas across 6 Languages (100 per language) playing ALL 10 games on Nizalo.
+ * 600 AI Personas across 6 Languages (100 per language) playing ALL 11 games on Nizalo.
  * Pure ESM JavaScript.
  * 
  * Games:
@@ -13,6 +13,7 @@
  * 8. seega (السيجة)
  * 9. speed-math (الرياضيات السريعة)
  * 10. xo (إكس أو)
+ * 11. ludo (لودو)
  */
 
 export const ALL_GAMES = [
@@ -26,6 +27,7 @@ export const ALL_GAMES = [
   "seega",
   "speed-math",
   "xo",
+  "ludo",
 ];
 
 

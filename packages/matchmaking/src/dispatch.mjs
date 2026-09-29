@@ -47,6 +47,7 @@ export function createDispatchWorker(db, {
   now = () => Date.now(),
   onError = (err) => { throw err; },
   emit = () => {},
+  autoMarkLive = true,
 } = {}) {
   if (!settlement) throw new Error("createDispatchWorker requires a settlement service");
   if (!store) throw new Error("createDispatchWorker requires a duel store");
@@ -109,7 +110,9 @@ export function createDispatchWorker(db, {
       // in hand is correct without a second load.
     }
 
-    // DO NOT markLive here! Gateway will do it when both clients connect.
+    if (autoMarkLive) {
+      await store.markLive(duel);
+    }
     return { duelId, outcome: DispatchOutcome.LIVE, players: duel.players, gameId: duel.gameId };
   }
 

@@ -25,6 +25,7 @@ import {
   SEAT_0, SEAT_1, POINTS, CHECKERS_PER_SIDE, other,
   initialBoard, pointSeat, isHomeIndex, destinationFor, isBearOffDestination,
   entryDestination, isOpenFor, isLegalBearOff, legalActions, hasAnyLegalAction,
+  legalActionsWithForcedRules,
   rollDiceFor, openingRoll,
 } from "./backgammon.mjs";
 
@@ -218,6 +219,11 @@ export const BackgammonPlugin = {
       }
     }
 
+    const forced = legalActionsWithForcedRules(state, seat);
+    if (!forced.some((a) => a.from === from && a.die === die)) {
+      return { ok: false, reason: "ILLEGAL" };
+    }
+
     let next = cloneState(state);
     if (from === "BAR") next.bar[seat] -= 1;
     else next.board[from] -= seat === SEAT_0 ? 1 : -1;
@@ -283,7 +289,7 @@ export const BackgammonPlugin = {
       dice: [...state.dice],
     };
     if (viewer === "spectator" || seat === null || seat !== state.turn) return base;
-    return { ...base, legalActions: legalActions(state, seat) };
+    return { ...base, legalActions: legalActionsWithForcedRules(state, seat) };
   },
 
   /** Evidence for the Fair Play Engine -- the same move-timing-uniformity

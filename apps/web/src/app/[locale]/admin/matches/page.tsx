@@ -42,6 +42,7 @@ const GAMES = [
   { id: "seega", name: "Seega" },
   { id: "reversi", name: "Reversi" },
   { id: "gomoku", name: "Gomoku" },
+  { id: "ludo", name: "Ludo Royale" },
 ];
 
 export default function AdminMatchesPage() {

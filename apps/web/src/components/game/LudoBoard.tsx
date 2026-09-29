@@ -432,10 +432,7 @@ export function LudoBoard({
     }
   }, [currentRoll, rollCount, isMyTurn]);
 
-  const [ludoMode, setLudoMode] = useState<"1v1" | "4p">("1v1");
-  const [matchmakingStatus, setMatchmakingStatus] = useState<string | null>(null);
-
-  const numPlayers = ludoMode === "4p" ? 4 : (tokens?.length || 2);
+  const numPlayers = tokens?.length || 2;
 
   // Map seat index to visual quadrant (0: Red/BL, 1: Blue/TL, 2: Green/TR, 3: Yellow/BR)
   const getVisualPlayer = (player: number, totalPlayers: number): number => {
@@ -495,20 +492,6 @@ export function LudoBoard({
       onMove({ action: "MOVE", tokenIndex });
     }
   };
-
-  function handleModeChange(mode: "1v1" | "4p") {
-    setLudoMode(mode);
-    if (mode === "4p") {
-      setMatchmakingStatus(strings.searching4p);
-      setTimeout(() => {
-        playLudoMatchFoundSound();
-        setMatchmakingStatus(strings.matchFound4p);
-        setTimeout(() => setMatchmakingStatus(null), 3000);
-      }, 1200);
-    } else {
-      setMatchmakingStatus(null);
-    }
-  }
 
   const myPlayerIndex = mySeat !== null ? mySeat : 0;
   const opponents = Array.from({ length: numPlayers })
@@ -593,7 +576,7 @@ export function LudoBoard({
                 {hasPawn ? (
                   <motion.div
                     className={styles.pawnWrapper}
-                    animate={isLegal ? { y: [0, -3, 0] } : {}}
+                    animate={isLegal ? { scale: [1, 1.08, 1] } : {}}
                     transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
                   >
                     <LudoPawn color={color} isMovable={isLegal} isTurn={isPlayerTurn} />
@@ -610,55 +593,30 @@ export function LudoBoard({
   };
 
   return (
-    <div className="w-full flex flex-col items-center gap-5 py-3 font-sans select-none overflow-hidden">
-      {/* 1v1 vs 4P Matchmaking Switcher */}
-      <div className={styles.ludoModeBar}>
-        <button
-          type="button"
-          className={[styles.ludoModeTab, ludoMode === "1v1" ? styles.ludoModeTabActive : ""].join(" ")}
-          onClick={() => handleModeChange("1v1")}
-        >
-          {strings.mode1v1}
-        </button>
-        <button
-          type="button"
-          className={[styles.ludoModeTab, ludoMode === "4p" ? styles.ludoModeTabActive : ""].join(" ")}
-          onClick={() => handleModeChange("4p")}
-        >
-          {strings.mode4p}
-        </button>
-      </div>
+    <div className={styles.ludoViewportWrapper}>
+      {/* Top Bar / Opponents HUD (Clean single strip, no wrapping, zero jitter) */}
+      <div className={styles.topOpponentsBar}>
+        {opponents.map((p) => {
+          const vis = getVisualPlayer(p, numPlayers);
+          const colorName = COLOR_MAP[vis] ?? "red";
+          const colorClass = styles[`color${colorName.charAt(0).toUpperCase() + colorName.slice(1)}`];
+          const isTurn = turn === p;
 
-      {matchmakingStatus && (
-        <div className={styles.matchmakingRadarPill}>
-          <span className={styles.radarDot} />
-          <span>{matchmakingStatus}</span>
-        </div>
-      )}
-
-      {/* Top Bar / Opponent Info */}
-      <div className="flex w-full max-w-[580px] justify-between items-center px-2 gap-3">
-        <div className="flex flex-wrap gap-2 flex-1">
-          {opponents.map((p) => {
-            const vis = getVisualPlayer(p, numPlayers);
-            const colorName = COLOR_MAP[vis] ?? "red";
-            const colorClass = styles[`color${colorName.charAt(0).toUpperCase() + colorName.slice(1)}`];
-
-            return (
-              <div
-                key={p}
-                className={`${styles.playerInfo} ${turn === p ? styles.playerInfoActive : ""} ${colorClass || ""}`}
-              >
-                <div className={styles.playerDot} />
-                <span className={styles.playerName}>{getPlayerName(p, vis)}</span>
-              </div>
-            );
-          })}
-        </div>
-        <div className="text-gray-500 font-mono text-sm whitespace-nowrap">
-          {phase === "ROLL" && turn !== mySeat && strings.opponentRolling}
-          {phase === "MOVE" && turn !== mySeat && strings.opponentMoving}
-        </div>
+          return (
+            <div
+              key={p}
+              className={`${styles.playerCard} ${isTurn ? styles.playerCardActive : ""} ${colorClass || ""}`}
+            >
+              <div className={styles.playerDot} />
+              <span className={styles.playerName}>{getPlayerName(p, vis)}</span>
+              {isTurn && (
+                <span className={styles.activeTurnPill}>
+                  {phase === "ROLL" ? strings.opponentRolling : strings.opponentMoving}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* LUDO CLASSIC LUXURY BOARD CONTAINER */}
@@ -948,9 +906,9 @@ export function LudoBoard({
         </div>
       </div>
 
-      {/* Bottom Bar / My Controls */}
-      <div className="flex w-full max-w-[580px] justify-between items-center px-2">
-        <div>
+      {/* Bottom Bar / My Controls (Rigid height deck, zero jump/jitter) */}
+      <div className={styles.controlsDeck}>
+        <div className={styles.playerCardZone}>
           {(() => {
             const vis = getVisualPlayer(myPlayerIndex, numPlayers);
             const colorName = COLOR_MAP[vis] ?? "red";
@@ -958,18 +916,47 @@ export function LudoBoard({
 
             return (
               <div
-                className={`${styles.playerInfo} ${turn === myPlayerIndex ? styles.playerInfoActive : ""} ${colorClass || ""}`}
+                className={`${styles.playerCard} ${turn === myPlayerIndex ? styles.playerCardActive : ""} ${colorClass || ""}`}
               >
                 <div className={styles.playerDot} />
                 <span className={styles.playerName}>
                   {mySeat !== null ? `${getPlayerName(myPlayerIndex, vis)} (${strings.you})` : strings.spectator}
                 </span>
+                {turn === myPlayerIndex && (
+                  <span className={styles.myTurnMiniBadge}>دورك</span>
+                )}
               </div>
             );
           })()}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className={styles.actionDockRight}>
+          {/* Action Slot: Fixed height container so phase changes never reflow surrounding layout */}
+          <div className={styles.actionSlot}>
+            {isMyTurn && phase === "ROLL" && (
+              <button type="button" onClick={handleRoll} className={styles.rollActionBtn}>
+                <span className={styles.rollActionIcon}>🎲</span>
+                <span>{strings.rollDice}</span>
+              </button>
+            )}
+
+            {isMyTurn && phase === "MOVE" && (
+              <div className={styles.movePromptPill}>
+                {currentRoll === 6 && <span className={styles.sixBadge}>{strings.extraRoll}</span>}
+                <span className={styles.moveText}>{strings.pickToken}</span>
+              </div>
+            )}
+
+            {!isMyTurn && (
+              <div className={styles.opponentTurnPill}>
+                <span className={styles.opponentDot} />
+                <span>
+                  {phase === "ROLL" ? strings.opponentRolling : strings.opponentMoving}
+                </span>
+              </div>
+            )}
+          </div>
+
           {/* 3D Dice Button */}
           <div className={styles.diceZone}>
             <motion.button
@@ -980,19 +967,11 @@ export function LudoBoard({
               animate={
                 isRolling
                   ? {
-                      rotateX: [0, 360, 720],
-                      rotateY: [0, -360, -720],
-                      rotateZ: [0, 90, 0],
-                      scale: [1, 1.2, 0.96, 1],
+                      rotate: [0, 90, 180, 270, 360],
                     }
-                  : isMyTurn && phase === "ROLL"
-                  ? {
-                      scale: [1, 1.05, 1],
-                      transition: { repeat: Infinity, duration: 1.4, ease: "easeInOut" },
-                    }
-                  : { scale: 1 }
+                  : {}
               }
-              transition={{ duration: 0.55, ease: "easeOut" }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
               title={isMyTurn && phase === "ROLL" ? strings.clickToRoll : undefined}
               aria-label="Roll Dice"
             >
@@ -1002,32 +981,6 @@ export function LudoBoard({
               {isMyTurn && phase === "ROLL" && <span className={styles.dicePulseRing} />}
             </motion.button>
           </div>
-
-          {/* Roll Action CTA */}
-          {isMyTurn && phase === "ROLL" && (
-            <button type="button" onClick={handleRoll} className={styles.rollActionBtn}>
-              <span className={styles.rollActionIcon}>🎲</span>
-              <span>{strings.rollDice}</span>
-            </button>
-          )}
-
-          {/* Move Status CTA */}
-          {isMyTurn && phase === "MOVE" && (
-            <div className={styles.movePromptPill}>
-              {currentRoll === 6 && <span className={styles.sixBadge}>{strings.extraRoll}</span>}
-              <span className={styles.moveText}>{strings.pickToken}</span>
-            </div>
-          )}
-
-          {/* Opponent Status CTA */}
-          {!isMyTurn && (
-            <div className={styles.opponentTurnPill}>
-              <span className={styles.opponentDot} />
-              <span>
-                {phase === "ROLL" ? strings.opponentRolling : strings.opponentMoving}
-              </span>
-            </div>
-          )}
         </div>
       </div>
     </div>

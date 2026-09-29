@@ -22,6 +22,7 @@ const TARGET_GAMES = [
   { id: 'reversi', name: 'ريفيرسي الذكاء' },
   { id: 'gomoku', name: 'جوموكو الأبطال' },
   { id: 'seega', name: 'السيجة التراثية' },
+  { id: 'ludo', name: 'لودو رويال الملكية' },
 ];
 
 async function fundAllBots() {

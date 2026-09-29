@@ -1,0 +1,239 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 14, 20, 0.7);
+  backdrop-filter: blur(6px);
+  z-index: 10500;
+  display: flex;
+  justify-content: flex-end;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.panel {
+  position: relative;
+  background: var(--nz-surface-1);
+  border-inline-start: 1px solid var(--nz-line-strong);
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--nz-shadow-3);
+  animation: slideDrawer 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--nz-space-4) var(--nz-space-6);
+  border-bottom: 1px solid var(--nz-line);
+}
+
+.titleArea {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+}
+
+.gameIcon {
+  font-size: 24px;
+}
+
+.title {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-lg);
+  font-weight: 700;
+  color: var(--nz-text);
+  margin: 0;
+}
+
+.subtitle {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+  margin: 0;
+}
+
+.closeBtn {
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.closeBtn:hover {
+  background: var(--nz-surface-3);
+  color: var(--nz-text);
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--nz-line);
+  padding-inline: var(--nz-space-6);
+  gap: var(--nz-space-2);
+  background: var(--nz-surface-2);
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 10px 12px;
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  color: var(--nz-text-2);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.tab:hover {
+  color: var(--nz-text);
+}
+
+.tabActive {
+  color: var(--nz-accent);
+  border-bottom-color: var(--nz-accent);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--nz-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-4);
+}
+
+.ruleCard {
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+}
+
+.ruleCardTitle {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  color: var(--nz-text);
+  margin: 0;
+}
+
+.ruleCardText {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  line-height: var(--nz-leading-body);
+  color: var(--nz-text-2);
+  margin: 0;
+}
+
+.badgeList {
+  display: flex;
+  gap: var(--nz-space-2);
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: var(--nz-text-xs);
+  padding: 2px 8px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-3);
+  color: var(--nz-text-2);
+  border: 1px solid var(--nz-line);
+}
+
+.variantSelector {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  padding: var(--nz-space-2) var(--nz-space-6);
+  background: var(--nz-surface-1);
+  border-bottom: 1px solid var(--nz-line);
+  overflow-x: auto;
+}
+
+.variantLabel {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.variantChip {
+  padding: 4px 10px;
+  border-radius: var(--nz-radius-pill);
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-2);
+  color: var(--nz-text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.variantChip:hover {
+  background: var(--nz-surface-3);
+  color: var(--nz-text);
+}
+
+.variantChipActive {
+  background: var(--nz-accent);
+  color: #fff;
+  border-color: var(--nz-accent);
+}
+
+.bulletList {
+  margin: 0;
+  padding-inline-start: var(--nz-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+}
+
+.bulletItem {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  line-height: var(--nz-leading-body);
+  color: var(--nz-text-2);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDrawer {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideDrawerRtl {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+:global([dir="rtl"]) .panel {
+  border-inline-start: none;
+  border-inline-end: 1px solid var(--nz-line-strong);
+  animation-name: slideDrawerRtl;
+}

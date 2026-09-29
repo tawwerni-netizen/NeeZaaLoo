@@ -91,6 +91,111 @@
   box-shadow: 0 0 6px #ff5a2b;
 }
 
+/* --- Desktop Secondary "More" Dropdown --- */
+.moreNavWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.moreNavBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px clamp(6px, 0.7vw, 12px);
+  border-radius: var(--nz-radius-pill);
+  font-size: clamp(0.82rem, 0.9vw, 0.9rem);
+  font-weight: 600;
+  color: var(--nz-text-2);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.moreNavBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.moreNavBtnActive {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(201, 169, 110, 0.2), rgba(245, 158, 11, 0.1));
+  border-color: rgba(201, 169, 110, 0.4);
+}
+
+.moreChevron {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+}
+
+.moreChevronOpen {
+  transform: rotate(180deg);
+}
+
+.moreDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-start: 0;
+  min-width: 200px;
+  background: rgba(14, 19, 29, 0.96);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(201, 169, 110, 0.1);
+  padding: 6px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.moreDropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--nz-text-2);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.moreDropdownItem:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.moreDropdownItemActive {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(255, 90, 43, 0.15), rgba(245, 158, 11, 0.1));
+  font-weight: 700;
+}
+
+.moreItemContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.moreItemLiveBadge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
 .navSoon {
   display: inline-flex;
   align-items: center;

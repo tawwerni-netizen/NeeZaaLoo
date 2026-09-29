@@ -362,7 +362,7 @@ async function main() {
 
     // 7. Seed realistic ratings for the 204 bots across games
     console.log("Seeding realistic ratings for the 204 bots across games...");
-    const games = ["chess", "xo", "connect-four", "checkers", "speed-math", "reversi", "gomoku", "backgammon", "dominoes", "seega"];
+    const games = ["chess", "xo", "connect-four", "checkers", "speed-math", "reversi", "gomoku", "backgammon", "dominoes", "seega", "ludo"];
     
     // Check if table rating has vol_x100
     const colCheck = await client.query(`

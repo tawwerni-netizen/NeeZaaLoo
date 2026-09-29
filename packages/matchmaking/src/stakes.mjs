@@ -15,7 +15,7 @@
  */
 const USDT_MINOR = 1_000_000n;
 
-export const STAKE_PRESETS_USD = Object.freeze([2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000]);
+export const STAKE_PRESETS_USD = Object.freeze([2, 5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000]);
 
 export const STAKE_PRESETS_MINOR = Object.freeze(
   STAKE_PRESETS_USD.map((usd) => BigInt(usd) * USDT_MINOR)

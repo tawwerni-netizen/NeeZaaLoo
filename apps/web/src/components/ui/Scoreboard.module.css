@@ -1,0 +1,62 @@
+.scoreboard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nz-space-4);
+  padding: 6px 16px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  font-family: var(--nz-font-ui);
+}
+
+.scoreItem {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+}
+
+.playerName {
+  font-size: var(--nz-text-xs);
+  font-weight: 700;
+  color: var(--nz-text-2);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scoreNum {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--nz-text-lg);
+  font-weight: 800;
+  color: var(--nz-text);
+  line-height: 1;
+}
+
+.divider {
+  font-family: var(--nz-font-num);
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-3);
+  opacity: 0.6;
+}
+
+.turnIndicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--nz-accent);
+  box-shadow: 0 0 8px var(--nz-accent);
+  margin-inline-start: var(--nz-space-1);
+}
+
+.roundInfo {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+  letter-spacing: var(--nz-tracking-caps);
+  text-transform: uppercase;
+  border-inline-start: 1px solid var(--nz-line);
+  padding-inline-start: var(--nz-space-3);
+  margin-inline-start: var(--nz-space-1);
+}

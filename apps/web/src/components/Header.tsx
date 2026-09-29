@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Logo } from "./Logo";
@@ -16,8 +16,6 @@ import { useI18n } from "@/lib/i18n/context";
 import { transition } from "@/lib/motion";
 import { WealthWalletIcon } from "@/components/icons/WealthWalletIcon";
 import styles from "./Header.module.css";
-
-type NavItem = { href?: string; label: string; icon: string; items?: { href: string; label: string; icon?: string; }[] };
 
 const DEPOSIT_LABELS: Record<string, string> = {
   ar: "إيداع",
@@ -36,23 +34,50 @@ export function Header() {
   const { locale, t } = useI18n();
   const reduceMotion = useReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreWrapRef = useRef<HTMLDivElement>(null);
 
+  // 1. PRIMARY USER NAVIGATION: Play, Games, Tournaments, Rank
   const PRIMARY_NAV = [
-    { href: "/play", label: t("nav.arena"), icon: "⚔️" },
-    { href: "/games", label: t("nav.games"), icon: "🎲" },
-    { href: "/tournaments", label: t("nav.tournaments"), icon: "🏆" },
-    { href: "/clans", label: t("nav.clans"), icon: "🛡️" },
-    { href: "/store", label: t("nav.store") || "Store", icon: "🛒" },
-    { href: "/battle-pass", label: t("nav.battle_pass") || "Seasons", icon: "🎟️" },
-    { href: "/rank", label: t("nav.rank"), icon: "👑" },
+    { href: "/play", label: locale === "ar" ? "العب" : (t("nav.play_now") || "Play"), icon: "⚔️" },
+    { href: "/games", label: t("nav.games") || (locale === "ar" ? "الألعاب" : "Games"), icon: "🎲" },
+    { href: "/tournaments", label: t("nav.tournaments") || (locale === "ar" ? "البطولات" : "Tournaments"), icon: "🏆" },
+    { href: "/rank", label: t("nav.rank") || (locale === "ar" ? "التصنيف" : "Rank"), icon: "👑" },
   ];
 
-  const isActive = (href: string) => pathname === `/${locale}${href}`;
+  // 2. SECONDARY SYSTEMS: Clans, Store, Battle Pass, Live Stream, Rewards
+  const SECONDARY_NAV = [
+    { href: "/clans", label: t("nav.clans") || (locale === "ar" ? "الكلانات" : "Clans"), icon: "🛡️" },
+    { href: "/store", label: t("nav.store") || (locale === "ar" ? "المتجر" : "Store"), icon: "🛒" },
+    { href: "/battle-pass", label: t("nav.battle_pass") || (locale === "ar" ? "تذكرة الموسم" : "Battle Pass"), icon: "🎟️" },
+    { href: "/watch", label: t("nav.watch") || (locale === "ar" ? "البث المباشر" : "Live"), icon: "📺", isLive: true },
+    { href: "/referrals", label: t("nav.referrals") || (locale === "ar" ? "المكافآت" : "Rewards"), icon: "🎁" },
+  ];
 
-  function closeMenu() { setMenuOpen(false); }
+  const isActive = (href: string) => pathname === `/${locale}${href}` || (href !== "/" && pathname.startsWith(`/${locale}${href}`));
+  const isSecondaryActive = SECONDARY_NAV.some((item) => isActive(item.href));
+
+  function closeMenu() {
+    setMenuOpen(false);
+    setMoreOpen(false);
+  }
+
+  // Handle click outside desktop More dropdown
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (moreWrapRef.current && !moreWrapRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+    if (moreOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [moreOpen]);
 
   useEffect(() => {
     setMenuOpen(false);
+    setMoreOpen(false);
   }, [pathname]);
 
   return (
@@ -62,7 +87,8 @@ export function Header() {
           <Logo />
         </LocaleLink>
 
-        <nav className={styles.primaryNav} aria-label="Primary">
+        {/* Desktop Primary Navigation Bar */}
+        <nav className={styles.primaryNav} aria-label="Primary Navigation">
           {PRIMARY_NAV.map((item) => {
             const active = isActive(item.href);
             return (
@@ -78,22 +104,59 @@ export function Header() {
             );
           })}
 
-          {/* Dedicated Live Stream Icon with Hover Tooltip */}
-          <div className={styles.liveStreamNavWrap}>
-            <LocaleLink
-              href="/watch"
-              className={`${styles.liveStreamNavLink} ${isActive("/watch") ? styles.liveStreamNavLinkActive : ""}`}
-              aria-label={t("nav.watch")}
-              title={`( ${t("nav.watch")} )`}
+          {/* Desktop Secondary "More" Dropdown Menu */}
+          <div className={styles.moreNavWrap} ref={moreWrapRef}>
+            <button
+              type="button"
+              className={`${styles.moreNavBtn} ${isSecondaryActive ? styles.moreNavBtnActive : ""}`}
+              onClick={() => setMoreOpen((v) => !v)}
+              aria-expanded={moreOpen}
+              aria-haspopup="true"
             >
-              <span className={styles.liveStreamIconWrap}>
-                <span className={styles.liveStreamPulseDot} />
-                <span className={styles.liveStreamIcon}>📺</span>
-              </span>
-              <span className={styles.liveStreamTooltip} role="tooltip">
-                ( {t("nav.watch")} )
-              </span>
-            </LocaleLink>
+              <span>{locale === "ar" ? "المزيد" : "More"}</span>
+              <svg
+                className={`${styles.moreChevron} ${moreOpen ? styles.moreChevronOpen : ""}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+              {isSecondaryActive && <span className={styles.activeIndicator} />}
+            </button>
+
+            <AnimatePresence>
+              {moreOpen && (
+                <motion.div
+                  className={styles.moreDropdown}
+                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {SECONDARY_NAV.map((item) => {
+                    const active = isActive(item.href);
+                    return (
+                      <LocaleLink
+                        key={item.href}
+                        href={item.href}
+                        className={`${styles.moreDropdownItem} ${active ? styles.moreDropdownItemActive : ""}`}
+                        onClick={() => setMoreOpen(false)}
+                      >
+                        <span className={styles.moreItemContent}>
+                          <span>{item.icon}</span>
+                          <span>{item.label}</span>
+                        </span>
+                        {item.isLive && (
+                          <span className={styles.moreItemLiveBadge}>LIVE</span>
+                        )}
+                      </LocaleLink>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </nav>
 
@@ -163,15 +226,6 @@ export function Header() {
 
         {/* Mobile Header Actions (Visible on mobile/tablet screens) */}
         <div className={styles.mobileActions}>
-          <LocaleLink
-            href="/watch"
-            className={`${styles.mobileLiveBtn} ${isActive("/watch") ? styles.mobileLiveBtnActive : ""}`}
-            aria-label={t("nav.watch")}
-            title={`( ${t("nav.watch")} )`}
-          >
-            <span className={styles.mobileLivePulseDot} />
-            <span className={styles.mobileLiveIcon}>📺</span>
-          </LocaleLink>
           {loading ? null : player ? (
             <>
               <LocaleLink
@@ -198,7 +252,7 @@ export function Header() {
             <>
               <LocaleLink href="/play" className={styles.mobileHeaderPlayBtn}>
                 <span>⚔️</span>
-                <span>{t("nav.play_now")}</span>
+                <span>{locale === "ar" ? "العب" : "Play"}</span>
               </LocaleLink>
               <LanguageSwitcher variant="compact" />
             </>
@@ -288,7 +342,7 @@ export function Header() {
               </div>
             )}
 
-            {/* Primary Navigation Grid */}
+            {/* 1. Primary Navigation Section */}
             <div className={styles.mobileNavSection}>
               <div className={styles.mobileSectionTitle}>
                 {locale === "ar" ? "القائمة الرئيسية" : "Main Navigation"}
@@ -309,52 +363,72 @@ export function Header() {
                     </LocaleLink>
                   );
                 })}
-                {/* Live Stream tile in Mobile Drawer */}
-                <LocaleLink
-                  href="/watch"
-                  className={isActive("/watch") ? styles.mobileNavTileActive : styles.mobileNavTile}
-                  onClick={closeMenu}
-                >
-                  <span className={styles.mobileNavTileIcon}>📺</span>
-                  <span className={styles.mobileNavTileLabel}>{t("nav.watch")}</span>
-                  <span className={styles.mobileNavLiveBadge}>LIVE</span>
-                  {isActive("/watch") && <span className={styles.activeGlowDot} />}
-                </LocaleLink>
               </div>
             </div>
 
-            {/* Quick Services (If Logged in) */}
-            {player && (
-              <div className={styles.mobileServicesSection}>
-                <div className={styles.mobileSectionTitle}>
-                  {locale === "ar" ? "خدمات الحساب" : "Account Services"}
-                </div>
-                <div className={styles.mobileServicesGrid}>
-                  <LocaleLink href="/chat" className={styles.mobileServiceItem} onClick={closeMenu}>
-                    <span className={styles.serviceIcon}>💬</span>
-                    <span className={styles.serviceLabel}>{t("nav.chat")}</span>
-                  </LocaleLink>
-                  <LocaleLink href="/wallet" className={styles.mobileServiceItem} onClick={closeMenu}>
-                    <span className={styles.serviceIcon}>💎</span>
-                    <span className={styles.serviceLabel}>{t("nav.wallet")}</span>
-                  </LocaleLink>
-                  <LocaleLink href="/referrals" className={styles.mobileServiceItem} onClick={closeMenu}>
-                    <span className={styles.serviceIcon}>🎁</span>
-                    <span className={styles.serviceLabel}>{t("nav.referrals")}</span>
-                  </LocaleLink>
-                  <LocaleLink href="/help" className={styles.mobileServiceItem} onClick={closeMenu}>
-                    <span className={styles.serviceIcon}>❓</span>
-                    <span className={styles.serviceLabel}>{t("nav.support")}</span>
-                  </LocaleLink>
-                  {player.isAdmin && (
-                    <LocaleLink href="/admin" className={styles.mobileServiceItem} onClick={closeMenu}>
-                      <span className={styles.serviceIcon}>🛡️</span>
-                      <span className={styles.serviceLabel}>{t("nav.admin") || "Admin"}</span>
-                    </LocaleLink>
-                  )}
-                </div>
+            {/* 2. Secondary Features Section */}
+            <div className={styles.mobileNavSection} style={{ marginTop: "16px" }}>
+              <div className={styles.mobileSectionTitle}>
+                {locale === "ar" ? "المزيد والمجتمع" : "Explore & Features"}
               </div>
-            )}
+              <div className={styles.mobileNavGrid}>
+                {SECONDARY_NAV.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <LocaleLink
+                      key={item.href}
+                      href={item.href}
+                      className={active ? styles.mobileNavTileActive : styles.mobileNavTile}
+                      onClick={closeMenu}
+                    >
+                      <span className={styles.mobileNavTileIcon}>{item.icon}</span>
+                      <span className={styles.mobileNavTileLabel}>{item.label}</span>
+                      {item.isLive && (
+                        <span className={styles.mobileNavLiveBadge}>LIVE</span>
+                      )}
+                      {active && <span className={styles.activeGlowDot} />}
+                    </LocaleLink>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 3. Quick Account Services */}
+            <div className={styles.mobileServicesSection}>
+              <div className={styles.mobileSectionTitle}>
+                {locale === "ar" ? "خدمات الحساب والدعم" : "Account & Support"}
+              </div>
+              <div className={styles.mobileServicesGrid}>
+                <LocaleLink href="/chat" className={styles.mobileServiceItem} onClick={closeMenu}>
+                  <span className={styles.serviceIcon}>💬</span>
+                  <span className={styles.serviceLabel}>{t("nav.chat")}</span>
+                </LocaleLink>
+                <LocaleLink href="/wallet" className={styles.mobileServiceItem} onClick={closeMenu}>
+                  <span className={styles.serviceIcon}>💎</span>
+                  <span className={styles.serviceLabel}>{t("nav.wallet")}</span>
+                </LocaleLink>
+                <LocaleLink href="/help" className={styles.mobileServiceItem} onClick={closeMenu}>
+                  <span className={styles.serviceIcon}>❓</span>
+                  <span className={styles.serviceLabel}>{t("nav.support")}</span>
+                </LocaleLink>
+                <LocaleLink href="/fair-play" className={styles.mobileServiceItem} onClick={closeMenu}>
+                  <span className={styles.serviceIcon}>🛡️</span>
+                  <span className={styles.serviceLabel}>{locale === "ar" ? "النزاهة" : "Fair Play"}</span>
+                </LocaleLink>
+                {player?.isAdmin && (
+                  <LocaleLink href="/admin" className={styles.mobileServiceItem} onClick={closeMenu}>
+                    <span className={styles.serviceIcon}>⚙️</span>
+                    <span className={styles.serviceLabel}>{t("nav.admin") || "Admin"}</span>
+                  </LocaleLink>
+                )}
+                {player?.isOrganizer && (
+                  <LocaleLink href="/organizer" className={styles.mobileServiceItem} onClick={closeMenu}>
+                    <span className={styles.serviceIcon}>🏆</span>
+                    <span className={styles.serviceLabel}>{t("nav.organizer") || "Organizer"}</span>
+                  </LocaleLink>
+                )}
+              </div>
+            </div>
 
             {/* Footer Bar: Language and Logout */}
             <div className={styles.mobileFooterBar}>

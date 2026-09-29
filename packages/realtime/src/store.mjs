@@ -124,7 +124,7 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
       }
 
       const rows = await db.query(
-        `SELECT id, game_id, plugin_version, seat_0, seat_1, tier, stake_minor::text AS stake,
+        `SELECT id, game_id, plugin_version, seat_0, seat_1, seat_2, seat_3, tier, stake_minor::text AS stake,
                 asset, initial_state, seed, time_control, clock_state, status, is_vs_computer,
                 started_at, created_at
            FROM duel 
@@ -151,7 +151,7 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
 
     async load(duelId, plugins, recoveredAtMs) {
       const r = await db.query(
-        `SELECT id, game_id, plugin_version, seat_0, seat_1, tier, stake_minor::text AS stake,
+        `SELECT id, game_id, plugin_version, seat_0, seat_1, seat_2, seat_3, tier, stake_minor::text AS stake,
                 asset, initial_state, seed, time_control, clock_state, status,
                 result, termination_reason, game_hash, is_vs_computer,
                 started_at, created_at
@@ -232,7 +232,7 @@ export function createDuelStore(db, { emit = () => {} } = {}) {
         duelId: row.id,
         gameId: row.game_id,
         pluginVersion: row.plugin_version,
-        players: [row.seat_0, row.seat_1],
+        players: [row.seat_0, row.seat_1, ...(row.seat_2 ? [row.seat_2] : []), ...(row.seat_3 ? [row.seat_3] : [])],
         seed: row.seed,
         config: {},
         challenge: plugin.rehydrate(row.initial_state, row.time_control, row.seed),

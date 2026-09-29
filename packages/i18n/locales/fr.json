@@ -77,7 +77,7 @@
       "trust_tournaments": "Tournois Quotidiens & Duels Cash Immédiats"
     },
     "games": {
-      "heading": "10 jeux, une base équitable",
+      "heading": "11 jeux, une base équitable",
       "duration_label": "Durée",
       "mode_label": "Mode",
       "play_cta": "Jouer à {name}",
@@ -1383,7 +1383,7 @@
   "play_page": {
     "badge": "ARÈNE DE JEUX ET DE DUELS EN DIRECT",
     "title": "Choisissez votre jeu et défiez les meilleurs",
-    "subtitle": "10 jeux de pure compétence sans aucun hasard. Duels 1v1 en direct, entraînement contre l'IA ou tournois majeurs avec gains immédiats en USDT.",
+    "subtitle": "11 jeux de pure compétence sans aucun hasard. Duels 1v1 en direct, entraînement contre l'IA ou tournois majeurs avec gains immédiats en USDT.",
     "trust_cashout": "Retrait instantané en 60 secondes",
     "trust_fairplay": "Jeu 100% équitable contrôlé par serveur",
     "trust_battles": "Batailles et tournois 24h/24 et 7j/7",

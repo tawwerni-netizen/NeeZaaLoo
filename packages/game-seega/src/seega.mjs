@@ -154,6 +154,8 @@ export function applyMove(board, from, to, seat) {
     const r1 = rowOf(to) + dr, c1 = colOf(to) + dc;
     if (r1 < 0 || r1 >= BOARD_SIZE || c1 < 0 || c1 >= BOARD_SIZE) continue;
     const adjacent = r1 * BOARD_SIZE + c1;
+    // Center sanctuary (al-wasat): stone resting on the center square cannot be captured
+    if (isCenter(adjacent)) continue;
     if (seatOf(next[adjacent]) !== opponent) continue;
 
     const r2 = r1 + dr, c2 = c1 + dc;
@@ -164,6 +166,16 @@ export function applyMove(board, from, to, seat) {
   for (const idx of captured) next[idx] = 0;
 
   return { board: next, captured };
+}
+
+/** Check if the piece at `from` can make another consecutive capture */
+export function canContinueCapture(board, from, seat) {
+  for (const to of orthogonalNeighbors(from)) {
+    if (board[to] !== 0) continue;
+    const { captured } = applyMove(board, from, to, seat);
+    if (captured.length > 0) return true;
+  }
+  return false;
 }
 
 export function pieceCount(board, seat) {

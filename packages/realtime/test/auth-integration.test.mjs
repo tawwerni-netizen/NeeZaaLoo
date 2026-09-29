@@ -68,7 +68,7 @@ async function stack() {
 
   const duels = new Map();
   const plugins = new Map([["chess", ChessPlugin]]);
-  const gw = createGateway({ auth, duels, plugins, now });
+  const gw = await createGateway({ auth, duels, plugins, now });
 
   const d = createDuel({
     duelId: "d1", plugin: ChessPlugin, players: ["alice", "bob"],
@@ -180,9 +180,9 @@ describe("the gateway with real authentication", () => {
     await gw.close();
   });
 
-  test("the gateway refuses to start with no way to authenticate", () => {
-    assert.throws(
-      () => createGateway({ duels: new Map(), plugins: new Map() }),
+  test("the gateway refuses to start with no way to authenticate", async () => {
+    await assert.rejects(
+      async () => await createGateway({ duels: new Map(), plugins: new Map() }),
       /needs either an auth service or a sessions map/
     );
   });

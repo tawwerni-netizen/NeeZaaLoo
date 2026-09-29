@@ -26,7 +26,7 @@ export const LudoPlugin = {
   },
 
   rehydrate(initial) {
-    const playerCount = initial.tokens ? initial.tokens.length : 2;
+    const playerCount = initial.config?.playerCount || (initial.tokens ? initial.tokens.length : (initial.playerCount || 2));
     return { state: freshState(initial.seed, playerCount) };
   },
 

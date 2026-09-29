@@ -3,6 +3,7 @@
 import { Logo } from "./Logo";
 import { LocaleLink } from "./LocaleLink";
 import { useI18n } from "@/lib/i18n/context";
+import { GameRegistry } from "@/lib/games/registry";
 import styles from "./Footer.module.css";
 
 const FOOTER_I18N = {
@@ -273,23 +274,17 @@ export function Footer() {
               <span>{getFooterText(FOOTER_I18N.colArena, locale)}</span>
             </div>
             <ul className={styles.linkList}>
+              {GameRegistry.getAll().slice(0, 5).map((game) => (
+                <li key={game.id}>
+                  <LocaleLink href={`/play/${game.id}`}>
+                    {game.icon} {t(`common.game_names.${game.nameKey}`)}
+                  </LocaleLink>
+                </li>
+              ))}
               <li>
-                <LocaleLink href="/play/chess">♟️ {getFooterText(FOOTER_I18N.gameChess, locale)}</LocaleLink>
-              </li>
-              <li>
-                <LocaleLink href="/play/dominoes">🀄 {getFooterText(FOOTER_I18N.gameDominoes, locale)}</LocaleLink>
-              </li>
-              <li>
-                <LocaleLink href="/play/ludo">🎲 {getFooterText(FOOTER_I18N.gameLudo, locale)}</LocaleLink>
-              </li>
-              <li>
-                <LocaleLink href="/play/backgammon">🎲 {getFooterText(FOOTER_I18N.gameBackgammon, locale)}</LocaleLink>
-              </li>
-              <li>
-                <LocaleLink href="/play/xo">⚔️ {getFooterText(FOOTER_I18N.gameXo, locale)}</LocaleLink>
-              </li>
-              <li>
-                <LocaleLink href="/play">🌐 {getFooterText(FOOTER_I18N.allGames, locale)}</LocaleLink>
+                <LocaleLink href="/games">
+                  🌐 {getFooterText(FOOTER_I18N.allGames, locale)} ({GameRegistry.getCount()})
+                </LocaleLink>
               </li>
             </ul>
           </div>

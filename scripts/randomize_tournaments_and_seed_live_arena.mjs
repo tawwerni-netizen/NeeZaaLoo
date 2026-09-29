@@ -25,6 +25,7 @@ const TARGET_COUNTS = {
   reversi: { FREE: 5, CASH: 9 },
   gomoku: { FREE: 8, CASH: 6 },
   seega: { FREE: 7, CASH: 10 },
+  ludo: { FREE: 10, CASH: 8 },
 };
 
 async function randomizeTournaments() {
@@ -103,6 +104,7 @@ const LIVE_GAMES = [
   { gameId: 'reversi', tier: 'CASH', stakeMinor: '10000000', moves: 20 },
   { gameId: 'gomoku', tier: 'FREE', stakeMinor: '0', moves: 15 },
   { gameId: 'seega', tier: 'CASH', stakeMinor: '10000000', moves: 11 },
+  { gameId: 'ludo', tier: 'CASH', stakeMinor: '10000000', moves: 16 },
 ];
 
 async function seedLiveArena() {

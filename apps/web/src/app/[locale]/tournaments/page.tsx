@@ -49,19 +49,6 @@ type FilterType = "ALL" | "REGISTRATION" | "FREE" | "CASH" | "LIVE";
 
 const BROWSE_STATUSES = "SCHEDULED,REGISTRATION,LIVE,FINALS";
 
-const GAME_ICONS: Record<string, string> = {
-  chess: "♟️",
-  dominoes: "🀄",
-  backgammon: "🎲",
-  "speed-math": "🔢",
-  xo: "❌",
-  "connect-four": "🔴",
-  checkers: "⚫",
-  reversi: "⚪",
-  gomoku: "🟢",
-  seega: "🎯",
-};
-
 // Complete multilingual localized copy across all 6 supported languages
 const PAGE_TEXTS: Record<SupportedLocale, {
   badge: string;
@@ -99,6 +86,7 @@ const PAGE_TEXTS: Record<SupportedLocale, {
   ctaWatch: string;
   ctaFinals: string;
   startsIn: string;
+  noTournamentsAvailable: string;
   emptyHeading: string;
   emptySub: string;
   resetFilter: string;
@@ -116,10 +104,11 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     badge: "🏆 البطولات الرسمية والأولمبياد التنافسي",
     title: "بطولات نيزالو الكبرى · العب واكسب بجدارة",
     subtitle: "ساحة البطولات التنافسية الرسمية — نافس نخبة اللاعبين في ألعاب الذكاء والمهارة الخالصة 100%، واكسب جوائز كاش مضمونة تسحبها فوراً.",
-    metric1Val: "+$25,000 USDT",
+    noTournamentsAvailable: "لا توجد بطولات متاحة حالياً",
+    metric1Val: "$0 USDT",
     metric1Title: "إجمالي جوائز البطولات",
     metric1Sub: "جوائز كاش حقيقية مضمونة وموزعة",
-    metric2Val: "340+",
+    metric2Val: "0",
     metric2Title: "أبطال مسجلون في البطولات",
     metric2Sub: "تنافس واصعد لقمة صدارة النخبة",
     metric3Val: "خلال 60 ثانية",
@@ -165,10 +154,11 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     badge: "🏆 OFFICIAL ESPORTS CHAMPIONSHIPS",
     title: "Nizalo Grand Championships · Play & Win",
     subtitle: "The official esports arena for mind games — compete against verified players in 100% skill-based brackets with guaranteed cash prizes and instant payouts.",
-    metric1Val: "+$25,000 USDT",
+    noTournamentsAvailable: "No tournaments available right now",
+    metric1Val: "$0 USDT",
     metric1Title: "Total Tournament Prizes",
     metric1Sub: "Guaranteed cash prize pools",
-    metric2Val: "340+",
+    metric2Val: "0",
     metric2Title: "Registered Competitors",
     metric2Sub: "Climb the global ELO leaderboards",
     metric3Val: "Under 60s",
@@ -214,10 +204,11 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     badge: "🏆 CAMPEONATOS OFICIALES DE ESPORTS",
     title: "Grandes Campeonatos Nizalo · Juega y Gana",
     subtitle: "La arena oficial de deportes mentales: compite en llaves 100% de habilidad con premios en efectivo garantizados y retiros instantáneos.",
-    metric1Val: "+$25,000 USDT",
+    noTournamentsAvailable: "No hay torneos disponibles en este momento",
+    metric1Val: "$0 USDT",
     metric1Title: "Premios Totales de Torneos",
     metric1Sub: "Bolsas de efectivo garantizadas",
-    metric2Val: "340+",
+    metric2Val: "0",
     metric2Title: "Competidores Registrados",
     metric2Sub: "Asciende en el ranking ELO global",
     metric3Val: "En 60s",
@@ -263,10 +254,11 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     badge: "🏆 CHAMPIONNATS OFFICIELS ESPORT",
     title: "Grands Championnats Nizalo · Jouez et Gagnez",
     subtitle: "L'arène officielle d'esport cérébral — affrontez l'élite dans des tournois 100% basés sur les compétences avec prix cash garantis et retraits instantanés.",
-    metric1Val: "+$25,000 USDT",
+    noTournamentsAvailable: "Aucun tournoi disponible actuellement",
+    metric1Val: "$0 USDT",
     metric1Title: "Total des Prix des Tournois",
     metric1Sub: "Cagnottes cash garanties",
-    metric2Val: "340+",
+    metric2Val: "0",
     metric2Title: "Compétiteurs Inscrits",
     metric2Sub: "Grimpez au classement mondial ELO",
     metric3Val: "En 60s",
@@ -312,10 +304,11 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     badge: "🏆 官方电竞职业锦标赛",
     title: "Nizalo 巅峰锦标赛 · 纯技艺竞技 赢取大奖",
     subtitle: "官方智力电竞竞技场 — 与全球认证选手同台较量，100% 纯技巧淘汰赛，保底现金大奖，秒级极速提现。",
-    metric1Val: "+$25,000 USDT",
+    noTournamentsAvailable: "当前暂无可用锦标赛",
+    metric1Val: "$0 USDT",
     metric1Title: "锦标赛累计总奖金池",
     metric1Sub: "官方保底真实加密货币奖金",
-    metric2Val: "340+",
+    metric2Val: "0",
     metric2Title: "认证在册参赛选手",
     metric2Sub: "冲击全服天梯 ELO 榜首",
     metric3Val: "60 秒内",
@@ -361,10 +354,11 @@ const PAGE_TEXTS: Record<SupportedLocale, {
     badge: "🏆 आधिकारिक एस्पोर्ट्स चैंपियनशिप",
     title: "निज़ालो ग्रैंड चैंपियनशिप · खेलें और जीतें",
     subtitle: "आधिकारिक माइंड स्पोर्ट्स एस्पोर्ट्स एरिना — 100% कौशल-आधारित टूर्नामेंटों में मुकाबला करें, गारंटीकृत नकद पुरस्कार और तुरंत निकासी।",
-    metric1Val: "+$25,000 USDT",
+    noTournamentsAvailable: "वर्तमान में कोई टूर्नामेंट उपलब्ध नहीं है",
+    metric1Val: "$0 USDT",
     metric1Title: "कुल टूर्नामेंट पुरस्कार",
     metric1Sub: "गारंटीकृत नकद पुरस्कार राशि",
-    metric2Val: "340+",
+    metric2Val: "0",
     metric2Title: "पंजीकृत प्रतियोगी",
     metric2Sub: "वैश्विक ELO लीडरबोर्ड पर शीर्ष पर पहुंचें",
     metric3Val: "60 सेकंड में",
@@ -649,7 +643,7 @@ function TournamentsList() {
               </button>
 
               {gamesList.map((game) => {
-                const icon = GAME_ICONS[game.id] ?? "🎯";
+                const icon = game.icon || "🎯";
                 const name = t(`common.game_names.${game.nameKey}`) || game.id;
                 const isSelected = selectedGame === game.id;
 
@@ -693,7 +687,11 @@ function TournamentsList() {
           ) : filtered && filtered.length === 0 ? (
             <div className={styles.emptyCard}>
               <span className={styles.emptyIcon}>🏆</span>
-              <h2 className={styles.emptyHeading}>{texts.emptyHeading}</h2>
+              <h2 className={styles.emptyHeading}>
+                {tournaments && tournaments.length === 0
+                  ? texts.noTournamentsAvailable
+                  : texts.emptyHeading}
+              </h2>
               <p className={styles.emptySub}>{texts.emptySub}</p>
               <div className={styles.emptyActions}>
                 {isFilterActive && (
@@ -728,7 +726,7 @@ function TournamentsList() {
                 const isUrgent =
                   row.status === "REGISTRATION" && (registeredPct >= 60 || remainingSpots <= 4);
                 const imgPath = getTournamentCover(row.game_id);
-                const gameIcon = GAME_ICONS[row.game_id] ?? "🎮";
+                const gameIcon = getGame(row.game_id)?.icon ?? "🎮";
 
                 return (
                   <LocaleLink key={row.id} href={`/tournaments/${row.id}`} className={styles.card}>

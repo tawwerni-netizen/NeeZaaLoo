@@ -24,55 +24,58 @@ export function MobileBottomNav() {
   // Normalize path without locale prefix (e.g. "/ar/play" -> "/play")
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
-  const isHome = pathWithoutLocale === "/";
-  const isArena = pathWithoutLocale.startsWith("/play");
+  const isPlay = pathWithoutLocale.startsWith("/play");
   const isGames = pathWithoutLocale.startsWith("/games");
+  const isRank = pathWithoutLocale.startsWith("/rank");
   const isWallet = pathWithoutLocale.startsWith("/wallet");
   const isProfile = pathWithoutLocale.startsWith("/profile");
 
   return (
     <nav className={styles.bottomNav} aria-label="Mobile Navigation">
       <div className={styles.navContainer}>
-        {/* 1. Home */}
-        <LocaleLink
-          href="/"
-          className={[styles.navItem, isHome ? styles.active : ""].join(" ")}
-          aria-label={t("nav.home_aria_label")}
-        >
-          <span className={styles.navIconWrap}>
-            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-          </span>
-          <span className={styles.navLabel}>{locale === "ar" ? "الرئيسية" : "Home"}</span>
-          {isHome && <span className={styles.activeIndicator} />}
-        </LocaleLink>
-
-        {/* 2. Arena / Play */}
+        {/* 1. Play */}
         <LocaleLink
           href="/play"
-          className={[styles.navItem, isArena ? styles.active : ""].join(" ")}
-          aria-label={t("nav.arena")}
+          className={[styles.navItem, isPlay ? styles.active : ""].join(" ")}
+          aria-label={t("nav.play_now") || "Play"}
         >
           <span className={styles.navIconWrap}>
             <span className={styles.emojiIcon}>⚔️</span>
           </span>
-          <span className={styles.navLabel}>{t("nav.arena")}</span>
-          {isArena && <span className={styles.activeIndicator} />}
+          <span className={styles.navLabel}>
+            {locale === "ar" ? "العب" : "Play"}
+          </span>
+          {isPlay && <span className={styles.activeIndicator} />}
         </LocaleLink>
 
-        {/* 3. Games */}
+        {/* 2. Games */}
         <LocaleLink
           href="/games"
           className={[styles.navItem, isGames ? styles.active : ""].join(" ")}
-          aria-label={t("nav.games")}
+          aria-label={t("nav.games") || "Games"}
         >
           <span className={styles.navIconWrap}>
             <span className={styles.emojiIcon}>🎲</span>
           </span>
-          <span className={styles.navLabel}>{t("nav.games")}</span>
+          <span className={styles.navLabel}>
+            {t("nav.games") || (locale === "ar" ? "الألعاب" : "Games")}
+          </span>
           {isGames && <span className={styles.activeIndicator} />}
+        </LocaleLink>
+
+        {/* 3. Rank */}
+        <LocaleLink
+          href="/rank"
+          className={[styles.navItem, isRank ? styles.active : ""].join(" ")}
+          aria-label={t("nav.rank") || "Rank"}
+        >
+          <span className={styles.navIconWrap}>
+            <span className={styles.emojiIcon}>👑</span>
+          </span>
+          <span className={styles.navLabel}>
+            {t("nav.rank") || (locale === "ar" ? "التصنيف" : "Rank")}
+          </span>
+          {isRank && <span className={styles.activeIndicator} />}
         </LocaleLink>
 
         {/* 4. Wallet */}
@@ -88,7 +91,9 @@ export function MobileBottomNav() {
                 <span className={styles.balanceBadge}>${totalUsd.toFixed(0)}</span>
               )}
             </span>
-            <span className={styles.navLabel}>{t("nav.wallet")}</span>
+            <span className={styles.navLabel}>
+              {t("nav.wallet") || (locale === "ar" ? "المحفظة" : "Wallet")}
+            </span>
             {isWallet && <span className={styles.activeIndicator} />}
           </LocaleLink>
         ) : (
@@ -101,7 +106,9 @@ export function MobileBottomNav() {
             <span className={styles.navIconWrap}>
               <WealthWalletIcon size={20} />
             </span>
-            <span className={styles.navLabel}>{t("nav.wallet")}</span>
+            <span className={styles.navLabel}>
+              {t("nav.wallet") || (locale === "ar" ? "المحفظة" : "Wallet")}
+            </span>
           </button>
         )}
 
@@ -117,7 +124,9 @@ export function MobileBottomNav() {
                 {player.handle ? player.handle.charAt(0).toUpperCase() : "👤"}
               </span>
             </span>
-            <span className={styles.navLabel}>{t("nav.profile")}</span>
+            <span className={styles.navLabel}>
+              {t("nav.profile") || (locale === "ar" ? "حسابي" : "Profile")}
+            </span>
             {isProfile && <span className={styles.activeIndicator} />}
           </LocaleLink>
         ) : (

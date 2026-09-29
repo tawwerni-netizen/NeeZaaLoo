@@ -81,6 +81,11 @@ export function createPgBus({ pool, connect, onPublishError, onListenError }) {
         setTimeout(() => { ensureListening().catch((err) => onListenError?.(err)); }, 1000).unref?.();
       });
       await client.query(`LISTEN ${CHANNEL}`);
+      if (closed) {
+        try { await client.query(`UNLISTEN ${CHANNEL}`); } catch {}
+        await client.end().catch(() => {});
+        return;
+      }
       listenClient = client;
     })();
     return listening;
@@ -92,15 +97,6 @@ export function createPgBus({ pool, connect, onPublishError, onListenError }) {
       if (Buffer.byteLength(envelope, "utf8") > MAX_NOTIFY_PAYLOAD_BYTES) {
         throw new Error(`RealtimeBus payload too large for topic "${topic}" (${Buffer.byteLength(envelope, "utf8")} bytes)`);
       }
-      // Fire-and-forget from the caller's perspective (publish is
-      // synchronous everywhere else in this package); a failed NOTIFY is a
-      // lost broadcast notification, never a lost persisted message -- the
-      // same "persist is authoritative, broadcast is best-effort" contract
-      // messages.mjs's own sendMessage already documents. `onPublishError`
-      // is how a caller observes this without publish() itself needing to
-      // become async or throwing -- see directive #25's "realtime bus
-      // publish[/delivery] failures" metric, wired by apps/gateway and
-      // apps/api, never a second metrics system of its own.
       pool.query("SELECT pg_notify($1, $2)", [CHANNEL, envelope]).catch((err) => { onPublishError?.(err, topic); });
     },
     subscribe(topic, handler) {
@@ -110,6 +106,9 @@ export function createPgBus({ pool, connect, onPublishError, onListenError }) {
     },
     async close() {
       closed = true;
+      if (listening) {
+        try { await listening; } catch {}
+      }
       await local.close();
       if (listenClient) {
         try { await listenClient.query(`UNLISTEN ${CHANNEL}`); } catch { /* connection may already be gone */ }

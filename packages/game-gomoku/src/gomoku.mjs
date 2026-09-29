@@ -81,16 +81,20 @@ export function isBoardFull(board) {
  * directions from the just-placed stone. */
 const AXES = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
+export const CENTER_CELL = 7 * BOARD_SIZE + 7; // 112 (h8 center on 15x15)
+
 /**
  * The complete run of 5+ same-mark stones through `idx` along whichever
  * axis (if any) it completes, in board order (lowest index first) -- the
  * full chain, including any overline beyond the minimum 5, so a caller
  * can highlight every stone actually in the line. Returns `null` if
- * `idx` is empty or completes no such run. Checked ONLY from the
- * just-placed square -- the one place a new run can appear, exactly like
- * XO's own winningLine().
+ * `idx` is empty or completes no such run.
+ *
+ * Policy:
+ * - Freestyle (default): 5 or more stones in a row wins.
+ * - Standard / Tournament (exactFive: true): Exactly 5 stones wins; overlines (6+) do not win.
  */
-export function winningLineThrough(board, idx) {
+export function winningLineThrough(board, idx, { exactFive = false } = {}) {
   const mark = board[idx];
   if (mark === 0) return null;
   const row0 = rowOf(idx), col0 = colOf(idx);
@@ -107,7 +111,11 @@ export function winningLineThrough(board, idx) {
       cells.unshift(r * BOARD_SIZE + c);
       r -= dr; c -= dc;
     }
-    if (cells.length >= LINE_LENGTH) return cells;
+    if (exactFive) {
+      if (cells.length === LINE_LENGTH) return cells;
+    } else {
+      if (cells.length >= LINE_LENGTH) return cells;
+    }
   }
   return null;
 }

@@ -8,7 +8,7 @@ import { LocaleLink } from "@/components/LocaleLink";
 import { transition } from "@/lib/motion";
 import { useI18n } from "@/lib/i18n/context";
 import { get } from "@/lib/api";
-import { listGames } from "@/lib/games";
+import { listGames, GameRegistry } from "@/lib/games";
 import { playCardHoverSound, playDifficultySelectSound } from "@/lib/game-audio";
 import { HeroParticles } from "./HeroParticles";
 import styles from "./Hero.module.css";
@@ -759,13 +759,13 @@ export function Hero() {
               </Button>
             </LocaleLink>
             <LocaleLink
-              href="/wallet"
+              href="/games"
               onMouseEnter={() => playCardHoverSound()}
               onClick={() => playDifficultySelectSound("MEDIUM")}
             >
               <Button variant="ghost" className={styles.secondaryBtn}>
-                <span style={{ marginInlineEnd: "8px" }}>💳</span>
-                {t("home.hero.instant_deposit")}
+                <span style={{ marginInlineEnd: "8px" }}>🎲</span>
+                {locale === "ar" ? `استكشف الألعاب (${GameRegistry.getCount()})` : `Explore Games (${GameRegistry.getCount()})`}
               </Button>
             </LocaleLink>
           </motion.div>

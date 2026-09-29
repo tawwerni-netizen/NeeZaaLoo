@@ -77,7 +77,7 @@
       "trust_tournaments": "Torneos Diarios y Duelos de Dinero"
     },
     "games": {
-      "heading": "10 juegos, una base justa",
+      "heading": "11 juegos, una base justa",
       "duration_label": "Duración",
       "mode_label": "Modo",
       "play_cta": "Jugar {name}",
@@ -1383,7 +1383,7 @@
   "play_page": {
     "badge": "ARENA DE JUEGOS Y DUELOS EN VIVO",
     "title": "Elige tu juego y desafía a los mejores",
-    "subtitle": "10 juegos de pura habilidad con cero azar. Duelos 1v1 en vivo, práctica contra IA o torneos con pagos instantáneos en USDT.",
+    "subtitle": "11 juegos de pura habilidad con cero azar. Duelos 1v1 en vivo, práctica contra IA o torneos con pagos instantáneos en USDT.",
     "trust_cashout": "Retiro instantáneo en 60 segundos",
     "trust_fairplay": "Juego 100% justo con servidor protegido",
     "trust_battles": "Batallas y torneos continuos 24/7",

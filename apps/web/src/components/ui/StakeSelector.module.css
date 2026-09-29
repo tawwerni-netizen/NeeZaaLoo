@@ -1,0 +1,153 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-xl);
+  padding: var(--nz-space-6);
+  gap: var(--nz-space-5);
+  max-width: 520px;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-lg);
+  font-weight: 700;
+  color: var(--nz-text);
+  margin: 0;
+}
+
+.balanceBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--nz-space-2);
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stakeBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nz-space-3);
+  border-radius: var(--nz-radius-md);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text);
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+  min-height: 64px;
+}
+
+.stakeBtn:hover:not(:disabled) {
+  border-color: var(--nz-line-strong);
+  background: var(--nz-surface-3);
+  transform: translateY(-1px);
+}
+
+.stakeBtnActive {
+  background: rgba(255, 90, 43, 0.12) !important;
+  border-color: var(--nz-accent) !important;
+  color: var(--nz-text) !important;
+  box-shadow: 0 0 12px rgba(255, 90, 43, 0.2);
+}
+
+.stakeAmount {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--nz-text-lg);
+  font-weight: 800;
+}
+
+.stakeLabel {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+}
+
+.breakdownBox {
+  display: flex;
+  flex-direction: column;
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-4);
+  gap: var(--nz-space-2);
+}
+
+.breakdownRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+}
+
+.breakdownValue {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.prizeRow {
+  border-top: 1px solid var(--nz-line);
+  padding-top: var(--nz-space-2);
+  margin-top: 2px;
+  font-weight: 700;
+  color: var(--nz-text);
+  font-size: var(--nz-text-sm);
+}
+
+.prizeValue {
+  color: var(--nz-win);
+  font-size: var(--nz-text-base);
+  font-weight: 800;
+}
+
+.insufficientAlert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: var(--nz-radius-md);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--nz-loss);
+  font-size: var(--nz-text-xs);
+}
+
+.depositLink {
+  color: var(--nz-loss);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+}

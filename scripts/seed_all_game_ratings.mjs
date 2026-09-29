@@ -13,7 +13,8 @@ const ALL_GAMES = [
   'checkers',
   'reversi',
   'gomoku',
-  'seega'
+  'seega',
+  'ludo'
 ];
 
 async function seedRatings() {

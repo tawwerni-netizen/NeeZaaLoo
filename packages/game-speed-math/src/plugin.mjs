@@ -125,7 +125,22 @@ function generateQuestions(seed, config) {
   return questions;
 }
 
-const emptyProgress = () => ({ index: 0, correct: 0, wrong: 0, totalMs: 0, times: [] });
+export function getStreakMultiplier(streak) {
+  if (streak >= 5) return 1.5;
+  if (streak >= 3) return 1.2;
+  return 1.0;
+}
+
+const emptyProgress = () => ({
+  index: 0,
+  correct: 0,
+  wrong: 0,
+  streak: 0,
+  bestStreak: 0,
+  points: 0,
+  totalMs: 0,
+  times: [],
+});
 
 export const SpeedMathPlugin = {
   id: "speed-math",
@@ -196,7 +211,16 @@ export const SpeedMathPlugin = {
 
     p.times.push({ at: ctx.serverTimeMs, ms: elapsed });
     if (elapsed !== null) p.totalMs += elapsed;
-    if (correct) p.correct++; else p.wrong++;
+    if (correct) {
+      p.correct++;
+      p.streak = (p.streak || 0) + 1;
+      p.bestStreak = Math.max(p.bestStreak || 0, p.streak);
+      const mult = getStreakMultiplier(p.streak);
+      p.points = (p.points || 0) + Math.round(100 * mult);
+    } else {
+      p.wrong++;
+      p.streak = 0;
+    }
     p.index++;
 
     next.answers[seat].push({ i: p.index - 1, answer: intent.answer, correct });
@@ -204,12 +228,12 @@ export const SpeedMathPlugin = {
     return {
       ok: true,
       state: next,
-      record: { seat, answer: intent.answer, correct, questionIndex: p.index - 1 },
+      record: { seat, answer: intent.answer, correct, questionIndex: p.index - 1, streak: p.streak, points: p.points },
       events: [{
         type: "ANSWER",
         // Correctness is public; the ANSWER VALUE is not echoed to the room,
         // so an opponent cannot read it off the wire and copy it.
-        payload: { seat, correct, index: p.index - 1 },
+        payload: { seat, correct, index: p.index - 1, streak: p.streak, points: p.points },
       }],
     };
   },
@@ -241,6 +265,7 @@ export const SpeedMathPlugin = {
   project(state, viewer, seat = null) {
     const scores = {
       correct: [state.progress[0].correct, state.progress[1].correct],
+      points: [state.progress[0].points || 0, state.progress[1].points || 0],
       answered: [state.progress[0].index, state.progress[1].index],
       total: state.questions.length,
     };
@@ -251,47 +276,40 @@ export const SpeedMathPlugin = {
     const q = state.questions[p.index];
     return {
       scores,
-      you: { correct: p.correct, wrong: p.wrong, answered: p.index },
+      you: {
+        correct: p.correct,
+        wrong: p.wrong,
+        answered: p.index,
+        streak: p.streak || 0,
+        bestStreak: p.bestStreak || 0,
+        points: p.points || 0,
+      },
       // Only the current question, and only its operands -- never `answer`.
       current: q ? { a: q.a, b: q.b, op: q.op, index: p.index } : null,
     };
   },
 
-  /**
-   * Automation signals. Speed Math is trivially scriptable given screen access,
-   * so the defence is not "can they see it" but "does a human produce this".
-   *
-   * Four independent signal KINDS, deliberately -- the Fair Play Engine's own
-   * noisy-OR scoring (packages/fairplay/src/engine.mjs) rewards independent
-   * kinds of evidence and does not stack repetitions of one kind, so a real
-   * finding here is one that shows up more than one way:
-   *   - IMPOSSIBLE_INPUT: any single answer faster than human reaction time.
-   *   - AUTOMATION: metronomic timing across all answers (low variance).
-   *   - PERFORMANCE_ANOMALY: a SUSTAINED answer rate across the whole
-   *     session that no human keeps up regardless of per-answer variance --
-   *     a script that pads each answer with slightly different (but still
-   *     inhumanly short) delays would dodge AUTOMATION's variance check and
-   *     IMPOSSIBLE_INPUT's per-answer floor both, but not this.
-   *   - ACCURACY: near-perfect correctness that does not degrade on harder
-   *     operations the way real human accuracy does -- "challenge
-   *     consistency" in the literal sense: a genuine human's accuracy is
-   *     NOT consistent across question difficulty, so a script's IS.
-   *
-   * What is deliberately NOT reimplemented here as a signal: server
-   * timestamps and session integrity are not statistical evidence to
-   * weigh, they are structural guarantees enforced elsewhere and already
-   * unconditional -- `ctx.serverTimeMs` is the only clock this plugin
-   * ever reads (a client cannot supply or influence a timestamp at all),
-   * and duplicate/replayed submissions are refused by NO_QUESTIONS_LEFT
-   * before ever reaching this method. Fabricating a "signal" for a
-   * condition that cannot occur would be detection theatre, not defence.
-   */
   fairPlaySignals(state, history = {}) {
     const signals = [];
     const seat = history.seat ?? 0;
     const rawTimes = state.progress[seat].times;
     const times = rawTimes.map((t) => t.ms).filter((m) => m !== null);
     if (times.length < 8) return signals;
+
+    // A response under 120ms violates the minimum human perception-reaction floor
+    const sub120 = times.filter((m) => m < 120).length;
+    if (sub120 >= 1) {
+      signals.push({
+        id: "speed_math.sub_120ms_threshold",
+        kind: "IMPOSSIBLE_INPUT",
+        strength: 1,
+        confidence: 1,
+        observedValue: { sub120msCount: sub120, thresholdMs: 120, fastestMs: Math.min(...times) },
+        baseline: { humanFloorMs: 120 },
+        explanation: `${sub120} answers arrived under 120ms, violating the absolute physical human reaction threshold.`,
+        detectorVersion: 2,
+      });
+    }
 
     // A response faster than human perception-plus-motor time is not a fast
     // human. This one is physically certain rather than statistical.
@@ -357,7 +375,8 @@ export const SpeedMathPlugin = {
     // addition); a script's does not. Compare per-operation accuracy only
     // when at least two operations were actually seen with enough samples
     // each to compare.
-    const answers = state.answers[seat];
+    const answers = state.answers?.[seat] ?? [];
+    if (!state.questions || answers.length === 0) return signals;
     const byOp = new Map();
     for (let k = 0; k < answers.length; k++) {
       const q = state.questions[answers[k].i];
@@ -410,10 +429,16 @@ export const SpeedMathPlugin = {
 
 function outcomeFrom(state, reason) {
   const [a, b] = state.progress;
-  if (a.correct !== b.correct) {
-    return { result: a.correct > b.correct ? "1-0" : "0-1", reason };
+  const ptsA = a.points !== undefined && a.points > 0 ? a.points : a.correct;
+  const ptsB = b.points !== undefined && b.points > 0 ? b.points : b.correct;
+  if (ptsA !== ptsB) {
+    return { result: ptsA > ptsB ? "1-0" : "0-1", reason };
   }
-  // Equal scores: whoever spent less time answering. A genuine tie is a draw.
+  // Equal points: tie-break 1 on accuracy (fewer wrong answers)
+  if (a.wrong !== b.wrong) {
+    return { result: a.wrong < b.wrong ? "1-0" : "0-1", reason: `${reason}_TIEBREAK_ACCURACY` };
+  }
+  // Equal points and accuracy: whoever spent less time answering. A genuine tie is a draw.
   if (a.totalMs !== b.totalMs && a.index > 0 && b.index > 0) {
     return { result: a.totalMs < b.totalMs ? "1-0" : "0-1", reason: `${reason}_TIEBREAK_TIME` };
   }

@@ -23,7 +23,7 @@ import styles from "./ChallengePopup.module.css";
 const GAME_NAME_KEY: Record<string, string> = {
   chess: "chess", checkers: "checkers", "connect-four": "connect_four",
   xo: "xo", "speed-math": "speed_math", dominoes: "dominoes",
-  backgammon: "backgammon", seega: "seega", reversi: "reversi", gomoku: "gomoku",
+  backgammon: "backgammon", seega: "seega", reversi: "reversi", gomoku: "gomoku", ludo: "ludo",
 };
 
 export type IncomingChallenge = {

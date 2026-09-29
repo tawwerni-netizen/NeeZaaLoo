@@ -158,20 +158,8 @@ export default function RankPage() {
               <span className={styles.filterText}>{dir === "rtl" ? "الترتيب العام الشامل" : "All Games Combined"}</span>
             </button>
             {games.map((g) => {
-              const name = t(`common.game_names.${g.nameKey}`);
-              const GAME_ICONS: Record<string, string> = {
-                chess: "♟️",
-                dominoes: "🀄",
-                backgammon: "🎲",
-                "speed-math": "🔢",
-                xo: "❌",
-                "connect-four": "🔴",
-                checkers: "⚫",
-                reversi: "⚪",
-                gomoku: "🟢",
-                seega: "🎯",
-              };
-              const icon = GAME_ICONS[g.id] || "🎮";
+              const name = t(`common.game_names.${g.nameKey}`) || g.id;
+              const icon = g.icon || "🎮";
               return (
                 <button
                   key={g.id}

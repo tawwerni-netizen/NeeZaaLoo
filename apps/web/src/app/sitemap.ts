@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { EDITORIAL_ARTICLES_MAP } from "@/lib/editorial/articles-map";
+import { GameRegistry } from "@/lib/games/registry";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nizalo.com";
 const LOCALES = ["en", "zh", "hi", "es", "ar", "fr"] as const;
@@ -14,18 +15,7 @@ const STATIC_ROUTES = [
   { path: "/fair-play", changeFreq: "monthly", priority: 0.8 },
 ] as const;
 
-const GAME_SLUGS = [
-  "chess",
-  "checkers",
-  "dominoes",
-  "backgammon",
-  "seega",
-  "connect-four",
-  "xo",
-  "speed-math",
-  "reversi",
-  "gomoku",
-] as const;
+const GAME_SLUGS = GameRegistry.getSlugs();
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

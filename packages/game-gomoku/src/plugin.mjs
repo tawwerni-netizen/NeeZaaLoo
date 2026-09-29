@@ -10,21 +10,29 @@
  * the just-placed square. The only real difference is scale (225 cells
  * instead of 9) and the win condition itself (5+ in a row instead of 3).
  */
-import { SEAT_0, SEAT_1, CELLS, initialBoard, legalCells, isBoardFull, winningLineThrough, pieceFor } from "./gomoku.mjs";
+import { SEAT_0, SEAT_1, CELLS, initialBoard, legalCells, isBoardFull, winningLineThrough, pieceFor, CENTER_CELL } from "./gomoku.mjs";
 
-function freshState() {
-  return { board: initialBoard(), turn: SEAT_0, lastMove: null, moves: [] };
+function freshState(config = {}) {
+  return { board: initialBoard(), turn: SEAT_0, lastMove: null, moves: [], config };
 }
 
 function cloneState(state) {
-  return { board: Int8Array.from(state.board), turn: state.turn, lastMove: state.lastMove, moves: [...state.moves] };
+  return {
+    board: Int8Array.from(state.board),
+    turn: state.turn,
+    lastMove: state.lastMove,
+    moves: [...state.moves],
+    config: state.config,
+  };
 }
 
 /** Position-derived outcome, or null if the game continues. Checked
  * AFTER every applied move, exactly like XO's own outcomeFor(). */
 function outcomeFor(state) {
   if (state.lastMove === null) return null;
-  const line = winningLineThrough(state.board, state.lastMove);
+  const line = winningLineThrough(state.board, state.lastMove, {
+    exactFive: state.config?.exactFive ?? false,
+  });
   if (line) {
     const justMoved = state.turn === SEAT_0 ? SEAT_1 : SEAT_0;
     return { result: justMoved === SEAT_0 ? "1-0" : "0-1", reason: "FIVE_IN_A_ROW", line };
@@ -38,8 +46,8 @@ export const GomokuPlugin = {
   version: 1,
   turnModel: "ALTERNATING",
 
-  createChallenge(_seed, _config = {}) {
-    return { state: freshState(), publicSeed: null };
+  createChallenge(_seed, config = {}) {
+    return { state: freshState(config), publicSeed: null };
   },
 
   /** Always the same empty board -- no per-duel randomness, exactly like
@@ -48,28 +56,33 @@ export const GomokuPlugin = {
     return { initialState: {} };
   },
 
-  rehydrate(_initial) {
-    return { state: freshState() };
+  rehydrate(initial) {
+    return { state: freshState(initial.config || {}) };
   },
 
   applyIntent(state, intent, ctx) {
-    if (!Number.isInteger(intent) || intent < 0 || intent >= CELLS) {
+    const cell = typeof intent === "object" && intent !== null ? intent.cell : intent;
+    if (!Number.isInteger(cell) || cell < 0 || cell >= CELLS) {
       return { ok: false, reason: "MALFORMED" };
     }
     if (state.turn !== ctx.seat) return { ok: false, reason: "NOT_YOUR_TURN" };
-    if (state.board[intent] !== 0) return { ok: false, reason: "ILLEGAL" };
+    if (state.board[cell] !== 0) return { ok: false, reason: "ILLEGAL" };
+
+    if (state.config?.centerOpening && state.moves.length === 0 && cell !== CENTER_CELL) {
+      return { ok: false, reason: "CENTER_OPENING_REQUIRED" };
+    }
 
     const next = cloneState(state);
-    next.board[intent] = pieceFor(state.turn);
-    next.lastMove = intent;
-    next.moves.push(intent);
+    next.board[cell] = pieceFor(state.turn);
+    next.lastMove = cell;
+    next.moves.push(cell);
     next.turn = state.turn === SEAT_0 ? SEAT_1 : SEAT_0;
 
     return {
       ok: true,
       state: next,
-      record: { cell: intent, seat: ctx.seat },
-      events: [{ type: "PLACE", payload: { seat: ctx.seat, cell: intent } }],
+      record: { cell, seat: ctx.seat },
+      events: [{ type: "PLACE", payload: { seat: ctx.seat, cell } }],
     };
   },
 

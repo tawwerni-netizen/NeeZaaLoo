@@ -1,0 +1,106 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--nz-space-8);
+  border-radius: var(--nz-radius-lg);
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  gap: var(--nz-space-4);
+  max-width: 540px;
+  margin: var(--nz-space-6) auto;
+}
+
+.iconWrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.codeBadge {
+  font-family: var(--nz-font-num);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-loss);
+  background: rgba(239, 68, 68, 0.1);
+  padding: 2px 8px;
+  border-radius: var(--nz-radius-pill);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  letter-spacing: var(--nz-tracking-caps);
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-lg);
+  font-weight: 700;
+  color: var(--nz-text);
+  margin: 0;
+}
+
+.description {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  line-height: var(--nz-leading-body);
+  color: var(--nz-text-2);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  margin-top: var(--nz-space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.retryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nz-space-2);
+  padding: 8px 18px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-accent);
+  color: #fff;
+  border: none;
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.retryBtn:hover {
+  background: var(--nz-accent-hover);
+  transform: translateY(-1px);
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.secondaryBtn:hover {
+  background: var(--nz-surface-3);
+  color: var(--nz-text);
+}

@@ -55,6 +55,7 @@ const WATCH_GAMES = [
   { id: "seega", nameEn: "Seega", nameAr: "السيجة", icon: "🏜️" },
   { id: "reversi", nameEn: "Reversi", nameAr: "ريفيرسي", icon: "⚫" },
   { id: "gomoku", nameEn: "Gomoku", nameAr: "جوموكو", icon: "⭕" },
+  { id: "ludo", nameEn: "Ludo Royale", nameAr: "لودو رويال", icon: "👑" },
 ];
 
 export default function WatchPage() {

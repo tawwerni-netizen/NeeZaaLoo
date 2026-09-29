@@ -41,8 +41,8 @@ async function enqueue(db, playerId, {
 async function pair(db, { duelId = "duel-" + Math.random().toString(36).slice(2, 10),
   tier = "FREE", stake = 0, mode = "blitz" } = {}) {
   const r = await db.query(
-    `SELECT * FROM mm_pair('chess', $1, $2::entry_tier, $3, $4, $5::jsonb, $6::jsonb)`,
-    [mode, tier, stake, duelId, INITIAL, TC]
+    `SELECT * FROM mm_pair('chess'::text, $1::text, $2::entry_tier, $3::bigint, $4::text, $5::jsonb, $6::jsonb, NULL::text, $7::text)`,
+    [mode, tier, stake, duelId, INITIAL, TC, tier === "CASH" ? "USDT" : null]
   );
   return r.rows[0] ?? null;
 }

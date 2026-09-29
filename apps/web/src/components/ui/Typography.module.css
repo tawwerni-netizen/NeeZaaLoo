@@ -1,0 +1,180 @@
+/* Typography System Module
+   Strictly adheres to Nizalo design tokens:
+   - Display: Archivo / Arabic Plex
+   - UI: IBM Plex Sans / Arabic Plex
+   - Numeric: IBM Plex Mono (tabular-nums)
+   - Real RTL support (zero tracking for Arabic, direction-aware)
+*/
+
+.display {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-4xl);
+  font-weight: 800;
+  line-height: var(--nz-leading-tight);
+  letter-spacing: var(--nz-tracking-display);
+  color: var(--nz-text);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.displayLg {
+  font-size: var(--nz-text-5xl);
+}
+
+.displaySm {
+  font-size: var(--nz-text-3xl);
+}
+
+.heading {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-2xl);
+  font-weight: 700;
+  line-height: var(--nz-leading-snug);
+  letter-spacing: var(--nz-tracking-tight);
+  color: var(--nz-text);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.headingH1 {
+  font-size: var(--nz-text-3xl);
+  font-weight: 800;
+}
+
+.headingH2 {
+  font-size: var(--nz-text-2xl);
+  font-weight: 700;
+}
+
+.headingH3 {
+  font-size: var(--nz-text-xl);
+  font-weight: 600;
+}
+
+.headingH4 {
+  font-size: var(--nz-text-lg);
+  font-weight: 600;
+}
+
+.body {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-base);
+  line-height: var(--nz-leading-body);
+  color: var(--nz-text);
+  margin: 0;
+}
+
+.bodySm {
+  font-size: var(--nz-text-sm);
+}
+
+.bodyLg {
+  font-size: var(--nz-text-md);
+}
+
+.caption {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  line-height: var(--nz-leading-snug);
+  color: var(--nz-text-2);
+  margin: 0;
+}
+
+.captionMuted {
+  color: var(--nz-text-3);
+}
+
+.numeric {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.financialCredit {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--nz-win);
+}
+
+.financialDebit {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--nz-text);
+}
+
+.financialLocked {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--nz-text-3);
+}
+
+/* Tactical Game State Typography */
+.gameState {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nz-space-1);
+  padding: 2px 8px;
+  border-radius: var(--nz-radius-pill);
+}
+
+.gameStateTurnActive {
+  background: rgba(255, 90, 43, 0.15);
+  border: 1px solid var(--nz-accent);
+  color: var(--nz-accent);
+  animation: turnPulse 1.6s ease-in-out infinite;
+}
+
+.gameStateOpponentThinking {
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+}
+
+.gameStateCheck {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid var(--nz-loss);
+  color: var(--nz-loss);
+  font-weight: 900;
+}
+
+.gameStateWin {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid var(--nz-win);
+  color: var(--nz-win);
+}
+
+.gameStateDraw {
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid var(--nz-draw);
+  color: var(--nz-draw);
+}
+
+@keyframes turnPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 90, 43, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(255, 90, 43, 0);
+  }
+}
+
+/* RTL overrides */
+:global([dir="rtl"]) .display,
+:global([dir="rtl"]) .heading {
+  letter-spacing: 0;
+}
+
+:global([dir="rtl"]) .numeric,
+:global([dir="rtl"]) .financialCredit,
+:global([dir="rtl"]) .financialDebit,
+:global([dir="rtl"]) .financialLocked {
+  direction: ltr;
+  unicode-bidi: embed;
+}

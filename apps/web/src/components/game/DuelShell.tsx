@@ -20,6 +20,7 @@ import { ResultCeremony } from "@/components/game/ResultCeremony";
 import { TableEnvironmentProvider } from "@/components/game/TableEnvironment";
 import { GameVisualSettings } from "@/components/game/GameVisualSettings";
 import { LiveMatchShareModal } from "@/components/game/LiveMatchShareModal";
+import { ConfirmationModal, RulesPanel } from "@/components/ui";
 import { getGame } from "@/lib/games";
 import { get, post } from "@/lib/api";
 import { playUndoSound } from "@/lib/chess-audio";
@@ -111,6 +112,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [completedInfo, setCompletedInfo] = useState<{
     completed: boolean;
     result: string | null;
@@ -431,47 +433,27 @@ export function DuelShell({ duelId }: { duelId: string }) {
           />
         ) : plugin && view ? (
           <div className={styles.duelArena}>
-            {gameId && (
-              <div 
-                className={styles.duelArenaBg}
-                style={{ backgroundImage: `url(/images/games/${gameId.replace(/_/g, "-")}-hero.jpg)` }}
-              />
+            {gameId !== "ludo" && (
+              <div className={styles.opponentBar}>
+                {players && (opponentSeat !== null ? (
+                  <PlayerStrip
+                    playerId={players[opponentSeat] ?? ""}
+                    active={isSharedClock ? true : clock?.toMove === opponentSeat}
+                    remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[opponentSeat] ?? null}
+                    flagged={false}
+                    reverse={true}
+                  />
+                ) : isSpectator && players[1] ? (
+                  <PlayerStrip
+                    playerId={players[1] ?? ""}
+                    active={isSharedClock ? true : clock?.toMove === 1}
+                    remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[1] ?? null}
+                    flagged={false}
+                    reverse={true}
+                  />
+                ) : null)}
+              </div>
             )}
-            <div className={styles.vsHeader}>
-              {players && (mySeat !== null ? (
-                <PlayerStrip
-                  playerId={players[mySeat] ?? ""}
-                  active={isSharedClock ? true : clock?.toMove === mySeat}
-                  remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[mySeat] ?? null}
-                  flagged={false}
-                />
-              ) : isSpectator && players[0] ? (
-                <PlayerStrip
-                  playerId={players[0] ?? ""}
-                  active={isSharedClock ? true : clock?.toMove === 0}
-                  remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[0] ?? null}
-                  flagged={false}
-                />
-              ) : null)}
-              <div className={styles.vsBadge}>VS</div>
-              {players && (opponentSeat !== null ? (
-                <PlayerStrip
-                  playerId={players[opponentSeat] ?? ""}
-                  active={isSharedClock ? true : clock?.toMove === opponentSeat}
-                  remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[opponentSeat] ?? null}
-                  flagged={false}
-                  reverse={true}
-                />
-              ) : isSpectator && players[1] ? (
-                <PlayerStrip
-                  playerId={players[1] ?? ""}
-                  active={isSharedClock ? true : clock?.toMove === 1}
-                  remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[1] ?? null}
-                  flagged={false}
-                  reverse={true}
-                />
-              ) : null)}
-            </div>
 
             <div className={styles.boardContainer}>
               <plugin.Board
@@ -482,6 +464,26 @@ export function DuelShell({ duelId }: { duelId: string }) {
                 onMove={(intent) => sendIntent(intent)}
               />
             </div>
+
+            {gameId !== "ludo" && (
+              <div className={styles.playerBar}>
+                {players && (mySeat !== null ? (
+                  <PlayerStrip
+                    playerId={players[mySeat] ?? ""}
+                    active={isSharedClock ? true : clock?.toMove === mySeat}
+                    remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[mySeat] ?? null}
+                    flagged={false}
+                  />
+                ) : isSpectator && players[0] ? (
+                  <PlayerStrip
+                    playerId={players[0] ?? ""}
+                    active={isSharedClock ? true : clock?.toMove === 0}
+                    remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[0] ?? null}
+                    flagged={false}
+                  />
+                ) : null)}
+              </div>
+            )}
 
             {!isSpectator && (
               <div className={styles.actionsRow}>
@@ -500,6 +502,9 @@ export function DuelShell({ duelId }: { duelId: string }) {
                 {plugin.supportsDraw && (
                   <Button variant="ghost" onClick={offerDraw} disabled={drawOfferBy !== null}>{t("game.offer_draw")}</Button>
                 )}
+                <Button variant="ghost" onClick={() => setRulesOpen(true)}>
+                  📖 Rules
+                </Button>
                 <Button variant="secondary" onClick={() => setResignConfirmOpen(true)}>{t("game.resign")}</Button>
               </div>
             )}
@@ -508,46 +513,26 @@ export function DuelShell({ duelId }: { duelId: string }) {
           <p className={styles.playerLine}>{t("game.connecting")}</p>
         )}
 
-        {resignConfirmOpen && mounted && typeof document !== "undefined" && createPortal(
-          <div
-            className={styles.confirmOverlay}
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("game.resign_confirm_title")}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setResignConfirmOpen(false);
-            }}
-          >
-            <div className={styles.confirmCard} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.confirmIcon}>🏳️</div>
-              <h2 className={styles.confirmTitle}>{t("game.resign_confirm_title")}</h2>
-              <p className={styles.confirmBody}>{t("game.resign_confirm_body")}</p>
-              <div className={styles.confirmActions}>
-                <button
-                  type="button"
-                  className={styles.confirmBtn}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    resign();
-                    setResignConfirmOpen(false);
-                  }}
-                >
-                  {t("game.confirm")}
-                </button>
-                <button
-                  type="button"
-                  className={styles.cancelBtn}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setResignConfirmOpen(false);
-                  }}
-                >
-                  {t("game.cancel")}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
+        <ConfirmationModal
+          open={resignConfirmOpen}
+          title={t("game.resign_confirm_title")}
+          message={t("game.resign_confirm_body")}
+          confirmLabel={t("game.confirm")}
+          cancelLabel={t("game.cancel")}
+          variant="destructive"
+          onConfirm={() => {
+            resign();
+            setResignConfirmOpen(false);
+          }}
+          onCancel={() => setResignConfirmOpen(false)}
+        />
+
+        {gameId && (
+          <RulesPanel
+            open={rulesOpen}
+            gameSlug={gameId}
+            onClose={() => setRulesOpen(false)}
+          />
         )}
 
         <p className={styles.playerLine}>

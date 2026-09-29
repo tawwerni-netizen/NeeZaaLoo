@@ -15,10 +15,10 @@ export default function FairPlayPage() {
   const whyPoints = [
     {
       icon: "🎯",
-      title: locale === "ar" ? "١٠٠٪ مهارة (100% Skill)" : "100% Skill-Based (100% Skill)",
+      title: locale === "ar" ? "ألعاب مهارة وتحكيم نزيه" : "Skill-Based & Verified Competition",
       desc: locale === "ar" 
-        ? "جميع الألعاب تعتمد حصرياً على الذكاء والتخطيط والتكتيك الذهني — لا نرد ولا عجلة ولا عناصر صدفة تتحكم بالنتائج."
-        : "All games rely exclusively on mental acumen, tactical depth, and strategic foresight — no dice rolls or random elements."
+        ? "تعتمد ألعابنا على الذكاء والتخطيط والتكتيك الذهني، مع توليد النرد في ألعاب الزهر عبر التزام مشفر بخوارزمية SHA-256 لمنع أي تلاعب."
+        : "All games rely on mental acumen, tactical depth, and strategic foresight, with RNG games governed by cryptographic SHA-256 commit-reveal seeds."
     },
     {
       icon: "⚡",

@@ -310,12 +310,12 @@ export async function createGateway({
             const seat = seatFor(duel, playerId);
             const isSeated = seat >= 0;
             if (isSeated) {
-              duel.seatConns ??= [new Set(), new Set()];
-              const bot0 = getBotSeat(duel, 0);
-              const bot1 = getBotSeat(duel, 1);
-              const has0 = Boolean(bot0) || (duel.seatConns[0]?.size ?? 0) > 0 || seat === 0;
-              const has1 = Boolean(bot1) || (duel.seatConns[1]?.size ?? 0) > 0 || seat === 1;
-              if (duel.status === DuelState.READY && has0 && has1) {
+              duel.seatConns ??= Array.from({ length: duel.players.length }, () => new Set());
+              const allConnected = duel.players.every((pid, s) => {
+                const bot = getBotSeat(duel, s);
+                return Boolean(bot) || (duel.seatConns[s]?.size ?? 0) > 0 || seat === s;
+              });
+              if (duel.status === DuelState.READY && allConnected) {
                 await store.markLive(duel, t);
                 duel.status = DuelState.LIVE;
                 if (duel.clock.model === "SHARED") duel.clock.startedAt = t;
@@ -542,10 +542,7 @@ export async function createGateway({
    * ordinary drop-and-reconnect into a false CONCURRENT_SEAT signal. */
   function broadcastPresence(duel) {
     if (!duel) return;
-    const connectedSeats = [
-      (duel.seatConns?.[0]?.size ?? 0) > 0 || Boolean(getBotSeat(duel, 0)),
-      (duel.seatConns?.[1]?.size ?? 0) > 0 || Boolean(getBotSeat(duel, 1)),
-    ];
+    const connectedSeats = duel.players.map((_, s) => (duel.seatConns?.[s]?.size ?? 0) > 0 || Boolean(getBotSeat(duel, s)));
     for (const c of room(duel.duelId)) {
       send(c, {
         t: "PRESENCE",
@@ -556,10 +553,10 @@ export async function createGateway({
   }
 
   function projectClockSafe(duel, t) {
-    const hasBot = Boolean(getBotSeat(duel, 0) || getBotSeat(duel, 1));
-    if (!duel.vsComputer && !hasBot && duel.events.length === 0) {
-      const bothConnected = (duel.seatConns?.[0]?.size ?? 0) > 0 && (duel.seatConns?.[1]?.size ?? 0) > 0;
-      if (!bothConnected) {
+    const hasAnyBot = duel.players.some((_, s) => Boolean(getBotSeat(duel, s)));
+    if (!duel.vsComputer && !hasAnyBot && duel.events.length === 0) {
+      const allConnected = duel.players.every((_, s) => (duel.seatConns?.[s]?.size ?? 0) > 0);
+      if (!allConnected) {
         if (duel.clock.model === "SHARED") {
           return { model: "SHARED", remainingMs: duel.clock.durationMs, paused: true };
         }
@@ -805,10 +802,7 @@ export async function createGateway({
       // standing RIGHT NOW rather than only learning of it from a
       // DRAW_OFFERED event it was disconnected for and will never see.
       drawOfferBy: duel.drawOfferBy,
-      connectedSeats: [
-        (duel.seatConns?.[0]?.size ?? 0) > 0,
-        (duel.seatConns?.[1]?.size ?? 0) > 0,
-      ],
+      connectedSeats: duel.players.map((_, s) => (duel.seatConns?.[s]?.size ?? 0) > 0 || Boolean(getBotSeat(duel, s))),
     };
   }
 
@@ -1307,21 +1301,17 @@ export async function createGateway({
             if (!takeToken(reconnectLimiterFor(conn.playerId, duel.duelId), t)) {
               return fail(conn, ErrorCode.RECONNECT_LIMITED);
             }
-            duel.seatConns ??= [new Set(), new Set()];
-            const bot0 = getBotSeat(duel, 0);
-            const bot1 = getBotSeat(duel, 1);
-            const wasBothConnected = (Boolean(bot0) || (duel.seatConns[0]?.size ?? 0) > 0) &&
-                                     (Boolean(bot1) || (duel.seatConns[1]?.size ?? 0) > 0);
-            duel.seatConns[seat].add(conn);
-            const nowBothConnected = (Boolean(bot0) || (duel.seatConns[0]?.size ?? 0) > 0) &&
-                                     (Boolean(bot1) || (duel.seatConns[1]?.size ?? 0) > 0);
-            if (duel.status === DuelState.READY && nowBothConnected) {
+            duel.seatConns ??= Array.from({ length: duel.players.length }, () => new Set());
+            const wasAllConnected = duel.players.every((pid, s) => Boolean(getBotSeat(duel, s)) || (duel.seatConns[s]?.size ?? 0) > 0);
+            duel.seatConns[seat]?.add(conn);
+            const nowAllConnected = duel.players.every((pid, s) => Boolean(getBotSeat(duel, s)) || (duel.seatConns[s]?.size ?? 0) > 0);
+            if (duel.status === DuelState.READY && nowAllConnected) {
               await store.markLive(duel, t);
               duel.status = DuelState.LIVE;
               if (duel.clock.model === "SHARED") duel.clock.startedAt = t;
               else duel.clock.turnStartedAt = t;
               duel.startedAt = t;
-            } else if (!duel.vsComputer && duel.events.length === 0 && !wasBothConnected && nowBothConnected) {
+            } else if (!duel.vsComputer && duel.events.length === 0 && !wasAllConnected && nowAllConnected) {
               if (duel.clock.model === "SHARED") duel.clock.startedAt = t;
               else duel.clock.turnStartedAt = t;
               duel.startedAt = t;

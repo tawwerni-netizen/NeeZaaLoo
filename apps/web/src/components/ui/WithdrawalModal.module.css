@@ -1,0 +1,133 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 14, 20, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nz-space-4);
+}
+
+.modal {
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line-strong);
+  border-radius: var(--nz-radius-xl);
+  box-shadow: var(--nz-shadow-3);
+  padding: var(--nz-space-6);
+  max-width: 460px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-lg);
+  font-weight: 700;
+  color: var(--nz-text);
+  margin: 0;
+}
+
+.closeBtn {
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+  font-weight: 600;
+}
+
+.input {
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: 10px 14px;
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text);
+  outline: none;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.input:focus {
+  border-color: var(--nz-accent);
+}
+
+.numInput {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.feeBox {
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.feeRow {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+}
+
+.netRow {
+  border-top: 1px solid var(--nz-line);
+  padding-top: 4px;
+  font-weight: 700;
+  color: var(--nz-text);
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-accent);
+  color: #fff;
+  border: none;
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: var(--nz-accent-hover);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

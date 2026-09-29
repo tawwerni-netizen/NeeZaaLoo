@@ -24,6 +24,7 @@ const RADAR_GAMES = [
   "reversi",
   "gomoku",
   "seega",
+  "ludo",
 ];
 
 const STAKE_LADDER = [

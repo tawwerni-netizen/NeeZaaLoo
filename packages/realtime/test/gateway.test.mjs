@@ -105,11 +105,11 @@ async function authed(token, gwInstance = gw) {
 /** Let the event loop deliver anything already in flight. */
 const settle = () => new Promise((r) => setTimeout(r, 30));
 
-before(() => {
+before(async () => {
   sessions = new Map([["tok-alice", "alice"], ["tok-bob", "bob"], ["tok-eve", "eve"]]);
   duels = new Map();
   plugins = new Map([["chess", ChessPlugin], ["speed-math", SpeedMathPlugin], ["xo", XOPlugin]]);
-  gw = createGateway({ sessions, duels, plugins, now });
+  gw = await createGateway({ sessions, duels, plugins, now });
 });
 
 after(async () => { await gw.close(); });
@@ -485,6 +485,8 @@ describe("reconnection", () => {
 });
 
 describe("timeouts", () => {
+  before(() => { duels.clear(); });
+
   test("the sweeper completes a duel with no client message at all", async () => {
     newDuel("d-timeout", { initialMs: 10_000 });
     const bob = await authed("tok-bob");
@@ -528,22 +530,27 @@ describe("abuse resistance", () => {
   });
 
   test("PING is answered with the server's own time", async () => {
+    const prev = CLOCK;
     CLOCK = 1_700_000_000_000;
-    const c = await authed("tok-alice");
-    c.send({ t: "PING", cseq: 42 });
-    const pong = await c.next((m) => m.t === ServerMsg.PONG);
-    assert.equal(pong.serverTimeMs, 1_700_000_000_000);
-    assert.equal(pong.cseq, 42);
-    await c.close();
+    try {
+      const c = await authed("tok-alice");
+      c.send({ t: "PING", cseq: 42 });
+      const pong = await c.next((m) => m.t === ServerMsg.PONG);
+      assert.equal(pong.serverTimeMs, 1_700_000_000_000);
+      assert.equal(pong.cseq, 42);
+      await c.close();
+    } finally {
+      CLOCK = prev;
+    }
   });
 });
 
 describe("VS_COMPUTER -- a bot moves through the SAME path a human's INTENT does", () => {
   let aiGw, aiDuels;
 
-  before(() => {
+  before(async () => {
     aiDuels = new Map();
-    aiGw = createGateway({
+    aiGw = await createGateway({
       sessions, duels: aiDuels, plugins, now,
       aiAdapters: new Map([
         ["chess", createChessAiAdapter()],
@@ -646,9 +653,9 @@ describe("VS_COMPUTER against a SIMULTANEOUS game -- the bot paces itself indepe
   let smGw, smDuels;
   const SM_CONFIG = { ...SPEED_MATH_DEFAULT_CONFIG, durationMs: 60_000, questionCount: 20 };
 
-  before(() => {
+  before(async () => {
     smDuels = new Map();
-    smGw = createGateway({
+    smGw = await createGateway({
       sessions, duels: smDuels, plugins, now,
       aiAdapters: new Map([["speed-math", createSpeedMathAiAdapter()]]),
       aiMoveDelayMs: 10, // real timers, kept short so tests stay fast

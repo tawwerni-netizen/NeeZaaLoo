@@ -1,0 +1,57 @@
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--nz-surface-2) 0%,
+    var(--nz-surface-3) 50%,
+    var(--nz-surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  display: block;
+  border-radius: var(--nz-radius-sm);
+}
+
+.text {
+  height: 1em;
+  margin-block: 0.2em;
+  border-radius: var(--nz-radius-sm);
+}
+
+.circular {
+  border-radius: 999px;
+}
+
+.rectangular {
+  border-radius: var(--nz-radius-md);
+}
+
+.card {
+  height: 280px;
+  width: 100%;
+  border-radius: var(--nz-radius-lg);
+  border: 1px solid var(--nz-line);
+}
+
+.board {
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--nz-radius-lg);
+  border: 1px solid var(--nz-line);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--nz-surface-2);
+  }
+}

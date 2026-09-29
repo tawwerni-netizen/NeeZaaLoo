@@ -77,7 +77,7 @@
       "trust_tournaments": "每日大型锦标赛与实时现金对决"
     },
     "games": {
-      "heading": "十款游戏,同一套公平机制",
+      "heading": "十一款游戏,同一套公平机制",
       "duration_label": "时长",
       "mode_label": "模式",
       "play_cta": "开始{name}",
@@ -1383,7 +1383,7 @@
   "play_page": {
     "badge": "在线游戏与实时对决竞技场",
     "title": "挑选你的游戏，挑战顶级高手",
-    "subtitle": "10 款完全依靠策略与技术的确定性对决游戏。实时 1v1 较量、AI 战术演练，或参加即时 USDT 结算的大型锦标赛。",
+    "subtitle": "11 款完全依靠策略与技术的确定性对决游戏。实时 1v1 较量、AI 战术演练，或参加即时 USDT 结算的大型锦标赛。",
     "trust_cashout": "60秒内极速提现",
     "trust_fairplay": "100% 服务端裁定公平保障",
     "trust_battles": "24/7 全天候实时赛事",

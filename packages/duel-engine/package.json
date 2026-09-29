@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "src/duel.mjs",
+  "main": "src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./ruleset": "./src/ruleset-registry.mjs"
+  },
   "scripts": { "test": "node --test" }
 }
