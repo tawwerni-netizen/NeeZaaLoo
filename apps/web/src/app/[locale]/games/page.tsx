@@ -46,7 +46,7 @@ const ONBOARDING_I18N: Record<string, {
     q1: "ماذا يمكنني أن ألعب؟",
     a1: "11 لعبة ذهنية وتكتيكية معتمدة رسمياً. تحكيم آلي حازم، بدون أي أفضلية للدار، وتنافس عادل 100%.",
     q2: "كم تبلغ تكلفة اللعب؟",
-    a2: "مجانية بالكامل للتدريب والنزالات الودية، أو مبارزات كاش تبدأ من 1$ إلى 100$ بسحب USDT فوري.",
+    a2: "مجانية بالكامل للتدريب والنزالات الودية، أو مبارزات كاش تبدأ من 1$ إلى 2,000$ بسحب USDT فوري.",
     q3: "كيف أبدأ الآن؟",
     a3: "اختر لعبتك المفضلة أدناه، واضغط «العب الآن» للانضمام إلى نزال مباشر خلال أقل من 5 ثوانٍ.",
     searchPlaceholder: "ابحث عن لعبة بالاسم أو الفئة...",
@@ -68,7 +68,7 @@ const ONBOARDING_I18N: Record<string, {
     q1: "What can I play?",
     a1: "11 authentic, certified mind sports & tabletop games. Deterministic rules, zero house edge, 100% player skill.",
     q2: "How much does it cost?",
-    a2: "100% Free practice & friendly duels, or real Cash Duels from $1 to $100 with instant USDT payouts.",
+    a2: "100% Free practice & friendly duels, or real Cash Duels from $1 to $2,000 with instant USDT payouts.",
     q3: "How do I start?",
     a3: "Pick any game below, click 'Play Now', and enter instant server-side matchmaking in under 5 seconds.",
     searchPlaceholder: "Search games by name, category or rules...",
@@ -90,7 +90,7 @@ const ONBOARDING_I18N: Record<string, {
     q1: "¿A qué puedo jugar?",
     a1: "11 juegos mentales y de mesa certificados. Reglas oficiales, sin ventaja de la casa y 100% habilidad.",
     q2: "¿Cuánto cuesta?",
-    a2: "100% gratis para practicar, o duelos con dinero real desde $1 hasta $100 con retiros USDT inmediatos.",
+    a2: "100% gratis para practicar, o duelos con dinero real desde $1 hasta $2,000 con retiros USDT inmediatos.",
     q3: "¿Cómo empiezo?",
     a3: "Elige cualquier juego abajo, haz clic en 'Jugar Ahora' y entra al emparejamiento en menos de 5 segundos.",
     searchPlaceholder: "Buscar por nombre o categoría...",
@@ -112,7 +112,7 @@ const ONBOARDING_I18N: Record<string, {
     q1: "À quoi puis-je jouer ?",
     a1: "11 jeux cérébraux et de plateau certifiés. Règles authentiques, aucun avantage maison, 100% compétence.",
     q2: "Combien cela coûte-t-il ?",
-    a2: "100% gratuit pour s'entraîner, ou duels en argent réel dès 1$ avec retraits instantanés en USDT.",
+    a2: "100% gratuit pour s'entraîner, ou duels en argent réel dès 1$ à 2 000$ avec retraits instantanés en USDT.",
     q3: "Comment démarrer ?",
     a3: "Choisissez votre jeu ci-dessous, cliquez sur 'Jouer' et trouvez un adversaire en moins de 5 secondes.",
     searchPlaceholder: "Rechercher par nom ou catégorie...",
@@ -134,7 +134,7 @@ const ONBOARDING_I18N: Record<string, {
     q1: "मैं क्या खेल सकता हूँ?",
     a1: "11 प्रमाणित माइंड स्पोर्ट्स और टेबलटॉप गेम। बिना किसी हाउस एज के 100% कौशल-आधारित खेल।",
     q2: "इसकी लागत कितनी है?",
-    a2: "अभ्यास के लिए 100% मुफ़्त, या $1 से $100 तक नकद द्वंद्व और तत्काल USDT निकासी।",
+    a2: "अभ्यास के लिए 100% मुफ़्त, या $1 से $2,000 तक नकद द्वंद्व और तत्काल USDT निकासी।",
     q3: "मैं कैसे शुरुआत करूँ?",
     a3: "नीचे से कोई भी खेल चुनें, 'अभी खेलें' पर क्लिक करें और 5 सेकंड से कम समय में मैच शुरू करें।",
     searchPlaceholder: "खेल या श्रेणी खोजें...",
@@ -156,7 +156,7 @@ const ONBOARDING_I18N: Record<string, {
     q1: "我可以玩什么？",
     a1: "11 款权威认证的智力竞技与经典桌游。绝对公平、无平台暗箱、100% 纯技术对抗。",
     q2: "需要花费多少？",
-    a2: "完全免费练习与友谊赛，或参与 $1 至 $100 的现金争霸，USDT 秒级提现到账。",
+    a2: "完全免费练习与友谊赛，或参与 $1 至 $2,000 的现金争霸，USDT 秒级提现到账。",
     q3: "如何立即开始？",
     a3: "在下方选择心仪游戏，点击“即刻开战”，5秒内极速匹配真实在线对手。",
     searchPlaceholder: "搜索游戏名称或分类...",
@@ -385,7 +385,7 @@ function GameHubCard({
           {game.stakeEligibility.isCashEligible ? (
             <>
               <span className={styles.cashEligibleBadge}>
-                💰 {isRtl ? "نزالات كاش $1-$100" : "Cash Duels $1-$100"}
+                💰 {isRtl ? "نزالات كاش 1$-2,000$" : "Cash Duels $1-$2,000"}
               </span>
               <span className={styles.freePlayBadge}>
                 🆓 {isRtl ? "لعب مجاني متاح" : "Free Play"}
