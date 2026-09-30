@@ -95,7 +95,7 @@ function InnerPlayCatalogPage() {
           <div className={styles.catalogTitleGroup}>
             <h2 className={styles.catalogHeading}>{t("play_page.catalog_heading")}</h2>
             <span className={styles.catalogCount}>
-              {filteredGames.length} {t("play_page.games_available")}
+              {t("play_page.games_available", { count: filteredGames.length })}
             </span>
           </div>
 
