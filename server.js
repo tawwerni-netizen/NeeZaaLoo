@@ -10,8 +10,11 @@
 const http = require("node:http");
 const path = require("node:path");
 const fs = require("node:fs");
+const dns = require("node:dns");
 const pg = require("pg");
 const next = require("next");
+
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 const here = __dirname;
 
@@ -51,9 +54,9 @@ for (const key of Object.keys(process.env)) {
 }
 
 // 3. Database URL configuration
-const ACTIVE_PRODUCTION_DB_URL = "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=no-verify";
-if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("neon.tech") || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2") || process.env.DATABASE_URL.includes("ep-cold-frog-b2dicy1p")) {
-  console.log("[config] Upgrading DATABASE_URL to active clean Supabase production database.");
+const ACTIVE_PRODUCTION_DB_URL = "postgresql://neondb_owner:npg_s7umPR8eYVAw@ep-solitary-shape-b20qc2vs-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require";
+if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("supabase.com") || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2") || process.env.DATABASE_URL.includes("ep-cold-frog-b2dicy1p")) {
+  console.log("[config] Upgrading DATABASE_URL to active clean Neon production database.");
   process.env.DATABASE_URL = ACTIVE_PRODUCTION_DB_URL;
 }
 
@@ -314,7 +317,6 @@ async function startServer() {
       idleTimeoutMillis: 10000,
       connectionTimeoutMillis: 10000,
       statement_timeout: 10000,
-      options: "-c statement_timeout=10000 -c lock_timeout=5000 -c idle_in_transaction_session_timeout=15000",
       ssl: { rejectUnauthorized: false },
       keepAlive: true,
     });

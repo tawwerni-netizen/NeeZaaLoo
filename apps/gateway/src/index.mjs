@@ -135,7 +135,6 @@ export async function createGatewayRuntime({
     idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 5000,
     statement_timeout: 5000,
-    options: "-c statement_timeout=5000 -c lock_timeout=3000 -c idle_in_transaction_session_timeout=10000",
     ssl: { rejectUnauthorized: false },
     keepAlive: true,
   });

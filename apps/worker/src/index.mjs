@@ -128,7 +128,6 @@ export async function createWorkerAppRuntime({
     idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 5000,
     statement_timeout: 10000,
-    options: "-c statement_timeout=10000 -c lock_timeout=5000 -c idle_in_transaction_session_timeout=15000",
     ssl: { rejectUnauthorized: false },
     keepAlive: true,
   });
