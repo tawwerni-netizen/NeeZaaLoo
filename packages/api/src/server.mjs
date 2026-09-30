@@ -1106,9 +1106,13 @@ function buildRoutes(storeSvc) {
         );
         if (!r.rows.length) return { body: {} };
         const email = await emailIdentity?.getByPlayerId(actor.id);
-        const rolesRes = await db.query("SELECT admin_roles($1) AS roles", [actor.id]);
+        const [rolesRes, customRolesRes] = await Promise.all([
+          db.query("SELECT admin_roles($1) AS roles", [actor.id]).catch(() => ({ rows: [] })),
+          db.query("SELECT role_id FROM admin_custom_role_grant WHERE admin_id = $1", [actor.id]).catch(() => ({ rows: [] }))
+        ]);
         const roles = rolesRes.rows[0]?.roles ?? [];
-        const isAdmin = roles.includes("SUPER_ADMIN") || roles.includes("ADMIN");
+        const hasCustom = (customRolesRes.rows?.length ?? 0) > 0;
+        const isAdmin = roles.includes("SUPER_ADMIN") || roles.includes("ADMIN") || roles.length > 0 || hasCustom;
         return { body: {
           ...r.rows[0],
           isOrganizer: Boolean(r.rows[0].is_organizer),
@@ -3348,10 +3352,10 @@ function buildRoutes(storeSvc) {
           // Admin CRM Analytics: DAU, MAU
           () => db.query(
             `SELECT
-              count(DISTINCT player_id) FILTER (WHERE created_at >= now() - interval '24 hours')::int AS dau,
+              count(DISTINCT player_id) FILTER (WHERE issued_at >= now() - interval '24 hours')::int AS dau,
               count(DISTINCT player_id)::int AS mau
              FROM auth_session
-             WHERE created_at >= now() - interval '30 days'`
+             WHERE issued_at >= now() - interval '30 days'`
           ),
           // Admin CRM Analytics: Churn rate and LTV calculation bases
           () => db.query(
@@ -3361,13 +3365,13 @@ function buildRoutes(storeSvc) {
             `WITH previous_period AS (
                SELECT DISTINCT player_id
                FROM auth_session
-               WHERE created_at >= now() - interval '60 days'
-                 AND created_at < now() - interval '30 days'
+               WHERE issued_at >= now() - interval '60 days'
+                 AND issued_at < now() - interval '30 days'
              ),
              current_period AS (
                SELECT DISTINCT player_id
                FROM auth_session
-               WHERE created_at >= now() - interval '30 days'
+               WHERE issued_at >= now() - interval '30 days'
              )
              SELECT
                (SELECT count(*)::int FROM previous_period) AS active_previous,

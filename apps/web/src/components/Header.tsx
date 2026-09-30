@@ -52,6 +52,8 @@ export function Header() {
     { href: "/battle-pass", label: t("nav.battle_pass") || (locale === "ar" ? "تذكرة الموسم" : "Battle Pass"), icon: "🎟️" },
     { href: "/watch", label: t("nav.watch") || (locale === "ar" ? "البث المباشر" : "Live"), icon: "📺", isLive: true },
     { href: "/referrals", label: t("nav.referrals") || (locale === "ar" ? "المكافآت" : "Rewards"), icon: "🎁" },
+    ...(player?.isAdmin ? [{ href: "/admin", label: t("nav.admin") || (locale === "ar" ? "لوحة الإدارة" : "Admin"), icon: "⚙️" }] : []),
+    ...(player?.isOrganizer ? [{ href: "/organizer", label: t("nav.organizer") || (locale === "ar" ? "لوحة المنظم" : "Organizer"), icon: "🏆" }] : []),
   ];
 
   const isActive = (href: string) => pathname === `/${locale}${href}` || (href !== "/" && pathname.startsWith(`/${locale}${href}`));
@@ -209,6 +211,12 @@ export function Header() {
                 <span className={styles.chatIcon}>💬</span>
               </LocaleLink>
               <NotificationCenter />
+              {player.isAdmin && (
+                <LocaleLink href="/admin" className={styles.adminDirectPill} title={t("nav.admin") || "Admin Dashboard"}>
+                  <span className={styles.adminDirectIcon}>⚙️</span>
+                  <span className={styles.adminDirectText}>{locale === "ar" ? "لوحة الإدارة" : "Admin"}</span>
+                </LocaleLink>
+              )}
               <UserMenu />
               <div className={styles.headerDivider} />
             </>

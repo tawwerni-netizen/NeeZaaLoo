@@ -410,6 +410,48 @@
   line-height: 1;
 }
 
+.adminDirectPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--nz-radius-pill);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.adminDirectPill:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: #f59e0b;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+}
+
+.adminDirectIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.adminDirectText {
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 1200px) {
+  .adminDirectText {
+    display: none;
+  }
+  .adminDirectPill {
+    padding: 6px 8px;
+  }
+}
+
 .headerDivider {
   width: 1px;
   height: 20px;

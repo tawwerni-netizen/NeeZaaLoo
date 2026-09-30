@@ -84,10 +84,19 @@ export function MatchmakingFlow({
       try {
         const [activeRes, selfRes] = await Promise.all([
           get<{ active: boolean; duel?: { id: string; gameId: string } }>("/v1/me/active-duel").catch(() => null),
-          get<OpponentInfo>(`/v1/players/${player.id}/preview`).catch(() => null)
+          get<{ id: string; nickname: string; avatarUrl?: string | null; globalSkill?: number | null }>(
+            `/v1/players/by-id/${encodeURIComponent(player.id)}/preview`
+          ).catch(() => null)
         ]);
 
-        if (selfRes) setSelfProfile(selfRes);
+        if (selfRes) {
+          setSelfProfile({
+            id: selfRes.id || player.id,
+            handle: selfRes.nickname || player.handle,
+            avatarUrl: selfRes.avatarUrl ?? null,
+            globalSkill: selfRes.globalSkill ?? null,
+          });
+        }
 
         if (activeRes?.active && activeRes.duel && activeRes.duel.gameId === gameId) {
           router.replace(`/${locale}/game/${activeRes.duel.id}`);
@@ -141,14 +150,45 @@ export function MatchmakingFlow({
           ticketIdRef.current = String(ticket.id);
         }
         if (ticket?.status === "MATCHED" && ticket.duel_id) {
-          // Do not stop polling until we have successfully fetched the opponent info.
-          // In distributed environments, duel record might not be immediately available.
-          const duel = await get<Duel>(`/v1/duels/${ticket.duel_id}`);
-          const opponentId = duel.seat_0 === player?.id ? duel.seat_1 : duel.seat_0;
-          const info = await get<OpponentInfo>(`/v1/players/${opponentId}`);
+          const matchedDuelId = ticket.duel_id;
+          let opponentInfo: OpponentInfo = {
+            id: "opponent",
+            handle: locale === "ar" ? "منافس" : "Opponent",
+            avatarUrl: null,
+            globalSkill: null,
+          };
+
+          try {
+            const duel = await get<Duel>(`/v1/duels/${matchedDuelId}`);
+            const opponentId = duel.seat_0 === player?.id ? duel.seat_1 : duel.seat_0;
+
+            if (opponentId) {
+              opponentInfo.id = opponentId;
+              if (opponentId.startsWith("ai-") || opponentId.startsWith("bot-") || (duel as any).is_vs_computer) {
+                const diffKey = opponentId.replace("ai-", "").toUpperCase();
+                opponentInfo.handle = opponentId.startsWith("ai-")
+                  ? (locale === "ar" ? `بوت ذكاء اصطناعي (${diffKey})` : `AI Bot (${diffKey})`)
+                  : (locale === "ar" ? "بوت نيزالو" : "Nizalo Bot");
+                opponentInfo.globalSkill = 1200;
+              } else {
+                const preview = await get<{ nickname: string; avatarUrl?: string | null; globalSkill?: number | null }>(
+                  `/v1/players/by-id/${encodeURIComponent(opponentId)}/preview`
+                ).catch(() => null);
+
+                if (preview?.nickname) {
+                  opponentInfo.handle = preview.nickname;
+                  opponentInfo.avatarUrl = preview.avatarUrl ?? null;
+                  opponentInfo.globalSkill = preview.globalSkill ?? null;
+                }
+              }
+            }
+          } catch {
+            // Match is ready; fallback opponent info allows the match countdown to start
+          }
+
           if (!cancelledRef.current) {
-            setDuelId(ticket.duel_id);
-            setOpponent(info);
+            setDuelId(matchedDuelId);
+            setOpponent(opponentInfo);
             setPhase("matched");
             return; // Stop polling on success
           }

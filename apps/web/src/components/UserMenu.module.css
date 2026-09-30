@@ -142,3 +142,27 @@
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
 }
+
+.adminMenuItem {
+  color: #fbbf24;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.adminMenuItem:hover {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.adminBadgeSmall {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  margin-inline-start: auto;
+}

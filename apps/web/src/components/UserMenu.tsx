@@ -9,7 +9,7 @@ import styles from "./UserMenu.module.css";
 
 export function UserMenu() {
   const { player, logout } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -70,8 +70,12 @@ export function UserMenu() {
             </LocaleLink>
 
             {player.isAdmin && (
-              <LocaleLink href="/admin" className={styles.menuItem} onClick={() => setOpen(false)}>
-                ⚙️ {t("nav.admin") || "Admin Dashboard"}
+              <LocaleLink href="/admin" className={`${styles.menuItem} ${styles.adminMenuItem}`} onClick={() => setOpen(false)}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                  <span>⚙️</span>
+                  <span>{t("nav.admin") || (locale === "ar" ? "لوحة الإدارة" : "Admin Dashboard")}</span>
+                </span>
+                <span className={styles.adminBadgeSmall}>Admin</span>
               </LocaleLink>
             )}
 
