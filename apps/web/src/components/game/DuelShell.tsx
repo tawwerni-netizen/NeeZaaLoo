@@ -88,6 +88,14 @@ const DUEL_SHELL_I18N = {
     hi: "चाल वापस लें",
     zh: "悔棋撤销",
   },
+  rules: {
+    ar: "القواعد 📖",
+    en: "Rules 📖",
+    es: "Reglas 📖",
+    fr: "Règles 📖",
+    hi: "नियम 📖",
+    zh: "规则 📖",
+  },
 };
 
 export function DuelShell({ duelId }: { duelId: string }) {
@@ -503,9 +511,9 @@ export function DuelShell({ duelId }: { duelId: string }) {
                   <Button variant="ghost" onClick={offerDraw} disabled={drawOfferBy !== null}>{t("game.offer_draw")}</Button>
                 )}
                 <Button variant="ghost" onClick={() => setRulesOpen(true)}>
-                  📖 Rules
+                  {DUEL_SHELL_I18N.rules[locale] || DUEL_SHELL_I18N.rules.en}
                 </Button>
-                <Button variant="secondary" onClick={() => setResignConfirmOpen(true)}>{t("game.resign")}</Button>
+                <Button variant="secondary" className={styles.resignBtn} onClick={() => setResignConfirmOpen(true)}>{t("game.resign")}</Button>
               </div>
             )}
           </div>

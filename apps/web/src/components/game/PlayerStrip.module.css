@@ -2,15 +2,15 @@
   display: flex;
   align-items: center;
   gap: var(--nz-space-3);
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: var(--nz-radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(22, 27, 34, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 380px;
+  width: 100%;
+  max-width: 460px;
+  margin-inline: auto;
   box-sizing: border-box;
   transition: all 0.25s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -80,17 +80,14 @@
 
 .reverse {
   flex-direction: row-reverse;
-  text-align: left;
-}
-.reverse .info {
-  align-items: flex-end;
 }
 
 @media (max-width: 640px) {
   .strip {
-    padding: 6px 8px;
-    gap: 6px;
-    border-radius: var(--nz-radius-md);
+    padding: 6px 10px;
+    gap: 8px;
+    border-radius: var(--nz-radius-lg);
+    max-width: 100%;
   }
 
   .nameRow {

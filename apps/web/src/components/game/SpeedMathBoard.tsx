@@ -365,50 +365,44 @@ export function SpeedMathBoard({ scores, you, current, mySeat, canMove, onMove }
           </AnimatePresence>
 
           <form
-            className={styles.answerRow}
+            className={styles.answerForm}
             onSubmit={(e) => { e.preventDefault(); submit(); }}
           >
-            <input
-              ref={inputRef}
-              className={`nz-num ${styles.answerInput}`}
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              value={draft}
-              disabled={!canMove}
-              onChange={(e) => {
-                const clean = normalizeNumberInput(e.target.value);
-                if (clean === "-" || /^-?\d*$/.test(clean)) {
-                  setDraft(clean);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  submit();
-                }
-              }}
-              aria-label={t("game.speed_math.answer_label")}
-              placeholder="?"
-            />
+            <div className={styles.answerRow}>
+              <input
+                ref={inputRef}
+                className={`nz-num ${styles.answerInput}`}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={draft}
+                disabled={!canMove}
+                onChange={(e) => {
+                  const clean = normalizeNumberInput(e.target.value);
+                  if (clean === "-" || /^-?\d*$/.test(clean)) {
+                    setDraft(clean);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    submit();
+                  }
+                }}
+                aria-label={t("game.speed_math.answer_label")}
+                placeholder="?"
+              />
+            </div>
+
+            {/* Prominent Glowing Submit Button */}
             <button
               type="submit"
-              className={styles.submitButton}
+              className={styles.bigSubmitBtn}
               disabled={!canMove || draft.trim() === "" || draft.trim() === "-"}
             >
-              ↵
+              ⚡ {mathDict.submitBtn}
             </button>
           </form>
-
-          {/* Prominent Glowing Submit Button */}
-          <button
-            type="button"
-            className={styles.bigSubmitBtn}
-            onClick={submit}
-            disabled={!canMove || draft.trim() === "" || draft.trim() === "-"}
-          >
-            ⚡ {mathDict.submitBtn}
-          </button>
 
           {/* Virtual On-Screen Numpad */}
           <div className={styles.keypadSection}>
