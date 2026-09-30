@@ -19,7 +19,7 @@
 import { randomUUID } from "node:crypto";
 import { DEFAULT_SPAWNERS } from "./spawn.mjs";
 import { configForDifficulty as speedMathConfigForDifficulty } from "../../game-speed-math/src/plugin.mjs";
-import { resolveTimeControl } from "../../duel-engine/src/time-profiles.mjs";
+import { resolveTimeControl, tryResolveTimeControl } from "../../duel-engine/src/time-profiles.mjs";
 
 export const VsComputerError = Object.freeze({
   UNSUPPORTED_GAME: "UNSUPPORTED_GAME",
@@ -70,13 +70,13 @@ export function createVsComputerService(db) {
       if (!AI_SUPPORTED_GAMES.has(gameId)) {
         return { ok: false, reason: VsComputerError.UNSUPPORTED_GAME };
       }
-      timeControl ??= resolveTimeControl(gameId, timeProfile || "STANDARD");
+      timeControl ??= (tryResolveTimeControl(gameId, timeProfile) || resolveTimeControl(gameId, "STANDARD"));
       if (!Object.values(Difficulty).includes(difficulty)) {
         return { ok: false, reason: VsComputerError.UNKNOWN_DIFFICULTY };
       }
 
       const spawn = DEFAULT_SPAWNERS[gameId];
-      const spawned = spawn({ mode });
+      const spawned = spawn({ mode, variant: mode });
       const { initialState, timeControl: resolvedTimeControl } =
         resolveChallengeFor(gameId, difficulty, spawned, timeControl);
       const botId = `ai-${difficulty.toLowerCase()}`;

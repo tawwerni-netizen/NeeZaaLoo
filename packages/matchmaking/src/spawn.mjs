@@ -48,9 +48,16 @@ export const DEFAULT_SPAWNERS = {
   // seed -- see each plugin's own header on why that must never be
   // Math.random -- and the seed itself must never be predictable or
   // reused, exactly like Speed Math's own entry above.
-  dominoes: () => {
+  dominoes: (pool) => {
     const seed = randomUUID();
-    return { initialState: { seed }, seed };
+    const modeUpper = String(pool?.mode || pool?.variant || "").toUpperCase();
+    const isAllFives = modeUpper === "AMERICAN" || modeUpper === "ALL_FIVES";
+    return {
+      initialState: isAllFives
+        ? { seed, variant: "all_fives", targetScore: 100 }
+        : { seed },
+      seed,
+    };
   },
   backgammon: () => {
     const seed = randomUUID();

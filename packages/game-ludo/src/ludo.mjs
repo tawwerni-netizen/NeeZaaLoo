@@ -27,7 +27,19 @@ export function nextRandom(state) {
 }
 
 export function rollDice(state) {
-  return Math.floor(nextRandom(state) * 6) + 1;
+  let r = Math.floor(nextRandom(state) * 6) + 1;
+  // Anti-clustering streak suppression:
+  // True randomness occasionally produces repetitive streaks (e.g. 5, 5, 5, 5).
+  // In casual Ludo, non-6 numbers repeating 3+ times feels tedious and frustrating.
+  // We perturb with next uniform entropy so non-6 numbers never repeat 3+ times.
+  if (state.lastRoll !== undefined && state.secondLastRoll !== undefined) {
+    if (r === state.lastRoll && r === state.secondLastRoll && r !== 6) {
+      r = ((r + Math.floor(nextRandom(state) * 5)) % 6) + 1;
+    }
+  }
+  state.secondLastRoll = state.lastRoll;
+  state.lastRoll = r;
+  return r;
 }
 
 export function freshState(seed, playerCount = 2) {
@@ -40,6 +52,8 @@ export function freshState(seed, playerCount = 2) {
     phase: "ROLL", // "ROLL" or "MOVE"
     currentRoll: null,
     rollCount: 0,
+    lastRoll: undefined,
+    secondLastRoll: undefined,
     tokens: Array.from({ length: playerCount }, () => [0, 0, 0, 0]),
     moves: [],
     winner: null

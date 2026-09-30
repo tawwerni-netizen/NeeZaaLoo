@@ -9,6 +9,8 @@ function cloneState(state) {
     phase: state.phase,
     currentRoll: state.currentRoll,
     rollCount: state.rollCount,
+    lastRoll: state.lastRoll,
+    secondLastRoll: state.secondLastRoll,
     tokens: state.tokens.map(t => [...t]),
     moves: [...state.moves],
     winner: state.winner

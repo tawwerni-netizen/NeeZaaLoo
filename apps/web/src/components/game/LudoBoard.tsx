@@ -390,9 +390,11 @@ export function LudoBoard({
   const strings = (LUDO_I18N[locale] ?? LUDO_I18N["en"])!;
   const isMyTurn = mySeat === turn && canMove;
   const [isRolling, setIsRolling] = useState(false);
+  const [rollingDisplayNum, setRollingDisplayNum] = useState<number | null>(null);
   const [lastDisplayedRoll, setLastDisplayedRoll] = useState<number>(6);
   const [knockoutEvent, setKnockoutEvent] = useState<string | null>(null);
   const prevTokensRef = useRef<number[][] | null>(null);
+  const prevRollRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (prevTokensRef.current && tokens) {
@@ -414,10 +416,25 @@ export function LudoBoard({
   }, [tokens, strings.knockout]);
 
   useEffect(() => {
-    if (currentRoll !== null) {
+    if (currentRoll !== null && currentRoll !== prevRollRef.current) {
+      if (!isMyTurn) {
+        setIsRolling(true);
+        try { playDiceRollSound(); } catch {}
+        let count = 0;
+        const interval = setInterval(() => {
+          count++;
+          setRollingDisplayNum(Math.floor(Math.random() * 6) + 1);
+          if (count >= 7) {
+            clearInterval(interval);
+            setRollingDisplayNum(null);
+            setIsRolling(false);
+          }
+        }, 45);
+      }
       setLastDisplayedRoll(currentRoll);
     }
-  }, [currentRoll]);
+    prevRollRef.current = currentRoll;
+  }, [currentRoll, isMyTurn]);
 
   useEffect(() => {
     if (currentRoll === 6 && isMyTurn) {
@@ -478,9 +495,17 @@ export function LudoBoard({
         playDiceRollSound();
       } catch {}
       onMove({ action: "ROLL" });
-      setTimeout(() => {
-        setIsRolling(false);
-      }, 550);
+
+      let count = 0;
+      const interval = setInterval(() => {
+        count++;
+        setRollingDisplayNum(Math.floor(Math.random() * 6) + 1);
+        if (count >= 10) {
+          clearInterval(interval);
+          setRollingDisplayNum(null);
+          setIsRolling(false);
+        }
+      }, 45);
     }
   };
 
@@ -968,15 +993,22 @@ export function LudoBoard({
                 isRolling
                   ? {
                       rotate: [0, 90, 180, 270, 360],
+                      scale: [1, 1.18, 0.94, 1.1, 1],
                     }
-                  : {}
+                  : {
+                      scale: [1, isMyTurn && phase === "ROLL" ? 1.04 : 1, 1],
+                    }
               }
-              transition={{ duration: 0.45, ease: "easeOut" }}
+              transition={
+                isRolling
+                  ? { duration: 0.45, ease: "easeOut" }
+                  : { duration: 1.5, repeat: isMyTurn && phase === "ROLL" ? Infinity : 0, ease: "easeInOut" }
+              }
               title={isMyTurn && phase === "ROLL" ? strings.clickToRoll : undefined}
               aria-label="Roll Dice"
             >
               <div className={styles.diceFace}>
-                <DicePips value={currentRoll ?? lastDisplayedRoll} />
+                <DicePips value={rollingDisplayNum ?? currentRoll ?? lastDisplayedRoll} />
               </div>
               {isMyTurn && phase === "ROLL" && <span className={styles.dicePulseRing} />}
             </motion.button>

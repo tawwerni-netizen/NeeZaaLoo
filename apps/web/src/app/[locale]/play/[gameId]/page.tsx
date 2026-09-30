@@ -1180,7 +1180,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
   });
   const capability = useMemo(() => getGameCapability(gameId), [gameId]);
   const [gameConfig, setGameConfig] = useState<GameSpecificConfigValue>(() => ({
-    timeProfile: capability.timeControls?.find((t: any) => t.isDefault)?.id || capability.timeControls?.[0]?.id || "BLITZ_3_2",
+    timeProfile: capability.timeControls?.find((t: any) => t.isDefault)?.id || capability.timeControls?.[0]?.id || "STANDARD",
     variant: capability.variants?.find((v: any) => v.isDefault)?.id || capability.variants?.[0]?.id || "TRADITIONAL",
     playerCount: (capability.playerCountOptions?.find((p: any) => p.isDefault)?.count as 2 | 4 | undefined) || 2,
     matchPoints: capability.matchPoints?.find((m: any) => m.isDefault)?.points || 1,
@@ -1192,6 +1192,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
   const [ludoPlayerCount, setLudoPlayerCount] = useState<2 | 4>(2);
   const [showRules, setShowRules] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!plugin) {
     return (
@@ -1287,7 +1288,7 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
           // Non-fatal, attempt proceed
         }
       }
-      const finalProfile = chosenProfile || gameConfig.timeProfile || "STANDARD";
+      const finalProfile = chosenProfile || (capability.setupType === "time_control" ? gameConfig.timeProfile : "STANDARD") || "STANDARD";
       const finalMode =
         gameId === "ludo"
           ? (gameConfig.playerCount === 4 ? "standard-4p" : "standard")
@@ -1310,7 +1311,9 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
         ...(gameId === "ludo" ? { mode: gameConfig.playerCount === 4 ? "standard-4p" : "standard" } : {}),
       });
       router.push(`/${locale}/game/${r.duelId}`);
-    } catch {
+    } catch (err: any) {
+      console.error("startVsComputer error:", err);
+      setErrorMsg(t("common.error_occurred") || "Could not start match. Please try again.");
       setCreating(false);
     }
   }
@@ -1319,6 +1322,32 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
     <>
       <Header />
       <main className="nz-container">
+        {errorMsg && (
+          <div style={{
+            margin: "16px 0",
+            padding: "12px 18px",
+            background: "rgba(239, 68, 68, 0.15)",
+            border: "1px solid rgba(239, 68, 68, 0.4)",
+            borderRadius: "12px",
+            color: "#fca5a5",
+            fontSize: "14px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px"
+          }}>
+            <span>⚠️ {errorMsg}</span>
+            <button
+              type="button"
+              onClick={() => setErrorMsg(null)}
+              style={{ background: "none", border: "none", color: "#fca5a5", cursor: "pointer", fontSize: "16px", padding: "4px" }}
+              aria-label="Dismiss error"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         {/* Navigation & Back Header */}
         <div className={styles.navBar}>
           <div className={styles.leftGroup}>
