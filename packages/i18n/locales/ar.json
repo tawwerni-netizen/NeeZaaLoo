@@ -647,6 +647,7 @@
     "opponent_reconnected": "أعاد الخصم الاتصال",
     "you_disconnected": "انقطع الاتصال — جارٍ إعادة الاتصال",
     "vs_computer": "ضد الحاسوب",
+    "vs_computer_name": "كمبيوتر",
     "difficulty": {
       "EASY": "سهل",
       "MEDIUM": "متوسط",

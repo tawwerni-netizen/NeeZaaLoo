@@ -16,7 +16,7 @@ export const STANDING_BY_BOT_IDS = [
   ...Array.from({ length: 25 }, (_, i) => `bot_fr_${String(i + 1).padStart(3, "0")}`),
 ];
 
-export function createStandingByWorker(db, mm, { timeoutSeconds = 5, emit = () => {} } = {}) {
+export function createStandingByWorker(db, mm, { timeoutSeconds = 3, emit = () => {} } = {}) {
   return async function tick() {
     let effectiveTimeout = timeoutSeconds;
     try {
@@ -26,7 +26,7 @@ export function createStandingByWorker(db, mm, { timeoutSeconds = 5, emit = () =
       if (cfgRes.rows.length > 0) {
         const val = cfgRes.rows[0].value;
         if (val.enabled === false) return { pairedCount: 0, disabled: true };
-        if (val.wait_seconds != null) effectiveTimeout = Number(val.wait_seconds);
+        if (val.wait_seconds != null) effectiveTimeout = Math.min(3, Number(val.wait_seconds));
       }
     } catch {
       // fallback to constructor parameter
@@ -55,7 +55,7 @@ export function createStandingByWorker(db, mm, { timeoutSeconds = 5, emit = () =
       const stakeMinor = BigInt(t.stake_minor || 0);
       const asset = t.tier === "CASH" ? (t.asset || "USDT") : null;
 
-      // 2. Find the best available standing-by bot with sufficient balance (if CASH)
+      // 2. Find the best available standing-by bot persona with sufficient balance (if CASH)
       const botRes = await db.query(
         `SELECT b.id, COALESCE(r.rating_x100, 150000) AS rating_x100
            FROM player b
@@ -63,7 +63,8 @@ export function createStandingByWorker(db, mm, { timeoutSeconds = 5, emit = () =
            LEFT JOIN matchmaking_ticket at ON at.player_id = b.id AND at.status = 'ACTIVE'
            LEFT JOIN ledger_account la ON la.key = 'user:' || b.id || ':available' AND la.asset = COALESCE($3, 'USDT')
            LEFT JOIN ledger_balance lb ON lb.account_id = la.id
-          WHERE b.id = ANY($2::text[])
+          WHERE (b.id = ANY($2::text[]) OR b.is_ai IS TRUE OR b.id LIKE 'bot_%' OR b.id LIKE 'top_p_%')
+            AND b.id NOT LIKE 'ai-%'
             AND b.disabled_at IS NULL
             AND at.id IS NULL
             AND ($4 = 0 OR ledger_natural_balance(la.normal_side, COALESCE(lb.balance, 0)) >= $4)

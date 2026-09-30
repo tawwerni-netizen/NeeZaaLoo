@@ -659,6 +659,7 @@
     "opponent_reconnected": "Opponent reconnected",
     "you_disconnected": "Connection lost — reconnecting",
     "vs_computer": "Vs Computer",
+    "vs_computer_name": "Computer",
     "difficulty": {
       "EASY": "Easy",
       "MEDIUM": "Medium",

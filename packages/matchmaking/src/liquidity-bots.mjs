@@ -6,7 +6,7 @@
  * instantaneous matching (Zero-Friction experience).
  */
 export function createLiquidityBotEngine(db, mm, options = {}) {
-  const waitThresholdMs = options.waitThresholdMs || 15000;
+  const waitThresholdMs = options.waitThresholdMs || 4000;
   
   async function tick() {
     // 1. Find tickets that are ACTIVE, belong to human players, and are waiting > waitThresholdMs
@@ -15,26 +15,34 @@ export function createLiquidityBotEngine(db, mm, options = {}) {
        FROM matchmaking_ticket t
        JOIN player p ON p.id = t.player_id
        WHERE t.status = 'ACTIVE'
-         AND p.is_ai = FALSE
+         AND (p.is_ai = FALSE OR p.is_ai IS NULL)
          AND t.enqueued_at < NOW() - INTERVAL '${waitThresholdMs / 1000} seconds'`
     );
 
     let injected = 0;
     for (const ticket of waitingRes.rows) {
-      // 2. Find an available AI bot with a rating as close as possible to the waiting player
+      const stakeMinor = BigInt(ticket.stake_minor || 0);
+      const asset = ticket.tier === "CASH" ? (ticket.asset || "USDT") : null;
+
+      // 2. Find an available AI persona bot with sufficient balance (if CASH)
       const botRes = await db.query(
         `SELECT p.id, COALESCE(r.rating_x100, 150000) as rating_x100
          FROM player p
          LEFT JOIN rating r ON r.player_id = p.id AND r.game_id = $1
-         WHERE p.is_ai = TRUE
+         LEFT JOIN ledger_account la ON la.key = 'user:' || p.id || ':available' AND la.asset = COALESCE($3, 'USDT')
+         LEFT JOIN ledger_balance lb ON lb.account_id = la.id
+         WHERE (p.is_ai = TRUE OR p.id LIKE 'bot_%' OR p.id LIKE 'top_p_%')
+           AND p.id NOT LIKE 'ai-%'
+           AND p.disabled_at IS NULL
            -- Ensure this bot isn't already sitting in the active queue
            AND NOT EXISTS (
              SELECT 1 FROM matchmaking_ticket mt 
              WHERE mt.player_id = p.id AND mt.status = 'ACTIVE'
            )
+           AND ($4 = 0 OR ledger_natural_balance(la.normal_side, COALESCE(lb.balance, 0)) >= $4)
          ORDER BY ABS(COALESCE(r.rating_x100, 150000) - $2) ASC
          LIMIT 1`,
-        [ticket.game_id, ticket.rating_x100]
+        [ticket.game_id, ticket.rating_x100, asset, stakeMinor.toString()]
       );
       
       if (botRes.rows.length > 0) {
@@ -47,9 +55,9 @@ export function createLiquidityBotEngine(db, mm, options = {}) {
             gameId: ticket.game_id,
             mode: ticket.mode,
             tier: ticket.tier,
-            stakeMinor: BigInt(ticket.stake_minor),
+            stakeMinor,
             asset: ticket.asset,
-            ratingX100: bot.rating_x100,
+            ratingX100: Number(bot.rating_x100),
             timeControl: ticket.time_control,
             ttlSeconds: 60
           });

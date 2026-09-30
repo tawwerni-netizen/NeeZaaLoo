@@ -22,9 +22,13 @@ type Preview = {
   level: number; exp: number; selectedBadge: string | null; globalSkill: number | null;
 };
 
-const BOT_DIFFICULTY: Record<string, string> = {
-  "ai-easy": "EASY", "ai-medium": "MEDIUM", "ai-hard": "HARD", "ai-expert": "EXPERT",
-};
+function getBotDifficulty(id: string): string | null {
+  if (id.startsWith("ai-easy")) return "EASY";
+  if (id.startsWith("ai-medium")) return "MEDIUM";
+  if (id.startsWith("ai-hard")) return "HARD";
+  if (id.startsWith("ai-expert")) return "EXPERT";
+  return null;
+}
 
 /**
  * Client-side clock interpolation:
@@ -77,20 +81,23 @@ export function PlayerStrip({
   reverse?: boolean;
 }) {
   const { t } = useI18n();
-  const isBot = playerId in BOT_DIFFICULTY;
+  const botDiff = getBotDifficulty(playerId);
+  const isVsComputer = botDiff !== null;
   const [preview, setPreview] = useState<Preview | null>(null);
   const currentRemainingMs = useInterpolatedClock(remainingMs, active);
 
   useEffect(() => {
-    if (isBot) return;
+    if (isVsComputer) return;
     let cancelled = false;
     void get<Preview>(`/v1/players/by-id/${encodeURIComponent(playerId)}/preview`)
       .then((r) => { if (!cancelled) setPreview(r); })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [playerId, isBot]);
+  }, [playerId, isVsComputer]);
 
-  const nickname = isBot ? t(`game.difficulty.${BOT_DIFFICULTY[playerId]}`) : preview?.nickname ?? "…";
+  const nickname = isVsComputer
+    ? `${t("game.vs_computer_name")} (${t(`game.difficulty.${botDiff}`)})`
+    : preview?.nickname ?? "…";
   const avatarUrl = preview?.avatarUrl ?? null;
 
   const isFlagged = flagged || (currentRemainingMs !== null && currentRemainingMs <= 0);
@@ -100,10 +107,10 @@ export function PlayerStrip({
       <Avatar nickname={nickname} avatarUrl={avatarUrl} size={40} rating={preview?.globalSkill ?? null} />
       <div className={styles.info}>
         <div className={styles.nameRow}>
-          <span className={styles.nickname}>{isBot ? `♞ ${nickname}` : nickname}</span>
+          <span className={styles.nickname}>{nickname}</span>
           {preview?.selectedBadge && <span aria-hidden="true">{badgeIcon(preview.selectedBadge)}</span>}
         </div>
-        {!isBot && preview && (
+        {!isVsComputer && preview && (
           <div className={styles.meta}>
             {preview.globalSkill != null && <span className="nz-num">{t("profile.global_skill_label")} {preview.globalSkill}</span>}
           </div>

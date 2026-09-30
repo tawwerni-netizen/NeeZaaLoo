@@ -30,6 +30,22 @@ type Props = {
 };
 
 const CEREMONY_REASON_BADGES: Record<string, Record<string, string>> = {
+  VOIDED: {
+    ar: "⚠️ تم إلغاء النزال واسترداد الرصيد بالكامل",
+    en: "⚠️ Match voided — full stake refunded",
+    es: "⚠️ Partida anulada — apuesta reembolsada",
+    fr: "⚠️ Duel annulé — mise remboursée",
+    hi: "⚠️ मैच रद्द — पूरा दांव वापस",
+    zh: "⚠️ 对局已撤销 — 资金已全额退还",
+  },
+  CANCELLED: {
+    ar: "⚠️ تم إلغاء النزال واسترداد الرصيد بالكامل",
+    en: "⚠️ Match cancelled — full stake refunded",
+    es: "⚠️ Partida cancelada — apuesta reembolsada",
+    fr: "⚠️ Duel annulé — mise remboursée",
+    hi: "⚠️ मैच रद्द — पूरा दांव वापस",
+    zh: "⚠️ 对局已取消 — 资金已全额退还",
+  },
   BACKGAMMON: {
     ar: "👑 انتصار باكغامون إمبراطوري ثلاثي (3x)!",
     en: "👑 Imperial Backgammon Win (3x)!",
@@ -120,7 +136,10 @@ export function ResultCeremony({
   const reduceMotion = useReducedMotion();
   const [gemCount, setGemCount] = useState(0);
 
-  const titleKey = outcome === "win" ? "game.result_win" : outcome === "draw" ? "game.result_draw" : "game.result_loss";
+  const isVoided = reason === "VOIDED" || reason === "CANCELLED";
+  const titleKey = isVoided
+    ? (locale === "ar" ? "تم إلغاء النزال" : "Match Voided")
+    : outcome === "win" ? "game.result_win" : outcome === "draw" ? "game.result_draw" : "game.result_loss";
   const isGuest = player?.handle?.startsWith("Guest_");
 
   useEffect(() => {
@@ -222,7 +241,7 @@ export function ResultCeremony({
           textShadow: outcome === "win" ? `0 0 24px ${gameTokens.palette.glow}` : "none",
         }}
       >
-        {isSpectator ? `${result} · ${reason ? t(`game.reason.${reason}`) : ""}` : t(titleKey)}
+        {isSpectator ? `${result} · ${reason ? (CEREMONY_REASON_BADGES[reason]?.[locale] ?? t(`game.reason.${reason}`)) : ""}` : isVoided ? titleKey : t(titleKey)}
       </motion.h1>
       {!isSpectator && reason && (
         <div className={styles.reasonBadgeWrap}>

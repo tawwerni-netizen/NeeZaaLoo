@@ -157,13 +157,12 @@ export function DuelShell({ duelId }: { duelId: string }) {
     const msg = latest as Record<string, unknown>;
     if (msg.t === "STATE") {
       if (Array.isArray(msg.players)) setPlayers(msg.players as string[]);
-      if (typeof msg.gameId === "string") setGameId(msg.gameId);
-      if (msg.status === "COMPLETED" || msg.status === "SETTLED") {
+      if (msg.status === "COMPLETED" || msg.status === "SETTLED" || msg.status === "VOIDED" || msg.status === "CANCELLED") {
         const outcome = msg.outcome as { result?: unknown; reason?: unknown } | undefined;
         setCompletedInfo({
           completed: true,
-          result: outcome?.result ? String(outcome.result) : null,
-          reason: outcome?.reason ? String(outcome.reason) : null,
+          result: outcome?.result ? String(outcome.result) : (msg.status === "VOIDED" || msg.status === "CANCELLED" ? "1/2-1/2" : null),
+          reason: outcome?.reason ? String(outcome.reason) : (msg.status === "VOIDED" || msg.status === "CANCELLED" ? String(msg.status) : null),
         });
       }
     }
@@ -224,11 +223,11 @@ export function DuelShell({ duelId }: { duelId: string }) {
             if (d.seat_3) p.push(d.seat_3!);
             setPlayers((prev) => prev ?? p);
           }
-          if (d.status === "COMPLETED" || d.status === "SETTLED") {
+          if (d.status === "COMPLETED" || d.status === "SETTLED" || d.status === "VOIDED" || d.status === "CANCELLED") {
             setCompletedInfo({
               completed: true,
-              result: d.result ?? null,
-              reason: d.termination_reason ?? null,
+              result: d.result ?? "1/2-1/2",
+              reason: d.termination_reason ?? d.status,
             });
           }
         }
