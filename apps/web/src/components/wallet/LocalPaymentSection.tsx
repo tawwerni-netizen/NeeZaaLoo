@@ -150,6 +150,12 @@ export function LocalDepositSection({ isAr, playerId, onCredited }: { isAr: bool
         BELOW_MINIMUM: { en: "That amount is below the minimum for this method.", ar: "هذا المبلغ أقل من الحد الأدنى المسموح." },
         ABOVE_MAXIMUM: { en: "That amount is above the maximum for this method.", ar: "هذا المبلغ أكبر من الحد الأقصى المسموح." },
         INVALID_RECEIVING_NUMBER: { en: "That number is no longer active -- pick another.", ar: "هذا الرقم لم يعد متاحاً، اختر رقماً آخر." },
+        CONTROL_DISABLED: { en: "Deposits are temporarily paused for maintenance.", ar: "عمليات الإيداع معطلة مؤقتاً للصيانة، يرجى المحاولة لاحقاً." },
+        SERVICE_UNAVAILABLE: { en: "Payment service is currently unavailable.", ar: "خدمة الدفع غير متوفرة حالياً، يرجى المحاولة لاحقاً." },
+        RAIL_DISABLED: { en: "This payment rail is currently disabled.", ar: "طريقة الدفع هذه معطلة مؤقتاً." },
+        MISSING_SENDER_INFO: { en: "Please enter your name and phone number.", ar: "من فضلك أدخل اسمك ورقم الهاتف الذي ستحول منه." },
+        INVALID_AMOUNT: { en: "Please enter a valid amount.", ar: "أدخل مبلغاً صحيحاً بالجنيه." },
+        UNAUTHENTICATED: { en: "Please log in to continue.", ar: "يرجى تسجيل الدخول للمتابعة." },
       };
       const msg = code ? messages[code] : null;
       setError(msg ? (isAr ? msg.ar : msg.en) : (isAr ? "تعذر إنشاء طلب الإيداع" : "Could not create the deposit request"));
