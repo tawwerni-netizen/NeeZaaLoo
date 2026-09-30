@@ -426,3 +426,38 @@
 }
 
 @keyframes vsPulse { 0% { text-shadow: 0 0 10px rgba(255, 184, 0, 0.6); transform: scale(1); } 100% { text-shadow: 0 0 25px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 90, 43, 0.8); transform: scale(1.1); } }
+
+/* Game-specific board ambiance and drop shadows */
+.duelArena[data-game="chess"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(30, 58, 138, 0.35));
+}
+.duelArena[data-game="dominoes"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(120, 53, 15, 0.35));
+}
+.duelArena[data-game="ludo"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(16, 185, 129, 0.3));
+}
+.duelArena[data-game="backgammon"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(212, 175, 55, 0.3));
+}
+.duelArena[data-game="speed-math"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(6, 182, 212, 0.35));
+}
+.duelArena[data-game="xo"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(56, 189, 248, 0.35));
+}
+.duelArena[data-game="connect-four"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(2, 132, 199, 0.35));
+}
+.duelArena[data-game="checkers"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(153, 27, 27, 0.35));
+}
+.duelArena[data-game="reversi"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(16, 185, 129, 0.35));
+}
+.duelArena[data-game="gomoku"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(194, 155, 56, 0.35));
+}
+.duelArena[data-game="seega"] .boardContainer {
+  filter: drop-shadow(0 14px 36px rgba(217, 119, 6, 0.35));
+}

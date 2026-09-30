@@ -7,7 +7,7 @@
   justify-content: center;
   padding: var(--nz-space-4) 0;
   border-radius: var(--nz-radius-2xl);
-  transition: background var(--nz-dur-slow) var(--nz-ease-out);
+  transition: background var(--nz-dur-slow) var(--nz-ease-out), box-shadow var(--nz-dur-slow) ease;
   perspective: 1200px;
   perspective-origin: 50% 40%;
 }
@@ -31,7 +31,110 @@
   transform-style: preserve-3d;
 }
 
-/* Environment themes */
+/* ==========================================================================
+   Game-Specific Bespoke Atmospheres (11 Games)
+   ========================================================================== */
+
+/* 1. Chess: Obsidian Grandmaster */
+.environment[data-game-theme="chess"] {
+  background: radial-gradient(circle at 50% 30%, rgba(30, 58, 138, 0.45) 0%, rgba(8, 12, 24, 0.7) 50%, rgba(3, 7, 18, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="chess"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.22), rgba(30, 58, 138, 0.15) 50%, transparent 75%);
+}
+
+/* 2. Dominoes: Café Nostalgia & Warm Walnut */
+.environment[data-game-theme="dominoes"] {
+  background: radial-gradient(circle at 50% 30%, rgba(120, 53, 15, 0.4) 0%, rgba(30, 16, 8, 0.7) 50%, rgba(18, 10, 6, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="dominoes"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(217, 119, 6, 0.22), rgba(120, 53, 15, 0.15) 50%, transparent 75%);
+}
+
+/* 3. Ludo: Arcade Royale Quad-Color Vibrancy */
+.environment[data-game-theme="ludo"] {
+  background: radial-gradient(circle at 50% 30%, rgba(16, 185, 129, 0.3) 0%, rgba(9, 24, 32, 0.7) 50%, rgba(5, 12, 18, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="ludo"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.2), rgba(239, 68, 68, 0.12) 40%, rgba(59, 130, 246, 0.1) 60%, transparent 75%);
+}
+
+/* 4. Backgammon: Levant Tawla Luxury & Cedar */
+.environment[data-game-theme="backgammon"] {
+  background: radial-gradient(circle at 50% 30%, rgba(92, 58, 33, 0.4) 0%, rgba(32, 18, 10, 0.7) 50%, rgba(20, 12, 7, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="backgammon"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.25), rgba(92, 58, 33, 0.15) 50%, transparent 75%);
+}
+
+/* 5. Speed Math: Neural Cyberpunk & Electric Synapse */
+.environment[data-game-theme="speed-math"] {
+  background: radial-gradient(circle at 50% 30%, rgba(6, 182, 212, 0.35) 0%, rgba(9, 19, 38, 0.7) 50%, rgba(5, 8, 20, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="speed-math"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(6, 182, 212, 0.28), rgba(139, 92, 246, 0.18) 50%, transparent 75%);
+}
+
+/* 6. XO: Neon Blade & Laser Razor Grid */
+.environment[data-game-theme="xo"] {
+  background: radial-gradient(circle at 50% 30%, rgba(56, 189, 248, 0.3) 0%, rgba(12, 16, 26, 0.7) 50%, rgba(7, 8, 13, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="xo"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.22), rgba(244, 63, 94, 0.15) 50%, transparent 75%);
+}
+
+/* 7. Connect Four: Arcade Gravity Matrix */
+.environment[data-game-theme="connect-four"] {
+  background: radial-gradient(circle at 50% 30%, rgba(2, 132, 199, 0.35) 0%, rgba(12, 26, 51, 0.7) 50%, rgba(7, 14, 28, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="connect-four"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(2, 132, 199, 0.25), rgba(225, 29, 72, 0.15) 50%, transparent 75%);
+}
+
+/* 8. Checkers: Tactical Damas & Dark Slate */
+.environment[data-game-theme="checkers"] {
+  background: radial-gradient(circle at 50% 30%, rgba(153, 27, 27, 0.35) 0%, rgba(24, 25, 34, 0.7) 50%, rgba(12, 13, 18, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="checkers"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(239, 68, 68, 0.24), rgba(153, 27, 27, 0.15) 50%, transparent 75%);
+}
+
+/* 9. Reversi: The Emerald Flip & Championship Felt */
+.environment[data-game-theme="reversi"] {
+  background: radial-gradient(circle at 50% 30%, rgba(6, 78, 59, 0.45) 0%, rgba(12, 40, 30, 0.7) 50%, rgba(5, 20, 15, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="reversi"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.24), rgba(6, 78, 59, 0.15) 50%, transparent 75%);
+}
+
+/* 10. Gomoku: Zen Kaya Wood & Ink Slate */
+.environment[data-game-theme="gomoku"] {
+  background: radial-gradient(circle at 50% 30%, rgba(120, 53, 15, 0.35) 0%, rgba(26, 20, 15, 0.7) 50%, rgba(16, 13, 10, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="gomoku"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(194, 155, 56, 0.25), rgba(120, 53, 15, 0.15) 50%, transparent 75%);
+}
+
+/* 11. Seega: Egyptian Sandstone & Ancient Nile Bronze */
+.environment[data-game-theme="seega"] {
+  background: radial-gradient(circle at 50% 30%, rgba(146, 64, 14, 0.38) 0%, rgba(32, 21, 12, 0.7) 50%, rgba(19, 13, 7, 0.95) 85%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+.environment[data-game-theme="seega"] .ambientLighting {
+  background: radial-gradient(ellipse at 50% 0%, rgba(217, 119, 6, 0.25), rgba(146, 64, 14, 0.15) 50%, transparent 75%);
+}
+
+/* Default / Manual Overrides */
 .classic-felt {
   background: radial-gradient(circle at 50% 30%, rgba(20, 97, 78, 0.35) 0%, rgba(14, 74, 60, 0.15) 50%, transparent 80%);
 }

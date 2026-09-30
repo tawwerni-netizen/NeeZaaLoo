@@ -19,9 +19,11 @@
  * change on the same 1-second cadence, just without the scale/opacity
  * animation -- the information (the count) is never motion-only.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { getGameThemeTokens } from "@/lib/games/theme-tokens";
+import { playCardHoverSound, playLudoMatchFoundSound } from "@/lib/game-audio";
 import { get, post, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthPopup } from "@/lib/auth-popup-context";
@@ -40,7 +42,17 @@ type OpponentInfo = { id: string; handle: string; avatarUrl?: string | null; glo
 
 const GAME_NAME_KEY: Record<string, string> = { chess: "chess", "speed-math": "speed_math" };
 
-export function MatchmakingFlow({ gameId, stake, mode }: { gameId: string; stake?: StakeChoice; mode?: string }) {
+export function MatchmakingFlow({
+  gameId,
+  stake,
+  mode,
+  timeProfile,
+}: {
+  gameId: string;
+  stake?: StakeChoice;
+  mode?: string;
+  timeProfile?: string;
+}) {
   const { player } = useAuth();
   const { openPopup } = useAuthPopup();
   const { t, locale } = useI18n();
@@ -85,6 +97,7 @@ export function MatchmakingFlow({ gameId, stake, mode }: { gameId: string; stake
         const res = await post<{ ticketId?: string }>("/v1/matchmaking/tickets", {
           gameId,
           ...(mode ? { mode } : {}),
+          ...(timeProfile ? { timeProfile } : {}),
           ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor, asset: stake.asset } : {}),
         });
         if (res?.ticketId) {
@@ -154,12 +167,21 @@ export function MatchmakingFlow({ gameId, stake, mode }: { gameId: string; stake
     return () => clearTimeout(timer);
   }, [phase, player?.id]);
 
+  const gameTokens = useMemo(() => getGameThemeTokens(gameId), [gameId]);
+
   // "Matched" reveal, then countdown.
   useEffect(() => {
     if (phase !== "matched") return;
-    const timer = setTimeout(() => setPhase("countdown"), 1400);
+    try {
+      if (gameId === "ludo") {
+        playLudoMatchFoundSound();
+      } else {
+        playCardHoverSound();
+      }
+    } catch {}
+    const timer = setTimeout(() => setPhase("countdown"), 1800);
     return () => clearTimeout(timer);
-  }, [phase]);
+  }, [phase, gameId]);
 
   async function cancel() {
     cancelledRef.current = true;
@@ -171,7 +193,13 @@ export function MatchmakingFlow({ gameId, stake, mode }: { gameId: string; stake
   const findingMessage = t(`matchmaking.finding_${Math.min(Math.floor(elapsedSec / 4) + 1, 3)}`);
 
   return (
-    <div className={styles.stage}>
+    <div
+      className={styles.stage}
+      style={{
+        "--game-accent": gameTokens.palette.accent,
+        "--game-glow": gameTokens.palette.glow,
+      } as React.CSSProperties}
+    >
       <AnimatePresence mode="wait">
         {phase === "queuing" && (
           <motion.div key="queuing" {...fade(reduceMotion)} className={styles.center}>
@@ -181,6 +209,18 @@ export function MatchmakingFlow({ gameId, stake, mode }: { gameId: string; stake
 
         {phase === "waiting" && (
           <motion.div key="waiting" {...fade(reduceMotion)} className={styles.center}>
+            <div
+              className={styles.gamePersonaBadge}
+              style={{
+                borderColor: gameTokens.palette.border,
+                background: gameTokens.palette.cardGradient,
+                boxShadow: `0 0 20px ${gameTokens.palette.glow}`,
+              }}
+            >
+              <span className={styles.gamePersonaDot} style={{ background: gameTokens.palette.accent }} />
+              <span>{gameTokens.persona[locale] || gameTokens.persona.en}</span>
+            </div>
+
             <div className={styles.radarContainer}>
               <div className={styles.radarPulse}></div>
               <div className={styles.radarPulseDelay}></div>
@@ -203,46 +243,61 @@ export function MatchmakingFlow({ gameId, stake, mode }: { gameId: string; stake
 
         {phase === "matched" && opponent && (
           <motion.div key="matched" {...fade(reduceMotion)} className={styles.vsDramaticWrap}>
-            <motion.div 
-              className={styles.vsPlayerSide}
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ type: "spring", damping: 12 }}
+            <motion.div
+              className={styles.matchedCountdownVibe}
+              initial={{ opacity: 0, y: -16, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              style={{
+                color: gameTokens.palette.accent,
+                textShadow: `0 0 20px ${gameTokens.palette.glow}`,
+              }}
             >
-              <Avatar nickname={player?.handle || "You"} avatarUrl={(player as any)?.avatarUrl ?? null} size={100} />
-              <span className={styles.vsHandleDramatic}>{player?.handle}</span>
-              {selfProfile?.globalSkill != null && (
-                <div className={styles.vsGssBadge}>
-                  <span className={styles.vsGssLabel}>GSS</span>
-                  {selfProfile.globalSkill}
-                </div>
-              )}
-            </motion.div>
-            
-            <motion.div 
-              className={styles.vsLightningCenter}
-              initial={{ scale: 0, rotate: -15 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            >
-              <span className={styles.vsMarkDramatic}>VS</span>
+              {gameTokens.countdownVibe[locale] || gameTokens.countdownVibe.en}
             </motion.div>
 
-            <motion.div 
-              className={styles.vsPlayerSide}
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ type: "spring", damping: 12 }}
-            >
-              <Avatar nickname={opponent.handle} avatarUrl={opponent.avatarUrl ?? null} size={100} />
-              <span className={styles.vsHandleDramatic}>{opponent.handle}</span>
-              {opponent.globalSkill != null && (
-                <div className={styles.vsGssBadge}>
-                  <span className={styles.vsGssLabel}>GSS</span>
-                  {opponent.globalSkill}
-                </div>
-              )}
-            </motion.div>
+            <div className={styles.vsPlayersRow}>
+              <motion.div 
+                className={styles.vsPlayerSide}
+                initial={{ x: -100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ type: "spring", damping: 12 }}
+              >
+                <Avatar nickname={player?.handle || "You"} avatarUrl={(player as any)?.avatarUrl ?? null} size={100} />
+                <span className={styles.vsHandleDramatic}>{player?.handle}</span>
+                {selfProfile?.globalSkill != null && (
+                  <div className={styles.vsGssBadge}>
+                    <span className={styles.vsGssLabel}>GSS</span>
+                    {selfProfile.globalSkill}
+                  </div>
+                )}
+              </motion.div>
+              
+              <motion.div 
+                className={styles.vsLightningCenter}
+                initial={{ scale: 0, rotate: -15 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+              >
+                <span className={styles.vsMarkDramatic} style={{ filter: `drop-shadow(0 0 16px ${gameTokens.palette.glow})` }}>VS</span>
+              </motion.div>
+
+              <motion.div 
+                className={styles.vsPlayerSide}
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ type: "spring", damping: 12 }}
+              >
+                <Avatar nickname={opponent.handle} avatarUrl={opponent.avatarUrl ?? null} size={100} />
+                <span className={styles.vsHandleDramatic}>{opponent.handle}</span>
+                {opponent.globalSkill != null && (
+                  <div className={styles.vsGssBadge}>
+                    <span className={styles.vsGssLabel}>GSS</span>
+                    {opponent.globalSkill}
+                  </div>
+                )}
+              </motion.div>
+            </div>
           </motion.div>
         )}
 

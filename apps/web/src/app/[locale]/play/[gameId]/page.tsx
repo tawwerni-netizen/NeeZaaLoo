@@ -13,7 +13,7 @@
  * either; its card in ModeSelect links straight into the standalone
  * /tournaments surface.
  */
-import { use, useState, useEffect, Suspense } from "react";
+import { use, useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -29,6 +29,9 @@ import { post, setTokens } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthPopup } from "@/lib/auth-popup-context";
 import { ChessTimePerMoveSelect } from "@/components/play/ChessTimePerMoveSelect";
+import { GameSpecificConfig, type GameSpecificConfigValue } from "@/components/play/GameSpecificConfig";
+import { getGameCapability } from "@/lib/games/capabilities";
+import { getGameThemeTokens } from "@/lib/games/theme-tokens";
 import { useI18n } from "@/lib/i18n/context";
 import styles from "./playGame.module.css";
 
@@ -40,6 +43,7 @@ const IMG_PLACEHOLDER =
 
 type Step =
   | { name: "mode" }
+  | { name: "game_config"; targetMode: "VS_COMPUTER" | "RANDOM_OPPONENT" | "FRIEND" }
   | { name: "difficulty" }
   | { name: "time_control"; difficulty: Difficulty | null }
   | { name: "friend_stake" }
@@ -1174,6 +1178,15 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
     }
     return { name: "mode" };
   });
+  const capability = useMemo(() => getGameCapability(gameId), [gameId]);
+  const [gameConfig, setGameConfig] = useState<GameSpecificConfigValue>(() => ({
+    timeProfile: capability.timeControls?.find((t: any) => t.isDefault)?.id || capability.timeControls?.[0]?.id || "BLITZ_3_2",
+    variant: capability.variants?.find((v: any) => v.isDefault)?.id || capability.variants?.[0]?.id || "TRADITIONAL",
+    playerCount: (capability.playerCountOptions?.find((p: any) => p.isDefault)?.count as 2 | 4 | undefined) || 2,
+    matchPoints: capability.matchPoints?.find((m: any) => m.isDefault)?.points || 1,
+    sprintOption: capability.sprintOptions?.find((s: any) => s.isDefault)?.id || "BLITZ_10",
+    seriesOption: capability.seriesOptions?.find((s: any) => s.isDefault)?.id || "BEST_OF_3",
+  }));
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [dominoesVariant, setDominoesVariant] = useState<"TRADITIONAL" | "AMERICAN">("TRADITIONAL");
   const [ludoPlayerCount, setLudoPlayerCount] = useState<2 | 4>(2);
@@ -1191,9 +1204,13 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
   }
 
   const gameName = t(`common.game_names.${plugin.nameKey}`) || plugin.id;
+  const gameTokens = useMemo(() => getGameThemeTokens(gameId), [gameId]);
 
   function handleBack() {
     switch (step.name) {
+      case "game_config":
+        setStep({ name: "mode" });
+        break;
       case "difficulty":
         setStep({ name: "mode" });
         break;
@@ -1205,8 +1222,18 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
         }
         break;
       case "friend_stake":
+        if (capability.setupType !== "canonical_direct") {
+          setStep({ name: "game_config", targetMode: "FRIEND" });
+        } else {
+          setStep({ name: "mode" });
+        }
+        break;
       case "random_stake":
-        setStep({ name: "mode" });
+        if (capability.setupType !== "canonical_direct") {
+          setStep({ name: "game_config", targetMode: "RANDOM_OPPONENT" });
+        } else {
+          setStep({ name: "mode" });
+        }
         break;
       case "friend":
         setStep({ name: "friend_stake" });
@@ -1223,26 +1250,33 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
 
   function handleMode(mode: PlayMode) {
     if (mode === "VS_COMPUTER") {
-      if (gameId === "ludo") {
-        // Ludo has authentic relaxed turn timers and no artificial difficulty level
-        void startVsComputer(null, "STANDARD");
+      if (capability.setupType !== "canonical_direct") {
+        setStep({ name: "game_config", targetMode: "VS_COMPUTER" });
       } else if (plugin!.difficulties.length > 0) {
         setStep({ name: "difficulty" });
       } else {
-        setStep({ name: "time_control", difficulty: null });
+        void startVsComputer("MEDIUM", "STANDARD");
       }
     } else if (mode === "FRIEND") {
       if (!player) {
         openPopup();
         return;
       }
-      setStep({ name: "friend_stake" });
+      if (capability.setupType !== "canonical_direct") {
+        setStep({ name: "game_config", targetMode: "FRIEND" });
+      } else {
+        setStep({ name: "friend_stake" });
+      }
     } else {
-      setStep({ name: "random_stake" });
+      if (capability.setupType !== "canonical_direct") {
+        setStep({ name: "game_config", targetMode: "RANDOM_OPPONENT" });
+      } else {
+        setStep({ name: "random_stake" });
+      }
     }
   }
 
-  async function startVsComputer(chosenDifficulty: Difficulty | null, chosenProfile: string = "STANDARD") {
+  async function startVsComputer(chosenDifficulty: Difficulty | null = null, chosenProfile?: string) {
     setCreating(true);
     try {
       if (!player) {
@@ -1253,12 +1287,27 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
           // Non-fatal, attempt proceed
         }
       }
+      const finalProfile = chosenProfile || gameConfig.timeProfile || "STANDARD";
+      const finalMode =
+        gameId === "ludo"
+          ? (gameConfig.playerCount === 4 ? "standard-4p" : "standard")
+          : gameId === "dominoes"
+          ? (gameConfig.variant || dominoesVariant)
+          : gameId === "backgammon"
+          ? String(gameConfig.matchPoints || 1)
+          : gameId === "speed-math"
+          ? (gameConfig.sprintOption || "standard")
+          : gameId === "xo" || gameId === "connect-four"
+          ? (gameConfig.seriesOption || "standard")
+          : "standard";
+
       const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", {
         gameId,
         difficulty: chosenDifficulty ?? "MEDIUM",
-        timeProfile: chosenProfile,
-        ...(gameId === "dominoes" ? { variant: dominoesVariant } : {}),
-        ...(gameId === "ludo" ? { mode: ludoPlayerCount === 4 ? "standard-4p" : "standard" } : {}),
+        timeProfile: finalProfile,
+        mode: finalMode,
+        ...(gameId === "dominoes" ? { variant: gameConfig.variant || dominoesVariant } : {}),
+        ...(gameId === "ludo" ? { mode: gameConfig.playerCount === 4 ? "standard-4p" : "standard" } : {}),
       });
       router.push(`/${locale}/game/${r.duelId}`);
     } catch {
@@ -1299,7 +1348,13 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               </span>
             </button>
 
-            <div className={styles.gameBadge}>
+            <div
+              className={styles.gameBadge}
+              style={{
+                borderColor: gameTokens.palette.border,
+                background: gameTokens.palette.surface,
+              }}
+            >
               <img
                 src={`/images/games/${plugin.id}-badge.jpg`}
                 alt={gameName}
@@ -1333,14 +1388,16 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
 
             <span
               className={`${styles.stepItem} ${
-                step.name === "difficulty" || step.name === "friend_stake" || step.name === "random_stake"
+                step.name === "game_config" || step.name === "difficulty" || step.name === "friend_stake" || step.name === "random_stake"
                   ? styles.stepItemActive
                   : step.name === "time_control" || step.name === "friend" || step.name === "matchmaking"
                   ? styles.stepItemCompleted
                   : ""
               }`}
             >
-              2. {step.name === "difficulty" || step.name === "time_control"
+              2. {step.name === "game_config"
+                  ? (isRtl ? "إعدادات المواجهة" : "Match Setup")
+                  : step.name === "difficulty" || step.name === "time_control"
                   ? t("play.nav.step_difficulty")
                   : t("play.nav.step_stake")}
             </span>
@@ -1361,79 +1418,15 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
           </div>
         </div>
 
-        {/* Dominoes Variant Selector Banner */}
-        {gameId === "dominoes" && (
-          <div className={styles.variantBanner}>
-            <div className={styles.variantInfo}>
-              <span className={styles.variantIcon}>🀄</span>
-              <div>
-                <div className={styles.variantHeading}>
-                  {t("play.dominoes.variant_heading")}
-                </div>
-                <div className={styles.variantDesc}>
-                  {dominoesVariant === "TRADITIONAL"
-                    ? t("play.dominoes.desc_traditional")
-                    : t("play.dominoes.desc_american")}
-                </div>
-              </div>
-            </div>
-            <div className={styles.variantTabs}>
-              <button
-                type="button"
-                className={dominoesVariant === "TRADITIONAL" ? styles.variantTabActive : styles.variantTab}
-                onClick={() => setDominoesVariant("TRADITIONAL")}
-              >
-                {t("play.dominoes.traditional")}
-              </button>
-              <button
-                type="button"
-                className={dominoesVariant === "AMERICAN" ? styles.variantTabActive : styles.variantTab}
-                onClick={() => setDominoesVariant("AMERICAN")}
-              >
-                {t("play.dominoes.american")}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Ludo Player Count Selector Banner */}
-        {gameId === "ludo" && (
-          <div className={styles.variantBanner}>
-            <div className={styles.variantInfo}>
-              <span className={styles.variantIcon}>🎲</span>
-              <div>
-                <div className={styles.variantHeading}>
-                  {t("play.ludo.variant_heading") || "Players"}
-                </div>
-                <div className={styles.variantDesc}>
-                  {ludoPlayerCount === 2
-                    ? (t("play.ludo.desc_2p") || "Classic 1vs1 Duel")
-                    : (t("play.ludo.desc_4p") || "4-Player Free-For-All")}
-                </div>
-              </div>
-            </div>
-            <div className={styles.variantTabs}>
-              <button
-                type="button"
-                className={ludoPlayerCount === 2 ? styles.variantTabActive : styles.variantTab}
-                onClick={() => setLudoPlayerCount(2)}
-              >
-                {locale === "ar" ? "1 ضد 1" : locale === "es" ? "1 vs 1" : locale === "fr" ? "1 c. 1" : locale === "hi" ? "1 बनाम 1" : locale === "zh" ? "1对1" : "1vs1"}
-              </button>
-              <button
-                type="button"
-                className={ludoPlayerCount === 4 ? styles.variantTabActive : styles.variantTab}
-                onClick={() => setLudoPlayerCount(4)}
-              >
-                {locale === "ar" ? "4 لاعبين" : locale === "es" ? "4 Jugadores" : locale === "fr" ? "4 Joueurs" : locale === "hi" ? "4 खिलाड़ी" : locale === "zh" ? "4人对战" : "4 Players"}
-              </button>
-            </div>
-          </div>
-        )}
-
         {step.name === "mode" && (
           <>
-            <div className={styles.heroBanner}>
+            <div
+              className={styles.heroBanner}
+              style={{
+                boxShadow: `0 16px 40px rgba(0,0,0,0.5), 0 0 50px ${gameTokens.palette.glow}`,
+                border: `1px solid ${gameTokens.palette.border}`,
+              }}
+            >
               <img 
                 src={`/images/games/${plugin.id}-hero.jpg`} 
                 className={styles.heroBackground} 
@@ -1451,22 +1444,42 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               />
               <div className={styles.heroOverlay} />
               <div className={styles.heroContent}>
-                <h1 className={styles.heroTitle}>{gameName}</h1>
+                <div
+                  className={styles.heroPersonaBadge}
+                  style={{
+                    borderColor: gameTokens.palette.border,
+                    color: gameTokens.palette.accent,
+                    boxShadow: `0 0 16px ${gameTokens.palette.glow}`,
+                  }}
+                >
+                  <span className={styles.heroPersonaDot} style={{ background: gameTokens.palette.accent }} />
+                  <span>{gameTokens.persona[locale] || gameTokens.persona.en}</span>
+                </div>
+                <h1
+                  className={styles.heroTitle}
+                  style={{
+                    background: `linear-gradient(135deg, #ffffff 0%, ${gameTokens.palette.accent} 100%)`,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  {gameName}
+                </h1>
                 <p className={styles.heroSubtitle}>
-                  {spec?.subtitle ? (isRtl ? spec.subtitle.ar : spec.subtitle.en) : t("play.hero_subtitle")}
+                  {spec?.subtitle ? (spec.subtitle[locale] || (isRtl ? spec.subtitle.ar : spec.subtitle.en) || spec.subtitle.en) : t("play.hero_subtitle")}
                 </p>
 
                 {spec && (
                   <>
                     <div className={styles.heroChips}>
                       <span className={styles.heroChip}>
-                        {isRtl ? spec.timingBadge.ar : spec.timingBadge.en}
+                        {spec.timingBadge[locale] || (isRtl ? spec.timingBadge.ar : spec.timingBadge.en) || spec.timingBadge.en}
                       </span>
                       <span className={styles.heroChip}>
-                        {isRtl ? spec.natureBadge.ar : spec.natureBadge.en}
+                        {spec.natureBadge[locale] || (isRtl ? spec.natureBadge.ar : spec.natureBadge.en) || spec.natureBadge.en}
                       </span>
                       <span className={styles.heroChip}>
-                        {isRtl ? spec.dopamineBadge.ar : spec.dopamineBadge.en}
+                        {spec.dopamineBadge[locale] || (isRtl ? spec.dopamineBadge.ar : spec.dopamineBadge.en) || spec.dopamineBadge.en}
                       </span>
                     </div>
 
@@ -1503,11 +1516,11 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
                               <div className={styles.ruleCardHeader}>
                                 <span className={styles.ruleIndex}>{idx + 1}</span>
                                 <span className={styles.ruleTitle}>
-                                  {isRtl ? rule.titleAr : rule.titleEn}
+                                  {rule.title[locale] || (isRtl ? rule.title.ar : rule.title.en) || rule.title.en || rule.titleAr || ""}
                                 </span>
                               </div>
                               <p className={styles.ruleDesc}>
-                                {isRtl ? rule.descAr : rule.descEn}
+                                {rule.desc[locale] || (isRtl ? rule.desc.ar : rule.desc.en) || rule.desc.en || rule.descAr || ""}
                               </p>
                             </div>
                           ))}
@@ -1526,6 +1539,35 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
           </>
         )}
 
+        {step.name === "game_config" && (
+          <GameSpecificConfig
+            capability={capability}
+            gameName={gameName}
+            plugin={plugin}
+            config={gameConfig}
+            onChangeConfig={(newCfg) => {
+              setGameConfig(newCfg);
+              if (newCfg.variant && (newCfg.variant === "TRADITIONAL" || newCfg.variant === "AMERICAN")) {
+                setDominoesVariant(newCfg.variant);
+              }
+              if (newCfg.playerCount) {
+                setLudoPlayerCount(newCfg.playerCount);
+              }
+            }}
+            isVsComputer={step.targetMode === "VS_COMPUTER"}
+            loading={creating}
+            onContinue={() => {
+              if (step.targetMode === "VS_COMPUTER") {
+                void startVsComputer("MEDIUM", gameConfig.timeProfile);
+              } else if (step.targetMode === "FRIEND") {
+                setStep({ name: "friend_stake" });
+              } else {
+                setStep({ name: "random_stake" });
+              }
+            }}
+          />
+        )}
+
         {step.name === "difficulty" && (
           <DifficultySelect
             plugin={plugin}
@@ -1538,16 +1580,13 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
               setDifficulty(d);
               if (gameId === "chess") {
                 if (d === "EASY") {
-                  // Easy mode: Open/unlimited time, instant guest start!
                   void startVsComputer("EASY", "UNLIMITED");
                 } else if (d === "EXPERT") {
-                  // Expert mode: Mandatory official strict rules (1m per move anti-cheat)
                   void startVsComputer("EXPERT", "PER_MOVE_60S");
                 } else {
                   setStep({ name: "time_control", difficulty: d });
                 }
               } else {
-                // All other games use their authentic intrinsic timing model:
                 void startVsComputer(d, "STANDARD");
               }
             }}
@@ -1596,14 +1635,44 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
         )}
 
         {step.name === "friend" && (
-          <FriendChallenge gameId={gameId} stake={step.stake} />
+          <FriendChallenge
+            gameId={gameId}
+            stake={step.stake}
+            mode={
+              gameId === "ludo"
+                ? (gameConfig.playerCount === 4 ? "standard-4p" : "standard")
+                : gameId === "dominoes"
+                ? (gameConfig.variant || dominoesVariant)
+                : gameId === "backgammon"
+                ? String(gameConfig.matchPoints || 1)
+                : gameId === "speed-math"
+                ? (gameConfig.sprintOption || "standard")
+                : gameId === "xo" || gameId === "connect-four"
+                ? (gameConfig.seriesOption || "standard")
+                : "standard"
+            }
+            {...(gameConfig.timeProfile ? { timeProfile: gameConfig.timeProfile } : {})}
+          />
         )}
 
         {step.name === "matchmaking" && (
           <MatchmakingFlow 
             gameId={gameId} 
             stake={step.stake} 
-            {...(gameId === "ludo" ? { mode: ludoPlayerCount === 4 ? "standard-4p" : "standard" } : {})}
+            mode={
+              gameId === "ludo"
+                ? (gameConfig.playerCount === 4 ? "standard-4p" : "standard")
+                : gameId === "dominoes"
+                ? (gameConfig.variant || dominoesVariant)
+                : gameId === "backgammon"
+                ? String(gameConfig.matchPoints || 1)
+                : gameId === "speed-math"
+                ? (gameConfig.sprintOption || "standard")
+                : gameId === "xo" || gameId === "connect-four"
+                ? (gameConfig.seriesOption || "standard")
+                : "standard"
+            }
+            {...(gameConfig.timeProfile ? { timeProfile: gameConfig.timeProfile } : {})}
           />
         )}
 

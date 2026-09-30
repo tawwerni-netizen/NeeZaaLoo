@@ -260,7 +260,11 @@
 
 .card:hover .actionArrow {
   color: #fff;
-  transform: translateX(isRtl ? -4px : 4px);
+  transform: translateX(4px);
+}
+
+[dir="rtl"] .card:hover .actionArrow {
+  transform: translateX(-4px);
 }
 
 @media (max-width: 768px) {

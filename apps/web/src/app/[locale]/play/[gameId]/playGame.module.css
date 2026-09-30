@@ -263,6 +263,27 @@
   gap: var(--nz-space-3);
 }
 
+.heroPersonaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: var(--nz-radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: var(--nz-text-xs);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  backdrop-filter: blur(8px);
+}
+
+.heroPersonaDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
 .heroTitle {
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   font-weight: 900;

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import styles from "./GameThumbnail.module.css";
 
@@ -48,8 +48,10 @@ export function GameThumbnail({
   const isRtl = dir === "rtl";
   const normId = gameId.replace(/_/g, "-");
 
+  const [imgError, setImgError] = useState(false);
+
   const renderGameArt = () => {
-    if (SUPPORTED_GAMES.has(normId)) {
+    if (SUPPORTED_GAMES.has(normId) && !imgError) {
       const suffix =
         variant === "hero"
           ? "-hero"
@@ -66,6 +68,7 @@ export function GameThumbnail({
           alt={title || normId}
           className={styles.bgArtImage}
           loading="lazy"
+          onError={() => setImgError(true)}
         />
       );
     }

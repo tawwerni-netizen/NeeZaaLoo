@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth-context";
 import { get, ApiError } from "@/lib/api";
 import { getGame, listGames } from "@/lib/games";
 import { getGameContent, type GameLocalizedContent } from "@/lib/games/game-content";
+import { getGameThemeTokens } from "@/lib/games/theme-tokens";
 import styles from "./game-details.module.css";
 
 // Last-resort fallback for a game with no real photography yet
@@ -542,6 +543,8 @@ export default function GameDetailsPage({
   const coreCta = gameContent?.coreCta || pageDict.coreCtaFallback;
   const legalNotice = gameContent?.legalPrizeNotice || pageDict.legalNoticeFallback;
 
+  const gameTokens = getGameThemeTokens(plugin.id);
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nizalo.com";
   const canonicalUrl = `${siteUrl}/${locale}/games/${plugin.id}`;
 
@@ -645,9 +648,27 @@ export default function GameDetailsPage({
         </nav>
 
         {/* Hero Section */}
-        <header className={styles.hero}>
+        <header
+          className={styles.hero}
+          style={{
+            "--game-accent": gameTokens.palette.accent,
+            "--game-glow": gameTokens.palette.glow,
+            "--game-border": gameTokens.palette.border,
+          } as React.CSSProperties}
+        >
           <div className={styles.heroContent}>
             <div className={styles.badgeRow}>
+              <div
+                className={styles.personaBadge}
+                style={{
+                  borderColor: gameTokens.palette.border,
+                  color: gameTokens.palette.accent,
+                  boxShadow: `0 0 16px ${gameTokens.palette.glow}`,
+                }}
+              >
+                <span className={styles.personaDot} style={{ background: gameTokens.palette.accent }} />
+                <span>{gameTokens.persona[locale] || gameTokens.persona.en}</span>
+              </div>
               <span className={styles.badgeTag}>
                 {plugin.turnModel === "SIMULTANEOUS"
                   ? pageDict.simultaneousTurns
@@ -656,14 +677,29 @@ export default function GameDetailsPage({
               <span className={styles.badgeTag}>
                 {t(`home.games.${plugin.nameKey}.duration`)}
               </span>
-              <span className={styles.badgeTag}>
+              <span
+                className={styles.badgeTag}
+                style={{
+                  color: plugin.cashEnabled ? "#10b981" : "var(--nz-text-3)",
+                  borderColor: plugin.cashEnabled ? "rgba(16, 185, 129, 0.4)" : "rgba(255, 255, 255, 0.1)",
+                }}
+              >
                 {plugin.cashEnabled
                   ? pageDict.prizeActive
                   : pageDict.freePlayOnly}
               </span>
             </div>
 
-            <h1 className={styles.heading}>{gameName}</h1>
+            <h1
+              className={styles.heading}
+              style={{
+                background: `linear-gradient(135deg, #ffffff 0%, ${gameTokens.palette.accent} 100%)`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              {gameName}
+            </h1>
             <p className={styles.tagline}>{tagline}</p>
 
             <dl className={styles.factsBar}>

@@ -45,9 +45,16 @@ const ERROR_KEYS: Record<string, string> = {
   INVALID_STAKE: "play.challenge.error_invalid_stake",
 };
 
-export function FriendChallenge({ gameId, stake }: {
+export function FriendChallenge({
+  gameId,
+  stake,
+  mode,
+  timeProfile,
+}: {
   gameId: string;
   stake?: StakeChoice;
+  mode?: string;
+  timeProfile?: string;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -87,7 +94,10 @@ export function FriendChallenge({ gameId, stake }: {
     setError(null);
     try {
       const r = await post<{ challengeId: string; expiresAt: string }>("/v1/challenges", {
-        gameId, opponentNickname: nickname,
+        gameId,
+        opponentNickname: nickname,
+        ...(mode ? { mode } : {}),
+        ...(timeProfile ? { timeProfile } : {}),
         ...(stake?.tier === "CASH" ? { tier: "CASH", stakeMinor: stake.stakeMinor, asset: stake.asset } : {}),
       });
       setSentTo(nickname);

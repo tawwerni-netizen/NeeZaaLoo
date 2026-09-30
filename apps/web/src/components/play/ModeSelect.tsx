@@ -1,16 +1,21 @@
 "use client";
 
 /**
- * Step 1 of the pre-match flow, for every game: how do you want to play.
- * Exactly four, clearly separated modes -- VS COMPUTER, PLAY WITH FRIEND,
+ * Step 1 of the pre-match flow, tailored specifically for each game:
+ * How do you want to play?
+ * Exactly four clearly separated modes -- VS COMPUTER, PLAY WITH FRIEND,
  * RANDOM OPPONENT, TOURNAMENT.
  * 
- * Re-architected with Cyber-Luxury tactile cards, live pulsing status badges,
- * custom glowing vector icons, and procedural Web Audio interaction sound effects.
+ * Re-architected with Game Theme Tokens:
+ * 1. Bespoke game-specific titles, descriptions, and tags (no generic template feel).
+ * 2. Cyber-Tactile luxury cards, live pulsing status badges, and glowing vector icons.
+ * 3. Procedural Web Audio interaction sound effects.
  */
+import { useMemo } from "react";
 import { LocaleLink } from "@/components/LocaleLink";
 import { useI18n } from "@/lib/i18n/context";
 import type { GamePlugin } from "@/lib/games";
+import { getGameThemeTokens } from "@/lib/games/theme-tokens";
 import { playCardHoverSound, playModeSelectSound } from "@/lib/game-audio";
 import styles from "./ModeSelect.module.css";
 
@@ -21,8 +26,9 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
   gameId: string;
   onSelect: (mode: PlayMode) => void;
 }) {
-  const { t, dir } = useI18n();
+  const { t, locale, dir } = useI18n();
   const isRtl = dir === "rtl";
+  const gameTokens = useMemo(() => getGameThemeTokens(gameId), [gameId]);
 
   const handleSelect = (mode: PlayMode) => {
     try {
@@ -42,18 +48,24 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
   };
 
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+      style={{
+        "--game-accent": gameTokens.palette.accent,
+        "--game-glow": gameTokens.palette.glow,
+      } as React.CSSProperties}
+    >
       {/* Section Header */}
       <div className={styles.header}>
-        <div className={styles.badge}>
-          <span className={styles.pulseDot} />
-          <span>{t("play.mode.select_badge")}</span>
+        <div className={styles.badge} style={{ borderColor: gameTokens.palette.border }}>
+          <span className={styles.pulseDot} style={{ background: gameTokens.palette.accent }} />
+          <span>{gameTokens.persona[locale] || gameTokens.persona.en || t("play.mode.select_badge")}</span>
         </div>
         <h2 className={styles.heading}>
           {t("play.mode.heading")}
         </h2>
         <p className={styles.subheading}>
-          {t("play.mode.subheading")}
+          {gameTokens.tagline[locale] || gameTokens.tagline.en || t("play.mode.subheading")}
         </p>
       </div>
 
@@ -78,23 +90,23 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
                 </svg>
               </div>
               <span className={`${styles.pillBadge} ${styles.pillAi}`}>
-                {t("play.mode.vs_computer.badge")}
+                {gameTokens.modes.ai.badge[locale] || gameTokens.modes.ai.badge.en || t("play.mode.vs_computer.badge")}
               </span>
             </div>
 
             <div className={styles.cardBody}>
               <h3 className={styles.cardTitle}>
-                {t("play.mode.vs_computer.title")}
+                {gameTokens.modes.ai.title[locale] || gameTokens.modes.ai.title.en || t("play.mode.vs_computer.title")}
               </h3>
               <p className={styles.cardDescription}>
-                {t("play.mode.vs_computer.description")}
+                {gameTokens.modes.ai.desc[locale] || gameTokens.modes.ai.desc.en || t("play.mode.vs_computer.description")}
               </p>
             </div>
 
             <div className={styles.cardFooter}>
               <span className={styles.footerTag}>
                 <span className={styles.statusDot} />
-                {t("play.mode.vs_computer.tag")}
+                {gameTokens.modes.ai.tag[locale] || gameTokens.modes.ai.tag.en || t("play.mode.vs_computer.tag")}
               </span>
               <span className={styles.actionArrow}>
                 {isRtl ? "←" : "→"}
@@ -120,23 +132,23 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
               </svg>
             </div>
             <span className={`${styles.pillBadge} ${styles.pillFriend}`}>
-              {t("play.mode.friend.badge")}
+              {gameTokens.modes.friend.badge[locale] || gameTokens.modes.friend.badge.en || t("play.mode.friend.badge")}
             </span>
           </div>
 
           <div className={styles.cardBody}>
             <h3 className={styles.cardTitle}>
-              {t("play.mode.friend.title")}
+              {gameTokens.modes.friend.title[locale] || gameTokens.modes.friend.title.en || t("play.mode.friend.title")}
             </h3>
             <p className={styles.cardDescription}>
-              {t("play.mode.friend.description")}
+              {gameTokens.modes.friend.desc[locale] || gameTokens.modes.friend.desc.en || t("play.mode.friend.description")}
             </p>
           </div>
 
           <div className={styles.cardFooter}>
             <span className={styles.footerTag}>
               <span className={styles.statusDot} />
-              {t("play.mode.friend.tag")}
+              {gameTokens.modes.friend.tag[locale] || gameTokens.modes.friend.tag.en || t("play.mode.friend.tag")}
             </span>
             <span className={styles.actionArrow}>
               {isRtl ? "←" : "→"}
@@ -158,23 +170,23 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
               </svg>
             </div>
             <span className={`${styles.pillBadge} ${styles.pillMatch}`}>
-              {t("play.mode.random_opponent.badge")}
+              {gameTokens.modes.match.badge[locale] || gameTokens.modes.match.badge.en || t("play.mode.random_opponent.badge")}
             </span>
           </div>
 
           <div className={styles.cardBody}>
             <h3 className={styles.cardTitle}>
-              {t("play.mode.random_opponent.title")}
+              {gameTokens.modes.match.title[locale] || gameTokens.modes.match.title.en || t("play.mode.random_opponent.title")}
             </h3>
             <p className={styles.cardDescription}>
-              {t("play.mode.random_opponent.description")}
+              {gameTokens.modes.match.desc[locale] || gameTokens.modes.match.desc.en || t("play.mode.random_opponent.description")}
             </p>
           </div>
 
           <div className={styles.cardFooter}>
             <span className={styles.footerTag}>
               <span className={styles.pulseDot} />
-              {t("play.mode.random_opponent.tag")}
+              {gameTokens.modes.match.tag[locale] || gameTokens.modes.match.tag.en || t("play.mode.random_opponent.tag")}
             </span>
             <span className={styles.actionArrow}>
               {isRtl ? "←" : "→"}
@@ -202,23 +214,23 @@ export function ModeSelect({ plugin, gameId, onSelect }: {
               </svg>
             </div>
             <span className={`${styles.pillBadge} ${styles.pillTournament}`}>
-              {t("play.mode.tournament.badge")}
+              {gameTokens.modes.tournament.badge[locale] || gameTokens.modes.tournament.badge.en || t("play.mode.tournament.badge")}
             </span>
           </div>
 
           <div className={styles.cardBody}>
             <h3 className={styles.cardTitle}>
-              {t("play.mode.tournament.title")}
+              {gameTokens.modes.tournament.title[locale] || gameTokens.modes.tournament.title.en || t("play.mode.tournament.title")}
             </h3>
             <p className={styles.cardDescription}>
-              {t("play.mode.tournament.description")}
+              {gameTokens.modes.tournament.desc[locale] || gameTokens.modes.tournament.desc.en || t("play.mode.tournament.description")}
             </p>
           </div>
 
           <div className={styles.cardFooter}>
             <span className={styles.footerTag}>
               <span className={styles.statusDot} />
-              {t("play.mode.tournament.tag")}
+              {gameTokens.modes.tournament.tag[locale] || gameTokens.modes.tournament.tag.en || t("play.mode.tournament.tag")}
             </span>
             <span className={styles.actionArrow}>
               {isRtl ? "←" : "→"}

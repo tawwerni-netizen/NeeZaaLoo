@@ -49,6 +49,32 @@
   flex-wrap: wrap;
 }
 
+.personaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.personaDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  animation: personaDotPulse 2s infinite ease-in-out;
+}
+
+@keyframes personaDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.6; }
+}
+
 .badgeTag {
   font-size: 11px;
   text-transform: uppercase;

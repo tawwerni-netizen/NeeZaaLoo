@@ -84,17 +84,25 @@ describe("Authoritative Ruleset Registry (Single Source of Truth)", () => {
       assert.ok(r.timeControls?.defaultProfile, `Ruleset ${r.game}:${r.variant} must have default time profile`);
       assert.ok(r.timeControls?.allowedProfiles?.length > 0, `Ruleset ${r.game}:${r.variant} must have allowed time profiles`);
 
-      // Rules document
+      // Rules document (Bilingual En & Ar)
       const doc = r.rulesDocument;
       assert.ok(doc, `Ruleset ${r.game}:${r.variant} must have rulesDocument`);
       assert.ok(doc.overview, `Ruleset ${r.game}:${r.variant} must have overview`);
+      assert.ok(doc.overviewAr, `Ruleset ${r.game}:${r.variant} must have overviewAr`);
       assert.ok(doc.setup, `Ruleset ${r.game}:${r.variant} must have setup`);
+      assert.ok(doc.setupAr, `Ruleset ${r.game}:${r.variant} must have setupAr`);
       assert.ok(doc.legalMoves || doc.movementAndCapture, `Ruleset ${r.game}:${r.variant} must describe legal moves`);
+      assert.ok(doc.legalMovesAr || doc.movementAndCaptureAr, `Ruleset ${r.game}:${r.variant} must describe legal moves in Arabic`);
       assert.ok(Array.isArray(doc.winConditions) && doc.winConditions.length > 0, `Ruleset ${r.game}:${r.variant} must list win conditions`);
+      assert.ok(Array.isArray(doc.winConditionsAr) && doc.winConditionsAr.length > 0, `Ruleset ${r.game}:${r.variant} must list win conditions in Arabic`);
       assert.ok(Array.isArray(doc.drawConditions), `Ruleset ${r.game}:${r.variant} must list draw conditions`);
+      assert.ok(Array.isArray(doc.drawConditionsAr), `Ruleset ${r.game}:${r.variant} must list draw conditions in Arabic`);
       assert.ok(["DETERMINISTIC", "SERVER_SEEDED"].includes(doc.rngPolicy), `Ruleset ${r.game}:${r.variant} must have valid rngPolicy`);
       assert.ok(doc.rngDescription, `Ruleset ${r.game}:${r.variant} must have rngDescription`);
+      assert.ok(doc.rngDescriptionAr, `Ruleset ${r.game}:${r.variant} must have rngDescriptionAr`);
       assert.ok(doc.fairPlay, `Ruleset ${r.game}:${r.variant} must describe fair play policy`);
+      assert.ok(doc.fairPlayAr, `Ruleset ${r.game}:${r.variant} must describe fair play policy in Arabic`);
+      assert.ok(r.sourceAr, `Ruleset ${r.game}:${r.variant} must have sourceAr`);
     }
   });
 

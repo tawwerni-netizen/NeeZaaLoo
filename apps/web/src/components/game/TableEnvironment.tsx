@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { setSoundMaterial as setAudioMaterial, type SoundMaterial } from "@/lib/game-audio";
+import { getGameThemeTokens, type GameThemeTokens } from "@/lib/games/theme-tokens";
 import styles from "./TableEnvironment.module.css";
 
 export type TableTheme = "classic-felt" | "obsidian-arena" | "royal-walnut" | "midnight-neon";
@@ -17,6 +18,7 @@ interface VisualSettingsContextType {
   setPerspective3D: (enabled: boolean) => void;
   soundMaterial: SoundMaterial;
   setSoundMaterial: (mat: SoundMaterial) => void;
+  gameTokens: GameThemeTokens | null;
 }
 
 const VisualSettingsContext = createContext<VisualSettingsContextType>({
@@ -28,15 +30,25 @@ const VisualSettingsContext = createContext<VisualSettingsContextType>({
   setPerspective3D: () => {},
   soundMaterial: "wood",
   setSoundMaterial: () => {},
+  gameTokens: null,
 });
 
 export const useVisualSettings = () => useContext(VisualSettingsContext);
 
-export function TableEnvironmentProvider({ children }: { children: React.ReactNode }) {
+export function TableEnvironmentProvider({
+  gameId,
+  children,
+}: {
+  gameId?: string | undefined;
+  children: React.ReactNode;
+}) {
+  const gameTokens = useMemo(() => (gameId ? getGameThemeTokens(gameId) : null), [gameId]);
   const [tableTheme, setTableTheme] = useState<TableTheme>("classic-felt");
   const [quality, setQuality] = useState<GraphicsQuality>("high");
   const [perspective3D, setPerspective3D] = useState<boolean>(true);
-  const [soundMaterial, setSoundMaterialState] = useState<SoundMaterial>("wood");
+  const [soundMaterial, setSoundMaterialState] = useState<SoundMaterial>(
+    gameTokens ? gameTokens.soundMaterial : "wood"
+  );
 
   useEffect(() => {
     try {
@@ -57,11 +69,14 @@ export function TableEnvironmentProvider({ children }: { children: React.ReactNo
       if (savedMaterial && ["wood", "ceramic", "glass", "metal"].includes(savedMaterial)) {
         setSoundMaterialState(savedMaterial);
         setAudioMaterial(savedMaterial);
+      } else if (gameTokens) {
+        setSoundMaterialState(gameTokens.soundMaterial);
+        setAudioMaterial(gameTokens.soundMaterial);
       }
     } catch {
       // localStorage may fail in restricted environments
     }
-  }, []);
+  }, [gameTokens]);
 
   const handleSetTableTheme = (theme: TableTheme) => {
     setTableTheme(theme);
@@ -93,7 +108,8 @@ export function TableEnvironmentProvider({ children }: { children: React.ReactNo
     setPerspective3D: handleSetPerspective3D,
     soundMaterial,
     setSoundMaterial: handleSetSoundMaterial,
-  }), [tableTheme, quality, perspective3D, soundMaterial]);
+    gameTokens,
+  }), [tableTheme, quality, perspective3D, soundMaterial, gameTokens]);
 
   return (
     <VisualSettingsContext.Provider value={value}>
@@ -101,6 +117,23 @@ export function TableEnvironmentProvider({ children }: { children: React.ReactNo
         className={`${styles.environment} ${styles[tableTheme]} ${styles[`quality-${quality}`]}`}
         data-quality={quality}
         data-perspective={perspective3D ? "true" : "false"}
+        data-game-theme={gameId ?? "default"}
+        style={{
+          ...(gameTokens
+            ? ({
+                "--game-primary": gameTokens.palette.primary,
+                "--game-accent": gameTokens.palette.accent,
+                "--game-bg": gameTokens.palette.bg,
+                "--game-surface": gameTokens.palette.surface,
+                "--game-border": gameTokens.palette.border,
+                "--game-glow": gameTokens.palette.glow,
+                "--game-text": gameTokens.palette.text,
+                "--game-card-grad": gameTokens.palette.cardGradient,
+                "--game-table-rim": gameTokens.palette.tableRim,
+                "--game-turn-pulse": gameTokens.turnPulseColor,
+              } as React.CSSProperties)
+            : {}),
+        }}
       >
         <div className={styles.ambientLighting} aria-hidden="true" />
         <div className={styles.tableSurface}>

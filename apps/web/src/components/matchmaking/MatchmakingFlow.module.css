@@ -73,12 +73,34 @@
   }
 }
 
+/* --- Game Persona Badge --- */
+.gamePersonaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--nz-text-1);
+  margin-bottom: 8px;
+}
+
+.gamePersonaDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: radarCorePulse 1.4s infinite alternate;
+}
+
 /* --- Radar Matchmaking Effect --- */
 .radarContainer {
   position: relative;
   width: 120px;
   height: 120px;
-  margin: 0 auto 24px;
+  margin: 0 auto 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -87,9 +109,9 @@
 .radarCore {
   width: 30px;
   height: 30px;
-  background: #3b82f6;
+  background: var(--game-accent, #3b82f6);
   border-radius: 50%;
-  box-shadow: 0 0 15px #3b82f6;
+  box-shadow: 0 0 18px var(--game-accent, #3b82f6);
   z-index: 2;
   animation: radarCorePulse 1.5s infinite alternate;
 }
@@ -103,7 +125,7 @@
   width: 10px;
   height: 10px;
   background: transparent;
-  border: 2px solid #3b82f6;
+  border: 2px solid var(--game-accent, #3b82f6);
   border-radius: 50%;
   opacity: 0;
   animation: radarWave 2s infinite cubic-bezier(0.1, 0.7, 0.1, 1);
@@ -114,8 +136,8 @@
 }
 
 @keyframes radarCorePulse {
-  0% { transform: scale(1); box-shadow: 0 0 10px #3b82f6; }
-  100% { transform: scale(1.2); box-shadow: 0 0 25px #3b82f6; }
+  0% { transform: scale(1); box-shadow: 0 0 10px var(--game-accent, #3b82f6); }
+  100% { transform: scale(1.2); box-shadow: 0 0 25px var(--game-accent, #3b82f6); }
 }
 
 @keyframes radarWave {
@@ -139,12 +161,32 @@
 /* --- VS Dramatic Screen --- */
 .vsDramaticWrap {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
   padding: 40px 0;
   overflow: hidden;
   position: relative;
+  width: 100%;
+}
+
+.matchedCountdownVibe {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-align: center;
+  max-width: 600px;
+  line-height: 1.4;
+  padding: 0 16px;
+}
+
+.vsPlayersRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
 }
 
 .vsPlayerSide {
@@ -227,4 +269,38 @@
 .serverAuthoritativeBadge span {
   font-size: 11px;
   color: var(--nz-text-2);
+}
+
+@media (max-width: 640px) {
+  .matchedCountdownVibe {
+    font-size: 16px;
+    padding: 0 12px;
+  }
+  .vsPlayersRow {
+    gap: 8px;
+  }
+  .vsPlayerSide {
+    gap: 10px;
+    min-width: 0;
+  }
+  .vsHandleDramatic {
+    font-size: 16px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vsMarkDramatic {
+    font-size: 26px;
+    padding: 0 4px;
+  }
+  .vsGssBadge {
+    padding: 4px 10px;
+    font-size: 13px;
+  }
+  .gamePersonaBadge {
+    font-size: 12px;
+    padding: 6px 14px;
+    max-width: 90vw;
+  }
 }

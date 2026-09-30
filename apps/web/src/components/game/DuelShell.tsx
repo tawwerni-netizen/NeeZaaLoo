@@ -347,7 +347,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const connectionLabel = reconnecting ? t("game.reconnecting") : connected ? t("game.connected") : t("game.connecting");
 
   return (
-    <TableEnvironmentProvider>
+    <TableEnvironmentProvider {...(gameId ? { gameId } : {})}>
       <main className="nz-container">
         <div className={styles.statusBar}>
           <span className={styles.statusGroup}>
@@ -432,7 +432,7 @@ export function DuelShell({ duelId }: { duelId: string }) {
             rematchSent={rematchSent}
           />
         ) : plugin && view ? (
-          <div className={styles.duelArena}>
+          <div className={styles.duelArena} data-game={gameId ?? "game"}>
             {gameId !== "ludo" && (
               <div className={styles.opponentBar}>
                 {players && (opponentSeat !== null ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/Button";
@@ -10,6 +10,8 @@ import { useAuth } from "@/lib/auth-context";
 import { transition, useReducedMotion } from "@/lib/motion";
 import type { ProgressionDelta } from "@/lib/use-progression-snapshot";
 import { playVictoryFanfare, playDefeatTone } from "@/lib/game-audio";
+import { getGameThemeTokens } from "@/lib/games/theme-tokens";
+import { GameVictoryInsignia } from "./GameVictoryInsignia";
 import { MatchShareCard } from "./MatchShareCard";
 import styles from "./ResultCeremony.module.css";
 
@@ -179,9 +181,19 @@ export function ResultCeremony({
     }
   }, [outcome, isSpectator]);
 
+  const gameTokens = useMemo(() => getGameThemeTokens(gameId), [gameId]);
+
   return (
-    <div className={[styles.card, outcome ? styles[`outcome-${outcome}`] : ""].join(" ")} data-game={gameId}>
-      {/* Victory Laurel Wreath for WIN */}
+    <div
+      className={[styles.card, outcome ? styles[`outcome-${outcome}`] : ""].join(" ")}
+      data-game={gameId}
+      style={{
+        "--game-accent": gameTokens.palette.accent,
+        "--game-glow": gameTokens.palette.glow,
+        "--game-border": gameTokens.palette.border,
+      } as React.CSSProperties}
+    >
+      {/* Bespoke Game Victory Insignia for WIN */}
       {!isSpectator && outcome === "win" && (
         <motion.div
           className={styles.insigniaWrap}
@@ -189,20 +201,16 @@ export function ResultCeremony({
           animate={{ scale: 1, rotate: 0, opacity: 1 }}
           transition={transition.ceremonyLong}
         >
-          <svg viewBox="0 0 100 100" className={styles.laurelSvg} aria-hidden="true">
-            <defs>
-              <linearGradient id="gold-leaf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FFF2B2" />
-                <stop offset="40%" stopColor="#E5C158" />
-                <stop offset="85%" stopColor="#A68326" />
-                <stop offset="100%" stopColor="#6E5212" />
-              </linearGradient>
-            </defs>
-            <path d="M 22 68 C 12 50, 16 30, 32 18 C 30 26, 32 34, 38 40 C 30 46, 26 56, 28 66 Z" fill="url(#gold-leaf-grad)" />
-            <path d="M 78 68 C 88 50, 84 30, 68 18 C 70 26, 68 34, 62 40 C 70 46, 74 56, 72 66 Z" fill="url(#gold-leaf-grad)" />
-            <polygon points="50,26 56,42 74,42 60,53 65,70 50,59 35,70 40,53 26,42 44,42" fill="url(#gold-leaf-grad)" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))" />
-          </svg>
+          <GameVictoryInsignia type={gameTokens.victoryInsignia} />
         </motion.div>
+      )}
+
+      {!isSpectator && (
+        <div className={styles.gamePersonaCeremony}>
+          <span style={{ color: gameTokens.palette.accent }}>
+            {gameTokens.persona[locale] || gameTokens.persona.en}
+          </span>
+        </div>
       )}
 
       <motion.h1
@@ -211,7 +219,7 @@ export function ResultCeremony({
         animate={{ opacity: 1, scale: 1 }}
         transition={transition.surface}
         style={{
-          textShadow: outcome === "win" ? "0 0 20px rgba(34,197,94,0.5)" : "none"
+          textShadow: outcome === "win" ? `0 0 24px ${gameTokens.palette.glow}` : "none",
         }}
       >
         {isSpectator ? `${result} · ${reason ? t(`game.reason.${reason}`) : ""}` : t(titleKey)}
