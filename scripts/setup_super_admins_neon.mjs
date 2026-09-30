@@ -1,146 +1,110 @@
-import { hash as argonHash, verify as argonVerify, Algorithm } from "@node-rs/argon2";
+import fs from 'fs';
+import dns from 'dns';
+import pg from 'pg';
+import { hash as argonHash, Algorithm } from "@node-rs/argon2";
+import crypto from 'node:crypto';
 
-const SQL_ENDPOINT = "https://ep-cold-frog-b2dicy1p.c-6.eu-central-1.aws.neon.tech/sql";
-const NEON_CONN_STRING = "postgresql://neondb_owner:npg_ABH8MueOg6Qd@ep-cold-frog-b2dicy1p.c-6.eu-central-1.aws.neon.tech/neondb";
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+
+const env = fs.readFileSync(".env", "utf8");
+const match = env.match(/DATABASE_URL="([^"]+)"/);
+if (!match) {
+  throw new Error("DATABASE_URL not found in .env");
+}
+
+const client = new pg.Client({
+  connectionString: match[1],
+  ssl: { rejectUnauthorized: false }
+});
 
 const ARGON = { algorithm: Algorithm.Argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 };
-const TARGET_PASSWORD = "Nizalo@Admin#2026!x0Code";
-
-async function queryHttp(sql) {
-  const res = await fetch(SQL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "neon-connection-string": NEON_CONN_STRING,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ query: sql }),
-  });
-  const data = await res.json();
-  if (!res.ok || data.message || data.error) {
-    throw new Error(data.message || data.error || JSON.stringify(data));
-  }
-  return data.rows || [];
-}
-
-async function execHttp(queries) {
-  const res = await fetch(SQL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "neon-connection-string": NEON_CONN_STRING,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      queries: queries.map((q) => ({ query: q })),
-    }),
-  });
-  const data = await res.json();
-  if (!res.ok || data.message || data.error) {
-    throw new Error(data.message || data.error || JSON.stringify(data));
-  }
-  return data;
-}
+const TARGET_PASSWORD = 'Nizalo@Admin#2026!x0Code';
 
 async function main() {
-  console.log("=== Setting up Super Admins & Passwords ===");
-  
+  await client.connect();
+
   const passwordHash = await argonHash(TARGET_PASSWORD, ARGON);
   console.log("Generated Argon2id hash:", passwordHash.slice(0, 30) + "...");
 
   const users = [
-    {
-      id: "tawwerni",
-      handle: "tawwerni",
-      email: "tawwerni@gmail.com",
-      emailDisplay: "Tawwerni@gmail.com",
-      displayName: "Tawwerni",
-    },
-    {
-      id: "logoxpress_eg",
-      handle: "logoxpress_eg",
-      email: "logoxpress.eg@gmail.com",
-      emailDisplay: "LogoXpress.eg@gmail.com",
-      displayName: "LogoXpress",
-    }
+    { id: 'tawwerni', handle: 'tawwerni', email: 'tawwerni@gmail.com', name: 'Tawwerni' },
+    { id: 'logoxpress_eg', handle: 'logoxpress_eg', email: 'logoxpress.eg@gmail.com', name: 'LogoXpress' }
   ];
 
-  const queries = [];
-
   for (const u of users) {
-    // 1. Ensure player exists and is enabled
-    queries.push(`
-      INSERT INTO player (id, handle, locale, disabled_at)
-      VALUES ('${u.id}', '${u.handle}', 'ar', NULL)
-      ON CONFLICT (id) DO UPDATE
-      SET handle = '${u.handle}', disabled_at = NULL;
-    `);
+    console.log(`\nSetting up SuperAdmin for ${u.id} (${u.email})...`);
 
-    // 2. Set credential with fresh Argon2id hash
-    queries.push(`
-      INSERT INTO credential (player_id, password_hash, changed_at)
-      VALUES ('${u.id}', '${passwordHash}', now())
-      ON CONFLICT (player_id) DO UPDATE
-      SET password_hash = '${passwordHash}', changed_at = now();
-    `);
+    // 0. Ensure player exists
+    await client.query(`
+      INSERT INTO player (id, handle)
+      VALUES ($1, $2)
+      ON CONFLICT (id) DO UPDATE SET handle = $2
+    `, [u.id, u.handle]);
+    console.log(`- Ensured player record for ${u.id}`);
 
-    // 3. Ensure email identity exists and is verified
-    queries.push(`
-      INSERT INTO email_identity (id, player_id, email, email_display, verified_at)
-      VALUES ('eid_${u.id}', '${u.id}', '${u.email.toLowerCase()}', '${u.emailDisplay}', now())
-      ON CONFLICT (player_id) DO UPDATE
-      SET email = '${u.email.toLowerCase()}', email_display = '${u.emailDisplay}', verified_at = now();
-    `);
+    // 1. Ensure credential exists and password is set
+    await client.query(`
+      INSERT INTO credential (player_id, password_hash)
+      VALUES ($1, $2)
+      ON CONFLICT (player_id) DO UPDATE 
+      SET password_hash = $2, changed_at = now()
+    `, [u.id, passwordHash]);
+    console.log(`- Updated credential for ${u.id}`);
 
-    // 4. Ensure admin_user exists, enabled, mfa_enrolled
-    queries.push(`
+    // 2. Ensure email_identity exists
+    try {
+      await client.query(`
+        INSERT INTO email_identity (id, player_id, email, email_display, verified_at)
+        VALUES ($1, $2, $3, $4, now())
+        ON CONFLICT (player_id) DO UPDATE
+        SET email = $3, email_display = $4, verified_at = now()
+      `, [`eid_${crypto.randomUUID()}`, u.id, u.email.toLowerCase(), u.email]);
+      console.log(`- Updated email_identity for ${u.id}`);
+    } catch (e) {
+      console.log(`- email_identity note: ${e.message}`);
+    }
+
+    // 3. Ensure admin_user exists
+    await client.query(`
       INSERT INTO admin_user (id, email, display_name, mfa_enrolled, disabled_at)
-      VALUES ('${u.id}', '${u.email.toLowerCase()}', '${u.displayName}', TRUE, NULL)
+      VALUES ($1, $2, $3, TRUE, NULL)
       ON CONFLICT (id) DO UPDATE
-      SET email = '${u.email.toLowerCase()}', display_name = '${u.displayName}', mfa_enrolled = TRUE, disabled_at = NULL;
-    `);
+      SET email = $2, display_name = $3, mfa_enrolled = TRUE, disabled_at = NULL
+    `, [u.id, u.email, u.name]);
+    console.log(`- Updated admin_user for ${u.id}`);
 
-    // 5. Ensure SUPER_ADMIN role grant
-    queries.push(`
-      INSERT INTO admin_role_grant (admin_id, role, granted_by, reason, revoked_at)
-      VALUES ('${u.id}', 'SUPER_ADMIN', 'system-bootstrap', 'Primary SuperAdmin', NULL)
-      ON CONFLICT DO NOTHING;
-    `);
+    // 4. Ensure admin_role_grant exists for SUPER_ADMIN
+    const grantExists = await client.query(`
+      SELECT 1 FROM admin_role_grant 
+      WHERE admin_id = $1 AND role = 'SUPER_ADMIN' AND revoked_at IS NULL
+    `, [u.id]);
 
-    // In case there's an existing revoked grant, un-revoke it
-    queries.push(`
-      UPDATE admin_role_grant
-      SET revoked_at = NULL
-      WHERE admin_id = '${u.id}' AND role = 'SUPER_ADMIN';
-    `);
-
-    // 6. Clear any failed login attempts to prevent lockout
-    queries.push(`
-      DELETE FROM login_attempt
-      WHERE LOWER(identifier) IN ('${u.id}', '${u.handle.toLowerCase()}', '${u.email.toLowerCase()}', '${u.emailDisplay.toLowerCase()}');
-    `);
+    if (grantExists.rows.length === 0) {
+      await client.query(`
+        INSERT INTO admin_role_grant (admin_id, role, granted_by, reason)
+        VALUES ($1, 'SUPER_ADMIN', 'system-automation', 'Owner SuperAdmin promotion')
+      `, [u.id]);
+      console.log(`- Granted SUPER_ADMIN role to ${u.id}`);
+    } else {
+      console.log(`- ${u.id} already has active SUPER_ADMIN role grant`);
+    }
   }
 
-  await execHttp(queries);
-  console.log("✓ Applied all database updates for Super Admins");
+  // Verification
+  console.log('\n--- Verification ---');
+  const admins = await client.query(`
+    SELECT u.id, u.email, u.display_name, g.role, g.granted_at, c.changed_at as pwd_changed_at
+    FROM admin_user u
+    JOIN admin_role_grant g ON g.admin_id = u.id AND g.revoked_at IS NULL
+    JOIN credential c ON c.player_id = u.id
+    WHERE u.id IN ('tawwerni', 'logoxpress_eg')
+  `);
+  console.table(admins.rows);
 
-  // Verify credentials and roles
-  console.log("\n=== Verifying in Database ===");
-  for (const u of users) {
-    const playerRow = await queryHttp(`SELECT id, handle, disabled_at FROM player WHERE id = '${u.id}';`);
-    const credRow = await queryHttp(`SELECT password_hash FROM credential WHERE player_id = '${u.id}';`);
-    const emailRow = await queryHttp(`SELECT email, email_display, verified_at FROM email_identity WHERE player_id = '${u.id}';`);
-    const adminRow = await queryHttp(`SELECT id, email, display_name, mfa_enrolled, disabled_at FROM admin_user WHERE id = '${u.id}';`);
-    const grantRow = await queryHttp(`SELECT role, revoked_at FROM admin_role_grant WHERE admin_id = '${u.id}' AND revoked_at IS NULL;`);
-    const rolesRes = await queryHttp(`SELECT admin_roles('${u.id}') AS roles;`);
-
-    console.log(`\nUser: ${u.id} (${u.emailDisplay})`);
-    console.log(`  Handle: ${playerRow[0]?.handle}`);
-    console.log(`  Email: ${emailRow[0]?.email} (Verified: ${!!emailRow[0]?.verified_at})`);
-    console.log(`  Admin User: ${adminRow[0]?.display_name} (Active: ${!adminRow[0]?.disabled_at})`);
-    console.log(`  Effective Roles: ${JSON.stringify(rolesRes[0]?.roles)}`);
-
-    const matches = await argonVerify(credRow[0]?.password_hash, TARGET_PASSWORD);
-    console.log(`  Password Match Test: ${matches ? "PASSED (✓)" : "FAILED (✗)"}`);
-  }
+  await client.end();
 }
 
-main().catch(console.error);
+main().catch(err => {
+  console.error("Admin setup failed:", err);
+  process.exit(1);
+});

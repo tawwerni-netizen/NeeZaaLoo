@@ -16,6 +16,9 @@
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import dns from "node:dns";
+
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(here, "..", ".env");

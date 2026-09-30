@@ -26,7 +26,7 @@ async function seedRatings() {
 
   try {
     console.log('Fetching all bot players...');
-    const res = await pool.query("SELECT id, handle FROM player WHERE id LIKE 'bot_%' ORDER BY id");
+    const res = await pool.query("SELECT id, handle FROM player WHERE (is_ai = TRUE OR id LIKE 'bot_%' OR id LIKE 'top_p_%') AND id NOT LIKE 'ai-%' ORDER BY id");
     console.log(`Found ${res.rows.length} bots.`);
 
     if (res.rows.length === 0) {

@@ -1,11 +1,15 @@
 import pg from 'pg';
+import { loadEnv } from './load-env.mjs';
 import { createPgAdapter } from '../packages/ledger/src/pg-adapter.mjs';
 import { createTournamentService } from '../packages/tournament/src/tournament.mjs';
 import { GAME_TIME_CONTROLS } from '../packages/tournament/src/automated-engine.mjs';
 
+loadEnv();
+
 const pool = new pg.Pool({
-  connectionString: 'postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=no-verify',
-  ssl: { rejectUnauthorized: false }
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 5
 });
 
 const db = createPgAdapter(pool);
@@ -28,9 +32,15 @@ const TARGET_GAMES = [
 async function fundAllBots() {
   console.log('=== STEP 1: Provisioning and Funding AI Bots ===');
   const botRows = await pool.query(`
-    SELECT id FROM player WHERE is_ai = TRUE ORDER BY id ASC
+    SELECT p.id
+    FROM player p
+    LEFT JOIN ledger_account la ON la.key = 'user:' || p.id || ':available' AND la.asset = 'USDT'
+    LEFT JOIN ledger_balance lb ON lb.account_id = la.id
+    WHERE p.is_ai = TRUE AND p.id NOT LIKE 'ai-%'
+      AND COALESCE(ledger_natural_balance(la.normal_side, lb.balance), 0) < 500000000
+    ORDER BY p.id ASC
   `);
-  console.log(`Found ${botRows.rows.length} AI bots.`);
+  console.log(`Found ${botRows.rows.length} underfunded AI bots.`);
 
   let fundedCount = 0;
   for (const bot of botRows.rows) {

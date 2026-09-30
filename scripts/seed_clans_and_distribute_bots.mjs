@@ -1,6 +1,7 @@
 import pg from "pg";
+import { loadEnv } from "./load-env.mjs";
 
-const connectionString = "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=no-verify";
+loadEnv();
 
 const CLANS = [
   {
@@ -10,7 +11,7 @@ const CLANS = [
     logo: "⚔️",
     description: "عشيرة النخبة لأساتذة الشطرنج والألعاب التكتيكية، لا مكان فيها إلا للأبطال.",
     global_elo: 2850,
-    owner_id: "bot_p_001", // Grandmaster_Tariq
+    owner_id: "bot_p_001",
   },
   {
     id: "clan_arena_hawks",
@@ -19,7 +20,7 @@ const CLANS = [
     logo: "🦅",
     description: "صقور الأرينا للسرعة والحساب الذهني والمواجهات الخاطفة، نحلق دائماً في الصدارة.",
     global_elo: 2780,
-    owner_id: "bot_p_006", // Apex_Tactician
+    owner_id: "bot_p_006",
   },
   {
     id: "clan_mind_kings",
@@ -28,7 +29,7 @@ const CLANS = [
     logo: "👑",
     description: "أقوى تحالف عربي وعالمي في ألعاب الطاولة والدومينو والسيجة الاستراتيجية.",
     global_elo: 2910,
-    owner_id: "bot_p_003", // Sultan_Of_Mind
+    owner_id: "bot_p_003",
   },
   {
     id: "clan_nizalo_legends",
@@ -37,14 +38,27 @@ const CLANS = [
     logo: "🔥",
     description: "أساطير التحديات الكبرى والبطولات النارية، ننافس بشرف وننتصر بمهارة.",
     global_elo: 2690,
-    owner_id: "bot_p_002", // KingSlayer_EG
+    owner_id: "bot_p_002",
   },
 ];
 
 async function main() {
-  const client = new pg.Client({ connectionString });
-  await client.connect();
-  console.log("Connected to Supabase!");
+  let client;
+  for (let attempt = 1; attempt <= 10; attempt++) {
+    try {
+      client = new pg.Client({ 
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+      });
+      await client.connect();
+      console.log("Connected to Neon DB!");
+      break;
+    } catch (e) {
+      console.log(`Connection attempt ${attempt} failed: ${e.message}, retrying...`);
+      if (attempt === 10) throw e;
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
 
   try {
     // 1. Clean existing clan members & clans if any
