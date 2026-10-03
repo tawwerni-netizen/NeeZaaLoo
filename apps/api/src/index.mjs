@@ -158,10 +158,10 @@ export async function createApiRuntime({
 
   const pool = customPool || new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: Number(process.env.DB_POOL_SIZE || 5),
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 5000,
-    statement_timeout: 5000,
+    max: Number(process.env.DB_POOL_SIZE || 15),
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 30000,
+    statement_timeout: 15000,
     ssl: { rejectUnauthorized: false },
     keepAlive: true,
   });

@@ -313,10 +313,10 @@ async function startServer() {
     console.log("[server] Initializing shared database pool & RealtimeBus...");
     sharedPool = new pg.Pool({
       connectionString: process.env.DATABASE_URL,
-      max: Number(process.env.DB_POOL_SIZE || 10),
-      idleTimeoutMillis: 10000,
-      connectionTimeoutMillis: 10000,
-      statement_timeout: 10000,
+      max: Number(process.env.DB_POOL_SIZE || 15),
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 30000,
+      statement_timeout: 15000,
       ssl: { rejectUnauthorized: false },
       keepAlive: true,
     });
