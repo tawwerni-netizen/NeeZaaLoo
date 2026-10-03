@@ -14,7 +14,9 @@ const dns = require("node:dns");
 const pg = require("pg");
 const next = require("next");
 
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
+try {
+  if (dns.setDefaultResultOrder) dns.setDefaultResultOrder("ipv4first");
+} catch {}
 
 const here = __dirname;
 
@@ -126,6 +128,21 @@ const server = http.createServer(async (req, res) => {
 
   // Diagnostic Endpoint
   if (pathname === "/diag") {
+    let dbStatus = "not_initialized";
+    let dbError = null;
+    if (sharedPool) {
+      try {
+        await sharedPool.query("SELECT 1");
+        dbStatus = "connected";
+      } catch (err) {
+        dbStatus = "error";
+        dbError = err.message;
+      }
+    }
+    let dbHost = null;
+    try {
+      if (process.env.DATABASE_URL) dbHost = new URL(process.env.DATABASE_URL).host;
+    } catch {}
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
       ok: true,
@@ -138,6 +155,11 @@ const server = http.createServer(async (req, res) => {
         api: Boolean(apiRuntime),
         gateway: Boolean(gwRuntime),
         worker: Boolean(workerRuntime),
+      },
+      database: {
+        status: dbStatus,
+        error: dbError,
+        host: dbHost,
       },
       error: initError ? (initError.stack || initError.message) : null,
       timestamp: new Date().toISOString(),
