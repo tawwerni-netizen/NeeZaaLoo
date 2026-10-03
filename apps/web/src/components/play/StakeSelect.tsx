@@ -177,6 +177,10 @@ export function StakeSelect({ plugin, onContinue }: {
                 <span>{t("play.stake.winner_payout")}</span>
                 <span style={{ direction: "ltr" }}>${(stakeUsd * 2 * 0.88).toFixed(2)} {asset}</span>
               </div>
+              <div style={{ marginTop: "10px", padding: "8px 12px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", color: "#6ee7b7" }}>
+                <span>🛡️ {locale === "ar" ? "قاعدة التعادل: استرداد 100% بالكامل" : "Draw Policy: 100% Full Refund"}</span>
+                <strong style={{ direction: "ltr" }}>${stakeUsd.toFixed(2)} (0% {locale === "ar" ? "عمولة" : "fee"})</strong>
+              </div>
             </div>
           )}
         </>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import confetti from "canvas-confetti";
 import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
 import { transition } from "@/lib/motion";
@@ -13,87 +12,7 @@ import { playCardHoverSound, playDifficultySelectSound } from "@/lib/game-audio"
 import { HeroParticles } from "./HeroParticles";
 import styles from "./Hero.module.css";
 
-const triggerDopamineExplosion = () => {
-  const duration = 1000;
-  const end = Date.now() + duration;
-
-  const frame = () => {
-    confetti({
-      particleCount: 8,
-      angle: 60,
-      spread: 55,
-      origin: { x: 0 },
-      colors: ['#FFD700', '#FFB800', '#FFEA00', '#00FFFF', '#FF00FF']
-    });
-    confetti({
-      particleCount: 8,
-      angle: 120,
-      spread: 55,
-      origin: { x: 1 },
-      colors: ['#FFD700', '#FFB800', '#FFEA00', '#00FFFF', '#FF00FF']
-    });
-
-    if (Date.now() < end) {
-      requestAnimationFrame(frame);
-    }
-  };
-  frame();
-};
-
 const FEATURED_COUNT = 6;
-
-const QUICK_STAKES = [
-  {
-    stake: 2,
-    prize: 3.52,
-    badgeKey: "home.quick_stakes.badge_safe_start",
-    tagKey: "home.quick_stakes.tag_quick_trial",
-    popular: false,
-    accentColor: "#10B981",
-    themeClass: styles.cardEmerald,
-    soundLevel: "EASY" as const,
-  },
-  {
-    stake: 5,
-    prize: 8.8,
-    badgeKey: "home.quick_stakes.badge_most_popular",
-    tagKey: "home.quick_stakes.tag_champions_duel",
-    popular: true,
-    accentColor: "#3B82F6",
-    themeClass: styles.cardSapphire,
-    soundLevel: "MEDIUM" as const,
-  },
-  {
-    stake: 10,
-    prize: 17.6,
-    badgeKey: "home.quick_stakes.badge_pro_challenge",
-    tagKey: "home.quick_stakes.tag_tactical_duel",
-    popular: false,
-    accentColor: "#8B5CF6",
-    themeClass: styles.cardViolet,
-    soundLevel: "HARD" as const,
-  },
-  {
-    stake: 25,
-    prize: 44.0,
-    badgeKey: "home.quick_stakes.badge_elite_table",
-    tagKey: "home.quick_stakes.tag_grand_prize",
-    popular: false,
-    accentColor: "#F59E0B",
-    themeClass: styles.cardGold,
-    soundLevel: "EXPERT" as const,
-  },
-  {
-    stake: 50,
-    prize: 88.0,
-    badgeKey: "home.quick_stakes.badge_high_roller",
-    tagKey: "home.quick_stakes.tag_high_roller_prize",
-    popular: false,
-    accentColor: "#EF4444",
-    themeClass: styles.cardRuby,
-    soundLevel: "EXPERT" as const,
-  },
-];
 
 
 type LocalizedText = {
@@ -748,10 +667,7 @@ export function Hero() {
             <LocaleLink
               href="/play"
               onMouseEnter={() => playCardHoverSound()}
-              onClick={(e) => {
-                triggerDopamineExplosion();
-                playDifficultySelectSound("HARD");
-              }}
+              onClick={() => playDifficultySelectSound("HARD")}
             >
               <Button variant="primary" className={styles.primaryBtn}>
                 <span style={{ marginInlineEnd: "8px" }}>⚔️</span>
@@ -765,7 +681,7 @@ export function Hero() {
             >
               <Button variant="ghost" className={styles.secondaryBtn}>
                 <span style={{ marginInlineEnd: "8px" }}>🎲</span>
-                {locale === "ar" ? `استكشف الألعاب (${GameRegistry.getCount()})` : `Explore Games (${GameRegistry.getCount()})`}
+                {t('home.hero.cta_secondary')}
               </Button>
             </LocaleLink>
           </motion.div>
@@ -790,62 +706,7 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Instant Quick-Stake Match Selector (Tactile Cyber-Luxury Cards) */}
-          <div className={styles.quickStakeSection}>
-            <div className={styles.quickStakeHeader}>
-              <div className={styles.quickStakeTitle}>
-                <span className={styles.quickStakeTitleBadge}>
-                  <span className={styles.quickStakePulse} />
-                  <span>{t("home.quick_stakes.section_badge")}</span>
-                </span>
-                <span className={styles.quickStakeTitleText}>
-                  {t("home.quick_stakes.section_title")}
-                </span>
-              </div>
-              <span className={styles.quickStakeSub}>
-                {t("home.quick_stakes.section_sub")}
-              </span>
-            </div>
-
-            <div className={styles.quickStakeGrid}>
-              {QUICK_STAKES.map((qs) => (
-                <LocaleLink
-                  key={qs.stake}
-                  href={`/play?stake=${qs.stake}&tier=CASH`}
-                  className={`${styles.quickStakeCard} ${qs.themeClass} ${qs.popular ? styles.quickStakeCardPopular : ""}`}
-                  onMouseEnter={() => playCardHoverSound()}
-                  onClick={() => {
-                    triggerDopamineExplosion();
-                    playDifficultySelectSound(qs.soundLevel);
-                  }}
-                  title={HERO_I18N.startDuel(qs.stake)[locale] || HERO_I18N.startDuel(qs.stake).en}
-                >
-                  <div className={styles.cardGlowLine} style={{ background: `linear-gradient(90deg, ${qs.accentColor}, transparent)` }} />
-                  <div className={styles.cardTopRow}>
-                    <span
-                      className={qs.popular ? styles.popularBadge : styles.subtleBadge}
-                      style={!qs.popular ? { color: qs.accentColor, borderColor: `${qs.accentColor}55` } : undefined}
-                    >
-                      {t(qs.badgeKey)}
-                    </span>
-                  </div>
-                  <div className={styles.quickStakeTop}>
-                    <span className={styles.stakeAmountVal}>${qs.stake}</span>
-                    <span className={styles.stakeAmountCurrency}>USDT</span>
-                  </div>
-                  <div className={styles.quickStakePrizeBox}>
-                    <span className={styles.prizePrefix}>{HERO_I18N.netWin[locale] || HERO_I18N.netWin.en}</span>
-                    <span className={styles.prizeNumber}>${qs.prize.toFixed(2)}</span>
-                    <span className={styles.prizeCurrency}>USDT</span>
-                  </div>
-                  <span className={styles.quickStakeTag}>
-                    {t(qs.tagKey)}
-                  </span>
-                </LocaleLink>
-              ))}
-            </div>
           </div>
-        </div>
 
         {/* Large Grand Full-Width Showcase Slider */}
         <motion.div

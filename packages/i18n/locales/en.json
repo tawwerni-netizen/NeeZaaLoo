@@ -49,12 +49,12 @@
   },
   "home": {
     "hero": {
-      "eyebrow": "Skill decides. Nothing else.",
-      "headline_line1": "PROVE. PLAY.",
+      "eyebrow": "100% Skill-Based Mind Sports • Zero House Edge",
+      "headline_line1": "PROVE SKILL. PLAY.",
       "headline_line2": "WIN.",
-      "subhead": "Compete against real players in 1v1 skill games with zero luck. Win instant USDT cash prizes delivered directly to your wallet within 60 seconds.",
-      "cta_primary": "Enter Arena & Win Cash",
-      "cta_secondary": "Watch live",
+      "subhead": "Compete 1v1 in Chess, Dominoes, Ludo, Backgammon, Speed Math, and 6 more classical games. 100% player skill with authoritative anti-cheat. Practice free or compete in cash prize duels with instant payouts.",
+      "cta_primary": "Play Free Practice Now",
+      "cta_secondary": "Explore All 11 Games",
       "featured_heading": "Featured today",
       "guarantees": {
         "card_ai_badge": "Active 24/7",
@@ -80,13 +80,13 @@
         "pillar_fair_title": "100% Provably Fair & Anti-Cheat",
         "pillar_fair_desc": "Pure deterministic skill. Authoritative server verification guarantees absolute integrity."
       },
-      "headline_title": "Turn Skill Into Real Cash.",
-      "headline_accent": "Instant 60s Cashout.",
+      "headline_title": "The Competitive Arena for Mind Sports.",
+      "headline_accent": "Where Pure Skill Wins.",
       "instant_deposit": "Instant Deposit",
-      "trust_payout": "Instant <60s Cashout",
-      "trust_skill": "100% Skill • Zero RNG",
-      "trust_share": "88% Winner Share",
-      "trust_tournaments": "Daily Tournaments & Instant Cash Duels"
+      "trust_payout": "Instant Payouts (USDT & Local Rails)",
+      "trust_skill": "100% Skill • Zero House Edge",
+      "trust_share": "88% Winner Pot • 0% Draw Rake",
+      "trust_tournaments": "Free Training & Cash Championships"
     },
     "liveArena": {
       "heading": "Live Arena",
