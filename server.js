@@ -57,8 +57,8 @@ for (const key of Object.keys(process.env)) {
 
 // 3. Database URL configuration
 const ACTIVE_PRODUCTION_DB_URL = "postgresql://postgres.mdntbaqwbjcyxaffrrwy:wd_24h*FaceBook@aws-1-eu-central-1.pooler.supabase.com:5432/postgres";
-if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("neon.tech") || process.env.DATABASE_URL.includes("oqauuhkztracrktpmlxp") || process.env.DATABASE_URL.includes("ep-solitary-shape") || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p")) {
-  console.log("[config] Upgrading DATABASE_URL to active clean Supabase production database.");
+if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.includes("aws-1-eu-central-1.pooler.supabase.com")) {
+  console.log("[config] Upgrading DATABASE_URL to active clean Supabase pooler.");
   process.env.DATABASE_URL = ACTIVE_PRODUCTION_DB_URL;
 }
 
