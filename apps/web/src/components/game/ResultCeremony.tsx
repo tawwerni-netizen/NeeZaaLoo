@@ -330,10 +330,17 @@ export function ResultCeremony({
             {vsComputer ? (
               <>
                 <Button variant="primary" onClick={onRematch} disabled={rematchBusy} className={styles.actionBtn}>
-                  {rematchBusy ? (locale === "ar" ? "جارٍ التحضير..." : "Preparing...") : t("game.rematch")}
+                  {rematchBusy ? (locale === "ar" ? "جارٍ التحضير..." : "Preparing...") : (locale === "ar" ? "إعادة النزال ضد الكمبيوتر ⚡" : t("game.rematch"))}
                 </Button>
-                <LocaleLink href="/play" style={{ width: "100%" }}>
-                  <Button variant="secondary" className={styles.actionBtn}>{t("matchmaking.back_to_play")}</Button>
+                <LocaleLink href={`/play/${gameId}`} style={{ width: "100%" }}>
+                  <Button variant="secondary" className={styles.actionBtn}>
+                    ⚔️ {locale === "ar" ? "تحدي لاعب حقيقي في الأرينا" : "Challenge Real Opponent"}
+                  </Button>
+                </LocaleLink>
+                <LocaleLink href="/games" style={{ width: "100%" }}>
+                  <Button variant="ghost" className={styles.actionBtn}>
+                    🎲 {locale === "ar" ? "استكشاف باقي الألعاب" : "Explore All Games"}
+                  </Button>
                 </LocaleLink>
               </>
             ) : (
@@ -350,11 +357,15 @@ export function ResultCeremony({
                       : (locale === "ar" ? "طلب ثأر / إعادة النزال ⚔️" : "Request Rematch ⚔️")}
                   </Button>
                 )}
-                <LocaleLink href={`/play?game=${gameId}`} style={{ width: "100%" }}>
-                  <Button variant="secondary" className={styles.actionBtn}>{t("game.new_opponent")}</Button>
+                <LocaleLink href={`/play/${gameId}`} style={{ width: "100%" }}>
+                  <Button variant="secondary" className={styles.actionBtn}>
+                    ⚔️ {locale === "ar" ? "خصم جديد في نفس اللعبة" : t("game.new_opponent")}
+                  </Button>
                 </LocaleLink>
-                <LocaleLink href="/play" style={{ width: "100%" }}>
-                  <Button variant="ghost" className={styles.actionBtn}>{t("matchmaking.back_to_play")}</Button>
+                <LocaleLink href="/games" style={{ width: "100%" }}>
+                  <Button variant="ghost" className={styles.actionBtn}>
+                    🎲 {locale === "ar" ? "استكشاف باقي الألعاب" : "Explore All Games"}
+                  </Button>
                 </LocaleLink>
               </>
             )}

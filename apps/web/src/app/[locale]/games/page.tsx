@@ -41,6 +41,10 @@ const ONBOARDING_I18N: Record<string, {
   rulesCta: string;
   hubTitle: string;
   hubSub: string;
+  coreActionLabel: string;
+  winningGoalLabel: string;
+  instantPracticeCta: string;
+  arenaCta: string;
 }> = {
   ar: {
     q1: "ماذا يمكنني أن ألعب؟",
@@ -63,6 +67,10 @@ const ONBOARDING_I18N: Record<string, {
     rulesCta: "القواعد والاستراتيجية",
     hubTitle: "مركز ألعاب نيزالو التنافسية",
     hubSub: "11 رياضة ذهنية معتمدة. اختر لعبتك، تعرّف على قواعدها وتكتيكاتها، وانطلق في النزال فوراً.",
+    coreActionLabel: "طريقة اللعب:",
+    winningGoalLabel: "شرط الفوز:",
+    instantPracticeCta: "تجربة فورية ⚡",
+    arenaCta: "دخول الأرينا ⚔️",
   },
   en: {
     q1: "What can I play?",
@@ -85,6 +93,10 @@ const ONBOARDING_I18N: Record<string, {
     rulesCta: "Rules & Tactics",
     hubTitle: "Nizalo Game Hub",
     hubSub: "11 authentic mind sports & tabletop games. Discover, master the rules, and enter the arena instantly.",
+    coreActionLabel: "Core Action:",
+    winningGoalLabel: "Winning Goal:",
+    instantPracticeCta: "Free Practice ⚡",
+    arenaCta: "Enter Arena ⚔️",
   },
   es: {
     q1: "¿A qué puedo jugar?",
@@ -107,6 +119,10 @@ const ONBOARDING_I18N: Record<string, {
     rulesCta: "Reglas y Guía",
     hubTitle: "Centro de Juegos Nizalo",
     hubSub: "11 deportes mentales auténticos. Elige un juego, comprende sus reglas y compite al instante.",
+    coreActionLabel: "Mecánica:",
+    winningGoalLabel: "Objetivo:",
+    instantPracticeCta: "Práctica Gratis ⚡",
+    arenaCta: "Entrar a la Arena ⚔️",
   },
   fr: {
     q1: "À quoi puis-je jouer ?",
@@ -129,6 +145,10 @@ const ONBOARDING_I18N: Record<string, {
     rulesCta: "Règles & Stratégie",
     hubTitle: "Hub des Jeux Nizalo",
     hubSub: "11 sports cérébraux de référence. Choisissez, découvrez les règles et entrez en duel.",
+    coreActionLabel: "Mécanique :",
+    winningGoalLabel: "Victoire :",
+    instantPracticeCta: "Essai Gratuit ⚡",
+    arenaCta: "Rejoindre l'Arène ⚔️",
   },
   hi: {
     q1: "मैं क्या खेल सकता हूँ?",
@@ -151,6 +171,10 @@ const ONBOARDING_I18N: Record<string, {
     rulesCta: "नियम और रणनीति",
     hubTitle: "निज़ालो गेम हब",
     hubSub: "11 प्रामाणिक माइंड स्पोर्ट्स। खेल खोजें, नियम समझें और तुरंत खेलें।",
+    coreActionLabel: "मुख्य नियम:",
+    winningGoalLabel: "जीत का लक्ष्य:",
+    instantPracticeCta: "मुफ़्त अभ्यास ⚡",
+    arenaCta: "एरीना में जाएं ⚔️",
   },
   zh: {
     q1: "我可以玩什么？",
@@ -173,6 +197,214 @@ const ONBOARDING_I18N: Record<string, {
     rulesCta: "规则与进阶攻略",
     hubTitle: "Nizalo 游戏探索中心",
     hubSub: "11 款殿堂级智力竞技游戏。发现游戏、掌握战术、秒级开赛。",
+    coreActionLabel: "核心操作：",
+    winningGoalLabel: "获胜目标：",
+    instantPracticeCta: "即刻练习 ⚡",
+    arenaCta: "进入竞技场 ⚔️",
+  },
+};
+
+const GAME_MICRO_IDENTITIES: Record<string, {
+  coreAction: Record<string, string>;
+  expectedOutcome: Record<string, string>;
+}> = {
+  chess: {
+    coreAction: {
+      ar: "حرّك القطع التكتيكية واستحوذ على رقعة الـ 64",
+      en: "Move tactical pieces & control the 64 squares",
+      es: "Mueve piezas tácticas y controla las 64 casillas",
+      fr: "Déplacez les pièces et contrôlez les 64 cases",
+      zh: "掌控棋子布局，主导64格战场",
+      hi: "टुकड़ों को चालें और 64 खानों पर नियंत्रण रखें",
+    },
+    expectedOutcome: {
+      ar: "كش مات للملك وتتويج الأستاذية",
+      en: "Checkmate the King to claim victory",
+      es: "Jaque mate al Rey para ganar",
+      fr: "Échec et mat au Roi pour remporter la victoire",
+      zh: "将死敌方国王赢得胜利",
+      hi: "शह और मात देकर विजय प्राप्त करें",
+    },
+  },
+  dominoes: {
+    coreAction: {
+      ar: "طابق عيون الأحجار وأغلق منافذ الطاولة",
+      en: "Match tile pips & strategically block routes",
+      es: "Empareja los puntos y bloquea las salidas",
+      fr: "Associez les points et bloquez les sorties",
+      zh: "匹配骨牌点数，精妙封锁通路",
+      hi: "गोटियों के बिंदु मिलाएं और रास्ते रोकें",
+    },
+    expectedOutcome: {
+      ar: "تفريغ اليد أولاً أو الفوز بالقفلة",
+      en: "Empty hand first or win by tactical block",
+      es: "Vaciar la mano primero o ganar por bloqueo",
+      fr: "Vider sa main en premier ou gagner par blocage",
+      zh: "率先出完手牌或以封牌得分获胜",
+      hi: "पहले हाथ खाली करें या लॉक करके जीतें",
+    },
+  },
+  ludo: {
+    coreAction: {
+      ar: "حرك بيادقك الـ 4 واقتنص قطع الخصم",
+      en: "Race your 4 tokens & strike down opponent pieces",
+      es: "Mueve tus 4 fichas y captura a los rivales",
+      fr: "Avancez vos 4 pions et capturez vos adversaires",
+      zh: "驱动4颗棋子并拦截捕获对手",
+      hi: "अपनी 4 गोटियां चलाएं और प्रतिद्वंद्वी को काटें",
+    },
+    expectedOutcome: {
+      ar: "إدخال جميع البيادق لمثلث النصر",
+      en: "Escort all 4 tokens into the center triangle",
+      es: "Llevar todas las fichas a la meta central",
+      fr: "Mener tous vos pions au triangle de victoire",
+      zh: "将所有棋子送达中央胜利三角",
+      hi: "सभी गोटियों को विजय त्रिकोण तक पहुंचाएं",
+    },
+  },
+  backgammon: {
+    coreAction: {
+      ar: "ناور بالأقراص حول الطاولة واضرب الحجر المكشوف",
+      en: "Maneuver checkers around the board & hit blots",
+      es: "Maniobra tus fichas y captura las desprotegidas",
+      fr: "Manoeuvrez vos pions et frappez les cases vulnérables",
+      zh: "运筹棋子行进，击打落单敌棋",
+      hi: "मोहरों को आगे बढ़ाएं और खुली गोटियों को मारें",
+    },
+    expectedOutcome: {
+      ar: "إخراج كافة الأقراص وتحقيق المارش",
+      en: "Bear off all checkers or achieve Gammon",
+      es: "Retirar todas las fichas o lograr Gammon",
+      fr: "Sortir tous vos pions ou réussir un Gammon",
+      zh: "收回所有棋子或赢取双倍大胜",
+      hi: "सभी मोहरे बाहर निकालें या गैमन जीतें",
+    },
+  },
+  "speed-math": {
+    coreAction: {
+      ar: "احسب العمليات الذهنية واضغط الحل فوراً",
+      en: "Calculate rapid mental equations & tap answer",
+      es: "Resuelve operaciones mentales rápidas y pulsa",
+      fr: "Calculez de tête et cliquez immédiatement",
+      zh: "极速心算并在毫秒间选择正解",
+      hi: "मानसिक गणना करें और तुरंत उत्तर चुनें",
+    },
+    expectedOutcome: {
+      ar: "أعلى مجموع نقاط قبل نفاد الثواني",
+      en: "Score the highest points before clock expires",
+      es: "Mayor puntuación antes de que expire el tiempo",
+      fr: "Score le plus élevé avant la fin du chrono",
+      zh: "在倒计时结束前斩获最高积分",
+      hi: "समय समाप्त होने से पहले सर्वाधिक अंक प्राप्त करें",
+    },
+  },
+  xo: {
+    coreAction: {
+      ar: "خطط ثلاث خطوات للأمام في شبكة 3x3",
+      en: "Plot 3 moves ahead on a 3x3 grid",
+      es: "Planifica 3 jugadas en la cuadrícula 3x3",
+      fr: "Anticipez 3 coups sur la grille 3x3",
+      zh: "在3x3棋盘上预判3步连线",
+      hi: "3x3 ग्रिड में 3 चाल आगे की सोचें",
+    },
+    expectedOutcome: {
+      ar: "اصنع خطاً ثلاثياً متواصلاً واكسب",
+      en: "Align 3 symbols in a row to win instantly",
+      es: "Alinear 3 símbolos seguidos para ganar",
+      fr: "Aligner 3 symboles consécutifs pour gagner",
+      zh: "达成三连线即刻获胜",
+      hi: "एक पंक्ति में 3 मिलाकर तुरंत जीतें",
+    },
+  },
+  "connect-four": {
+    coreAction: {
+      ar: "أسقط الأقراص عمودياً واحبك الفخاخ القطاعية",
+      en: "Drop discs strategically & set diagonal traps",
+      es: "Suelta discos y prepara trampas diagonales",
+      fr: "Lâchez vos jetons et tendez des pièges",
+      zh: "竖直投子设局，编织纵横对角陷阱",
+      hi: "गोटियां नीचे गिराएं और जाल बिछाएं",
+    },
+    expectedOutcome: {
+      ar: "وصال 4 أقراص متتالية أفقياً أو قطرياً",
+      en: "Connect 4 consecutive discs in any direction",
+      es: "Conectar 4 discos consecutivos",
+      fr: "Aligner 4 jetons consécutifs",
+      zh: "连成4颗相同颜色的棋子",
+      hi: "लगातार 4 गोटियां जोड़कर जीतें",
+    },
+  },
+  checkers: {
+    coreAction: {
+      ar: "اقفز فوق قطع الخصم إجبارياً للالتهام",
+      en: "Execute mandatory jumps to capture pieces",
+      es: "Salta sobre las piezas rivales para capturarlas",
+      fr: "Sautez par-dessus les pions adverses pour capturer",
+      zh: "执行强制连跳，吃尽敌方棋子",
+      hi: "विरोधी की गोटियों पर छलांग लगाकर खाएं",
+    },
+    expectedOutcome: {
+      ar: "ترقية الملوك ومحو جيش الخصم",
+      en: "Promote Kings & wipe out the opposing army",
+      es: "Coronar Damas y eliminar las fichas rivales",
+      fr: "Promouvoir des Dames et anéantir l'ennemi",
+      zh: "加冕王者并消灭对手所有棋子",
+      hi: "राजा बनाएं और विरोधी की सेना समाप्त करें",
+    },
+  },
+  reversi: {
+    coreAction: {
+      ar: "حاصر أقراص الخصم واقلبها إلى لونك",
+      en: "Flank opponent lines & flip discs to your color",
+      es: "Encierra fichas rivales y voltéalas a tu color",
+      fr: "Prenez en étau les pions adverses pour les retourner",
+      zh: "夹击包围敌子，成片翻转为己方颜色",
+      hi: "विरोधी की गोटियों को घेरें और अपने रंग में बदलें",
+    },
+    expectedOutcome: {
+      ar: "السيطرة على أكثرية الرقعة عند الامتلاء",
+      en: "Dominate the majority of discs at full board",
+      es: "Dominar la mayoría del tablero al completarse",
+      fr: "Posséder la majorité des pions sur le plateau",
+      zh: "棋盘填满时持有最多棋子",
+      hi: "बोर्ड भरने पर अधिकांश गोटियों पर नियंत्रण रखें",
+    },
+  },
+  gomoku: {
+    coreAction: {
+      ar: "انشر أحجارك على رقعة الـ 15x15 دون مقاطعة",
+      en: "Place stones strategically on the 15x15 grid",
+      es: "Coloca piedras estratégicamente en 15x15",
+      fr: "Posez vos pierres stratégiquement sur le 15x15",
+      zh: "在15x15网格上铺展攻防棋子",
+      hi: "15x15 ग्रिड पर रणनीति से गोटियां रखें",
+    },
+    expectedOutcome: {
+      ar: "محاذاة 5 أحجار غير منقطعة",
+      en: "Form an unbroken row of 5 stones",
+      es: "Formar una línea continua de 5 piedras",
+      fr: "Former une ligne ininterrompue de 5 pierres",
+      zh: "五子连珠，先成五者为胜",
+      hi: "लगातार 5 गोटियों की पंक्ति बनाएं",
+    },
+  },
+  seega: {
+    coreAction: {
+      ar: "أنزل البيادق واقتنص بالحصار الثنائي المحكم",
+      en: "Deploy tokens & capture via custodian sandwich",
+      es: "Despliega fichas y captura mediante cerco doble",
+      fr: "Déployez vos pions et capturez en étau",
+      zh: "分兵落子，以双向夹击俘获敌方阵脚",
+      hi: "मोहरे तैनात करें और दोनों तरफ से घेरकर मारें",
+    },
+    expectedOutcome: {
+      ar: "شل حركة الخصم وإبادة قطعه",
+      en: "Immobilize or eradicate all enemy tokens",
+      es: "Inmovilizar o erradicar las fichas enemigas",
+      fr: "Immobiliser ou éliminer tous les pions adverses",
+      zh: "封锁敌方行动或歼灭所有敌子",
+      hi: "विरोधी की चालें रोकें या समाप्त करें",
+    },
   },
 };
 
@@ -421,11 +653,43 @@ function GameHubCard({
           </div>
         </div>
 
-        {/* Actions: Primary Play CTA + Secondary Rules CTA */}
+        {/* 3-Second Game Test: Core Action & Winning Goal */}
+        {GAME_MICRO_IDENTITIES[game.id] && (
+          <div className={styles.gameMicroSummary}>
+            <div className={styles.microItem}>
+              <span className={styles.microIcon}>⚡</span>
+              <div className={styles.microText}>
+                <span className={styles.microLabel}>{copy.coreActionLabel}</span>
+                <span className={styles.microVal}>
+                  {GAME_MICRO_IDENTITIES[game.id]!.coreAction[locale] || GAME_MICRO_IDENTITIES[game.id]!.coreAction.en}
+                </span>
+              </div>
+            </div>
+            <div className={styles.microItem}>
+              <span className={styles.microIcon}>🏆</span>
+              <div className={styles.microText}>
+                <span className={styles.microLabel}>{copy.winningGoalLabel}</span>
+                <span className={styles.microVal}>
+                  {GAME_MICRO_IDENTITIES[game.id]!.expectedOutcome[locale] || GAME_MICRO_IDENTITIES[game.id]!.expectedOutcome.en}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Actions: Instant Free Practice + Arena / Matchmaking + Rules */}
         <div className={styles.cardActions}>
+          <LocaleLink
+            href={`/play/${game.id}?mode=practice`}
+            className={styles.instantPracticeCta}
+            title={copy.instantPracticeCta}
+          >
+            <span>⚡</span>
+            <span>{copy.instantPracticeCta}</span>
+          </LocaleLink>
           <LocaleLink href={`/play/${game.id}`} className={styles.playCta}>
             <span>⚔️</span>
-            <span>{copy.playCta}</span>
+            <span>{copy.arenaCta}</span>
           </LocaleLink>
           <LocaleLink href={`/games/${game.id}`} className={styles.rulesCta}>
             <span>📖</span>

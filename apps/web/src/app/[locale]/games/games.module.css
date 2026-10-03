@@ -409,6 +409,50 @@
   text-overflow: ellipsis;
 }
 
+/* --- 3-Second Game Test Micro Summary --- */
+.gameMicroSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.microItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.microIcon {
+  font-size: 14px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.microText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.microLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--nz-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.microVal {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--nz-text-1, #f8fafc);
+  line-height: 1.35;
+}
+
 /* --- Card Action Buttons --- */
 .cardActions {
   display: grid;
@@ -416,6 +460,32 @@
   gap: 8px;
   margin-top: auto;
   padding-top: 4px;
+}
+
+.instantPracticeCta {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.3) 100%);
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+  font-size: 0.88rem;
+  font-weight: 800;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
+}
+
+.instantPracticeCta:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.35) 0%, rgba(217, 119, 6, 0.45) 100%);
+  color: #ffffff;
+  border-color: #fbbf24;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.35);
 }
 
 .playCta {
