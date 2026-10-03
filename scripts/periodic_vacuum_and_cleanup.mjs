@@ -32,9 +32,9 @@ import { pathToFileURL } from "node:url";
 
 const { Client } = pg;
 
-const ACTIVE_DB_URL = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("neon.tech")
+const ACTIVE_DB_URL = process.env.DATABASE_URL
   ? process.env.DATABASE_URL
-  : "postgresql://postgres.oqauuhkztracrktpmlxp:wd_24h*FaceBook@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=no-verify";
+  : "postgresql://postgres.mdntbaqwbjcyxaffrrwy:wd_24h*FaceBook@aws-1-eu-central-1.pooler.supabase.com:5432/postgres";
 
 /**
  * Execute chunked delete using ctid to prevent long transaction locks and memory spikes
