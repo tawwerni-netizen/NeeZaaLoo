@@ -54,9 +54,9 @@ for (const key of Object.keys(process.env)) {
 }
 
 // 3. Database URL configuration
-const ACTIVE_PRODUCTION_DB_URL = "postgresql://neondb_owner:npg_s7umPR8eYVAw@ep-solitary-shape-b20qc2vs-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require";
-if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("supabase.com") || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p") || process.env.DATABASE_URL.includes("ep-blue-dream-b2z21ql2") || process.env.DATABASE_URL.includes("ep-cold-frog-b2dicy1p")) {
-  console.log("[config] Upgrading DATABASE_URL to active clean Neon production database.");
+const ACTIVE_PRODUCTION_DB_URL = "postgresql://postgres.mdntbaqwbjcyxaffrrwy:wd_24h*FaceBook@aws-1-eu-central-1.pooler.supabase.com:5432/postgres";
+if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("neon.tech") || process.env.DATABASE_URL.includes("oqauuhkztracrktpmlxp") || process.env.DATABASE_URL.includes("ep-solitary-shape") || process.env.DATABASE_URL.includes("ep-rapid-cell-b1108r3p")) {
+  console.log("[config] Upgrading DATABASE_URL to active clean Supabase production database.");
   process.env.DATABASE_URL = ACTIVE_PRODUCTION_DB_URL;
 }
 
