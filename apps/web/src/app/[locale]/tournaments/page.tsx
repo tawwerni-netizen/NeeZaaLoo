@@ -38,6 +38,8 @@ type TournamentRow = {
   asset: string | null;
   capacity: number;
   title: string | null;
+  description?: string | null;
+  eligibility?: { minRatingX100?: number; maxRatingX100?: number } | null;
   registered_count: number;
   registration_closes_at: string | null;
   scheduled_starts_at: string | null;
@@ -470,6 +472,23 @@ function TournamentsList() {
     };
   }, [tournaments]);
 
+  // Compute live active prize pool and registrants from currently listed tournaments
+  const activePrizePool = useMemo(() => {
+    if (!tournaments) return 0;
+    return tournaments.reduce((acc, t) => {
+      if (t.tier === "CASH" && t.entry_fee_minor) {
+        const potMinor = Number(t.entry_fee_minor) * (t.capacity || 2);
+        return acc + (potMinor * 0.88) / 1_000_000;
+      }
+      return acc;
+    }, 0);
+  }, [tournaments]);
+
+  const activeRegistrants = useMemo(() => {
+    if (!tournaments) return 0;
+    return tournaments.reduce((acc, t) => acc + (t.registered_count || 0), 0);
+  }, [tournaments]);
+
   // Filter tournaments by both status and game
   const filtered = useMemo(() => {
     if (!tournaments) return null;
@@ -532,6 +551,8 @@ function TournamentsList() {
                   <bdi className="nz-num">
                     {siteStats.totalPrizesUsd > 0
                       ? `+$${Math.floor(siteStats.totalPrizesUsd).toLocaleString("en-US")} USDT`
+                      : activePrizePool > 0
+                      ? `+$${Math.floor(activePrizePool).toLocaleString("en-US")} USDT`
                       : texts.metric1Val}
                   </bdi>
                 </div>
@@ -545,7 +566,11 @@ function TournamentsList() {
               <div className={styles.metricContent}>
                 <div className={styles.metricValue}>
                   <bdi className="nz-num">
-                    {siteStats.totalRegistrants > 0 ? `${siteStats.totalRegistrants}+` : "0"}
+                    {siteStats.totalRegistrants > 0
+                      ? `${siteStats.totalRegistrants}+`
+                      : activeRegistrants > 0
+                      ? `${activeRegistrants}+`
+                      : texts.metric2Val}
                   </bdi>
                 </div>
                 <div className={styles.metricTitle}>{texts.metric2Title}</div>
@@ -745,12 +770,34 @@ function TournamentsList() {
 
                       {/* Top Badges */}
                       <div className={styles.topPills}>
-                        <span className={styles.formatBadge}>
-                          <span>🏆</span>
-                          <span>
-                            {t(`tournamentsPage.format.${row.format}`)} ({row.capacity}p)
+                        <div className={styles.topPillsLeft}>
+                          <span className={styles.formatBadge}>
+                            <span>🏆</span>
+                            <span>
+                              {t(`tournamentsPage.format.${row.format}`)} ({row.capacity}p)
+                            </span>
                           </span>
-                        </span>
+
+                          {row.eligibility ? (
+                            <span className={styles.eloPill}>
+                              <span>🎖️</span>
+                              <span>
+                                {row.eligibility.minRatingX100 && row.eligibility.maxRatingX100
+                                  ? `ELO ${Math.round(row.eligibility.minRatingX100 / 100)} - ${Math.round(row.eligibility.maxRatingX100 / 100)}`
+                                  : row.eligibility.minRatingX100
+                                  ? `ELO ${Math.round(row.eligibility.minRatingX100 / 100)}+`
+                                  : row.eligibility.maxRatingX100
+                                  ? `ELO ≤ ${Math.round(row.eligibility.maxRatingX100 / 100)}`
+                                  : (locale === "ar" ? "مفتوحة" : "Open")}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className={styles.eloPill}>
+                              <span>🌟</span>
+                              <span>{locale === "ar" ? "مفتوحة" : "Open"}</span>
+                            </span>
+                          )}
+                        </div>
 
                         <span className={`${styles.statusPill} ${styles[`status_${row.status}`] ?? ""}`}>
                           {isLive && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }} />}

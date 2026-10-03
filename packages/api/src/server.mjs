@@ -3026,7 +3026,7 @@ function buildRoutes(storeSvc) {
         const statuses = (query.get("status") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
         const r = await db.query(
           `SELECT t.id, t.game_id, t.format, t.status, t.tier, t.entry_fee_minor::text AS entry_fee_minor,
-                  t.asset, t.capacity, t.title, t.description, t.registration_closes_at,
+                  t.asset, t.capacity, t.title, t.description, t.eligibility, t.registration_closes_at,
                   t.scheduled_starts_at, t.starts_at, t.completed_at, t.prize_structure,
                   (SELECT count(*)::int FROM tournament_registration tr
                     WHERE tr.tournament_id = t.id AND tr.status = 'REGISTERED') AS registered_count

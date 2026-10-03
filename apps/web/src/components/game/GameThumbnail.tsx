@@ -68,6 +68,7 @@ export function GameThumbnail({
           alt={title || normId}
           className={styles.bgArtImage}
           loading="lazy"
+          decoding="async"
           onError={() => setImgError(true)}
         />
       );

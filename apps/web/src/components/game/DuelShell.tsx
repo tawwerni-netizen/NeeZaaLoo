@@ -6,7 +6,7 @@
  * player strips, the clock, draw agreement, resign, the result ceremony,
  * reconnect, spectator handling, and the chat slot.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
@@ -22,8 +22,10 @@ import { GameVisualSettings } from "@/components/game/GameVisualSettings";
 import { LiveMatchShareModal } from "@/components/game/LiveMatchShareModal";
 import { ConfirmationModal, RulesPanel } from "@/components/ui";
 import { getGame } from "@/lib/games";
+import { getGameThemeTokens } from "@/lib/games/theme-tokens";
 import { get, post } from "@/lib/api";
 import { playUndoSound } from "@/lib/chess-audio";
+import { playCardHoverSound } from "@/lib/game-audio";
 import styles from "./DuelShell.module.css";
 
 const BOT_IDS = new Set(["ai-easy", "ai-medium", "ai-hard", "ai-expert"]);
@@ -130,6 +132,9 @@ export function DuelShell({ duelId }: { duelId: string }) {
     tier?: string | undefined;
     winnerCash?: number | null;
   } | null>(null);
+
+  const gameTokens = useMemo(() => (gameId ? getGameThemeTokens(gameId) : null), [gameId]);
+
 
   useEffect(() => {
     setMounted(true);
@@ -312,6 +317,16 @@ export function DuelShell({ duelId }: { duelId: string }) {
   const canMove = !isSpectator && !completed && connected && mySeat !== null
     && (isSharedClock ? true : (clock?.toMove ?? (view as { turn?: number } | null)?.turn) === mySeat);
 
+  const prevCanMove = useRef(false);
+  useEffect(() => {
+    if (canMove && !prevCanMove.current && !completedInfo.completed) {
+      try {
+        playCardHoverSound();
+      } catch {}
+    }
+    prevCanMove.current = canMove;
+  }, [canMove, completedInfo.completed]);
+
   const lastMove = useMemo(() => {
     if (latest?.t !== "EVENT" || (latest as { type?: string }).type !== "INTENT_ACCEPTED") return null;
     const payload = (latest as { payload?: { intent?: unknown } }).payload;
@@ -439,7 +454,49 @@ export function DuelShell({ duelId }: { duelId: string }) {
             rematchSent={rematchSent}
           />
         ) : plugin && view ? (
-          <div className={styles.duelArena} data-game={gameId ?? "game"}>
+          <div
+            className={styles.duelArena}
+            data-game={gameId ?? "game"}
+            style={{
+              "--game-accent": gameTokens?.palette.accent ?? "#ff5a2b",
+              "--game-glow": gameTokens?.palette.glow ?? "rgba(255, 90, 43, 0.3)",
+              "--game-border": gameTokens?.palette.border ?? "rgba(255, 255, 255, 0.1)",
+            } as React.CSSProperties}
+          >
+            {/* Bespoke In-Match Game Identity & Turn HUD */}
+            {gameTokens && (
+              <div className={styles.gameHudHeader}>
+                <div className={styles.gameHudBadge} style={{ borderColor: gameTokens.palette.border }}>
+                  <span className={styles.gameHudDot} style={{ background: gameTokens.palette.accent }} />
+                  <span className={styles.gameHudTitle}>
+                    {gameTokens.persona[locale] || gameTokens.persona.en}
+                  </span>
+                </div>
+                <div className={styles.gameHudTurnStatus}>
+                  {canMove ? (
+                    <span className={styles.turnBadgeActive} style={{ borderColor: gameTokens.palette.accent, color: gameTokens.palette.accent }}>
+                      <span className={styles.turnPulseDot} style={{ background: gameTokens.palette.accent }} />
+                      <span>{locale === "ar" ? "دورك الآن للعب ⚔️" : "Your Turn ⚔️"}</span>
+                    </span>
+                  ) : (
+                    <span className={styles.turnBadgeWaiting}>
+                      <span className={styles.turnWaitingDot} />
+                      <span>{locale === "ar" ? "في انتظار الخصم..." : "Opponent thinking..."}</span>
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className={styles.gameHudRulesBtn}
+                  onClick={() => setRulesOpen(true)}
+                  title={t("game.rules") || "Rules"}
+                >
+                  <span>📖</span>
+                  <span>{locale === "ar" ? "القواعد" : "Rules"}</span>
+                </button>
+              </div>
+            )}
+
             {gameId !== "ludo" && (
               <div className={styles.opponentBar}>
                 {players && (opponentSeat !== null ? (

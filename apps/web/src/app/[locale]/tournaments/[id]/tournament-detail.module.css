@@ -92,6 +92,22 @@
   color: #f59e0b;
 }
 
+.eloBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--nz-radius-pill, 9999px);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
 .statusPill {
   display: inline-flex;
   align-items: center;
@@ -281,6 +297,46 @@
   padding-bottom: var(--nz-space-8);
   width: 100%;
   max-width: 680px;
+}
+
+.eligibilityBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--nz-radius-md, 10px);
+  font-size: 13px;
+  line-height: 1.5;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bannerEmoji {
+  font-size: 18px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.bannerText {
+  flex: 1;
+}
+
+.eligibilityBannerOk {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.eligibilityBannerWarning {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.eligibilityBannerGuest {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
 }
 
 .walletNotice {

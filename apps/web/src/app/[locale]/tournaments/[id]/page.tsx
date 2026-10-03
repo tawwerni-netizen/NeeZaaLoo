@@ -17,6 +17,7 @@ import { LocaleLink } from "@/components/LocaleLink";
 import { Button } from "@/components/Button";
 import { get, post, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useAuthPopup } from "@/lib/auth-popup-context";
 import { useI18n } from "@/lib/i18n/context";
 import { formatDate } from "@/lib/i18n/format";
 import { getGame } from "@/lib/games";
@@ -46,6 +47,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const { id } = use(params);
   const { t, locale } = useI18n();
   const { player } = useAuth();
+  const { openPopup } = useAuthPopup();
   const [tournament, setTournament] = useState<TournamentDetail | null | "not_found">(null);
   const [pairings, setPairings] = useState<Pairing[]>([]);
   const [standings, setStandings] = useState<Standing[]>([]);
@@ -55,6 +57,7 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [walletBalance, setWalletBalance] = useState<bigint | null>(null);
+  const [playerRating, setPlayerRating] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -88,6 +91,26 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
         setWalletBalance(0n);
       });
   }, [player]);
+
+  useEffect(() => {
+    if (!player || !tournament || tournament === "not_found") {
+      setPlayerRating(null);
+      return;
+    }
+    let cancelled = false;
+    get<{ ratings?: { gameId: string; rating: number }[] }>(`/v1/players/${encodeURIComponent(player.handle || player.id)}`)
+      .then((res) => {
+        if (cancelled) return;
+        const r = res?.ratings?.find((x) => x.gameId === tournament.game_id);
+        setPlayerRating(r ? Math.round(r.rating) : 1500);
+      })
+      .catch(() => {
+        if (!cancelled) setPlayerRating(1500);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [player, tournament]);
 
   useEffect(() => {
     const ids = new Set<string>();
@@ -183,6 +206,17 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
   const remainingSpots = Math.max(0, tournament.capacity - (tournament.registeredCount || 0));
   const registeredPct = Math.min(100, Math.round(((tournament.registeredCount || 0) / (tournament.capacity || 1)) * 100));
 
+  const minElo = tournament.eligibility?.minRatingX100
+    ? Math.round(tournament.eligibility.minRatingX100 / 100)
+    : null;
+  const maxElo = tournament.eligibility?.maxRatingX100
+    ? Math.round(tournament.eligibility.maxRatingX100 / 100)
+    : null;
+  const isEligible =
+    !player || !playerRating
+      ? true
+      : (minElo === null || playerRating >= minElo) && (maxElo === null || playerRating <= maxElo);
+
   return (
     <>
       <Header />
@@ -214,6 +248,25 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
                   {t(`tournamentsPage.format.${tournament.format}`)} ({tournament.capacity} {locale === "ar" ? "لاعب" : "p"})
                 </span>
               </span>
+              {tournament.eligibility ? (
+                <span className={styles.eloBadge}>
+                  <span>🎖️</span>
+                  <span>
+                    {minElo && maxElo
+                      ? `ELO: ${minElo} - ${maxElo}`
+                      : minElo
+                      ? `ELO: ${minElo}+`
+                      : maxElo
+                      ? `ELO ≤ ${maxElo}`
+                      : (locale === "ar" ? "مفتوحة للجميع" : "Open Bracket")}
+                  </span>
+                </span>
+              ) : (
+                <span className={styles.eloBadge}>
+                  <span>🌟</span>
+                  <span>{locale === "ar" ? "مفتوحة للجميع" : "Open Bracket"}</span>
+                </span>
+              )}
               <span className={`${styles.statusPill} ${styles[`status_${tournament.status}`] ?? ""}`}>
                 {tournament.status === "LIVE" && <span className={styles.liveDot} />}
                 {t(`tournamentsPage.status.${tournament.status}`)}
@@ -284,6 +337,39 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
 
         {tournament.status === "REGISTRATION" && (
           <div className={styles.actions}>
+            {/* ELO Eligibility Status Indicator */}
+            {!player ? (
+              <div className={`${styles.eligibilityBanner} ${styles.eligibilityBannerGuest}`}>
+                <span className={styles.bannerEmoji}>💡</span>
+                <div className={styles.bannerText}>
+                  <strong>{locale === "ar" ? "التسجيل مفتوح للجميع" : "Registration is Open"}</strong> —{" "}
+                  {locale === "ar"
+                    ? "سجّل حسابك خلال ثوانٍ بنقرة واحدة لتثبيت مقعدك والمنافسة على الجائزة."
+                    : "Create an account in seconds with 1-click to reserve your seat and compete for the prize."}
+                </div>
+              </div>
+            ) : isEligible ? (
+              <div className={`${styles.eligibilityBanner} ${styles.eligibilityBannerOk}`}>
+                <span className={styles.bannerEmoji}>✅</span>
+                <div className={styles.bannerText}>
+                  <strong>{locale === "ar" ? "أنت مؤهل للمشاركة في البطولة!" : "You are eligible to join!"}</strong> —{" "}
+                  {locale === "ar"
+                    ? `تصنيفك الحالي (${playerRating} ELO) متوافق تماماً مع معايير البطولة.`
+                    : `Your current rating (${playerRating} ELO) matches championship requirements.`}
+                </div>
+              </div>
+            ) : (
+              <div className={`${styles.eligibilityBanner} ${styles.eligibilityBannerWarning}`}>
+                <span className={styles.bannerEmoji}>⚠️</span>
+                <div className={styles.bannerText}>
+                  <strong>{locale === "ar" ? "غير مؤهل وفق تصنيف ELO" : "Ineligible by ELO rating"}</strong> —{" "}
+                  {locale === "ar"
+                    ? `تصنيفك الحالي (${playerRating} ELO) يقع خارج نطاق البطولة المطلوب (${minElo ? `الحد الأدنى ${minElo}` : ""} ${maxElo ? `الحد الأقصى ${maxElo}` : ""}). العب نزالات عادية لرفع وتعديل تصنيفك.`
+                    : `Your rating (${playerRating} ELO) does not meet championship criteria (${minElo ? `min ${minElo}` : ""} ${maxElo ? `max ${maxElo}` : ""}). Play ranked duels to adjust your rating.`}
+                </div>
+              </div>
+            )}
+
             {player && tournament.tier === "CASH" && walletBalance !== null && (
               <div className={`${styles.walletNotice} ${walletBalance < BigInt(tournament.entry_fee_minor || 0) ? styles.walletNoticeLow : styles.walletNoticeOk}`}>
                 <div className={styles.walletNoticeText}>
@@ -307,9 +393,9 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
 
             <div className={styles.mainActionBtnGroup}>
               {!player ? (
-                <LocaleLink href="/login" className={styles.fullWidthActionLink}>
-                  <Button variant="primary">{t("tournamentsPage.login_to_register")}</Button>
-                </LocaleLink>
+                <Button variant="primary" onClick={openPopup}>
+                  ⚔️ {locale === "ar" ? "سجّل الآن للمشاركة في البطولة" : "Sign Up & Join Championship"}
+                </Button>
               ) : registered ? (
                 <div className={styles.registeredRow}>
                   <Button variant="secondary" onClick={() => void withdraw()} disabled={busy}>
@@ -317,6 +403,10 @@ export default function TournamentDetailPage({ params }: { params: Promise<{ id:
                   </Button>
                   <span className={styles.registeredNote}>✅ {t("tournamentsPage.registered")}</span>
                 </div>
+              ) : !isEligible ? (
+                <Button variant="secondary" disabled>
+                  🚫 {locale === "ar" ? "غير مؤهل (شرط التصنيف ELO)" : "Ineligible (ELO requirement)"}
+                </Button>
               ) : (
                 <Button variant="primary" onClick={() => void register()} disabled={busy}>
                   {busy ? t("tournamentsPage.registering") : t("tournamentsPage.register")}
