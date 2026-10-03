@@ -320,15 +320,63 @@
   gap: 6px;
   padding: 6px 14px;
   border-radius: var(--nz-radius-pill);
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   font-size: var(--nz-text-xs);
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+.quickPracticeWrap {
+  margin-top: 18px;
+  width: 100%;
+  max-width: 460px;
+}
+
+.quickPracticeBtn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: var(--nz-radius-pill);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.6);
+  color: #ffffff;
+  font-family: var(--nz-font-heading);
+  font-size: var(--nz-text-base);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
   transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.quickPracticeBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.6);
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+}
+
+.quickPracticeBtn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.quickPracticeBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.quickPracticeIcon {
+  font-size: 1.25rem;
+  animation: pulseQuick 1.5s infinite;
+}
+
+@keyframes pulseQuick {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
 }
 
 .heroChip:hover {

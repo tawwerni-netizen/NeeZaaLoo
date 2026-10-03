@@ -72,8 +72,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleAuthCleared = () => {
       setPlayer(null);
     };
+    const handleAuthChanged = () => {
+      void refreshPlayer();
+    };
     window.addEventListener("nz_auth_cleared", handleAuthCleared);
-    return () => window.removeEventListener("nz_auth_cleared", handleAuthCleared);
+    window.addEventListener("nz_auth_changed", handleAuthChanged);
+    return () => {
+      window.removeEventListener("nz_auth_cleared", handleAuthCleared);
+      window.removeEventListener("nz_auth_changed", handleAuthChanged);
+    };
   }, [refreshPlayer]);
 
   // The one place the "saved account preference" tier of the locale

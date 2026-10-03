@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { LocaleLink } from "@/components/LocaleLink";
 import { useI18n } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth-context";
+import { useAuthPopup } from "@/lib/auth-popup-context";
 import { transition, useReducedMotion } from "@/lib/motion";
 import type { ProgressionDelta } from "@/lib/use-progression-snapshot";
 import { playVictoryFanfare, playDefeatTone } from "@/lib/game-audio";
@@ -133,6 +134,7 @@ export function ResultCeremony({
 }: Props) {
   const { t, locale } = useI18n();
   const { player } = useAuth();
+  const { openPopup } = useAuthPopup();
   const reduceMotion = useReducedMotion();
   const [gemCount, setGemCount] = useState(0);
 
@@ -312,11 +314,13 @@ export function ResultCeremony({
               ? "لا تفقد تقدمك وجوائزك. احفظ حسابك الآن بضغطة واحدة لاستلامها." 
               : "Don't lose your progress and rewards. Save your account now with one click to claim them."}
           </p>
-          <LocaleLink href="/login" style={{ width: "100%", textDecoration: "none" }}>
-            <Button variant="primary" className={styles.guestConversionBtn}>
-              {locale === "ar" ? "احفظ الحساب لاستلام الجوائز" : "Save Account to Claim"}
-            </Button>
-          </LocaleLink>
+          <Button
+            variant="primary"
+            className={styles.guestConversionBtn}
+            onClick={() => openPopup()}
+          >
+            {locale === "ar" ? "احفظ الحساب لاستلام الجوائز 🎁" : "Save Account to Claim 🎁"}
+          </Button>
         </motion.div>
       )}
 

@@ -181,6 +181,9 @@
   cursor: pointer;
   font: inherit;
   outline: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
 }

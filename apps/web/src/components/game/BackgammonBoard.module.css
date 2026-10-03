@@ -161,6 +161,10 @@
   border: none;
   padding: 0;
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
   overflow: visible;
 }
 

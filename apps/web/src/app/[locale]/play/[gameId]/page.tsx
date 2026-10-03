@@ -1318,6 +1318,14 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
     }
   }
 
+  useEffect(() => {
+    const modeParam = searchParams.get("mode");
+    if ((modeParam === "practice" || modeParam === "vs-computer") && plugin?.supportsAI && !creating) {
+      void startVsComputer("MEDIUM", "STANDARD");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <Header />
@@ -1557,6 +1565,24 @@ function InnerPlayGamePage({ params }: { params: Promise<{ gameId: string }> }) 
                       )}
                     </div>
                   </>
+                )}
+
+                {plugin.supportsAI && (
+                  <div className={styles.quickPracticeWrap}>
+                    <button
+                      type="button"
+                      className={styles.quickPracticeBtn}
+                      disabled={creating}
+                      onClick={() => void startVsComputer("MEDIUM", "STANDARD")}
+                    >
+                      <span className={styles.quickPracticeIcon}>⚡</span>
+                      <span>
+                        {creating
+                          ? (locale === "ar" ? "جارٍ بدء التدريب المجاني..." : "Launching Free Practice...")
+                          : (locale === "ar" ? "تدريب مجاني فوري ضد الكمبيوتر (1-Click)" : "Instant Free Practice vs Computer (1-Click)")}
+                      </span>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

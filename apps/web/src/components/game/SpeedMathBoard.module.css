@@ -289,6 +289,9 @@
   cursor: pointer;
   transition: all 0.12s ease;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .keypadBtn:hover:not(:disabled) {
@@ -332,6 +335,10 @@
   border: 2px solid #aaffea;
   color: #002b20;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
   box-shadow: 0 0 20px rgba(0, 255, 204, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.5);
   transition: all 0.15s ease;
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);

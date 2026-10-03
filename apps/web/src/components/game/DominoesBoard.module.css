@@ -132,6 +132,9 @@
     0 0 15px rgba(0, 255, 255, 0.3);
   transition: all var(--nz-dur-fast) var(--nz-ease-out);
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .tileFace {
@@ -281,6 +284,10 @@
   border: none;
   padding: 0;
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .passButton {

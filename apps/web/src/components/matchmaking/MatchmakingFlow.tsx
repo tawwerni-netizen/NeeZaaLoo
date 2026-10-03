@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { getGameThemeTokens } from "@/lib/games/theme-tokens";
 import { playCardHoverSound, playLudoMatchFoundSound } from "@/lib/game-audio";
-import { get, post, ApiError } from "@/lib/api";
+import { get, post, getTokens, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthPopup } from "@/lib/auth-popup-context";
 import { useI18n } from "@/lib/i18n/context";
@@ -74,7 +74,8 @@ export function MatchmakingFlow({
   useEffect(() => {
     cancelledRef.current = false;
     ticketIdRef.current = null;
-    if (!player) {
+    const { accessToken } = getTokens();
+    if (!player && !accessToken) {
       setError(locale === "ar" ? "يرجى تسجيل الدخول للبدء في التوفيق والمبارزة" : "Please log in to enter matchmaking");
       setPhase("error");
       openPopup();
@@ -82,19 +83,23 @@ export function MatchmakingFlow({
     }
     (async () => {
       try {
+        const playerId = player?.id;
         const [activeRes, selfRes] = await Promise.all([
           get<{ active: boolean; duel?: { id: string; gameId: string } }>("/v1/me/active-duel").catch(() => null),
-          get<{ id: string; nickname: string; avatarUrl?: string | null; globalSkill?: number | null }>(
-            `/v1/players/by-id/${encodeURIComponent(player.id)}/preview`
-          ).catch(() => null)
+          playerId
+            ? get<{ id: string; nickname: string; avatarUrl?: string | null; globalSkill?: number | null }>(
+                `/v1/players/by-id/${encodeURIComponent(playerId)}/preview`
+              ).catch(() => null)
+            : get<{ id: string; nickname?: string; handle?: string; avatarUrl?: string | null }>("/v1/me").catch(() => null)
         ]);
 
         if (selfRes) {
+          const selfHandle = (selfRes as any).nickname || (selfRes as any).handle || player?.handle || (locale === "ar" ? "أنت (ضيف)" : "You (Guest)");
           setSelfProfile({
-            id: selfRes.id || player.id,
-            handle: selfRes.nickname || player.handle,
-            avatarUrl: selfRes.avatarUrl ?? null,
-            globalSkill: selfRes.globalSkill ?? null,
+            id: (selfRes as any).id || player?.id || "guest",
+            handle: selfHandle,
+            avatarUrl: (selfRes as any).avatarUrl ?? null,
+            globalSkill: (selfRes as any).globalSkill ?? null,
           });
         }
 

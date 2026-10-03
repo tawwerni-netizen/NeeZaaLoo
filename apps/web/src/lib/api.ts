@@ -63,6 +63,7 @@ export function setTokens(accessToken: string, refreshToken: string, remember: b
   const days = remember ? 30 : 1;
   setCookie(ACCESS_TOKEN_KEY, accessToken, days);
   setCookie(REFRESH_TOKEN_KEY, refreshToken, days);
+  window.dispatchEvent(new Event("nz_auth_changed"));
 }
 
 export function clearTokens() {
