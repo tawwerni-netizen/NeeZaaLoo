@@ -13,6 +13,7 @@
   "scripts": {
     "test": "npm run test --workspaces --if-present",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
+    "check:secrets": "node scripts/check-secrets.mjs",
     "build": "npm run build --workspace=apps/web",
     "start": "node server.js",
     "pm2:start": "pm2 start ecosystem.config.cjs",

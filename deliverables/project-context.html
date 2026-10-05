@@ -371,7 +371,7 @@ Android (Compose)┤─▶ Edge (Cloudflare: WAF, DDoS, bot mgmt, geo, TLS)
   <p style="color:var(--accent)"><strong>Both keys were generated fresh for this deployment and are not reproduced in this document.</strong> If they need rotating, generate via <code class="mono">node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"</code> and update both Hostinger's environment variables panel and any dependent service.</p>
 
   <h3>Database: Supabase Postgres</h3>
-  <p>Project <code class="mono">oqauuhkztracrktpmlxp</code> on Supabase (<code class="mono">https://oqauuhkztracrktpmlxp.supabase.co</code>). <strong>Important distinction discovered during setup:</strong> Supabase surfaces several different connection values that are easy to confuse —</p>
+  <p>Project <code class="mono">[PROJECT_ID]</code> on Supabase (<code class="mono">https://[PROJECT_ID].supabase.co</code>). <strong>Important distinction discovered during setup:</strong> Supabase surfaces several different connection values that are easy to confuse —</p>
   <table>
     <tr><th>Value</th><th>Looks like</th><th>Use for</th></tr>
     <tr><td>Project REST URL</td><td class="mono">https://xxx.supabase.co/rest/v1/</td><td>Supabase's own REST/client API — <strong>not</strong> a Postgres connection string</td></tr>

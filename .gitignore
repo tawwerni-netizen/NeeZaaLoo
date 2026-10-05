@@ -2,6 +2,7 @@ node_modules/
 dist/
 build/
 .next/
+# Environment & Local Secrets (Never commit)
 .env
 .env.*
 !.env.example
@@ -9,14 +10,18 @@ build/
 local.properties
 *.keystore
 *.jks
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
 *.log
 .DS_Store
 coverage/
 .gradle/
 
-# Locally generated dev-only keys (smoke tests / local runs). Never committed:
-# these are generated on demand by loadOrGenerateKey and are not production
-# credentials, but a tracked key file is a tracked key file.
+# Locally generated dev-only keys
 .smoke-*
 .idea/
 *.tsbuildinfo
@@ -31,7 +36,13 @@ data/
 !apps/web/public/*.pdf
 skills-lock.json
 backups/
-*.json.gz
+*.bundle
+*.sql.gz
+*.dump
+secrets/
+private/
 scratch/
+*.scratch.*
 /*.mjs
 /scratch*
+
