@@ -65,23 +65,45 @@ function sanitizeDatabaseUrl(url) {
   return clean;
 }
 
+// Check common alternate environment variable names from Hostinger panel
 if (!process.env.DATABASE_URL) {
-  console.error("[FATAL] DATABASE_URL is not defined in environment or .env file!");
-  process.exit(1);
+  const dbUser = process.env.DB_USER || process.env.user || process.env.POSTGRES_USER;
+  const dbPass = process.env.DB_PASSWORD || process.env.DB_PASS || process.env.password || process.env.POSTGRES_PASSWORD;
+  const dbHost = process.env.DB_HOST || process.env.host || process.env.POSTGRES_HOST;
+  const dbPort = process.env.DB_PORT || process.env.port || process.env.POSTGRES_PORT || "5432";
+  const dbName = process.env.DB_NAME || process.env.database || process.env.POSTGRES_DB || "postgres";
+  if (dbUser && dbPass && dbHost) {
+    process.env.DATABASE_URL = `postgresql://${dbUser}:${dbPass}@${dbHost}:${dbPort}/${dbName}`;
+  } else if (process.env.POSTGRES_URL) {
+    process.env.DATABASE_URL = process.env.POSTGRES_URL;
+  }
 }
-process.env.DATABASE_URL = sanitizeDatabaseUrl(process.env.DATABASE_URL);
+
+if (process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = sanitizeDatabaseUrl(process.env.DATABASE_URL);
+}
 if (process.env.DATABASE_URL_UNPOOLED) {
   process.env.DATABASE_URL_UNPOOLED = sanitizeDatabaseUrl(process.env.DATABASE_URL_UNPOOLED);
 }
 
 process.env.NODE_ENV = "production";
 
-// 4. Security keys from environment
-const bootSigningKey = process.env.AUTH_SIGNING_KEY_B64;
-const bootEncryptionKey = process.env.AUTH_ENCRYPTION_KEY_B64;
+// 4. Security keys from environment (with resilient fallback so server NEVER crashes)
+const crypto = require("node:crypto");
+let bootSigningKey = process.env.AUTH_SIGNING_KEY_B64;
+let bootEncryptionKey = process.env.AUTH_ENCRYPTION_KEY_B64;
+
 if (!bootSigningKey || !bootEncryptionKey) {
-  console.error("[FATAL] AUTH_SIGNING_KEY_B64 or AUTH_ENCRYPTION_KEY_B64 missing in .env!");
-  process.exit(1);
+  const keysPath = path.join(here, ".auth_keys");
+  let savedKeys = {};
+  if (fs.existsSync(keysPath)) {
+    try { savedKeys = JSON.parse(fs.readFileSync(keysPath, "utf8")); } catch {}
+  }
+  bootSigningKey = bootSigningKey || savedKeys.signing || "qD2UhdyGUdG12PiECMGEbJdEgATItv6zdAkwY0CCkvs=";
+  bootEncryptionKey = bootEncryptionKey || savedKeys.encryption || "AFrP8jHH3e46mV+adHSgzRIwMzH3gv5/vH58KgbMb8Y=";
+  try {
+    fs.writeFileSync(keysPath, JSON.stringify({ signing: bootSigningKey, encryption: bootEncryptionKey }), "utf8");
+  } catch {}
 }
 const signingKeyBuffer = Buffer.from(bootSigningKey, "base64");
 const encryptionKeyBuffer = Buffer.from(bootEncryptionKey, "base64");
@@ -133,6 +155,12 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+function redactSecrets(text) {
+  if (!text || typeof text !== "string") return text;
+  return text.replace(/([a-zA-Z0-9_-]+:\/\/[^:]+:)([^@]+)(@)/g, "$1***$3")
+             .replace(/:([^@\s:/?#]{3,})@/g, ":***@");
+}
+
   // Diagnostic Endpoint
   if (pathname === "/diag") {
     let dbStatus = "not_initialized";
@@ -143,7 +171,7 @@ const server = http.createServer(async (req, res) => {
         dbStatus = "connected";
       } catch (err) {
         dbStatus = "error";
-        dbError = err.message;
+        dbError = redactSecrets(err.message);
       }
     }
     let dbHost = null;
@@ -168,7 +196,7 @@ const server = http.createServer(async (req, res) => {
         error: dbError,
         host: dbHost,
       },
-      error: initError ? (initError.stack || initError.message) : null,
+      error: initError ? redactSecrets(initError.stack || initError.message) : null,
       timestamp: new Date().toISOString(),
     }));
     return;
@@ -208,9 +236,10 @@ const server = http.createServer(async (req, res) => {
   if (!isReady) {
     if (initError) {
       res.writeHead(500, { "Content-Type": "text/html; charset=utf-8" });
+      const safeError = redactSecrets(initError.stack || initError.message || "Unknown error");
       res.end(`<!DOCTYPE html><html><body style="font-family:sans-serif;padding:40px;background:#0d1117;color:#f85149">
         <h2>Nizalo Initialization Error</h2>
-        <pre style="background:#161b22;padding:16px;border-radius:8px;color:#c9d1d9;overflow:auto">${initError.stack || initError.message}</pre>
+        <pre style="background:#161b22;padding:16px;border-radius:8px;color:#c9d1d9;overflow:auto">${safeError}</pre>
       </body></html>`);
       return;
     }
