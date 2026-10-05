@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "generated_at": "2026-09-29T13:30:00Z",
+  "platform": {
+    "name": "Nizalo",
+    "domain": "nizalo.com",
+    "architecture": "Monolith Next.js frontend with embedded Node.js HTTP/WebSocket server (server.js)",
+    "primary_language": "TypeScript / JavaScript (ESM)",
+    "database": {
+      "type": "PostgreSQL (Supabase)",
+      "pooler_endpoint": "aws-0-eu-central-1.pooler.supabase.com:5432/postgres",
+      "migrations_count": 82,
+      "tables_count": 103
+    },
+    "supported_locales": ["ar", "en", "es", "fr", "hi", "zh"],
+    "realtime_protocol": "Custom JSON frames over WebSocket (/ws, /ws/chat)"
+  },
+  "information_architecture": {
+    "primary_goal": "FIND A GAME → UNDERSTAND IT → PLAY IT",
+    "primary_navigation": [
+      { "id": "play", "route": "/play", "icon": "⚔️", "label": "Play" },
+      { "id": "games", "route": "/games", "icon": "🎲", "label": "Games" },
+      { "id": "tournaments", "route": "/tournaments", "icon": "🏆", "label": "Tournaments" },
+      { "id": "rank", "route": "/rank", "icon": "👑", "label": "Rank" }
+    ],
+    "secondary_navigation": [
+      { "id": "wallet", "route": "/wallet", "icon": "💎", "label": "Wallet" },
+      { "id": "profile", "route": "/profile", "icon": "👤", "label": "Profile" },
+      { "id": "rewards", "route": "/referrals", "icon": "🎁", "label": "Rewards" },
+      { "id": "clans", "route": "/clans", "icon": "🛡️", "label": "Clans" },
+      { "id": "store", "route": "/store", "icon": "🛒", "label": "Store" },
+      { "id": "battle-pass", "route": "/battle-pass", "icon": "🎟️", "label": "Battle Pass" },
+      { "id": "live", "route": "/watch", "icon": "📺", "label": "Live Stream" }
+    ],
+    "mobile_bottom_navigation": [
+      { "id": "play", "route": "/play", "icon": "⚔️", "label": "Play" },
+      { "id": "games", "route": "/games", "icon": "🎲", "label": "Games" },
+      { "id": "rank", "route": "/rank", "icon": "👑", "label": "Rank" },
+      { "id": "wallet", "route": "/wallet", "icon": "💎", "label": "Wallet" },
+      { "id": "profile", "route": "/profile", "icon": "👤", "label": "Profile" }
+    ]
+  },
+  "canonical_game_registry": {
+    "source_of_truth": "apps/web/src/lib/games/canonical-games.ts",
+    "total_games": 11,
+    "games": [
+      {
+        "id": "chess",
+        "nameKey": "chess",
+        "icon": "♟️",
+        "duration": "5–15 min",
+        "mode": "1v1 Head-to-Head",
+        "skillLevel": "All Levels · Master ELO",
+        "categories": ["ALL", "SKILL", "STRATEGY", "BOARD", "POPULAR", "AVAILABLE_NOW", "CASH_ELIGIBLE", "FREE_TO_PLAY"],
+        "isCashEligible": true,
+        "isFreeToPlay": true,
+        "hasRng": false,
+        "rulesStandard": "FIDE Blitz / Rapid Standard"
+      },
+      {
+        "id": "dominoes",
+        "nameKey": "dominoes",
+        "icon": "🀄",
+        "duration": "5–10 min",
+        "mode": "1v1 Head-to-Head",
+        "skillLevel": "Tactical · Counting",
+        "categories": ["ALL", "SKILL", "STRATEGY", "BOARD", "POPULAR", "AVAILABLE_NOW", "CASH_ELIGIBLE", "FREE_TO_PLAY"],
+        "isCashEligible": true,
+        "isFreeToPlay": true,
+        "hasRng": true,
+        "rulesStandard": "International Draw Dominoes Standard"
+      },
+      {
+        "id": "ludo",
+        "nameKey": "ludo",
+        "icon": "🎲",
+        "duration": "10–20 min",
+        "mode": "1v1 & 2–4 Players",
+        "skillLevel": "Tactical Race · Risk Management",
+        "categories": ["ALL", "SKILL", "BOARD", "CASUAL", "NEW", "POPULAR", "AVAILABLE_NOW", "CASH_ELIGIBLE", "FREE_TO_PLAY"],
+        "isCashEligible": true,
+        "isFreeToPlay": true,
+        "hasRng": true,
+        "rulesStandard": "Standard Tournament Ludo Championship"
+      },
+      {
+        "id": "backgammon",
+        "nameKey": "backgammon",
+        "icon": "🎲",
+        "duration": "8–15 min",
+        "mode": "1v1 Head-to-Head",
+        "skillLevel": "Pip Strategy · Probability",
+        "categories": ["ALL", "SKILL", "STRATEGY", "BOARD", "AVAILABLE_NOW", "CASH_ELIGIBLE", "FREE_TO_PLAY"],
+        "isCashEligible": true,
+        "isFreeToPlay": true,
+        "hasRng": true,
+        "rulesStandard": "World Backgammon Federation (WBF)"
+      },
+      {
+        "id": "speed-math",
+        "nameKey": "speed_math",
+        "icon": "🔢",
+        "duration": "60 sec",
+        "mode": "1v1 Blitz",
+        "skillLevel": "Mental Speed · Pure Focus",
+        "categories": ["ALL", "SKILL", "SPEED", "AVAILABLE_NOW", "CASH_ELIGIBLE", "FREE_TO_PLAY"],
+        "isCashEligible": true,
+        "isFreeToPlay": true,
+        "hasRng": false,
+        "rulesStandard": "Nizalo Speed Math Standard"
+      },
+      {
+        "id": "xo",
+        "nameKey": "xo",
+        "icon": "❌",
+        "duration": "1–2 min",
+        "mode": "1v1 Blitz",
+        "skillLevel": "Reflexes · Zero Error",
+        "categories": ["ALL", "SKILL", "SPEED", "CASUAL", "POPULAR", "AVAILABLE_NOW", "FREE_TO_PLAY"],
+        "isCashEligible": false,
+        "isFreeToPlay": true,
+        "hasRng": false,
+        "rulesStandard": "Classic 3x3 Tic-Tac-Toe Blitz"
+      },
+      {
+        "id": "connect-four",
+        "nameKey": "connect_four",
+        "icon": "🔴",
+        "duration": "3–5 min",
+        "mode": "1v1 Head-to-Head",
+        "skillLevel": "Pattern Recognition",
+        "categories": ["ALL", "SKILL", "STRATEGY", "CASUAL", "AVAILABLE_NOW", "FREE_TO_PLAY"],
+        "isCashEligible": false,
+        "isFreeToPlay": true,
+        "hasRng": false,
+        "rulesStandard": "Standard 7x6 Connect Four"
+      },
+      {
+        "id": "checkers",
+        "nameKey": "checkers",
+        "icon": "⚫",
+        "duration": "8–15 min",
+        "mode": "1v1 Head-to-Head",
+        "skillLevel": "Tactical Planning · Forced Lines",
+        "categories": ["ALL", "SKILL", "STRATEGY", "BOARD", "AVAILABLE_NOW", "CASH_ELIGIBLE", "FREE_TO_PLAY"],
+        "isCashEligible": true,
+        "isFreeToPlay": true,
+        "hasRng": false,
+        "rulesStandard": "American Checkers Standard"
+      },
+      {
+        "id": "reversi",
+        "nameKey": "reversi",
+        "icon": "⚪",
+        "duration": "5–10 min",
+        "mode": "1v1 Head-to-Head",
+        "skillLevel": "Positional Reversals · Territory",
+        "categories": ["ALL", "SKILL", "STRATEGY", "BOARD", "AVAILABLE_NOW", "CASH_ELIGIBLE", "FREE_TO_PLAY"],
+        "isCashEligible": true,
+        "isFreeToPlay": true,
+        "hasRng": false,
+        "rulesStandard": "World Othello Federation Standard"
+      },
+      {
+        "id": "gomoku",
+        "nameKey": "gomoku",
+        "icon": "🟢",
+        "duration": "5–10 min",
+        "mode": "1v1 Head-to-Head",
+        "skillLevel": "Tactical Alignment · Foresight",
+        "categories": ["ALL", "SKILL", "STRATEGY", "BOARD", "AVAILABLE_NOW", "FREE_TO_PLAY"],
+        "isCashEligible": false,
+        "isFreeToPlay": true,
+        "hasRng": false,
+        "rulesStandard": "International Freestyle Gomoku"
+      },
+      {
+        "id": "seega",
+        "nameKey": "seega",
+        "icon": "🎯",
+        "duration": "5–12 min",
+        "mode": "1v1 Head-to-Head",
+        "skillLevel": "Traditional Tactics · Pincer Encirclement",
+        "categories": ["ALL", "SKILL", "STRATEGY", "BOARD", "AVAILABLE_NOW", "FREE_TO_PLAY"],
+        "isCashEligible": false,
+        "isFreeToPlay": true,
+        "hasRng": false,
+        "rulesStandard": "Authentic Arab Seega Heritage Standard"
+      }
+    ]
+  },
+  "prioritized_issues": {
+    "P0": [
+      {
+        "id": "MULTI_SEAT_SETTLEMENT_GUARD",
+        "domain": "Settlement",
+        "description": "packages/settlement hardcodes 2-seat pots (seat0, seat1). Must be guarded until 4-player pot distribution is supported.",
+        "status": "IDENTIFIED"
+      }
+    ],
+    "P1": [
+      {
+        "id": "CANONICAL_GAME_CATALOG_SYNC",
+        "domain": "Catalog",
+        "description": "Resolved 10 vs 11 game count across i18n, FAQ, admin, footer, sitemap, and GameRegistry.",
+        "status": "RESOLVED"
+      },
+      {
+        "id": "RNG_HONESTY",
+        "domain": "Compliance",
+        "description": "Differentiated deterministic games (Chess, XO, etc.) from CSPRNG server-seeded games (Ludo, Backgammon, Dominoes).",
+        "status": "RESOLVED"
+      }
+    ],
+    "P2": [
+      {
+        "id": "PLATFORM_FEE_DISPLAY",
+        "domain": "Admin / Arena",
+        "description": "Harmonize 10% vs 12% rake display across admin arena and legal terms.",
+        "status": "IDENTIFIED"
+      }
+    ],
+    "P3": [
+      {
+        "id": "BILLIARDS_RESIDUE_CLEANUP",
+        "domain": "Cleanup",
+        "description": "Clean unused static billiards assets in public folder.",
+        "status": "IDENTIFIED"
+      }
+    ]
+  }
+}

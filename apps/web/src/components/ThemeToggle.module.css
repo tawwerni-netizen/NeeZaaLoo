@@ -1,0 +1,41 @@
+/* ThemeToggle.module.css */
+.toggleBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--nz-radius-pill, 999px);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+  cursor: pointer;
+  transition: all var(--nz-dur-fast, 140ms) ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.toggleBtn:hover {
+  background: var(--nz-surface-3);
+  color: var(--nz-text);
+  border-color: var(--nz-line-strong);
+  transform: scale(1.05);
+}
+
+.toggleBtn:active {
+  transform: scale(0.95);
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s ease;
+}
+
+.sunIcon {
+  color: #F59E0B;
+}
+
+.moonIcon {
+  color: #38BDF8;
+}

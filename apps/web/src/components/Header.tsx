@@ -1,0 +1,522 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Logo } from "./Logo";
+import { Button } from "./Button";
+import { LocaleLink } from "./LocaleLink";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { NotificationCenter } from "./notifications/NotificationCenter";
+import { UserMenu } from "./UserMenu";
+import { useAuth } from "@/lib/auth-context";
+import { useAuthPopup } from "@/lib/auth-popup-context";
+import { useWalletBalance } from "@/lib/use-wallet-balance";
+import { useI18n } from "@/lib/i18n/context";
+import { useBrand } from "@/lib/brand-context";
+import { transition } from "@/lib/motion";
+import { WealthWalletIcon } from "@/components/icons/WealthWalletIcon";
+import styles from "./Header.module.css";
+
+const DEPOSIT_LABELS: Record<string, string> = {
+  ar: "إيداع",
+  en: "Deposit",
+  es: "Depositar",
+  fr: "Dépôt",
+  hi: "जमा",
+  zh: "充值",
+};
+
+export function Header() {
+  const pathname = usePathname();
+  const { player, loading, logout } = useAuth();
+  const { openPopup } = useAuthPopup();
+  const { totalUsd, availableUsd, loading: balanceLoading } = useWalletBalance();
+  const { locale, t } = useI18n();
+  const { isDemoActive, currentTheme } = useBrand();
+  const reduceMotion = useReducedMotion();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreWrapRef = useRef<HTMLDivElement>(null);
+
+  // 1. PRIMARY USER NAVIGATION: Play, Games, Tournaments, Rank (+ B2B in demo mode)
+  const PRIMARY_NAV = [
+    { href: "/play", label: locale === "ar" ? "العب" : (t("nav.play_now") || "Play"), icon: "⚔️" },
+    { href: "/games", label: t("nav.games") || (locale === "ar" ? "الألعاب" : "Games"), icon: "🎲" },
+    { href: "/tournaments", label: t("nav.tournaments") || (locale === "ar" ? "البطولات" : "Tournaments"), icon: "🏆" },
+    { href: "/rank", label: t("nav.rank") || (locale === "ar" ? "التصنيف" : "Rank"), icon: "👑" },
+    ...(isDemoActive ? [{ href: "/b2b", label: locale === "ar" ? "شراء وترخيص المنصة" : "White-Label B2B", icon: "🏢" }] : []),
+  ];
+
+  // 2. SECONDARY SYSTEMS: Fair Play, Clans, Store, Battle Pass, Live Stream, Rewards
+  const SECONDARY_NAV = [
+    { href: "/fair-play", label: locale === "ar" ? "اللعب العادل والنزاهة" : (t("nav.fair_play") || "Fair Play"), icon: "🛡️" },
+    { href: "/clans", label: t("nav.clans") || (locale === "ar" ? "الكلانات" : "Clans"), icon: "⚔️" },
+    { href: "/store", label: t("nav.store") || (locale === "ar" ? "المتجر" : "Store"), icon: "🛒" },
+    { href: "/battle-pass", label: t("nav.battle_pass") || (locale === "ar" ? "تذكرة الموسم" : "Battle Pass"), icon: "🎟️" },
+    { href: "/watch", label: t("nav.watch") || (locale === "ar" ? "البث المباشر" : "Live"), icon: "📺", isLive: true },
+    { href: "/referrals", label: t("nav.referrals") || (locale === "ar" ? "المكافآت" : "Rewards"), icon: "🎁" },
+    ...(player?.isAdmin ? [{ href: "/admin", label: t("nav.admin") || (locale === "ar" ? "لوحة الإدارة" : "Admin"), icon: "⚙️" }] : []),
+    ...(player?.isOrganizer ? [{ href: "/organizer", label: t("nav.organizer") || (locale === "ar" ? "لوحة المنظم" : "Organizer"), icon: "🏆" }] : []),
+  ];
+
+  const isActive = (href: string) => pathname === `/${locale}${href}` || (href !== "/" && pathname.startsWith(`/${locale}${href}`));
+  const isSecondaryActive = SECONDARY_NAV.some((item) => isActive(item.href));
+
+  function closeMenu() {
+    setMenuOpen(false);
+    setMoreOpen(false);
+  }
+
+  // Handle click outside desktop More dropdown
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (moreWrapRef.current && !moreWrapRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+    if (moreOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [moreOpen]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setMoreOpen(false);
+  }, [pathname]);
+
+  return (
+    <header className={styles.header}>
+      <div className={`nz-container ${styles.inner}`}>
+        <LocaleLink href="/" aria-label={t("nav.home_aria_label")} className={styles.brand}>
+          <Logo />
+        </LocaleLink>
+
+        {/* Desktop Primary Navigation Bar */}
+        <nav className={styles.primaryNav} aria-label="Primary Navigation">
+          {PRIMARY_NAV.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <LocaleLink
+                key={item.href}
+                href={item.href}
+                className={active ? styles.navLinkActive : styles.navLink}
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+                <span className={styles.navLabel}>{item.label}</span>
+                {active && <span className={styles.activeIndicator} />}
+              </LocaleLink>
+            );
+          })}
+
+          {/* Desktop Secondary "More" Dropdown Menu */}
+          <div className={styles.moreNavWrap} ref={moreWrapRef}>
+            <button
+              type="button"
+              className={`${styles.moreNavBtn} ${isSecondaryActive ? styles.moreNavBtnActive : ""}`}
+              onClick={() => setMoreOpen((v) => !v)}
+              aria-expanded={moreOpen}
+              aria-haspopup="true"
+            >
+              <span>{locale === "ar" ? "المزيد" : "More"}</span>
+              <svg
+                className={`${styles.moreChevron} ${moreOpen ? styles.moreChevronOpen : ""}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+              {isSecondaryActive && <span className={styles.activeIndicator} />}
+            </button>
+
+            <AnimatePresence>
+              {moreOpen && (
+                <motion.div
+                  className={styles.moreDropdown}
+                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {SECONDARY_NAV.map((item) => {
+                    const active = isActive(item.href);
+                    return (
+                      <LocaleLink
+                        key={item.href}
+                        href={item.href}
+                        className={`${styles.moreDropdownItem} ${active ? styles.moreDropdownItemActive : ""}`}
+                        onClick={() => setMoreOpen(false)}
+                      >
+                        <span className={styles.moreItemContent}>
+                          <span>{item.icon}</span>
+                          <span>{item.label}</span>
+                        </span>
+                        {item.isLive && (
+                          <span className={styles.moreItemLiveBadge}>LIVE</span>
+                        )}
+                      </LocaleLink>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </nav>
+
+        {/* Desktop Secondary Actions */}
+        <div className={styles.secondary}>
+          {loading ? null : player ? (
+            <>
+              {/* Ultra-Professional Wallet Balance & Deposit Widget */}
+              <div className={styles.walletBalanceWidget}>
+                <LocaleLink
+                  href="/wallet"
+                  className={styles.walletBalanceMain}
+                  title={
+                    locale === "ar"
+                      ? `إجمالي الرصيد: ${totalUsd.toFixed(2)} $ (المتاح للعب: ${availableUsd.toFixed(2)} $)`
+                      : `Total Balance: $${totalUsd.toFixed(2)} (Available to play: $${availableUsd.toFixed(2)})`
+                  }
+                >
+                  <div className={styles.walletIconWrap}>
+                    <span className={styles.walletLiveDot} />
+                    <span className={styles.walletIcon}>
+                      <WealthWalletIcon size={19} />
+                    </span>
+                  </div>
+                  <div className={styles.walletAmountWrap}>
+                    <span className={styles.walletAmountNum}>
+                      {balanceLoading ? (
+                        <span className={styles.walletShimmer}>0.00</span>
+                      ) : (
+                        `${totalUsd.toFixed(2)}`
+                      )}
+                    </span>
+                    <span className={styles.walletAssetTag}>USDT</span>
+                  </div>
+                </LocaleLink>
+
+                <LocaleLink
+                  href="/wallet"
+                  className={styles.walletDepositQuickBtn}
+                  title={locale === "ar" ? "إيداع وشحن الرصيد فوراً" : "Deposit funds"}
+                >
+                  <span className={styles.walletDepositPlus}>+</span>
+                  <span className={styles.walletDepositLabel}>
+                    {DEPOSIT_LABELS[locale] || "Deposit"}
+                  </span>
+                </LocaleLink>
+              </div>
+
+              <LocaleLink href="/chat" className={styles.chatPill} aria-label={t("nav.chat")}>
+                <span className={styles.chatIcon}>💬</span>
+              </LocaleLink>
+              <NotificationCenter />
+              {player.isAdmin && (
+                <LocaleLink href="/admin" className={styles.adminDirectPill} title={t("nav.admin") || "Admin Dashboard"}>
+                  <span className={styles.adminDirectIcon}>⚙️</span>
+                  <span className={styles.adminDirectText}>{locale === "ar" ? "لوحة الإدارة" : "Admin"}</span>
+                </LocaleLink>
+              )}
+              <UserMenu />
+              <div className={styles.headerDivider} />
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" onClick={openPopup}>{t("nav.log_in")}</Button>
+              <LocaleLink href="/play">
+                <Button variant="primary">{t("nav.play_now")}</Button>
+              </LocaleLink>
+              <div className={styles.headerDivider} />
+            </>
+          )}
+          {isDemoActive && (
+            <LocaleLink
+              href="/b2b#inquiry"
+              className={styles.b2bDirectPill}
+              style={{
+                background: currentTheme.badgeBg,
+                color: currentTheme.badgeText,
+                borderColor: currentTheme.primaryColor,
+              }}
+            >
+              <span>🏢</span>
+              <span>{locale === "ar" ? "طلب شراء المنصة" : "White-Label Buyout"}</span>
+            </LocaleLink>
+          )}
+          <LanguageSwitcher />
+        </div>
+
+        {/* Mobile Header Actions (Visible on mobile/tablet screens) */}
+        <div className={styles.mobileActions}>
+          {loading ? null : player ? (
+            <>
+              <LocaleLink
+                href="/wallet"
+                className={styles.mobileWalletBalancePill}
+                aria-label={t("nav.wallet")}
+                title={locale === "ar" ? "رصيد المحفظة" : "Wallet Balance"}
+              >
+                <span className={styles.walletIcon}>
+                  <WealthWalletIcon size={16} />
+                </span>
+                <span className={styles.mobileBalanceNum}>
+                  {totalUsd.toFixed(2)}
+                </span>
+                <span className={styles.mobileDepositPlus}>+</span>
+              </LocaleLink>
+              <LocaleLink href="/chat" className={styles.mobileChatBtn} aria-label={t("nav.chat")}>
+                <span className={styles.chatIcon}>💬</span>
+              </LocaleLink>
+              <NotificationCenter />
+              <LanguageSwitcher variant="compact" />
+            </>
+          ) : (
+            <>
+              <LocaleLink href="/play" className={styles.mobileHeaderPlayBtn}>
+                <span>⚔️</span>
+                <span>{locale === "ar" ? "العب" : "Play"}</span>
+              </LocaleLink>
+              <LanguageSwitcher variant="compact" />
+            </>
+          )}
+
+          <button
+            type="button"
+            className={styles.menuToggle}
+            aria-label={t("nav.menu_aria_label")}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <MenuIcon open={menuOpen} />
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            className={styles.mobilePanel}
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+            transition={transition.reveal}
+          >
+            {/* User Profile Card or Guest Welcome Banner */}
+            {loading ? null : player ? (
+              <div className={styles.mobileUserCard}>
+                <div className={styles.mobileUserMain}>
+                  <div className={styles.mobileUserAvatar}>
+                    {player.handle ? player.handle.charAt(0).toUpperCase() : "U"}
+                  </div>
+                  <div className={styles.mobileUserInfo}>
+                    <div className={styles.mobileUserHandle}>{player.handle}</div>
+                    <div className={styles.mobileUserStatus}>
+                      <span className={styles.onlineDot} />
+                      <span>{locale === "ar" ? "متصل الآن" : "Online"}</span>
+                      {player.isAdmin && <span className={styles.adminTag}>Admin</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile Drawer Balance Showcase */}
+                <div className={styles.mobileDrawerBalanceBox}>
+                  <div className={styles.mobileDrawerBalanceLabel}>
+                    <WealthWalletIcon size={16} />
+                    <span>{locale === "ar" ? "رصيد المحفظة:" : "Wallet Balance:"}</span>
+                  </div>
+                  <div className={styles.mobileDrawerBalanceVal}>
+                    {totalUsd.toFixed(2)} <span style={{ fontSize: "11px", color: "#4ade80" }}>USDT</span>
+                  </div>
+                </div>
+
+                <div className={styles.mobileUserActions}>
+                  <LocaleLink href="/wallet" className={styles.mobileCardWalletBtn} onClick={closeMenu}>
+                    <span className={styles.walletIcon}>
+                      <WealthWalletIcon size={18} />
+                    </span>
+                    <span>{t("nav.wallet")}</span>
+                  </LocaleLink>
+                  <LocaleLink href="/profile" className={styles.mobileCardProfileBtn} onClick={closeMenu}>
+                    <span>{locale === "ar" ? "الملف الشخصي" : "Profile"}</span>
+                  </LocaleLink>
+                </div>
+              </div>
+            ) : (
+               <div className={styles.mobileGuestCard}>
+                <div className={styles.mobileGuestTitle}>
+                  {locale === "ar" ? "ميدان نزلو للمبارزات" : "Nizalo Duel Arena"}
+                </div>
+                <p className={styles.mobileGuestSubtitle}>
+                  {locale === "ar"
+                    ? "ألعاب مهارية معتمدة، تحكيم خادم فوري بدون أي عنصر حظ."
+                    : "100% skill-based games with instant server-side matchmaking."}
+                </p>
+                <div className={styles.mobileGuestButtons}>
+                  <Button variant="ghost" onClick={() => { closeMenu(); openPopup(); }}>
+                    {t("nav.log_in")}
+                  </Button>
+                  <LocaleLink href="/play" onClick={closeMenu}>
+                    <Button variant="primary">
+                      {t("nav.play_now")}
+                    </Button>
+                  </LocaleLink>
+                </div>
+              </div>
+            )}
+
+            {isDemoActive && (
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                <LocaleLink
+                  href="/b2b"
+                  onClick={closeMenu}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    padding: "10px 16px",
+                    borderRadius: "10px",
+                    background: currentTheme.badgeBg,
+                    color: currentTheme.badgeText,
+                    border: `1px solid ${currentTheme.primaryColor}`,
+                    fontWeight: "800",
+                    fontSize: "14px",
+                    textDecoration: "none",
+                  }}
+                >
+                  <span>🏢</span>
+                  <span>{locale === "ar" ? "باقات شراء وترخيص المنصة (B2B)" : "White-Label License & Buyout"}</span>
+                </LocaleLink>
+              </div>
+            )}
+
+            {/* 1. Primary Navigation Section */}
+            <div className={styles.mobileNavSection}>
+              <div className={styles.mobileSectionTitle}>
+                {locale === "ar" ? "القائمة الرئيسية" : "Main Navigation"}
+              </div>
+              <div className={styles.mobileNavGrid}>
+                {PRIMARY_NAV.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <LocaleLink
+                      key={item.href}
+                      href={item.href}
+                      className={active ? styles.mobileNavTileActive : styles.mobileNavTile}
+                      onClick={closeMenu}
+                    >
+                      <span className={styles.mobileNavTileIcon}>{item.icon}</span>
+                      <span className={styles.mobileNavTileLabel}>{item.label}</span>
+                      {active && <span className={styles.activeGlowDot} />}
+                    </LocaleLink>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Secondary Features Section */}
+            <div className={styles.mobileNavSection} style={{ marginTop: "16px" }}>
+              <div className={styles.mobileSectionTitle}>
+                {locale === "ar" ? "المزيد والمجتمع" : "Explore & Features"}
+              </div>
+              <div className={styles.mobileNavGrid}>
+                {SECONDARY_NAV.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <LocaleLink
+                      key={item.href}
+                      href={item.href}
+                      className={active ? styles.mobileNavTileActive : styles.mobileNavTile}
+                      onClick={closeMenu}
+                    >
+                      <span className={styles.mobileNavTileIcon}>{item.icon}</span>
+                      <span className={styles.mobileNavTileLabel}>{item.label}</span>
+                      {item.isLive && (
+                        <span className={styles.mobileNavLiveBadge}>LIVE</span>
+                      )}
+                      {active && <span className={styles.activeGlowDot} />}
+                    </LocaleLink>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 3. Quick Account Services */}
+            <div className={styles.mobileServicesSection}>
+              <div className={styles.mobileSectionTitle}>
+                {locale === "ar" ? "خدمات الحساب والدعم" : "Account & Support"}
+              </div>
+              <div className={styles.mobileServicesGrid}>
+                <LocaleLink href="/chat" className={styles.mobileServiceItem} onClick={closeMenu}>
+                  <span className={styles.serviceIcon}>💬</span>
+                  <span className={styles.serviceLabel}>{t("nav.chat")}</span>
+                </LocaleLink>
+                <LocaleLink href="/wallet" className={styles.mobileServiceItem} onClick={closeMenu}>
+                  <span className={styles.serviceIcon}>💎</span>
+                  <span className={styles.serviceLabel}>{t("nav.wallet")}</span>
+                </LocaleLink>
+                <LocaleLink href="/help" className={styles.mobileServiceItem} onClick={closeMenu}>
+                  <span className={styles.serviceIcon}>❓</span>
+                  <span className={styles.serviceLabel}>{t("nav.support")}</span>
+                </LocaleLink>
+                <LocaleLink href="/fair-play" className={styles.mobileServiceItem} onClick={closeMenu}>
+                  <span className={styles.serviceIcon}>🛡️</span>
+                  <span className={styles.serviceLabel}>{locale === "ar" ? "النزاهة" : "Fair Play"}</span>
+                </LocaleLink>
+                {player?.isAdmin && (
+                  <LocaleLink href="/admin" className={styles.mobileServiceItem} onClick={closeMenu}>
+                    <span className={styles.serviceIcon}>⚙️</span>
+                    <span className={styles.serviceLabel}>{t("nav.admin") || "Admin"}</span>
+                  </LocaleLink>
+                )}
+                {player?.isOrganizer && (
+                  <LocaleLink href="/organizer" className={styles.mobileServiceItem} onClick={closeMenu}>
+                    <span className={styles.serviceIcon}>🏆</span>
+                    <span className={styles.serviceLabel}>{t("nav.organizer") || "Organizer"}</span>
+                  </LocaleLink>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Bar: Language and Logout */}
+            <div className={styles.mobileFooterBar}>
+              <div className={styles.mobileControls}>
+                <LanguageSwitcher dropDirection="up" onSelect={closeMenu} />
+              </div>
+              {player && (
+                <button
+                  type="button"
+                  className={styles.mobileLogoutBtn}
+                  onClick={() => { closeMenu(); void logout(); }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                  <span>{t("nav.log_out")}</span>
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}
+
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      {open ? (
+        <path d="M4 4L16 16M16 4L4 16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      ) : (
+        <path d="M3 6H17M3 10H17M3 14H17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      )}
+    </svg>
+  );
+}

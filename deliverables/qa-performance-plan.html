@@ -1,0 +1,265 @@
+<title>Launch Readiness Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --ink:#0B0D10; --paper:#FFFFFF; --s1:#F7F8FA; --s2:#F0F2F5; --line:#E2E5EA;
+    --tx:#14171C; --tx2:#4B5563; --tx3:#828A96;
+    --accent:#CC3A14; --accent-soft:#FDEBE4;
+    --win:#157F4A; --win-soft:#E3F2E9;
+    --warn:#8A6416; --warn-soft:#FDF3D8;
+    --loss:#C2282D; --loss-soft:#FBE6E6;
+    --f-disp:"Archivo",system-ui,sans-serif;
+    --f-ui:"IBM Plex Sans",system-ui,sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#F7F8FA; --paper:#0B0D10; --s1:#14171C; --s2:#1C2027; --line:#2B313A;
+      --tx:#F2F4F7; --tx2:#9BA3AF; --tx3:#6B727E;
+      --accent:#FF5A2B; --accent-soft:#2A1810;
+      --win:#2FBF71; --win-soft:#0E2A1C;
+      --warn:#E5B84B; --warn-soft:#2E2510;
+      --loss:#E5484D; --loss-soft:#2E1414;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#F7F8FA; --paper:#0B0D10; --s1:#14171C; --s2:#1C2027; --line:#2B313A;
+    --tx:#F2F4F7; --tx2:#9BA3AF; --tx3:#6B727E;
+    --accent:#FF5A2B; --accent-soft:#2A1810;
+    --win:#2FBF71; --win-soft:#0E2A1C;
+    --warn:#E5B84B; --warn-soft:#2E2510;
+    --loss:#E5484D; --loss-soft:#2E1414;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--tx);font-family:var(--f-ui);font-size:15px;line-height:1.6;margin:0}
+  .wrap{max-width:920px;margin:0 auto;padding:40px 24px 80px}
+  h1,h2,h3,h4{font-family:var(--f-disp);color:var(--ink);letter-spacing:-.01em;text-wrap:balance;margin:0}
+  h1{font-size:clamp(26px,4vw,36px);font-weight:800}
+  h2{font-size:22px;font-weight:800;margin:0 0 4px}
+  h3{font-size:15px;font-weight:700;margin:0 0 10px}
+  p{margin:0 0 10px;color:var(--tx2)}
+  a{color:var(--accent)}
+  code{font-family:var(--f-mono);font-size:.86em;background:var(--s2);padding:1px 5px;border-radius:4px}
+  .eyebrow{font-family:var(--f-mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+  header{padding-bottom:28px;margin-bottom:32px;border-bottom:1px solid var(--line)}
+  header p{font-size:16px;max-width:60ch;margin-top:10px}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  nav.toc a{font-family:var(--f-mono);font-size:12px;font-weight:600;padding:6px 12px;background:var(--s1);border:1px solid var(--line);border-radius:20px;text-decoration:none;color:var(--tx2)}
+  section{margin:0 0 48px}
+  section.part{padding-top:8px}
+  .part-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .part-num{font-family:var(--f-mono);font-size:13px;color:var(--accent);font-weight:700}
+  .part-sub{color:var(--tx3);font-size:14px;margin-bottom:24px}
+  .flow{border:1px solid var(--line);border-radius:12px;padding:18px 20px 6px;margin:0 0 18px;background:var(--s1)}
+  .flow-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+  .flow-head h3{margin:0}
+  .flow-tag{font-family:var(--f-mono);font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:var(--win-soft);color:var(--win)}
+  .flow-tag.mock{background:var(--loss-soft);color:var(--loss)}
+  .flow-note{font-size:13px;color:var(--tx3);margin-bottom:10px}
+  ul.checks{list-style:none;margin:0;padding:0}
+  ul.checks li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--tx2)}
+  ul.checks li:first-child{border-top:none}
+  ul.checks input[type=checkbox]{margin-top:3px;width:15px;height:15px;accent-color:var(--accent);flex-shrink:0;cursor:pointer}
+  ul.checks li strong{color:var(--tx);font-weight:600}
+  ul.checks li.checked{opacity:.5}
+  ul.checks li.checked span{text-decoration:line-through}
+  .callout{background:var(--accent-soft);border-left:3px solid var(--accent);padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13.5px}
+  .callout strong{color:var(--ink)}
+  .callout.warn{background:var(--warn-soft);border-color:var(--warn)}
+  .callout.win{background:var(--win-soft);border-color:var(--win)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+  th{text-align:left;font-family:var(--f-mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--tx3);padding:6px 10px;border-bottom:1px solid var(--line)}
+  td{padding:7px 10px;border-bottom:1px solid var(--line);color:var(--tx2);vertical-align:top}
+  td strong{color:var(--tx)}
+  td.num{font-family:var(--f-mono);color:var(--ink)}
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0}
+  .metric{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--s1)}
+  .metric .n{font-family:var(--f-mono);font-size:19px;font-weight:600;color:var(--ink);display:block}
+  .metric .l{font-size:11px;color:var(--tx3)}
+  .file-ref{font-family:var(--f-mono);font-size:12px;color:var(--tx3)}
+  .today-list{counter-reset:t}
+  .today-list li{counter-increment:t;position:relative;padding:10px 0 10px 32px;border-top:1px solid var(--line);font-size:14px;color:var(--tx2)}
+  .today-list li:first-child{border-top:none}
+  .today-list li::before{content:counter(t);position:absolute;left:0;top:10px;width:20px;height:20px;background:var(--ink);color:var(--paper);border-radius:50%;font-family:var(--f-mono);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .today-list li strong{color:var(--tx)}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--tx3)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Nizalo — Pre-launch reference</div>
+    <h1>Launch readiness: QA &amp; performance</h1>
+    <p>Grounded in what's actually in the codebase and what was verified live tonight — not a generic checklist. Check items off as you go; your progress is saved in this browser.</p>
+    <nav class="toc">
+      <a href="#gameplay">Gameplay</a><a href="#chat">Chat</a><a href="#financial">Financial</a>
+      <a href="#frontend">Frontend</a><a href="#backend">Backend &amp; DB</a><a href="#mobile">Mobile</a>
+      <a href="#metrics">Targets</a><a href="#today">Do today</a>
+    </nav>
+  </header>
+
+  <section class="part" id="part1">
+    <div class="part-head"><span class="part-num">PART 1</span><h2>Functional edge-case testing</h2></div>
+    <p class="part-sub">What happens when things go wrong — disconnects, timeouts, double-clicks.</p>
+
+    <section id="gameplay">
+      <h3 style="font-size:17px;margin-bottom:14px">Matchmaking &amp; gameplay</h3>
+
+      <div class="flow">
+        <div class="flow-head"><h3>Vs Computer</h3><span class="flow-tag">verified live</span></div>
+        <div class="flow-note">Played a full chess game this session — move submission, AI reply, and clock all confirmed working over the real WebSocket gateway.</div>
+        <ul class="checks">
+          <li><input type="checkbox"><span>Close the tab mid-game, reopen, log back in — does <strong>ActiveMatchBanner</strong> find the live duel and let you resume, or is it silently orphaned?</span></li>
+          <li><input type="checkbox"><span>Kill wifi for 15s mid-move, restore — does the clock keep running server-side (it should — server is the clock authority) and does the client resync without desyncing the board?</span></li>
+          <li><input type="checkbox"><span>Let the clock hit zero while disconnected — confirm the duel settles on reconnect, not stuck "live" forever.</span></li>
+          <li><input type="checkbox"><span>Rapid double-click the same square/piece — confirm no duplicate move submission (intent should be idempotent per turn).</span></li>
+        </ul>
+      </div>
+
+      <div class="flow">
+        <div class="flow-head"><h3>Random opponent (matchmaking queue)</h3><span class="flow-tag">backend proven</span></div>
+        <div class="flow-note">Queue has a real TTL + heartbeat sweep and a partial unique index preventing double-queueing (already unit tested). The realtime gateway has a lease manager (<code class="file-ref">LEASE_MS=15000</code>) and a claim-sweep tick every 3s that reclaims a duel if its owning gateway instance dies.</div>
+        <ul class="checks">
+          <li><input type="checkbox"><span>Queue, then immediately queue again from a second tab — confirm <code>ALREADY_QUEUED</code> (409), not a second ticket.</span></li>
+          <li><input type="checkbox"><span>Queue and close the tab before a match is found — wait past the TTL, confirm the stale ticket is swept and doesn't permanently occupy the matchmaking pool.</span></li>
+          <li><input type="checkbox"><span>One player disconnects the instant a match is found (before either client renders the board) — does the other player get seated correctly, and does the disconnector's reconnect resume into the same duel?</span></li>
+          <li><input type="checkbox"><span><strong>Cash-tier specifically:</strong> queue for a CASH ticket with exactly the stake amount as your balance, then a second CASH ticket immediately after — confirm the second is rejected, not a double-lock on the same funds.</span></li>
+        </ul>
+      </div>
+
+      <div class="flow">
+        <div class="flow-head"><h3>Direct friend challenges</h3><span class="flow-tag">backend proven</span></div>
+        <div class="flow-note">A <code class="file-ref">challengeExpiryWorker</code> tick already exists; "accept an already-resolved challenge" is unit tested (returns <code>NOT_PENDING</code>, not a duplicate duel).</div>
+        <ul class="checks">
+          <li><input type="checkbox"><span>Both players click "accept" within the same second — confirm exactly one duel is created, not two.</span></li>
+          <li><input type="checkbox"><span>Challenger cancels the instant the opponent clicks accept — which one wins the race, and is the loser told clearly why (not a silent failure)?</span></li>
+          <li><input type="checkbox"><span>Let a challenge sit until it expires while the recipient has the popup open — does the UI update live, or does clicking a dead challenge produce a confusing error?</span></li>
+        </ul>
+      </div>
+
+      <div class="flow">
+        <div class="flow-head"><h3>Tournaments</h3><span class="flow-tag">backend proven</span></div>
+        <div class="flow-note">8-phase lifecycle (DRAFT→...→SETTLED) with its own sweep worker bridging ordinary duel results into the bracket and auto-advancing rounds.</div>
+        <ul class="checks">
+          <li><input type="checkbox"><span>Disconnect mid-match during a LIVE tournament round — confirm the bracket doesn't stall waiting on a match that will never report back (check the sweep's timeout handling specifically).</span></li>
+          <li><input type="checkbox"><span>Register right as REGISTRATION closes — is the boundary handled cleanly (either in or a clear rejection), or is there a race where you're charged the entry fee but not seated?</span></li>
+          <li><input type="checkbox"><span>Confirm a withdrawn/disconnected player's opponent in the next round gets a bye or walkover, not an infinite wait.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="chat">
+      <h3 style="font-size:17px;margin:28px 0 14px">Chat system</h3>
+      <div class="flow">
+        <div class="flow-head"><h3>In-duel chat vs. global drawer</h3></div>
+        <ul class="checks">
+          <li><input type="checkbox"><span>Send a message the instant a duel ends — confirm it's not silently dropped when the channel tears down.</span></li>
+          <li><input type="checkbox"><span>Block a player mid-conversation — do their pending messages disappear from your view immediately, and can they still see messages you sent before the block?</span></li>
+          <li><input type="checkbox"><span>Trigger the chat rate limit deliberately (rapid-fire messages) — confirm you get a clear "slow down" state, not a silently dropped message or a disconnected socket.</span></li>
+          <li><input type="checkbox"><span>Reconnect after a network drop while the global chat drawer is open — does it resubscribe and backfill missed messages, or come back empty?</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="financial">
+      <h3 style="font-size:17px;margin:28px 0 14px">Financial flow — OxaPay</h3>
+      <div class="callout win"><strong>Fixed tonight:</strong> deposits and withdrawals were both silently broken end-to-end before this session (a custody-account naming mismatch rejected every real ledger posting). Both are now wired through independent chain verification and covered by tests — but neither has been exercised against <strong>real OxaPay traffic</strong> yet. Do a real, small, end-to-end deposit and withdrawal today before trusting it with a real user.</div>
+      <div class="flow">
+        <ul class="checks">
+          <li><input type="checkbox"><span><strong>Real deposit test:</strong> send a genuine small USDT-TRC20 transfer to a freshly generated address, confirm it lands as <code>CONFIRMED</code> in your wallet within the expected confirmation window (20 blocks on TRON).</span></li>
+          <li><input type="checkbox"><span><strong>Dust deposit:</strong> send less than 1 USDT — confirm it's quarantined, not silently lost or credited as a rounding error.</span></li>
+          <li><input type="checkbox"><span><strong>Delayed confirmation:</strong> watch the UI while a deposit sits in <code>CONFIRMING</code> — does the wallet page poll and update, or does the user have to manually refresh to see it clear?</span></li>
+          <li><input type="checkbox"><span><strong>Withdrawal under $500:</strong> confirm it auto-processes with no admin step (this is now live — verified by test, not yet by a real payout).</span></li>
+          <li><input type="checkbox"><span><strong>Withdrawal at/above $500:</strong> confirm it lands in your new admin approval queue, and that clicking approve actually broadcasts.</span></li>
+          <li><input type="checkbox"><span><strong>AML playthrough:</strong> deposit, immediately try to withdraw without playing a single duel — confirm <code>AML_PLAYTHROUGH_REQUIRED</code> blocks it with a clear, specific message (not a bare error code).</span></li>
+          <li><input type="checkbox"><span><strong>Reject flow:</strong> reject a pending withdrawal, confirm the funds actually reappear in the player's available balance within the same session (this was broken before tonight's fix — funds used to stay stuck forever).</span></li>
+        </ul>
+      </div>
+    </section>
+  </section>
+
+  <section class="part" id="part2">
+    <div class="part-head"><span class="part-num">PART 2</span><h2>Performance &amp; hosting optimization</h2></div>
+    <p class="part-sub">The platform runs as one Node process (<code>server.js</code>) fanning out to four children — Next.js, the API, the realtime gateway, and the worker — all on one Hostinger host. That shape drives most of what matters below.</p>
+
+    <div class="callout win"><strong>Already fixed:</strong> earlier in this project's life, a single open browser tab generated <strong>46,000+ requests in ~20 minutes</strong> — roughly 10 uncoordinated <code>setInterval</code> polling loops, several firing every second, stacked with no cleanup. Verified live tonight: that's down to ~4 requests/second on the dashboard. Whoever fixed it did it right — keep watching for regressions (see checklist below), this class of bug is easy to reintroduce one new component at a time.</div>
+
+    <section id="frontend">
+      <h3 style="font-size:17px;margin-bottom:14px">Frontend (Next.js)</h3>
+      <ul class="checks">
+        <li><input type="checkbox"><span><strong>Polling audit, recurring:</strong> before every merge that touches a page with live data, grep for new <code>setInterval</code> calls under 5 seconds. One new component polling every 1s is how the 46k-request bug happened the first time.</span></li>
+        <li><input type="checkbox"><span>Run <code>next build</code> and check the bundle analyzer output — flag any single game board component (Chess/Backgammon/etc.) pulling in more than its own game's code via a bad shared import.</span></li>
+        <li><input type="checkbox"><span>Confirm game board SVG/asset packs are only fetched for the game actually being played, not all 10 up front on the <code>/play</code> hub.</span></li>
+        <li><input type="checkbox"><span>In <code>DuelShell</code> and the board components, verify a WebSocket state update triggers a re-render of only the changed squares/pieces, not the whole board tree — React DevTools Profiler during an active game is the fastest way to see this.</span></li>
+        <li><input type="checkbox"><span>Confirm images use Next's <code>&lt;Image&gt;</code> (already true for the hero/game-card WebP assets per this session's network trace) everywhere, not raw <code>&lt;img&gt;</code>, for automatic lazy-loading below the fold.</span></li>
+        <li><input type="checkbox"><span>Check font loading — <code>_next/static/media/*.woff2</code> requests were firing on every navigation in tonight's trace; confirm <code>font-display: swap</code> and that they're cached long-term (immutable), not re-fetched per page.</span></li>
+      </ul>
+    </section>
+
+    <section id="backend">
+      <h3 style="font-size:17px;margin:28px 0 14px">Backend &amp; database</h3>
+      <ul class="checks">
+        <li><input type="checkbox"><span>Add <code>EXPLAIN ANALYZE</code> to the homepage/leaderboard queries (<code>/v1/tournaments</code>, <code>/v1/duels/live</code>, global-skill lookups) — these are hit by every logged-in user on every page load.</span></li>
+        <li><input type="checkbox"><span><strong>Cache the public leaderboard and homepage tournament list</strong> — they don't need per-request freshness. A 5–15s in-memory or Redis cache on these specific reads cuts real DB load without touching anything money-related (never cache wallet balances, duel state, or anything the ledger owns).</span></li>
+        <li><input type="checkbox"><span>Check <code>pg_stat_statements</code> (or Supabase's query insights) for the slowest queries after a day of real traffic — optimize by evidence, not guesswork.</span></li>
+        <li><input type="checkbox"><span><strong>WebSocket connection limits:</strong> the gateway has per-connection rate limits already (<code>RATE_LIMIT_CAPACITY</code>, chat's own separate budget) — confirm <code>ulimit -n</code> / Hostinger's process file-descriptor limit is high enough for your expected concurrent-connection count, since a single Node process holds every open socket.</span></li>
+        <li><input type="checkbox"><span>Watch memory on the 4 child processes under load (<code>server.js</code> spawns Next.js, API, Gateway, Worker) — if one leaks or spikes, it can crash-loop and take the reverse proxy's readiness probe down with it (this exact failure mode is referenced in this session's own commit history: "resolve api 502 bad gateway crash loop").</span></li>
+        <li><input type="checkbox"><span>Since deposits/withdrawals now run through independent chain reads (<code>chain.verifyIncoming</code> / <code>verifyTransfer</code>), confirm the TRON RPC endpoint you're using has headroom — every pending deposit and every in-flight withdrawal polls it on the reconciliation worker's tick.</span></li>
+      </ul>
+    </section>
+
+    <section id="mobile">
+      <h3 style="font-size:17px;margin:28px 0 14px">Mobile UX</h3>
+      <ul class="checks">
+        <li><input type="checkbox"><span>Test every board (Chess, Backgammon, Dominoes, etc.) at 375px width specifically — pieces need a minimum comfortable touch target; verify none require pixel-precision taps.</span></li>
+        <li><input type="checkbox"><span>Kill mobile data mid-move (airplane mode for 5s, restore) — same reconnect test as desktop, but confirm the mobile UI shows a visible "reconnecting" state rather than looking frozen.</span></li>
+        <li><input type="checkbox"><span>Test the deposit QR modal on an actual phone — can the camera scan it cleanly at the modal's rendered size?</span></li>
+        <li><input type="checkbox"><span>Confirm the bottom nav / active-match banner don't overlap the on-screen keyboard when typing in chat.</span></li>
+      </ul>
+    </section>
+  </section>
+
+  <section id="metrics">
+    <h2>Target metrics</h2>
+    <p class="part-sub">Numbers to check against, not aspirational round figures.</p>
+    <div class="metric-grid">
+      <div class="metric"><span class="n">&gt;90</span><span class="l">Lighthouse Performance (mobile)</span></div>
+      <div class="metric"><span class="n">&lt;2.5s</span><span class="l">LCP</span></div>
+      <div class="metric"><span class="n">&lt;200ms</span><span class="l">INP</span></div>
+      <div class="metric"><span class="n">&lt;0.1</span><span class="l">CLS</span></div>
+      <div class="metric"><span class="n">&lt;150ms</span><span class="l">Move → server ack, p95</span></div>
+      <div class="metric"><span class="n">&lt;1/user/s</span><span class="l">Idle-dashboard request rate</span></div>
+    </div>
+    <p style="font-size:12.5px;color:var(--tx3)">The last one is the one that actually bit this project — measure it with DevTools Network tab open for 30s on the logged-in home page, filter to XHR, count requests.</p>
+  </section>
+
+  <section id="today">
+    <h2>If you only do five things today</h2>
+    <ol class="today-list">
+      <li><strong>One real OxaPay deposit and one real withdrawal</strong>, end to end, with your own money. Everything else about the financial flow is verified by test, not by a real payment yet.</li>
+      <li><strong>Disconnect test on VS Computer and Random Opponent</strong> — the two most common play modes. Kill wifi mid-move on each, confirm reconnect works.</li>
+      <li><strong>30-second network trace on the dashboard</strong> — confirm the polling fix has held (see the target above). Takes two minutes, catches the most expensive class of regression.</li>
+      <li><strong>Rate-limit yourself on chat</strong> deliberately — confirm the failure mode is graceful, not a dropped connection.</li>
+      <li><strong>Mobile-width pass on your most-played game</strong> (Chess) — five minutes on a real phone catches what desktop testing never will.</li>
+    </ol>
+  </section>
+
+  <footer>Generated 2026-09-15 against the live nizalo.com codebase and a live network trace taken the same night. Re-check the "already fixed" callouts periodically — regressions here are cheap to reintroduce and expensive to notice late.</footer>
+</div>
+
+<script>
+(function(){
+  var KEY = 'nizalo-qa-checklist-v1';
+  var boxes = document.querySelectorAll('.checks input[type=checkbox]');
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) {}
+  boxes.forEach(function(box, i){
+    var id = 'chk-' + i;
+    if (saved[id]) { box.checked = true; box.closest('li').classList.add('checked'); }
+    box.addEventListener('change', function(){
+      box.closest('li').classList.toggle('checked', box.checked);
+      saved[id] = box.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch(e) {}
+    });
+  });
+})();
+</script>

@@ -1,0 +1,41 @@
+<svg viewBox="0 0 400 225" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="chessGlow" cx="50%" cy="45%" r="45%">
+      <stop offset="0%" stop-color="#FFD700" stop-opacity="0.28" />
+      <stop offset="70%" stop-color="#C6A867" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#0B0D10" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF1B8" />
+      <stop offset="50%" stop-color="#FFD700" />
+      <stop offset="100%" stop-color="#B38A2B" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="#080A10" />
+  <circle cx="200" cy="100" r="140" fill="url(#chessGlow)" />
+  <g opacity="0.18" stroke="#FFD700" stroke-width="0.8">
+    <line x1="20" y1="225" x2="160" y2="110" />
+    <line x1="80" y1="225" x2="180" y2="110" />
+    <line x1="140" y1="225" x2="195" y2="110" />
+    <line x1="200" y1="225" x2="200" y2="110" />
+    <line x1="260" y1="225" x2="205" y2="110" />
+    <line x1="320" y1="225" x2="220" y2="110" />
+    <line x1="380" y1="225" x2="240" y2="110" />
+    <line x1="40" y1="180" x2="360" y2="180" />
+    <line x1="70" y1="150" x2="330" y2="150" />
+    <line x1="110" y1="125" x2="290" y2="125" />
+  </g>
+  <g transform="translate(165, 35) scale(1.4)">
+    <path
+      d="M25 5 L28 12 L35 12 L30 16 L32 23 L25 19 L18 23 L20 16 L15 12 L22 12 Z"
+      fill="url(#goldGrad)"
+    />
+    <path
+      d="M17 26 C17 22, 33 22, 33 26 C33 32, 30 35, 31 46 C32 50, 36 52, 36 56 L14 56 C14 52, 18 50, 19 46 C20 35, 17 32, 17 26 Z"
+      fill="url(#goldGrad)"
+      stroke="#FFE082"
+      stroke-width="0.8"
+    />
+    <ellipse cx="25" cy="56" rx="14" ry="3" fill="#FFE082" />
+  </g>
+</svg>

@@ -1,0 +1,1260 @@
+.hero {
+  padding-block: var(--nz-space-10) var(--nz-space-14);
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(180deg, rgba(16, 20, 30, 0.7) 0%, rgba(16, 20, 30, 0.95) 100%), url(/images/home_hero_bg.jpg);
+  background-size: cover;
+  background-position: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-8);
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.headerZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.eyebrowWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--nz-space-3);
+}
+
+.eyebrowBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nz-brand-badge-text, var(--nz-brand-primary, #ff6232));
+  background: var(--nz-brand-badge-bg, rgba(255, 98, 50, 0.12));
+  border: 1px solid var(--nz-brand-primary, rgba(255, 98, 50, 0.35));
+  padding: 5px 16px;
+  border-radius: 999px;
+}
+
+.eyebrowBeacon {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nz-brand-primary, #ff6232);
+  box-shadow: 0 0 10px var(--nz-brand-glow, #ff6232);
+  animation: beaconPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes beaconPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.4; }
+}
+
+.headline {
+  font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--nz-space-4);
+  color: var(--nz-text);
+}
+
+.headlineAccent {
+  background: var(--nz-brand-gradient, linear-gradient(135deg, #ff6232 0%, #f5a623 100%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subhead {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  line-height: 1.6;
+  color: var(--nz-text-2);
+  margin: 0 0 var(--nz-space-6);
+  max-width: 62ch;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: var(--nz-space-6);
+}
+
+/* ==========================================================================
+   Psychological Trust & Conversion Bar
+   ========================================================================== */
+.psychologicalTrustBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: var(--nz-space-6);
+  width: 100%;
+}
+
+.trustItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.trustItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.trustIcon {
+  font-size: 13.5px;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   Tactile Cyber-Luxury Quick Stakes Match Selector
+   ========================================================================== */
+.quickStakeSection {
+  width: 100%;
+  max-width: 1100px;
+  margin: var(--nz-space-2) auto var(--nz-space-4);
+  padding: 22px 24px;
+  background: linear-gradient(180deg, rgba(20, 27, 44, 0.8) 0%, rgba(11, 15, 26, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+.quickStakeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.quickStakeTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quickStakeTitleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #60a5fa;
+}
+
+.quickStakePulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 8px #3b82f6;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.5;
+  }
+}
+
+.quickStakeTitleText {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.quickStakeSub {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #10b981;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quickStakeGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+.quickStakeCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 16px;
+  padding: 16px 12px;
+  background: linear-gradient(180deg, rgba(24, 32, 52, 0.75) 0%, rgba(13, 17, 28, 0.92) 100%);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+  overflow: hidden;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.22s ease,
+              border-color 0.22s ease,
+              background 0.22s ease;
+}
+
+.quickStakeCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0) 60%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.quickStakeCard:hover::after {
+  opacity: 1;
+  animation: heroShinySweep 1.5s infinite linear;
+}
+
+.cardGlowLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  opacity: 0.85;
+  transition: height 0.2s ease, opacity 0.2s ease;
+}
+
+.quickStakeCard:hover .cardGlowLine {
+  height: 5px;
+  opacity: 1;
+}
+
+.cardTopRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.popularBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: linear-gradient(135deg, #ef4444, #f59e0b);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.subtleBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2.5px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9999px;
+}
+
+.quickStakeTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.stakeAmountVal {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+  font-family: var(--nz-font-num);
+}
+
+.stakeAmountCurrency {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.quickStakePrizeBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 6px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.prizePrefix {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #a7f3d0;
+}
+
+.prizeNumber {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #34d399;
+  font-family: var(--nz-font-num);
+}
+
+.prizeCurrency {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #a7f3d0;
+}
+
+.quickStakeTag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #cbd5e1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Card Themes with Cyber-Glow */
+.cardEmerald:hover {
+  transform: translateY(-6px);
+  border-color: rgba(16, 185, 129, 0.55);
+  box-shadow: 0 14px 32px rgba(16, 185, 129, 0.25);
+}
+
+.cardSapphire:hover {
+  transform: translateY(-6px);
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: 0 14px 32px rgba(59, 130, 246, 0.25);
+}
+
+.cardViolet:hover {
+  transform: translateY(-6px);
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow: 0 14px 32px rgba(139, 92, 246, 0.25);
+}
+
+.cardGold:hover {
+  transform: translateY(-6px);
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 14px 32px rgba(245, 158, 11, 0.25);
+}
+
+.cardRuby:hover {
+  transform: translateY(-6px);
+  border-color: rgba(239, 68, 68, 0.55);
+  box-shadow: 0 14px 32px rgba(239, 68, 68, 0.25);
+}
+
+.featured {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.featuredLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--nz-text-3);
+}
+
+.featuredList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.featuredChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 6px;
+  border-radius: var(--nz-radius-pill);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-1);
+  color: var(--nz-text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.featuredChip:hover {
+  border-color: var(--nz-accent-line, #ffb800);
+  color: var(--nz-text);
+  transform: translateY(-1px);
+}
+
+.featuredGlyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--nz-surface-3);
+  color: var(--nz-text);
+  font-family: var(--nz-font-display);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Large Grand Full-Width Showcase Carousel */
+.visualFullWidth {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: var(--nz-space-2);
+}
+
+.showcaseGlowBackdrop {
+  position: absolute;
+  width: 104%;
+  height: 104%;
+  background: radial-gradient(circle, rgba(255, 90, 43, 0.16) 0%, rgba(245, 158, 11, 0.06) 45%, transparent 70%);
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.carouselContainer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1240px;
+}
+
+.showcaseCard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  min-height: 380px;
+  max-height: 520px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 184, 0, 0.28);
+  background: #0b0e14;
+  box-shadow: 0 25px 65px -10px rgba(0, 0, 0, 0.75), 0 0 45px rgba(255, 98, 50, 0.14);
+  display: block;
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.showcaseCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 60%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.carouselContainer:hover .showcaseCard {
+  transform: translateY(-4px) scale(1.005);
+  box-shadow: 0 35px 80px -12px rgba(0, 0, 0, 0.9), 0 0 85px var(--nz-brand-glow, rgba(255, 98, 50, 0.5));
+  border-color: var(--nz-brand-primary, rgba(245, 158, 11, 0.9));
+}
+
+.carouselContainer:hover .showcaseCard::after {
+  opacity: 1;
+  animation: heroShinySweep 2s infinite linear;
+}
+
+@keyframes heroShinySweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.slidesStack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0b0e14;
+}
+
+.bannerPicture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transform: scale(1.03);
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s ease;
+  pointer-events: none;
+}
+
+.bannerPictureActive {
+  opacity: 1;
+  z-index: 1;
+  transform: scale(1.02);
+}
+
+.bannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bannerOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(90deg, rgba(11, 14, 20, 0.95) 0%, rgba(11, 14, 20, 0.75) 45%, rgba(11, 14, 20, 0.18) 100%);
+  pointer-events: none;
+}
+
+[dir="rtl"] .bannerOverlay {
+  background: linear-gradient(270deg, rgba(11, 14, 20, 0.95) 0%, rgba(11, 14, 20, 0.75) 45%, rgba(11, 14, 20, 0.18) 100%);
+}
+
+.cyberCornerTL {
+  position: absolute;
+  top: 12px;
+  inset-inline-start: 12px;
+  width: 20px;
+  height: 20px;
+  border-top: 3px solid var(--nz-brand-primary, #f59e0b);
+  border-inline-start: 3px solid var(--nz-brand-primary, #f59e0b);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.cyberCornerBR {
+  position: absolute;
+  bottom: 12px;
+  inset-inline-end: 12px;
+  width: 20px;
+  height: 20px;
+  border-bottom: 3px solid #ff5a2b;
+  border-inline-end: 3px solid #ff5a2b;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.badgeArena {
+  position: absolute;
+  top: 20px;
+  inset-inline-start: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: var(--nz-radius-pill);
+  background: rgba(11, 14, 20, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 90, 43, 0.45);
+  color: #ff8a65;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  z-index: 3;
+}
+
+.pulsingDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ff5a2b;
+  box-shadow: 0 0 12px #ff5a2b;
+  animation: pulseGlow 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.5; }
+}
+
+.badgeCertified {
+  position: absolute;
+  top: 20px;
+  inset-inline-end: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border-radius: var(--nz-radius-pill);
+  background: rgba(11, 14, 20, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  z-index: 3;
+}
+
+.showcaseBottomBar {
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  padding: 28px 36px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  z-index: 3;
+}
+
+.showcaseTextGroup {
+  flex: 1;
+  max-width: 650px;
+}
+
+.showcaseTagRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.trophyIcon {
+  font-size: 15px;
+}
+
+.showcaseSuper {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #fbbf24;
+  text-transform: uppercase;
+}
+
+.showcaseTitle {
+  font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+  font-weight: 900;
+  color: #ffffff;
+  margin: 0 0 6px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.showcaseMeta {
+  font-size: clamp(0.82rem, 1.2vw, 0.95rem);
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.tagFairPlay {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-brand-gradient, linear-gradient(135deg, #ff6232 0%, #d97706 100%));
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px var(--nz-brand-glow, rgba(255, 98, 50, 0.35));
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+}
+
+.showcaseCard:hover .tagFairPlay {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px var(--nz-brand-glow, rgba(255, 98, 50, 0.55));
+}
+
+/* Carousel Navigation Arrows */
+.carouselArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(11, 14, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  backdrop-filter: blur(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+
+.carouselArrowPrev {
+  inset-inline-start: 18px;
+}
+
+.carouselArrowNext {
+  inset-inline-end: 18px;
+}
+
+.carouselContainer:hover .carouselArrow {
+  opacity: 0.92;
+}
+
+.carouselArrow:hover {
+  background: var(--nz-brand-primary, #ff5a2b);
+  border-color: var(--nz-brand-primary, #ff5a2b);
+  transform: translateY(-50%) scale(1.08);
+  opacity: 1 !important;
+}
+
+/* 10-Dot Indicator Strip */
+.carouselIndicators {
+  position: absolute;
+  bottom: 10px;
+  inset-inline: 0;
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.indicatorBar {
+  width: 8px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.indicatorBar:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.indicatorBarActive {
+  width: 24px;
+  background: var(--nz-brand-primary, #ff5a2b);
+  box-shadow: 0 0 10px var(--nz-brand-glow, rgba(255, 90, 43, 0.7));
+}
+
+@media (max-width: 960px) {
+  .showcaseCard {
+    aspect-ratio: 16 / 9;
+    min-height: 320px;
+  }
+  .showcaseBottomBar {
+    padding: 20px 24px;
+  }
+  .badgeArena, .badgeCertified {
+    padding: 5px 12px;
+    font-size: 10.5px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-block: var(--nz-space-6) var(--nz-space-10);
+    background-position: center 15%;
+    background-size: cover;
+  }
+  .showcaseCard {
+    aspect-ratio: 4 / 3;
+    min-height: 280px;
+    border-radius: 16px;
+  }
+  .showcaseBottomBar {
+    padding: 14px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .tagFairPlay {
+    align-self: flex-start;
+    padding: 6px 14px;
+    font-size: 11px;
+  }
+  .carouselArrow {
+    display: none;
+  }
+  .badgeArena {
+    top: 12px;
+    inset-inline-start: 12px;
+  }
+  .badgeCertified {
+    top: 12px;
+    inset-inline-end: 12px;
+  }
+}
+
+@keyframes pulseLiveDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.6; }
+}
+
+/* ==========================================================================
+   Instant Quick-Stake Match Selector (1-Click Cash Action & High Rewards)
+   ========================================================================== */
+.quickStakeSection {
+  margin-top: var(--nz-space-6);
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(201, 169, 110, 0.08) 0%, rgba(14, 19, 29, 0.9) 100%);
+  border: 1px solid rgba(201, 169, 110, 0.28);
+  border-radius: var(--nz-radius-lg, 14px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  width: 100%;
+  max-width: 860px;
+}
+
+.quickStakeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quickStakeTitle {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--nz-accent, #c9a96e);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quickStakeSub {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #4ade80;
+  letter-spacing: 0.02em;
+}
+
+.quickStakeGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.quickStakeCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 8px;
+  background: rgba(10, 14, 22, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--nz-radius-md, 8px);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  color: inherit;
+}
+
+.quickStakeCard:hover {
+  transform: translateY(-3px);
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.08);
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.2);
+}
+
+.quickStakeCardPopular {
+  border-color: var(--nz-brand-primary, rgba(245, 158, 11, 0.5));
+  background: linear-gradient(180deg, var(--nz-brand-badge-bg, rgba(245, 158, 11, 0.1)) 0%, rgba(10, 14, 22, 0.85) 100%);
+}
+
+.quickStakeCardPopular:hover {
+  border-color: var(--nz-brand-primary, #f59e0b);
+  box-shadow: 0 6px 20px var(--nz-brand-glow, rgba(245, 158, 11, 0.3));
+}
+
+
+.quickStakeTop {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.stakeAmountVal {
+  font-family: var(--nz-font-num);
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.stakeAmountCurrency {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.quickStakePrizeBox {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.prizePrefix {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.prizeNumber {
+  font-family: var(--nz-font-num);
+  font-size: 14px;
+  font-weight: 900;
+  color: #4ade80;
+}
+
+.prizeCurrency {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #4ade80;
+}
+
+.quickStakeTag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   4 Luxury Glassmorphic Metric Cards (Centrally Aligned - Zero Drift)
+   ========================================================================== */
+.metricCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--nz-space-4);
+  width: 100%;
+}
+
+.metricCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 18px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(20, 27, 44, 0.75) 0%, rgba(11, 15, 26, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+  overflow: hidden;
+  cursor: default;
+}
+
+.metricCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0) 60%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.metricCard:hover {
+  transform: translateY(-5px);
+}
+
+.metricCard:hover::after {
+  opacity: 1;
+  animation: heroShinySweep 1.5s infinite linear;
+}
+
+.metricCard:hover .cardGlowLine {
+  height: 5px;
+  opacity: 1;
+}
+
+.metricCardEmerald:hover {
+  border-color: rgba(16, 185, 129, 0.55);
+  box-shadow: 0 14px 32px rgba(16, 185, 129, 0.25);
+}
+
+.metricCardGold:hover {
+  border-color: var(--nz-brand-primary, rgba(245, 158, 11, 0.55));
+  box-shadow: 0 14px 32px var(--nz-brand-glow, rgba(245, 158, 11, 0.25));
+}
+
+.metricCardRuby:hover {
+  border-color: rgba(236, 72, 153, 0.55);
+  box-shadow: 0 14px 32px rgba(236, 72, 153, 0.25);
+}
+
+.metricCardCyan:hover {
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: 0 14px 32px rgba(59, 130, 246, 0.25);
+}
+
+.metricCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.metricIconWrap {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--nz-radius-md, 8px);
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.metricBadgeLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  padding: 3px 8px;
+  border-radius: var(--nz-radius-pill, 999px);
+  font-size: 10px;
+  font-weight: 800;
+  color: #4ade80;
+}
+
+.statPulseDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+  animation: pulseLiveDot 1.4s infinite ease-in-out;
+}
+
+.metricBadgeOnline {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(201, 169, 110, 0.15);
+  border: 1px solid rgba(201, 169, 110, 0.35);
+  padding: 3px 8px;
+  border-radius: var(--nz-radius-pill, 999px);
+  font-size: 10px;
+  font-weight: 800;
+  color: #c9a96e;
+}
+
+.metricBadgePayout {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  padding: 3px 8px;
+  border-radius: var(--nz-radius-pill, 999px);
+  font-size: 10px;
+  font-weight: 800;
+  color: #fb7185;
+}
+
+.metricBadgeFair {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  padding: 3px 8px;
+  border-radius: var(--nz-radius-pill, 999px);
+  font-size: 10px;
+  font-weight: 800;
+  color: #22d3ee;
+}
+
+.metricCardBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.metricNumber {
+  font-family: var(--nz-font-num);
+  font-size: 28px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.1;
+  margin-bottom: 5px;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metricTitle {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--nz-text);
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.metricSub {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--nz-text-3);
+  text-align: center;
+}
+
+/* ==========================================================================
+   Trust & Winning Pillars
+   ========================================================================== */
+.trustPillarsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--nz-space-4);
+  padding: 18px 24px;
+  background: rgba(14, 19, 29, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--nz-radius-lg, 14px);
+  width: 100%;
+}
+
+.trustPillar {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.pillarIcon {
+  font-size: 24px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.pillarTextWrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.pillarTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 3px;
+}
+
+.pillarDesc {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #94a3b8;
+}
+
+@media (max-width: 960px) {
+  .metricCardsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .quickStakeGrid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .trustPillarsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 540px) {
+  .metricCardsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .metricCard {
+    padding: 12px;
+  }
+}
+

@@ -1,0 +1,115 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 14, 20, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nz-space-4);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.modal {
+  position: relative;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line-strong);
+  border-radius: var(--nz-radius-xl);
+  box-shadow: var(--nz-shadow-3);
+  padding: var(--nz-space-6);
+  max-width: 440px;
+  width: 100%;
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.destructiveBorder {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  margin-bottom: var(--nz-space-3);
+}
+
+.icon {
+  font-size: 24px;
+}
+
+.title {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-lg);
+  font-weight: 700;
+  color: var(--nz-text);
+  margin: 0;
+}
+
+.message {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  line-height: var(--nz-leading-body);
+  color: var(--nz-text-2);
+  margin-bottom: var(--nz-space-6);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--nz-space-3);
+}
+
+.cancelBtn {
+  padding: 8px 18px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.cancelBtn:hover {
+  background: var(--nz-surface-3);
+  color: var(--nz-text);
+}
+
+.confirmBtn {
+  padding: 8px 20px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-accent);
+  color: #fff;
+  border: none;
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.confirmBtn:hover {
+  background: var(--nz-accent-hover);
+}
+
+.confirmDestructive {
+  background: var(--nz-loss);
+}
+
+.confirmDestructive:hover {
+  background: #dc2626;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

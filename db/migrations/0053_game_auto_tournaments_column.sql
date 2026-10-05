@@ -1,0 +1,33 @@
+-- =============================================================================
+-- 0053_game_auto_tournaments_column.sql
+--
+-- packages/api/src/server.mjs's admin Games Control panel (GET /v1/admin/
+-- controls's game list, and the three toggle-tournaments/toggle-cash/
+-- toggle-status routes) and packages/tournament/src/automated-engine.mjs's
+-- own tick() query have both referenced `game.auto_tournaments_enabled`
+-- since they were written -- but no migration ever created the column, so
+-- every one of those queries threw "column does not exist".
+--
+-- The admin panel's error was visible (every toggle attempt returned 500).
+-- The automated engine's was not: its query sits in a try/catch that, on
+-- ANY error, silently fell back to a hardcoded five-game list (chess,
+-- dominoes, backgammon, checkers, speed-math) -- spawning real cash
+-- tournaments for those five regardless of their actual is_live/
+-- cash_enabled state, and completely bypassing whatever an admin had
+-- (thought they had) set through a panel that could never save anyway.
+--
+-- Defaults to FALSE for every game: the honest, safe starting point is that
+-- automated cash tournaments run only where an admin has deliberately
+-- turned them on through the (now genuinely working) toggle, not wherever
+-- a silently-swallowed exception happened to fall back to.
+--
+-- IF NOT EXISTS: production turned out to already have this exact column
+-- (added by hand outside any tracked migration at some point, the same
+-- schema-drift pattern already found once this session -- see
+-- scripts/check-migration-state.mjs's own header). Idempotent either way:
+-- a fresh database gets the column with every game defaulted FALSE; a
+-- database that already has it is left completely untouched, whatever
+-- values are already sitting there.
+-- =============================================================================
+
+ALTER TABLE game ADD COLUMN IF NOT EXISTS auto_tournaments_enabled BOOLEAN NOT NULL DEFAULT FALSE;

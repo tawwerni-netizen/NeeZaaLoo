@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nizalo - Executive Acquisition & White-Label Deal Memorandum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #07090e;
+    --card-bg: rgba(18, 24, 38, 0.85);
+    --border: rgba(255, 255, 255, 0.08);
+    --gold: #f59e0b;
+    --gold-glow: rgba(245, 158, 11, 0.25);
+    --cyan: #38bdf8;
+    --green: #10b981;
+    --purple: #a855f7;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    body {
+      background-color: #07090e !important;
+      padding: 0 !important;
+    }
+    .card, .stat-card, .metric-box {
+      break-inside: avoid;
+    }
+  }
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    line-height: 1.6;
+    padding: 40px 20px;
+    -webkit-font-smoothing: antialiased;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 28px;
+    margin-bottom: 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .title {
+    font-size: clamp(2rem, 3.5vw, 2.8rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 40%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 680px;
+    margin-top: 10px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-gold {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px var(--gold-glow);
+  }
+  .btn-gold:hover { transform: translateY(-2px); filter: brightness(1.1); }
+  .btn-outline {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: #fff;
+  }
+  .btn-outline:hover { background: rgba(255, 255, 255, 0.1); }
+
+  /* Key Metrics Grid */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .metric-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .metric-value {
+    font-size: 26px;
+    font-weight: 900;
+    font-family: 'JetBrains Mono', monospace;
+    color: #fff;
+  }
+  .metric-sub {
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* Core Value Pillars */
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title span { color: var(--gold); }
+
+  .pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .pillar-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .pillar-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+  .pillar-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .pillar-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+  .pillar-desc {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: #e2e8f0;
+  }
+
+  /* 11 Skill Games Showcase */
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+  .game-badge {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+  }
+  .game-badge:hover {
+    border-color: var(--cyan);
+    background: rgba(56, 189, 248, 0.08);
+  }
+  .game-icon { font-size: 20px; }
+  .game-name { font-size: 13px; font-weight: 700; color: #fff; }
+  .game-type { font-size: 10.5px; color: var(--text-muted); }
+
+  /* Monetization & Deal Options */
+  .deal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .deal-card {
+    background: linear-gradient(180deg, rgba(24, 32, 50, 0.8) 0%, rgba(12, 16, 26, 0.9) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    position: relative;
+  }
+  .deal-card.popular {
+    border-color: var(--gold);
+    box-shadow: 0 0 30px var(--gold-glow);
+  }
+  .deal-badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: var(--gold);
+    color: #000;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+  .deal-name { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
+  .deal-price {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 14px;
+  }
+  .deal-price span { font-size: 13px; color: var(--text-muted); font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500; }
+  .deal-features {
+    list-style: none;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .deal-features li {
+    font-size: 13px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .deal-features li::before {
+    content: "✓";
+    color: var(--green);
+    font-weight: 900;
+  }
+
+  /* Contact & Due Diligence */
+  .footer-cta {
+    background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.15) 0%, transparent 70%), var(--card-bg);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 16px;
+    padding: 36px 30px;
+    text-align: center;
+  }
+  .footer-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 8px; }
+  .footer-sub { font-size: 14px; color: var(--text-muted); max-width: 600px; margin: 0 auto 20px; }
+  .contact-chips {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .chip {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+  .chip a { color: var(--cyan); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header class="header">
+    <div>
+      <div class="brand-badge">⚡ Institutional Tech Asset For Sale / License</div>
+      <h1 class="title">Nizalo — Proprietary Skill Esports Infrastructure</h1>
+      <p class="subtitle">Complete, production-ready 1v1 PvP & tournament platform. 11 skill games, server-authoritative engine, anti-cheat AI, dual-ledger crypto rails, and real-time white-label rebranding.</p>
+    </div>
+    <div class="header-actions">
+      <a href="https://demo.nizalo.com/b2b" target="_blank" class="btn btn-gold">Interactive B2B Sandbox ↗</a>
+      <a href="mailto:HHifzy@gmail.com?subject=Nizalo%20Acquisition%20Inquiry" class="btn btn-outline">Request Deal Room</a>
+    </div>
+  </header>
+
+  <!-- Key Metrics Bar -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">Proprietary Games</div>
+      <div class="metric-value">11 Built-in</div>
+      <div class="metric-sub">Chess, Backgammon, Dominoes...</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Estimated Replacement Cost</div>
+      <div class="metric-value">$450K+</div>
+      <div class="metric-sub">22+ Months of Dev Architecture</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Execution Latency</div>
+      <div class="metric-value">&lt; 50ms</div>
+      <div class="metric-sub">Real-time WebSocket State Sync</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Target Buyout Valuation</div>
+      <div class="metric-value">$500,000</div>
+      <div class="metric-sub">Or $35K–$75K per Turnkey License</div>
+    </div>
+  </div>
+
+  <!-- Core Pillars -->
+  <h2 class="section-title">Institutional Architectural <span>Pillars</span></h2>
+  <div class="pillars-grid">
+    <div class="pillar-card">
+      <div class="pillar-icon">🛡️</div>
+      <h3 class="pillar-title">Server-Authoritative Anti-Cheat</h3>
+      <p class="pillar-desc">Client input is purely advisory. Zero trust state calculation, millisecond move replay validation, heuristic anomaly detection, and automated bot bans to prevent engine abuse in real-stakes matches.</p>
+      <div class="tech-tags">
+        <span class="tag">Zero Trust</span>
+        <span class="tag">AI Anomaly Heuristics</span>
+        <span class="tag">State Isolation</span>
+      </div>
+    </div>
+
+    <div class="pillar-card">
+      <div class="pillar-icon">⚡</div>
+      <h3 class="pillar-title">Financial Dual-Ledger System</h3>
+      <p class="pillar-desc">Bank-grade double-entry accounting ledger with cryptographic hash chains. Native integration for crypto deposits/withdrawals (USDT TRC20/ERC20, BTC, ETH) with automated payout triggers within 60 seconds.</p>
+      <div class="tech-tags">
+        <span class="tag">Double-Entry Ledger</span>
+        <span class="tag">OxaPay / Web3</span>
+        <span class="tag">Automated Settlement</span>
+      </div>
+    </div>
+
+    <div class="pillar-card">
+      <div class="pillar-icon">🎨</div>
+      <h3 class="pillar-title">Dynamic Multi-Tenant White-Label</h3>
+      <p class="pillar-desc">Built-in theme morphing engine capable of restyling the entire visual design (CTAs, hero, tournaments, cards, badges) to any brand palette in real time. Full i18n support in 6 languages (EN, AR, ZH, HI, ES, FR).</p>
+      <div class="tech-tags">
+        <span class="tag">CSS Variables Engine</span>
+        <span class="tag">6 Languages (RTL/LTR)</span>
+        <span class="tag">Instant Skinning</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11 Games Suite -->
+  <h2 class="section-title">Suite of 11 <span>Skill-Based Games</span></h2>
+  <div class="games-grid">
+    <div class="game-badge">
+      <span class="game-icon">♟️</span>
+      <div>
+        <div class="game-name">Chess Blitz</div>
+        <div class="game-type">FIDE Rules • ELO Ranked</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">🎲</span>
+      <div>
+        <div class="game-name">Backgammon</div>
+        <div class="game-type">Classic Tawla • 1v1 Matches</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">🀄</span>
+      <div>
+        <div class="game-name">Dominoes</div>
+        <div class="game-type">Draw & Block • Point Scoring</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">🏁</span>
+      <div>
+        <div class="game-name">Checkers / Dama</div>
+        <div class="game-type">Classic 8x8 • Mandatory Jumps</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">🔵</span>
+      <div>
+        <div class="game-name">Connect Four</div>
+        <div class="game-type">Vertical 7x6 • Tactical Drop</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">⚪</span>
+      <div>
+        <div class="game-name">Reversi / Othello</div>
+        <div class="game-type">Flanking Reversals • 8x8 Grid</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">🔴</span>
+      <div>
+        <div class="game-name">Gomoku</div>
+        <div class="game-type">Five-in-a-Row • 15x15 Board</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">👑</span>
+      <div>
+        <div class="game-name">Ludo Champion</div>
+        <div class="game-type">2-4 Player Board • Roll & Race</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">⚡</span>
+      <div>
+        <div class="game-name">Speed Math</div>
+        <div class="game-type">Cognitive Reflex • Time Attack</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">❌</span>
+      <div>
+        <div class="game-name">Tic-Tac-Toe Ultra</div>
+        <div class="game-type">Speed XO • Rapid Fire Duel</div>
+      </div>
+    </div>
+    <div class="game-badge">
+      <span class="game-icon">🏺</span>
+      <div>
+        <div class="game-name">Seega</div>
+        <div class="game-type">Ancient Arabian Strategy</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deal Packages -->
+  <h2 class="section-title">Acquisition & <span>Licensing Tiers</span></h2>
+  <div class="deal-grid">
+    <div class="deal-card">
+      <div class="deal-name">Cloud Turnkey License</div>
+      <div class="deal-price">$35,000 <span>/ one-time setup</span></div>
+      <ul class="deal-features">
+        <li>Hosted on high-speed dedicated cloud</li>
+        <li>Full custom branding & domain setup</li>
+        <li>11 skill games fully activated</li>
+        <li>Payment gateway & crypto rails configured</li>
+        <li>Monthly tech maintenance: $2,500/mo</li>
+      </ul>
+      <a href="https://demo.nizalo.com/b2b#inquiry" class="btn btn-outline" style="width: 100%; justify-content: center;">Inquire License</a>
+    </div>
+
+    <div class="deal-card">
+      <div class="deal-name">Self-Hosted Source Code</div>
+      <div class="deal-price">$85,000 <span>/ perpetual license</span></div>
+      <ul class="deal-features">
+        <li>Complete proprietary Next.js & Node source code</li>
+        <li>Self-hosted on buyer's private AWS/GCP clusters</li>
+        <li>PostgreSQL + Redis infrastructure scripts</li>
+        <li>30 days hands-on deployment engineering support</li>
+        <li>Unlimited user & volume capability</li>
+      </ul>
+      <a href="https://demo.nizalo.com/b2b#inquiry" class="btn btn-outline" style="width: 100%; justify-content: center;">Inquire Source Code</a>
+    </div>
+
+    <div class="deal-card popular">
+      <div class="deal-badge">Exclusive Buyout</div>
+      <div class="deal-name">Full Platform Acquisition</div>
+      <div class="deal-price">$500,000 <span>/ complete buyout</span></div>
+      <ul class="deal-features">
+        <li>100% IP, Trademarks & Source Code ownership</li>
+        <li>Global exclusivity — seller exits completely</li>
+        <li>All 11 proprietary game engines & anti-cheat</li>
+        <li>All domains (nizalo.com, demo.nizalo.com)</li>
+        <li>90 days executive technical handover & advisory</li>
+      </ul>
+      <a href="https://demo.nizalo.com/b2b#inquiry" class="btn btn-gold" style="width: 100%; justify-content: center;">Discuss Acquisition</a>
+    </div>
+  </div>
+
+  <!-- Contact Section -->
+  <div class="footer-cta">
+    <h2 class="footer-title">Ready for Due Diligence & Technical Walkthrough?</h2>
+    <p class="footer-sub">Explore the live sandbox, test gameplay across all 11 games, inspect code architecture, or schedule a direct executive meeting.</p>
+    <div class="contact-chips">
+      <div class="chip">Executive Contact: <strong>Hifzy</strong></div>
+      <div class="chip">Direct Email: <a href="mailto:HHifzy@gmail.com">HHifzy@gmail.com</a></div>
+      <div class="chip">Live B2B Portal: <a href="https://demo.nizalo.com/b2b" target="_blank">demo.nizalo.com/b2b</a></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

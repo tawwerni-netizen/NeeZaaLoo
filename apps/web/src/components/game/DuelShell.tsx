@@ -1,0 +1,628 @@
+"use client";
+
+/**
+ * The generic duel room -- the ONE thing every game shares, per the Nizalo
+ * Table System spec's "one club, ten tables": connection state, both
+ * player strips, the clock, draw agreement, resign, the result ceremony,
+ * reconnect, spectator handling, and the chat slot.
+ */
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/Button";
+import { useDuelSocket } from "@/lib/use-duel-socket";
+import { useAuth } from "@/lib/auth-context";
+import { useI18n } from "@/lib/i18n/context";
+import { useProgressionSnapshot } from "@/lib/use-progression-snapshot";
+import { ChatDrawer } from "@/components/chat/ChatDrawer";
+import { PlayerStrip } from "@/components/game/PlayerStrip";
+import { ResultCeremony } from "@/components/game/ResultCeremony";
+import { TableEnvironmentProvider } from "@/components/game/TableEnvironment";
+import { GameVisualSettings } from "@/components/game/GameVisualSettings";
+import { LiveMatchShareModal } from "@/components/game/LiveMatchShareModal";
+import { ConfirmationModal, RulesPanel } from "@/components/ui";
+import { getGame } from "@/lib/games";
+import { getGameThemeTokens } from "@/lib/games/theme-tokens";
+import { get, post } from "@/lib/api";
+import { playUndoSound } from "@/lib/chess-audio";
+import { playCardHoverSound } from "@/lib/game-audio";
+import styles from "./DuelShell.module.css";
+
+const BOT_IDS = new Set(["ai-easy", "ai-medium", "ai-hard", "ai-expert"]);
+const BOT_DIFFICULTY: Record<string, string> = {
+  "ai-easy": "EASY", "ai-medium": "MEDIUM", "ai-hard": "HARD", "ai-expert": "EXPERT",
+};
+
+const DUEL_SHELL_I18N = {
+  spectator: {
+    ar: "مشاهد مباشر (قراءة فقط)",
+    en: "Live Spectator (Read-Only)",
+    es: "Espectador en Vivo (Solo Lectura)",
+    fr: "Spectateur en Direct (Lecture Seule)",
+    hi: "लाइव दर्शक (केवल पढ़ने के लिए)",
+    zh: "实时观战模式（只读）",
+  },
+  winnerCash: (amount: string): Record<string, string> => ({
+    ar: `الجائزة النقدية: $${amount} USDT`,
+    en: `Winner Cash: $${amount} USDT`,
+    es: `Premio al Ganador: $${amount} USDT`,
+    fr: `Prix du Vainqueur : $${amount} USDT`,
+    hi: `विजेता नकद: $${amount} USDT`,
+    zh: `获胜者现金奖金: $${amount} USDT`,
+  }),
+  waitingOpponent: {
+    ar: "في انتظار لعب الخصم...",
+    en: "Waiting for opponent's move...",
+    es: "Esperando movimiento del rival...",
+    fr: "En attente du coup adverse...",
+    hi: "प्रतिद्वंद्वी की चाल का इंतज़ार...",
+    zh: "等待对手落子...",
+  },
+  shareLive: {
+    ar: "مشاركة البث",
+    en: "Share Live",
+    es: "Compartir Directo",
+    fr: "Partager Direct",
+    hi: "लाइव शेयर करें",
+    zh: "分享直播",
+  },
+  shareLiveTooltip: {
+    ar: "مشاركة البث المباشر بـ 6 لغات",
+    en: "Share live duel across 6 languages",
+    es: "Compartir duelo en 6 idiomas",
+    fr: "Partager le duel en 6 langues",
+    hi: "6 भाषाओं में लाइव मुकाबला साझा करें",
+    zh: "支持6种语言的多语种对战直播分享",
+  },
+  chat: {
+    ar: "الشات",
+    en: "Chat",
+    es: "Chat",
+    fr: "Chat",
+    hi: "चैट",
+    zh: "聊天",
+  },
+  undoMove: {
+    ar: "تراجع عن الحركة",
+    en: "Undo Move",
+    es: "Deshacer Jugada",
+    fr: "Annuler le Coup",
+    hi: "चाल वापस लें",
+    zh: "悔棋撤销",
+  },
+  rules: {
+    ar: "القواعد 📖",
+    en: "Rules 📖",
+    es: "Reglas 📖",
+    fr: "Règles 📖",
+    hi: "नियम 📖",
+    zh: "规则 📖",
+  },
+};
+
+export function DuelShell({ duelId }: { duelId: string }) {
+  const { player } = useAuth();
+  const { t, locale } = useI18n();
+  const router = useRouter();
+  const {
+    connected, reconnecting, latest, seat, drawOfferBy,
+    sendIntent, resign, offerDraw, acceptDraw, declineDraw,
+  } = useDuelSocket(duelId);
+
+  const [gameId, setGameId] = useState<string | null>(null);
+  const [players, setPlayers] = useState<string[] | null>(null);
+  const [resignConfirmOpen, setResignConfirmOpen] = useState(false);
+  const [rematchBusy, setRematchBusy] = useState(false);
+  const [rematchSent, setRematchSent] = useState(false);
+  const [opponentNickname, setOpponentNickname] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
+  const [view, setView] = useState<unknown>(null);
+  const [clock, setClock] = useState<{ model?: string; remaining?: number[]; toMove?: number; remainingMs?: number } | null>(null);
+  const [connectedSeats, setConnectedSeats] = useState<[boolean, boolean] | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatUnread, setChatUnread] = useState(0);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [completedInfo, setCompletedInfo] = useState<{
+    completed: boolean;
+    result: string | null;
+    reason: string | null;
+  }>({ completed: false, result: null, reason: null });
+  const [duelMeta, setDuelMeta] = useState<{
+    tier?: string | undefined;
+    winnerCash?: number | null;
+  } | null>(null);
+
+  const gameTokens = useMemo(() => (gameId ? getGameThemeTokens(gameId) : null), [gameId]);
+
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!duelId || duelId.startsWith("guest")) return;
+    get<{ duel: { tier?: string; stake_minor?: string } }>(`/v1/duels/${duelId}`)
+      .then((res) => {
+        if (res?.duel) {
+          const tier = res.duel.tier;
+          const stakeMinor = res.duel.stake_minor;
+          let winnerCash: number | null = null;
+          if (tier === "CASH" && stakeMinor) {
+            winnerCash = (Number(stakeMinor) * 2 * 0.88) / 1_000_000;
+          }
+          setDuelMeta({ tier, winnerCash });
+        }
+      })
+      .catch(() => {});
+  }, [duelId]);
+
+  useEffect(() => {
+    if (!latest || typeof latest !== "object") return;
+    const msg = latest as Record<string, unknown>;
+    if (msg.t === "STATE") {
+      if (Array.isArray(msg.players)) setPlayers(msg.players as string[]);
+      if (msg.status === "COMPLETED" || msg.status === "SETTLED" || msg.status === "VOIDED" || msg.status === "CANCELLED") {
+        const outcome = msg.outcome as { result?: unknown; reason?: unknown } | undefined;
+        setCompletedInfo({
+          completed: true,
+          result: outcome?.result ? String(outcome.result) : (msg.status === "VOIDED" || msg.status === "CANCELLED" ? "1/2-1/2" : null),
+          reason: outcome?.reason ? String(outcome.reason) : (msg.status === "VOIDED" || msg.status === "CANCELLED" ? String(msg.status) : null),
+        });
+      }
+    }
+    if ("view" in msg && msg.view !== undefined && msg.view !== null) {
+      setView(msg.view);
+    }
+    if ("clock" in msg && msg.clock !== undefined && msg.clock !== null) {
+      setClock(msg.clock as { model?: string; remaining?: number[]; toMove?: number; remainingMs?: number });
+    }
+    if ("connectedSeats" in msg && Array.isArray(msg.connectedSeats)) {
+      setConnectedSeats(msg.connectedSeats as [boolean, boolean]);
+    }
+    if (msg.t === "COMPLETED") {
+      setCompletedInfo({
+        completed: true,
+        result: msg.result ? String(msg.result) : null,
+        reason: msg.reason ? String(msg.reason) : null,
+      });
+    }
+    if (msg.t === "EVENT" && msg.type === "DUEL_COMPLETED") {
+      const payload = msg.payload as { result?: unknown; reason?: unknown } | undefined;
+      setCompletedInfo({
+        completed: true,
+        result: payload?.result ? String(payload.result) : null,
+        reason: payload?.reason ? String(payload.reason) : null,
+      });
+    }
+  }, [latest]);
+
+  // Active status fallback polling: ensures resignation or winning move updates promptly even if WS frame is delayed
+  useEffect(() => {
+    if (completedInfo.completed) return;
+    let timer: ReturnType<typeof setInterval>;
+    let cancelled = false;
+
+    const checkStatus = async () => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      try {
+        const d = await get<{
+          id?: string;
+          game_id?: string;
+          seat_0?: string;
+          seat_1?: string;
+          seat_2?: string;
+          seat_3?: string;
+          status?: string;
+          result?: string | null;
+          termination_reason?: string | null;
+          is_vs_computer?: boolean;
+        }>(
+          `/v1/duels/${encodeURIComponent(duelId)}`
+        );
+        if (!cancelled && d) {
+          if (d.game_id) setGameId((prev) => prev ?? d.game_id!);
+          if (d.seat_0 && d.seat_1) {
+            const p = [d.seat_0!, d.seat_1!];
+            if (d.seat_2) p.push(d.seat_2!);
+            if (d.seat_3) p.push(d.seat_3!);
+            setPlayers((prev) => prev ?? p);
+          }
+          if (d.status === "COMPLETED" || d.status === "SETTLED" || d.status === "VOIDED" || d.status === "CANCELLED") {
+            setCompletedInfo({
+              completed: true,
+              result: d.result ?? "1/2-1/2",
+              reason: d.termination_reason ?? d.status,
+            });
+          }
+        }
+      } catch {
+        // Non-fatal poll error
+      }
+    };
+
+    // Immediate fetch on mount ensures initial duel metadata is populated without waiting for interval or WS handshake
+    void checkStatus();
+    timer = setInterval(() => void checkStatus(), 4000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [duelId, completedInfo.completed]);
+
+  const isSharedClock = clock?.model === "SHARED";
+  const completed = completedInfo.completed;
+  const result = completedInfo.result;
+  const reason = completedInfo.reason;
+
+  // Persist handled and completed duel in sessionStorage so player is never bounced back after match finishes
+  useEffect(() => {
+    if (completed) {
+      try {
+        const storedHandled = sessionStorage.getItem("nizalo_handled_duels");
+        const listHandled = storedHandled ? (JSON.parse(storedHandled) as string[]) : [];
+        if (!listHandled.includes(duelId)) {
+          listHandled.push(duelId);
+          sessionStorage.setItem("nizalo_handled_duels", JSON.stringify(listHandled));
+        }
+
+        const storedCompleted = sessionStorage.getItem("nizalo_completed_duels");
+        const listCompleted = storedCompleted ? (JSON.parse(storedCompleted) as string[]) : [];
+        if (!listCompleted.includes(duelId)) {
+          listCompleted.push(duelId);
+          sessionStorage.setItem("nizalo_completed_duels", JSON.stringify(listCompleted));
+        }
+      } catch {
+        // Non-fatal
+      }
+    }
+  }, [completed, duelId]);
+
+  const isSpectator = seat === null;
+  const mySeat = typeof seat === "number" ? (seat as 0 | 1) : null;
+  const opponentSeat = mySeat === 0 ? 1 : mySeat === 1 ? 0 : null;
+
+  const myOutcome: "win" | "loss" | "draw" | null = useMemo(() => {
+    if (!completed || result === null) return null;
+    if (result === "1/2-1/2") return "draw";
+    if (mySeat === null) return null;
+    const iWon = (result === "1-0" && mySeat === 0) || (result === "0-1" && mySeat === 1);
+    return iWon ? "win" : "loss";
+  }, [completed, result, mySeat]);
+
+  const vsComputer = players?.some((p) => BOT_IDS.has(p)) ?? false;
+  const botId = players?.find((p) => BOT_IDS.has(p)) ?? null;
+  const botDifficulty = botId ? (BOT_DIFFICULTY[botId] ?? "MEDIUM") : null;
+  const opponentConnected = vsComputer
+    ? true
+    : opponentSeat !== null && connectedSeats
+    ? Boolean(connectedSeats[opponentSeat])
+    : true;
+
+  useEffect(() => {
+    if (!players || opponentSeat === null) return;
+    const opponentId = players[opponentSeat];
+    if (!opponentId) return;
+    if (BOT_IDS.has(opponentId)) {
+      setOpponentNickname(t(`game.difficulty.${BOT_DIFFICULTY[opponentId] ?? "MEDIUM"}`));
+      return;
+    }
+    let cancelled = false;
+    void get<{ nickname: string }>(`/v1/players/by-id/${encodeURIComponent(opponentId)}/preview`)
+      .then((r) => { if (!cancelled) setOpponentNickname(r.nickname); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [players, opponentSeat]);
+
+  const canMove = !isSpectator && !completed && connected && mySeat !== null
+    && (isSharedClock ? true : (clock?.toMove ?? (view as { turn?: number } | null)?.turn) === mySeat);
+
+  const prevCanMove = useRef(false);
+  useEffect(() => {
+    if (canMove && !prevCanMove.current && !completedInfo.completed) {
+      try {
+        playCardHoverSound();
+      } catch {}
+    }
+    prevCanMove.current = canMove;
+  }, [canMove, completedInfo.completed]);
+
+  const lastMove = useMemo(() => {
+    if (latest?.t !== "EVENT" || (latest as { type?: string }).type !== "INTENT_ACCEPTED") return null;
+    const payload = (latest as { payload?: { intent?: unknown } }).payload;
+    return payload?.intent ?? null;
+  }, [latest]);
+
+  const delta = useProgressionSnapshot(player?.handle, gameId ?? undefined, completed);
+
+  async function handleRematch() {
+    if (vsComputer && botId && gameId) {
+      setRematchBusy(true);
+      try {
+        const difficulty = BOT_DIFFICULTY[botId] ?? "MEDIUM";
+        const r = await post<{ duelId: string }>("/v1/matchmaking/vs-computer", { gameId, difficulty });
+        router.push(`/${locale}/game/${r.duelId}`);
+      } finally {
+        setRematchBusy(false);
+      }
+      return;
+    }
+
+    if (!vsComputer && gameId) {
+      if (opponentNickname) {
+        setRematchBusy(true);
+        try {
+          await post<{ challengeId: string }>("/v1/challenges", { gameId, opponentNickname });
+          setRematchSent(true);
+        } catch {
+          router.push(`/${locale}/play?game=${gameId}`);
+        } finally {
+          setRematchBusy(false);
+        }
+      } else {
+        router.push(`/${locale}/play?game=${gameId}`);
+      }
+    }
+  }
+
+  const plugin = gameId ? getGame(gameId) : null;
+  const connectionLabel = reconnecting ? t("game.reconnecting") : connected ? t("game.connected") : t("game.connecting");
+
+  return (
+    <TableEnvironmentProvider {...(gameId ? { gameId } : {})}>
+      <main className="nz-container">
+        <div className={styles.statusBar}>
+          <span className={styles.statusGroup}>
+            <span className={connected ? styles.live : styles.offline}>{connectionLabel}</span>
+            {isSpectator && (
+              <>
+                <span className={styles.spectatorBadge} title={DUEL_SHELL_I18N.spectator[locale] || DUEL_SHELL_I18N.spectator.en}>
+                  👁️ {DUEL_SHELL_I18N.spectator[locale] || DUEL_SHELL_I18N.spectator.en}
+                </span>
+                {duelMeta?.winnerCash != null && duelMeta.winnerCash > 0 && (
+                  <span className={styles.spectatorPrizeBadge} title={DUEL_SHELL_I18N.winnerCash(duelMeta.winnerCash.toFixed(2))[locale] || DUEL_SHELL_I18N.winnerCash(duelMeta.winnerCash.toFixed(2)).en}>
+                    <span className={styles.prizePulseDot} />
+                    💰 {DUEL_SHELL_I18N.winnerCash(duelMeta.winnerCash.toFixed(2))[locale] || DUEL_SHELL_I18N.winnerCash(duelMeta.winnerCash.toFixed(2)).en}
+                  </span>
+                )}
+              </>
+            )}
+            {!vsComputer && opponentSeat !== null && !completed && clock?.toMove === opponentSeat && (
+              <span className={styles.waitingBadge} title={DUEL_SHELL_I18N.waitingOpponent[locale] || DUEL_SHELL_I18N.waitingOpponent.en}>
+                <span className={styles.waitingDot} />
+                {DUEL_SHELL_I18N.waitingOpponent[locale] || DUEL_SHELL_I18N.waitingOpponent.en}
+              </span>
+            )}
+          </span>
+          <div className={styles.statusActions}>
+            <button
+              type="button"
+              className={styles.shareLiveBtn}
+              onClick={() => setShareModalOpen(true)}
+              aria-label={DUEL_SHELL_I18N.shareLive[locale] || DUEL_SHELL_I18N.shareLive.en}
+              title={DUEL_SHELL_I18N.shareLiveTooltip[locale] || DUEL_SHELL_I18N.shareLiveTooltip.en}
+            >
+              <span className={styles.shareIcon}>📡</span>
+              <span className={styles.shareLabel}>{DUEL_SHELL_I18N.shareLive[locale] || DUEL_SHELL_I18N.shareLive.en}</span>
+            </button>
+
+            {!isSpectator && seat !== undefined && (
+              <button
+                type="button"
+                className={[styles.chatBtn, chatOpen ? styles.chatBtnActive : ""].join(" ")}
+                onClick={() => setChatOpen((prev) => !prev)}
+                aria-label={DUEL_SHELL_I18N.chat[locale] || DUEL_SHELL_I18N.chat.en}
+                title={DUEL_SHELL_I18N.chat[locale] || DUEL_SHELL_I18N.chat.en}
+              >
+                <span className={styles.chatIcon}>💬</span>
+                <span className={styles.chatLabel}>{DUEL_SHELL_I18N.chat[locale] || DUEL_SHELL_I18N.chat.en}</span>
+                {chatUnread > 0 && (
+                  <span className={styles.chatBadge}>{chatUnread > 9 ? "9+" : chatUnread}</span>
+                )}
+              </button>
+            )}
+            <GameVisualSettings />
+          </div>
+        </div>
+
+        {plugin?.supportsDraw && !isSpectator && !completed && drawOfferBy !== null && (
+          <div className={styles.drawBanner}>
+            {drawOfferBy === mySeat ? (
+              <span>{t("game.draw_offer_sent")}</span>
+            ) : (
+              <>
+                <span>{t("game.draw_offer_received", { handle: opponentNickname })}</span>
+                <Button variant="primary" onClick={acceptDraw}>{t("game.accept_draw")}</Button>
+                <Button variant="ghost" onClick={declineDraw}>{t("game.decline_draw")}</Button>
+              </>
+            )}
+          </div>
+        )}
+
+        {completed ? (
+          <ResultCeremony
+            isSpectator={isSpectator}
+            outcome={myOutcome}
+            result={result}
+            reason={reason}
+            vsComputer={vsComputer}
+            duelId={duelId}
+            gameId={gameId ?? "game"}
+            delta={delta}
+            onRematch={() => void handleRematch()}
+            rematchBusy={rematchBusy}
+            rematchSent={rematchSent}
+          />
+        ) : plugin && view ? (
+          <div
+            className={styles.duelArena}
+            data-game={gameId ?? "game"}
+            style={{
+              "--game-accent": gameTokens?.palette.accent ?? "#ff5a2b",
+              "--game-glow": gameTokens?.palette.glow ?? "rgba(255, 90, 43, 0.3)",
+              "--game-border": gameTokens?.palette.border ?? "rgba(255, 255, 255, 0.1)",
+            } as React.CSSProperties}
+          >
+            {/* Bespoke In-Match Game Identity & Turn HUD */}
+            {gameTokens && (
+              <div className={styles.gameHudHeader}>
+                <div className={styles.gameHudBadge} style={{ borderColor: gameTokens.palette.border }}>
+                  <span className={styles.gameHudDot} style={{ background: gameTokens.palette.accent }} />
+                  <span className={styles.gameHudTitle}>
+                    {gameTokens.persona[locale] || gameTokens.persona.en}
+                  </span>
+                </div>
+                <div className={styles.gameHudTurnStatus}>
+                  {canMove ? (
+                    <span className={styles.turnBadgeActive} style={{ borderColor: gameTokens.palette.accent, color: gameTokens.palette.accent }}>
+                      <span className={styles.turnPulseDot} style={{ background: gameTokens.palette.accent }} />
+                      <span>{locale === "ar" ? "دورك الآن للعب ⚔️" : "Your Turn ⚔️"}</span>
+                    </span>
+                  ) : (
+                    <span className={styles.turnBadgeWaiting}>
+                      <span className={styles.turnWaitingDot} />
+                      <span>{locale === "ar" ? "في انتظار الخصم..." : "Opponent thinking..."}</span>
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className={styles.gameHudRulesBtn}
+                  onClick={() => setRulesOpen(true)}
+                  title={t("game.rules") || "Rules"}
+                >
+                  <span>📖</span>
+                  <span>{locale === "ar" ? "القواعد" : "Rules"}</span>
+                </button>
+              </div>
+            )}
+
+            {gameId !== "ludo" && (
+              <div className={styles.opponentBar}>
+                {players && (opponentSeat !== null ? (
+                  <PlayerStrip
+                    playerId={players[opponentSeat] ?? ""}
+                    active={isSharedClock ? true : clock?.toMove === opponentSeat}
+                    remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[opponentSeat] ?? null}
+                    flagged={false}
+                    reverse={true}
+                  />
+                ) : isSpectator && players[1] ? (
+                  <PlayerStrip
+                    playerId={players[1] ?? ""}
+                    active={isSharedClock ? true : clock?.toMove === 1}
+                    remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[1] ?? null}
+                    flagged={false}
+                    reverse={true}
+                  />
+                ) : null)}
+              </div>
+            )}
+
+            <div className={styles.boardContainer}>
+              <plugin.Board
+                view={view ?? {}}
+                lastMove={lastMove}
+                mySeat={mySeat}
+                canMove={canMove}
+                onMove={(intent) => sendIntent(intent)}
+              />
+            </div>
+
+            {gameId !== "ludo" && (
+              <div className={styles.playerBar}>
+                {players && (mySeat !== null ? (
+                  <PlayerStrip
+                    playerId={players[mySeat] ?? ""}
+                    active={isSharedClock ? true : clock?.toMove === mySeat}
+                    remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[mySeat] ?? null}
+                    flagged={false}
+                  />
+                ) : isSpectator && players[0] ? (
+                  <PlayerStrip
+                    playerId={players[0] ?? ""}
+                    active={isSharedClock ? true : clock?.toMove === 0}
+                    remainingMs={isSharedClock ? clock?.remainingMs ?? null : clock?.remaining?.[0] ?? null}
+                    flagged={false}
+                  />
+                ) : null)}
+              </div>
+            )}
+
+            {!isSpectator && (
+              <div className={styles.actionsRow}>
+                {vsComputer && botDifficulty === "EASY" && gameId === "chess" && (
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      sendIntent("undo");
+                      playUndoSound();
+                    }}
+                    disabled={!canMove}
+                  >
+                    ↩ {DUEL_SHELL_I18N.undoMove[locale] || DUEL_SHELL_I18N.undoMove.en}
+                  </Button>
+                )}
+                {plugin.supportsDraw && (
+                  <Button variant="ghost" onClick={offerDraw} disabled={drawOfferBy !== null}>{t("game.offer_draw")}</Button>
+                )}
+                <Button variant="ghost" onClick={() => setRulesOpen(true)}>
+                  {DUEL_SHELL_I18N.rules[locale] || DUEL_SHELL_I18N.rules.en}
+                </Button>
+                <Button variant="secondary" className={styles.resignBtn} onClick={() => setResignConfirmOpen(true)}>{t("game.resign")}</Button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className={styles.playerLine}>{t("game.connecting")}</p>
+        )}
+
+        <ConfirmationModal
+          open={resignConfirmOpen}
+          title={t("game.resign_confirm_title")}
+          message={t("game.resign_confirm_body")}
+          confirmLabel={t("game.confirm")}
+          cancelLabel={t("game.cancel")}
+          variant="destructive"
+          onConfirm={() => {
+            resign();
+            setResignConfirmOpen(false);
+          }}
+          onCancel={() => setResignConfirmOpen(false)}
+        />
+
+        {gameId && (
+          <RulesPanel
+            open={rulesOpen}
+            gameSlug={gameId}
+            onClose={() => setRulesOpen(false)}
+          />
+        )}
+
+        <p className={styles.playerLine}>
+          {isSpectator ? t("game.watching_as", { handle: player?.handle ?? "" }) : t("game.playing_as", { handle: player?.handle ?? "" })}
+        </p>
+
+        {!isSpectator && seat !== undefined && (
+          <ChatDrawer
+            channelKind="MATCH"
+            duelId={duelId}
+            isOpen={chatOpen}
+            onOpenChange={setChatOpen}
+            onUnreadChange={setChatUnread}
+          />
+        )}
+
+        <LiveMatchShareModal
+          isOpen={shareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+          duelId={duelId}
+          gameId={gameId ?? "game"}
+          gameName={plugin ? t(`common.game_names.${plugin.nameKey}`) : undefined}
+          player1={players?.[0] ? (players[0] === player?.id ? (player?.handle || "You") : (players[0].startsWith("ai-") ? "Computer" : players[0])) : "Player 1"}
+          player2={players?.[1] ? (players[1] === player?.id ? (player?.handle || "You") : (players[1].startsWith("ai-") ? "Computer" : players[1])) : "Player 2"}
+        />
+      </main>
+    </TableEnvironmentProvider>
+  );
+}

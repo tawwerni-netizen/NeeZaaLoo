@@ -1,0 +1,202 @@
+.section {
+  padding-block: var(--nz-space-12);
+  border-top: 1px solid var(--nz-line);
+  background: radial-gradient(circle at 50% 100%, rgba(34, 211, 238, 0.04) 0%, transparent 60%);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 60ch;
+  margin: 0 auto;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--nz-tracking-caps);
+  text-transform: uppercase;
+  color: var(--nz-cyan);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  background: rgba(34, 211, 238, 0.08);
+  border-radius: var(--nz-radius-pill);
+  padding: 4px 14px;
+  margin-block-end: var(--nz-space-4);
+}
+
+.heading {
+  font-size: var(--nz-text-xl);
+  font-weight: 800;
+  color: var(--nz-text-1);
+  margin: 0 0 var(--nz-space-2);
+}
+
+.body {
+  font-size: var(--nz-text-md);
+  color: var(--nz-text-2);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.featuresRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--nz-space-4);
+  margin-top: var(--nz-space-6);
+}
+
+.featureItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--nz-radius-pill);
+  font-size: 13px;
+  color: var(--nz-text-2);
+}
+
+.actionGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+  margin-top: var(--nz-space-6);
+  width: 100%;
+}
+
+.installBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  padding: 14px 28px;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.2) 0%, rgba(255, 215, 0, 0.15) 100%);
+  border: 1.5px solid var(--nz-cyan);
+  border-radius: var(--nz-radius-pill);
+  color: var(--nz-text-1);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(34, 211, 238, 0.25);
+}
+
+.installBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(34, 211, 238, 0.45);
+  border-color: #22d3ee;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.3) 0%, rgba(255, 215, 0, 0.25) 100%);
+}
+
+.installBtn:active {
+  transform: translateY(0);
+}
+
+.installIcon {
+  font-size: 1.8rem;
+}
+
+.installText {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+}
+
+.installLabel {
+  font-size: var(--nz-text-md);
+  font-weight: 800;
+  color: var(--nz-text-1);
+}
+
+.installMeta {
+  font-size: 12px;
+  color: var(--nz-text-3);
+}
+
+.installedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: var(--nz-radius-pill);
+  color: #4ade80;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.checkIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #22c55e;
+  color: #000;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.guideCard {
+  width: 100%;
+  max-width: 480px;
+  background: var(--nz-bg-card, #0f141f);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: start;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.guideHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.guideTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--nz-text-1);
+}
+
+.closeGuideBtn {
+  background: transparent;
+  border: none;
+  color: var(--nz-text-3);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.closeGuideBtn:hover {
+  color: var(--nz-text-1);
+}
+
+.guideSteps {
+  margin: 0;
+  padding-inline-start: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--nz-text-2);
+  line-height: 1.5;
+}
+
+.guideSteps li {
+  padding-inline-start: 4px;
+}

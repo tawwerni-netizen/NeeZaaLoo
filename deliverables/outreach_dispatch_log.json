@@ -1,0 +1,93 @@
+{
+  "sent": {
+    "partnerships@everymatrix.com": {
+      "id": 1,
+      "name": "Stian Hornsletten",
+      "company": "EveryMatrix",
+      "sentAt": "2026-10-05T02:52:49.812Z",
+      "messageId": "<e6ea41a1-0115-1b94-c68d-8044fd258395@nizalo.com>"
+    },
+    "order@softswiss.com": {
+      "id": 2,
+      "name": "Andrey Starovoitov",
+      "company": "SOFTSWISS",
+      "sentAt": "2026-10-05T02:53:59.528Z",
+      "messageId": "<cd44cd21-df10-1d09-c827-5c27800b73d6@nizalo.com>"
+    },
+    "info@digitain.com": {
+      "id": 3,
+      "name": "Ani Mkrtchyan",
+      "company": "Digitain",
+      "sentAt": "2026-10-05T02:55:02.940Z",
+      "messageId": "<07379716-5961-5308-8840-c8777b2e174c@nizalo.com>"
+    },
+    "sales@betconstruct.com": {
+      "id": 4,
+      "name": "Gor Mnatsakanyan",
+      "company": "BetConstruct",
+      "sentAt": "2026-10-05T02:56:04.177Z",
+      "messageId": "<9971c64a-7997-ef19-2847-d2512a3d563c@nizalo.com>"
+    },
+    "sales@pragmaticplay.com": {
+      "id": 5,
+      "name": "Julian Jarvis",
+      "company": "Pragmatic Play",
+      "sentAt": "2026-10-05T02:57:08.965Z",
+      "messageId": "<d65175bd-6f7b-1308-42cc-d08f8edf9a43@nizalo.com>"
+    },
+    "ir@playtech.com": {
+      "id": 6,
+      "name": "Mor Weizer",
+      "company": "Playtech",
+      "sentAt": "2026-10-05T02:58:12.888Z",
+      "messageId": "<9cfbf98e-3f78-fc56-2737-e39b81466077@nizalo.com>"
+    },
+    "ir@evolution.com": {
+      "id": 7,
+      "name": "Martin Carlesund",
+      "company": "Evolution Gaming",
+      "sentAt": "2026-10-05T03:04:30.637Z",
+      "messageId": "<76946368-b2fe-41d4-c61d-d2c6df02385f@nizalo.com>"
+    },
+    "sales@bragg.group": {
+      "id": 8,
+      "name": "Matevž Mazij",
+      "company": "Bragg Gaming Group",
+      "sentAt": "2026-10-05T03:05:52.272Z",
+      "messageId": "<e7254682-b740-3716-a600-dce8fecf3531@nizalo.com>"
+    },
+    "sales@skillonnet.com": {
+      "id": 9,
+      "name": "Michael Golembo",
+      "company": "SkillOnNet",
+      "sentAt": "2026-10-05T03:07:06.802Z",
+      "messageId": "<e447fc36-af9b-0eb9-ed5c-1796a866280c@nizalo.com>"
+    },
+    "sales@altenar.com": {
+      "id": 10,
+      "name": "Stanislav Silin",
+      "company": "Altenar",
+      "sentAt": "2026-10-05T03:07:58.554Z",
+      "messageId": "<4dbea155-070b-6266-bd44-ce77423692e7@nizalo.com>"
+    },
+    "sales@soft2bet.com": {
+      "id": 11,
+      "name": "Uri Poliavich",
+      "company": "Soft2Bet",
+      "sentAt": "2026-10-05T03:08:50.376Z",
+      "messageId": "<6bed40e9-3594-2fa3-3cbd-4f064eb4f84f@nizalo.com>"
+    },
+    "sales@gig.com": {
+      "id": 12,
+      "name": "Richard Carter",
+      "company": "GiG Software PLC",
+      "sentAt": "2026-10-05T03:09:49.835Z",
+      "messageId": "<e3d18ec1-5c84-455c-e3b5-0f9d1d606bf7@nizalo.com>"
+    }
+  },
+  "failed": {},
+  "stats": {
+    "totalSent": 12,
+    "totalFailed": 0
+  }
+}

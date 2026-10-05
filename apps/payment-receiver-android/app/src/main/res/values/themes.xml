@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Receiver" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/nz_paper</item>
+        <item name="android:statusBarColor">@color/nz_ink</item>
+        <item name="android:navigationBarColor">@color/nz_paper</item>
+    </style>
+
+    <style name="Theme.Receiver.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/nz_ink</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_mark</item>
+        <item name="postSplashScreenTheme">@style/Theme.Receiver</item>
+    </style>
+</resources>

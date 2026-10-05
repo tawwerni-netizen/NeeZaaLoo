@@ -1,0 +1,209 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+  width: 100%;
+}
+
+.zenBanner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 128, 0.2));
+  border: 1px solid rgba(0, 255, 255, 0.6);
+  border-radius: 999px;
+  color: #00ffff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 24px rgba(0, 255, 255, 0.4), inset 0 0 12px rgba(0, 255, 255, 0.2);
+  margin-bottom: 4px;
+  animation: pulseNeonGlow 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulseNeonGlow {
+  0% { box-shadow: 0 0 16px rgba(0, 255, 255, 0.3); }
+  100% { box-shadow: 0 0 32px rgba(0, 255, 255, 0.7); }
+}
+
+.boardContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 580px;
+  transition: transform var(--nz-dur-base) var(--nz-ease-settle);
+}
+
+.perspective {
+  transform: rotateX(12deg) translateZ(8px);
+  transform-style: preserve-3d;
+}
+
+.kayaWoodTable {
+  position: relative;
+  padding: 18px;
+  background: linear-gradient(145deg, #110022 0%, #050011 100%);
+  border-radius: var(--nz-radius-xl);
+  border: 4px solid #00ffff;
+  box-shadow: 
+    0 12px 0 #1f1105,
+    0 24px 45px rgba(0, 0, 0, 0.9),
+    inset 0 0 30px rgba(0, 255, 255, 0.4),
+    0 0 40px rgba(0, 255, 255, 0.5);
+}
+
+.board {
+  position: relative;
+  width: min(84vw, 500px);
+  aspect-ratio: 1 / 1;
+  background: #000;
+  border-radius: 4px;
+  box-shadow: inset 0 0 30px rgba(255, 0, 255, 0.5);
+  border: 2px solid #ff00ff;
+}
+
+.gridLines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.starPoint {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #ffea00;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px #ffea00, 0 0 20px #ffea00;
+}
+
+.cell {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: calc(100% / 15);
+  height: calc(100% / 15);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.cell:disabled { cursor: default; }
+
+.stoneWrap {
+  width: 90%;
+  height: 90%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.stoneSvg {
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6));
+}
+
+.previewStoneWrap {
+  width: 90%;
+  height: 90%;
+  opacity: 0.35;
+}
+
+.lastMoveRing {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  border-radius: 999px;
+  border: 3px solid #00ffcc;
+  box-shadow: 0 0 15px rgba(0, 255, 204, 1), inset 0 0 10px rgba(0, 255, 204, 0.8);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.winningStone {
+  animation: stoneWinPulseArcade 0.8s infinite ease-in-out;
+}
+
+@keyframes stoneWinPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #ffe699); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 12px #ffbe2b) drop-shadow(0 0 20px #ff5a2b); }
+}
+
+.winOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@media (max-width: 640px) {
+  .perspective {
+    transform: none !important;
+  }
+  .kayaWoodTable {
+  position: relative;
+  padding: 18px;
+  background: linear-gradient(145deg, #110022 0%, #050011 100%);
+  border-radius: var(--nz-radius-xl);
+  border: 4px solid #00ffff;
+  box-shadow: 
+    0 12px 0 #1f1105,
+    0 24px 45px rgba(0, 0, 0, 0.9),
+    inset 0 0 30px rgba(0, 255, 255, 0.4),
+    0 0 40px rgba(0, 255, 255, 0.5);
+}
+  .board {
+  position: relative;
+  width: min(84vw, 500px);
+  aspect-ratio: 1 / 1;
+  background: #000;
+  border-radius: 4px;
+  box-shadow: inset 0 0 30px rgba(255, 0, 255, 0.5);
+  border: 2px solid #ff00ff;
+}
+}
+
+@keyframes stoneWinPulseArcade { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px #ffea00); } 50% { transform: scale(1.15); filter: drop-shadow(0 0 20px #ffea00) drop-shadow(0 0 40px #ff5a2b); z-index: 10; } }
+.winLaserSvg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+  filter: drop-shadow(0 0 12px #ff00ff) drop-shadow(0 0 24px #ff00ff);
+  animation: laserPulse 1.5s infinite alternate;
+}
+
+@keyframes laserPulse {
+  from { opacity: 0.7; filter: drop-shadow(0 0 12px #ff00ff) drop-shadow(0 0 24px #ff00ff); }
+  to { opacity: 1; filter: drop-shadow(0 0 20px #ff00ff) drop-shadow(0 0 40px #ff00ff); }
+}
+
+.winningCell {
+  box-shadow: inset 0 0 20px rgba(255, 0, 255, 0.8), 0 0 30px rgba(255, 0, 255, 0.6) !important;
+  border-color: #ff00ff !important;
+  z-index: 10;
+  animation: cellWinPulse 1s infinite alternate;
+}
+
+@keyframes cellWinPulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); z-index: 20; }
+}

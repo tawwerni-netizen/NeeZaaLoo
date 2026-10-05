@@ -1,0 +1,215 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-2);
+  width: 100%;
+}
+
+.victoryBanner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, rgba(245, 179, 36, 0.25), rgba(229, 57, 22, 0.25));
+  border: 1px solid rgba(245, 179, 36, 0.6);
+  border-radius: 999px;
+  color: #FFE885;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 24px rgba(245, 179, 36, 0.4), inset 0 0 12px rgba(245, 179, 36, 0.2);
+  margin-bottom: 8px;
+  animation: pulseGoldGlow 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulseGoldGlow {
+  0% { box-shadow: 0 0 16px rgba(245, 179, 36, 0.3); }
+  100% { box-shadow: 0 0 32px rgba(245, 179, 36, 0.7); }
+}
+
+.dropSelectorRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: min(88vw, 500px);
+  height: 32px;
+  padding: 0 16px;
+}
+
+.dropColumnBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.dropColumnBtn:disabled { cursor: default; }
+
+.dropArrow {
+  font-size: 24px;
+  color: #ff00ff;
+  animation: bounceArrowArcade 0.5s infinite alternate ease-in-out;
+  filter: drop-shadow(0 0 10px rgba(255, 0, 255, 1));
+}
+
+@keyframes bounceArrow {
+  from { transform: translateY(-3px); }
+  to { transform: translateY(3px); }
+}
+
+.gridContainer {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  justify-content: center;
+  transition: transform var(--nz-dur-base) var(--nz-ease-settle);
+}
+
+.perspective {
+  transform: rotateX(8deg) translateZ(10px);
+  transform-style: preserve-3d;
+}
+
+.verticalStandFrame {
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.standFootLeft,
+.standFootRight {
+  position: absolute;
+  bottom: 0;
+  width: 44px;
+  height: 36px;
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.6);
+  z-index: 1;
+}
+
+.standFootLeft { left: 16px; }
+.standFootRight { right: 16px; }
+
+.rackHousing {
+  position: relative;
+  z-index: 2;
+  padding: 16px;
+  background: linear-gradient(145deg, #0f001a 0%, #05000a 70%, #000000 100%);
+  border-radius: var(--nz-radius-xl);
+  border: 4px solid #00f0ff;
+  box-shadow: 
+    0 12px 0 #005555,
+    0 24px 45px rgba(0, 0, 0, 0.9),
+    inset 0 0 20px rgba(0, 240, 255, 0.5),
+    0 0 30px rgba(0, 240, 255, 0.6);
+  animation: neonRackPulse 3s infinite alternate;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 8px;
+  width: min(84vw, 460px);
+  aspect-ratio: 7 / 6;
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.cell:disabled { cursor: default; }
+
+.holeBevel {
+  position: relative;
+  width: 90%;
+  height: 90%;
+  border-radius: 999px;
+  background: #000;
+  box-shadow: 
+    inset 0 6px 12px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 240, 255, 0.3),
+    inset 0 0 15px rgba(0, 240, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(0,240,255,0.2);
+}
+
+.tokenWrap {
+  width: 94%;
+  height: 94%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.tokenSvg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.previewTokenWrap {
+  width: 94%;
+  height: 94%;
+  opacity: 0.35;
+}
+
+.winningToken {
+  animation: winningPulseArcade 0.8s infinite ease-in-out;
+}
+
+@keyframes winningPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #ffe699); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 16px #ffbe2b) drop-shadow(0 0 24px #ff5a2b); }
+}
+
+@media (max-width: 640px) {
+  .perspective {
+    transform: none !important;
+  }
+  .rackHousing {
+  position: relative;
+  z-index: 2;
+  padding: 16px;
+  background: linear-gradient(145deg, #0f001a 0%, #05000a 70%, #000000 100%);
+  border-radius: var(--nz-radius-xl);
+  border: 4px solid #00f0ff;
+  box-shadow: 
+    0 12px 0 #005555,
+    0 24px 45px rgba(0, 0, 0, 0.9),
+    inset 0 0 20px rgba(0, 240, 255, 0.5),
+    0 0 30px rgba(0, 240, 255, 0.6);
+  animation: neonRackPulse 3s infinite alternate;
+}
+  .grid { gap: 4px; width: 88vw; }
+}
+
+@keyframes neonRackPulse { from { box-shadow: 0 12px 0 #005555, 0 24px 45px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,240,255,0.4), 0 0 20px rgba(0,240,255,0.4); } to { box-shadow: 0 12px 0 #005555, 0 24px 45px rgba(0,0,0,0.9), inset 0 0 40px rgba(0,240,255,0.7), 0 0 50px rgba(0,240,255,0.8); } }
+@keyframes bounceArrowArcade { from { transform: translateY(-5px) scale(1); filter: drop-shadow(0 0 5px #ff00ff); } to { transform: translateY(5px) scale(1.2); filter: drop-shadow(0 0 15px #ff00ff) drop-shadow(0 0 25px #ff00ff); } }
+@keyframes winningPulseArcade { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px #ffea00); } 50% { transform: scale(1.15); filter: drop-shadow(0 0 20px #ffea00) drop-shadow(0 0 40px #ff5a2b); z-index: 10; } }
+.dropActive {
+  background: rgba(255, 0, 255, 0.1);
+  box-shadow: inset 0 0 15px rgba(255, 0, 255, 0.3), 0 0 20px rgba(255, 0, 255, 0.2);
+  border-radius: var(--nz-radius-lg);
+  transition: all 0.2s ease-out;
+}

@@ -1,0 +1,16 @@
+# Nizalo Platform - Hostinger LiteSpeed / Apache Reverse Proxy Configuration
+Options -Indexes +FollowSymLinks
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Forward WebSocket connections to port 3000
+  RewriteCond %{HTTP:Upgrade} =websocket [NC]
+  RewriteRule ^(.*)$ ws://127.0.0.1:3000/$1 [P,L,QSA]
+
+  # 2. Forward all HTTP requests directly to Node.js application on port 3000
+  RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L,QSA]
+</IfModule>
+

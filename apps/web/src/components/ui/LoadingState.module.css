@@ -1,0 +1,70 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nz-space-4);
+  padding: var(--nz-space-8);
+  min-height: 200px;
+  width: 100%;
+}
+
+.spinner {
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.spinnerSm {
+  width: 24px;
+  height: 24px;
+}
+
+.spinnerLg {
+  width: 64px;
+  height: 64px;
+}
+
+.ringOuter {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid var(--nz-line);
+  border-top-color: var(--nz-accent);
+  animation: spin 1s linear infinite;
+}
+
+.ringInner {
+  position: absolute;
+  inset: 6px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  border-bottom-color: var(--nz-accent-line);
+  animation: spinReverse 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.message {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  text-align: center;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinReverse {
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ringOuter,
+  .ringInner {
+    animation-duration: 4s;
+  }
+}

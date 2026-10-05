@@ -1,0 +1,137 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-xl);
+  padding: var(--nz-space-6);
+  gap: var(--nz-space-5);
+  max-width: 440px;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+}
+
+.networkBadge {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  padding: 2px 8px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+}
+
+.mainBalance {
+  display: flex;
+  align-items: baseline;
+  gap: var(--nz-space-2);
+}
+
+.currencySymbol {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-2xl);
+  font-weight: 700;
+  color: var(--nz-text);
+}
+
+.amount {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--nz-text-4xl);
+  font-weight: 800;
+  color: var(--nz-text);
+  line-height: 1;
+}
+
+.currencyCode {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-2);
+  font-weight: 600;
+}
+
+.subBalances {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--nz-space-3);
+  background: var(--nz-surface-2);
+  border-radius: var(--nz-radius-md);
+  padding: var(--nz-space-3);
+}
+
+.subItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subLabel {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+}
+
+.subAmount {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  color: var(--nz-text-2);
+}
+
+.actions {
+  display: flex;
+  gap: var(--nz-space-2);
+}
+
+.depositBtn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-accent);
+  color: #fff;
+  border: none;
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.depositBtn:hover {
+  background: var(--nz-accent-hover);
+  transform: translateY(-1px);
+}
+
+.withdrawBtn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text);
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.withdrawBtn:hover {
+  background: var(--nz-surface-3);
+}

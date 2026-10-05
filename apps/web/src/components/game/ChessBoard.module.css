@@ -1,0 +1,431 @@
+.wrap {
+  --board-ground: #0a0d14;
+  --board-light: #2b3548;
+  --board-dark: #141926;
+  --board-accent: #06b6d4;
+  --board-bevel: #121722;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-4);
+  width: 100%;
+}
+
+
+.checkBanner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(185, 28, 28, 0.3));
+  border: 1px solid rgba(239, 68, 68, 0.7);
+  border-radius: 999px;
+  color: #FCA5A5;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.5), inset 0 0 10px rgba(239, 68, 68, 0.3);
+  margin-bottom: 2px;
+  animation: pulseCheckGlow 1.2s infinite alternate ease-in-out;
+}
+
+.checkmateBanner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.35) 0%, rgba(185, 28, 28, 0.45) 100%);
+  border: 2px solid #ffd700;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.8), inset 0 0 15px rgba(255, 215, 0, 0.4);
+  margin-bottom: 2px;
+  animation: checkmatePulse 0.9s infinite alternate ease-in-out;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  z-index: 20;
+}
+
+@keyframes checkmatePulse {
+  0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); transform: scale(0.98); }
+  100% { box-shadow: 0 0 45px rgba(255, 215, 0, 1); transform: scale(1.03); }
+}
+
+.shockwaveOrigin {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.shockwaveRing {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid #ffd700;
+  box-shadow: 0 0 25px #ffd700, inset 0 0 15px #ffaa00;
+  animation: shockwaveExpand 1.6s cubic-bezier(0.1, 0.8, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+.shockwaveRingDelay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid #ff4444;
+  box-shadow: 0 0 25px #ff4444;
+  animation: shockwaveExpand 1.6s cubic-bezier(0.1, 0.8, 0.2, 1) infinite;
+  animation-delay: 0.5s;
+  pointer-events: none;
+}
+
+@keyframes shockwaveExpand {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(8.5);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseCheckGlow {
+  0% { box-shadow: 0 0 14px rgba(239, 68, 68, 0.4); transform: scale(0.98); }
+  100% { box-shadow: 0 0 28px rgba(239, 68, 68, 0.8); transform: scale(1.02); }
+}
+.boardContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 580px;
+  transition: transform var(--nz-dur-base) var(--nz-ease-settle);
+}
+
+.perspective {
+  transform: rotateX(15deg) translateZ(10px);
+  transform-style: preserve-3d;
+}
+
+.tableBevel {
+  position: relative;
+  padding: 22px;
+  background: linear-gradient(145deg, #110022 0%, #050011 100%);
+  border-radius: 20px;
+  box-shadow: 
+    0 16px 0 #0a0011,
+    0 28px 50px rgba(0, 0, 0, 0.9),
+    inset 0 0 30px rgba(0, 255, 255, 0.3),
+    0 0 40px rgba(0, 255, 255, 0.4);
+  border: 3px solid #00ffff;
+}
+
+.rankNotations {
+  position: absolute;
+  left: 6px;
+  top: 22px;
+  bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  font-family: var(--nz-font-num);
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  user-select: none;
+}
+
+.fileNotations {
+  position: absolute;
+  bottom: 5px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  justify-content: space-around;
+  font-family: var(--nz-font-num);
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  user-select: none;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: min(84vw, 500px);
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(255, 0, 255, 0.5), 0 0 15px rgba(255, 0, 255, 0.3);
+  border: 2px solid #ff00ff;
+}
+
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  outline: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.square:focus-visible {
+  outline: 2px solid #06b6d4;
+  outline-offset: -2px;
+  z-index: 3;
+}
+
+.square:disabled { cursor: default; }
+
+.themeControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 580px;
+  margin-bottom: 4px;
+  padding: 0 4px;
+  flex-wrap: nowrap;
+}
+
+.themeSelector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  /* Hide scrollbar for cleaner look */
+  scrollbar-width: none;
+}
+.themeSelector::-webkit-scrollbar {
+  display: none;
+}
+
+.themeBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.themeBtn:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.themeBtnActive {
+  border-color: #ffd700;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+}
+
+.themeColorDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.light {
+  background: var(--theme-sq-light, #ebecd0);
+  box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.04);
+}
+
+.dark {
+  background: var(--theme-sq-dark, #779556);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.selected {
+  box-shadow: inset 0 0 0 3px #ffea00, inset 0 0 20px rgba(255, 234, 0, 0.8), 0 0 20px rgba(255, 234, 0, 0.6);
+  z-index: 10;
+}
+
+.lastMove::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #00ffff;
+  opacity: 0.3;
+  box-shadow: inset 0 0 20px #00ffff;
+  pointer-events: none;
+}
+
+.inCheck {
+  box-shadow: inset 0 0 0 3px #ff003c, inset 0 0 30px rgba(255, 0, 60, 0.8), 0 0 30px rgba(255, 0, 60, 0.6);
+  animation: checkPulseArcade 0.8s infinite alternate;
+}
+
+@keyframes checkPulse {
+  0% { box-shadow: inset 0 0 0 3px #ef4444, inset 0 0 10px rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: inset 0 0 0 4px #ef4444, inset 0 0 24px rgba(239, 68, 68, 0.9); }
+  100% { box-shadow: inset 0 0 0 3px #ef4444, inset 0 0 10px rgba(239, 68, 68, 0.5); }
+}
+
+.pieceContainer {
+  position: relative;
+  width: 86%;
+  height: 86%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  z-index: 2;
+  transform-style: preserve-3d;
+}
+
+.moveDot {
+  position: absolute;
+  width: 26%;
+  height: 26%;
+  border-radius: 999px;
+  background: #00ffcc;
+  opacity: 0.9;
+  box-shadow: 0 0 15px rgba(0, 255, 204, 1), 0 0 30px rgba(0, 255, 204, 0.8);
+  pointer-events: none;
+  z-index: 3;
+  animation: pulseHintChess 1s infinite alternate;
+}
+
+@keyframes dotPulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.captureRing {
+  position: absolute;
+  inset: 10%;
+  border-radius: 999px;
+  border: 2.5px dashed #f43f5e;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.6), inset 0 0 8px rgba(244, 63, 94, 0.35);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 3;
+  animation: rotateTarget 6s linear infinite;
+}
+
+@keyframes rotateTarget {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.promoOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 13, 16, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.promoCard {
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line-strong);
+  border-radius: var(--nz-radius-xl);
+  padding: var(--nz-space-8);
+  box-shadow: var(--nz-shadow-3), 0 0 40px rgba(0, 0, 0, 0.8);
+  text-align: center;
+}
+
+.promoTitle {
+  margin: 0 0 var(--nz-space-6);
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-lg);
+  font-weight: 600;
+}
+
+.promoChoices {
+  display: flex;
+  gap: var(--nz-space-4);
+}
+
+.promoChoice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nz-space-2);
+  padding: var(--nz-space-4);
+  border-radius: var(--nz-radius-lg);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-surface-2);
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) var(--nz-ease-out);
+}
+
+.promoPieceWrap {
+  width: 48px;
+  height: 48px;
+}
+
+.promoChoice:hover {
+  border-color: var(--nz-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--nz-shadow-2);
+}
+
+.promoLabel {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .tableBevel {
+  position: relative;
+  padding: 22px;
+  background: linear-gradient(145deg, #110022 0%, #050011 100%);
+  border-radius: 20px;
+  box-shadow: 
+    0 16px 0 #0a0011,
+    0 28px 50px rgba(0, 0, 0, 0.9),
+    inset 0 0 30px rgba(0, 255, 255, 0.3),
+    0 0 40px rgba(0, 255, 255, 0.4);
+  border: 3px solid #00ffff;
+}
+  .rankNotations { left: 3px; font-size: 9px; }
+  .fileNotations { bottom: 2px; font-size: 9px; }
+  .board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: min(84vw, 500px);
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(255, 0, 255, 0.5), 0 0 15px rgba(255, 0, 255, 0.3);
+  border: 2px solid #ff00ff;
+}
+}
+
+@keyframes checkPulseArcade { from { box-shadow: inset 0 0 0 3px #ff003c, inset 0 0 20px rgba(255,0,60,0.6), 0 0 20px rgba(255,0,60,0.4); } to { box-shadow: inset 0 0 0 5px #ff003c, inset 0 0 40px rgba(255,0,60,1), 0 0 40px rgba(255,0,60,0.8); } }
+@keyframes pulseHintChess { from { transform: scale(0.8); opacity: 0.7; } to { transform: scale(1.2); opacity: 1; } }

@@ -1,0 +1,118 @@
+.hero {
+  position: relative;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-xl);
+  padding: var(--nz-space-6) var(--nz-space-8);
+  margin-bottom: var(--nz-space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nz-space-6);
+  flex-wrap: wrap;
+}
+
+.mainInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-4);
+  min-width: 260px;
+}
+
+.gameIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--nz-radius-lg);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  flex-shrink: 0;
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-2xl);
+  font-weight: 800;
+  color: var(--nz-text);
+  margin: 0;
+}
+
+.subtitle {
+  font-family: var(--nz-font-arabic);
+  font-size: var(--nz-text-sm);
+  color: var(--nz-text-3);
+  margin: 0;
+}
+
+.tacticalSpecs {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  flex-wrap: wrap;
+}
+
+.specBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-2);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+}
+
+.primaryBtn {
+  padding: 10px 24px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-accent);
+  color: #fff;
+  border: none;
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.primaryBtn:hover {
+  background: var(--nz-accent-hover);
+  transform: translateY(-1px);
+}
+
+.secondaryBtn {
+  padding: 10px 18px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.secondaryBtn:hover {
+  background: var(--nz-surface-3);
+  color: var(--nz-text);
+}

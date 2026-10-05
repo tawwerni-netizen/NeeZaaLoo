@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nizalo M&A — لوحة الـ 112 مشتري مؤسسي حول العالم (Global Acquisition Engine)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 24, 38, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --gold: #f59e0b;
+      --gold-glow: rgba(245, 158, 11, 0.25);
+      --green: #10b981;
+      --blue: #3b82f6;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 40%);
+      color: var(--text);
+      font-family: 'IBM Plex Sans Arabic', sans-serif;
+      min-height: 100vh;
+      padding: 30px 20px 80px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    header {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .badge-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: var(--gold);
+      font-size: 13.5px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-size: 30px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 800px;
+      margin: 0 auto 24px;
+      line-height: 1.6;
+    }
+    
+    /* Stats & Progress Bar */
+    .stats-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 22px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    .stat-item {
+      text-align: center;
+      padding: 10px;
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .stat-item:last-child { border-left: none; }
+    .stat-num {
+      font-size: 32px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--gold);
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .progress-bar-wrap {
+      grid-column: 1 / -1;
+      margin-top: 10px;
+    }
+    .progress-track {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), #10b981);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Controls */
+    .controls-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .search-box {
+      width: 100%;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      background: rgba(18, 24, 38, 0.95);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 15px 46px 15px 16px;
+      color: #fff;
+      font-size: 15.5px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .search-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 18px var(--gold-glow);
+    }
+    .search-icon {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 18px;
+      pointer-events: none;
+    }
+    .category-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    .pill-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .pill-btn.active {
+      background: var(--gold);
+      color: #000;
+      border-color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* Lead Cards Grid */
+    .leads-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 20px;
+    }
+    .lead-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+    .lead-card:hover {
+      border-color: rgba(245, 158, 11, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+    }
+    .lead-card.sent {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.04);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .lead-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lead-id {
+      font-size: 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: var(--text-dim);
+    }
+    .lead-title {
+      font-size: 13px;
+      color: var(--gold);
+      margin-top: 2px;
+    }
+    .lead-company {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-top: 4px;
+    }
+    .category-tag {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      white-space: nowrap;
+    }
+    .card-body {
+      margin: 12px 0 16px;
+      flex-grow: 1;
+    }
+    .lead-email-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+    }
+    .email-text {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: #e2e8f0;
+      direction: ltr;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .angle-text {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 2px solid var(--gold);
+      padding: 6px 10px;
+      border-radius: 0 6px 6px 0;
+    }
+    
+    /* Action Buttons */
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .btn-row-primary {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      border: none;
+    }
+    .btn-gmail {
+      background: linear-gradient(135deg, #ea4335, #c5221f);
+      color: #fff;
+      flex: 1.2;
+    }
+    .btn-gmail:hover {
+      box-shadow: 0 4px 12px rgba(234, 67, 53, 0.35);
+      filter: brightness(1.1);
+    }
+    .btn-mail {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      flex: 1;
+    }
+    .btn-mail:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .btn-copy {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      font-size: 11.5px;
+      padding: 6px 10px;
+    }
+    .btn-copy:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    
+    .status-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .checkbox-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .checkbox-wrap input {
+      accent-color: var(--green);
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Pagination */
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 36px;
+    }
+    .page-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .page-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .page-info {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: #000;
+      font-weight: 600;
+      padding: 10px 24px;
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 112;
+      font-size: 14px;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="badge-top">🌍 NIZALO GLOBAL $500K ACQUISITION CAMPAIGN</div>
+    <h1>لوحة الـ 112 مشتري مؤسسي حول العالم</h1>
+    <p class="subtitle">أكبر قاعدة بيانات تفاعلية تضم 112 مدير استحواذ ورئيس تنفيذي وصندوق استثمار قادرين على شراء المنصة بـ 500.000$ نقداً أو ترخيصها، مع أزرار الإرسال المباشر بنقرة واحدة عبر حسابك في Gmail (/u/2).</p>
+  </header>
+
+  <!-- Stats & Progress -->
+  <div class="stats-card">
+    <div class="stat-item">
+      <div class="stat-num" id="total-count">112</div>
+      <div class="stat-label">إجمالي المشترين المؤهلين عالمياً</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="sent-count" style="color: #10b981;">0</div>
+      <div class="stat-label">تم الإرسال لهم بنجاح</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="remaining-count" style="color: #3b82f6;">112</div>
+      <div class="stat-label">المتبقي للإرسال</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="today-goal">30</div>
+      <div class="stat-label">الهدف اليومي الموصى به</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Category Filters -->
+  <div class="controls-wrap">
+    <div class="search-box">
+      <input type="text" id="search-input" class="search-input" placeholder="ابحث بين 112 جهة بالاسم، اسم الشركة، المنصب، أو الإيميل...">
+      <span class="search-icon">🔍</span>
+    </div>
+
+    <div class="category-pills">
+      <button class="pill-btn active" data-cat="all">الكل (112)</button>
+      <button class="pill-btn" data-cat="iGaming B2B">مجمعات iGaming B2B (200)</button>
+      <button class="pill-btn" data-cat="Skill Gaming">ألعاب المهارة والكاش (200)</button>
+      <button class="pill-btn" data-cat="Crypto">الكريبتو وWeb3 وتيليجرام (200)</button>
+      <button class="pill-btn" data-cat="Regional">الشرق الأوسط وأمريكا اللاتينية (200)</button>
+      <button class="pill-btn" data-cat="Esports">منصات الرياضات والبطولات (100)</button>
+      <button class="pill-btn" data-cat="M&A">وسطاء M&A والاستثمار (100)</button>
+    </div>
+  </div>
+
+  <!-- Leads Cards Grid -->
+  <div class="leads-grid" id="leads-container">
+    <!-- Populated by JavaScript -->
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-bar" id="pagination-bar">
+    <button class="page-btn" id="prev-btn" onclick="prevPage()">السابق ➔</button>
+    <span class="page-info" id="page-info">صفحة 1 من 20</span>
+    <button class="page-btn" id="next-btn" onclick="nextPage()">⬅ التالي</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">تم النسخ بنجاح! ✓</div>
+
+<script>
+  const buyersData = [{"id":1,"name":"Stian Hornsletten","title":"CCO & Co-Founder","company":"EveryMatrix","domain":"everymatrix.com","email":"partnerships@everymatrix.com","contact_portal":"https://everymatrix.com/contact-us/","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into EveryMatrix's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20EveryMatrix","mx_host":"everymatrix-com.mail.protection.outlook.com"},{"id":2,"name":"Andrey Starovoitov","title":"Co-CEO","company":"SOFTSWISS","domain":"softswiss.com","email":"order@softswiss.com","contact_portal":"https://softswiss.com/contact-us/","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into SOFTSWISS's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20SOFTSWISS","mx_host":"aspmx.l.google.com"},{"id":3,"name":"Ani Mkrtchyan","title":"Chief Sales Officer","company":"Digitain","domain":"digitain.com","email":"info@digitain.com","contact_portal":"https://digitain.com/contact-us/","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Digitain's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Digitain","mx_host":"digitain-com.mail.protection.outlook.com"},{"id":4,"name":"Gor Mnatsakanyan","title":"Regional Director","company":"BetConstruct","domain":"betconstruct.com","email":"sales@betconstruct.com","contact_portal":"https://betconstruct.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into BetConstruct's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20BetConstruct","mx_host":"aspmx3.googlemail.com"},{"id":5,"name":"Julian Jarvis","title":"CEO","company":"Pragmatic Play","domain":"pragmaticplay.com","email":"sales@pragmaticplay.com","contact_portal":"https://pragmaticplay.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Pragmatic Play's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Pragmatic%20Play","mx_host":"pragmaticplay-com.mail.protection.outlook.com"},{"id":6,"name":"Mor Weizer","title":"CEO","company":"Playtech","domain":"playtech.com","email":"ir@playtech.com","contact_portal":"https://playtech.com/contact","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Playtech's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Playtech","mx_host":"playtech-com.mail.protection.outlook.com"},{"id":7,"name":"Martin Carlesund","title":"Group CEO","company":"Evolution Gaming","domain":"evolution.com","email":"ir@evolution.com","contact_portal":"https://evolution.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Evolution Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Evolution%20Gaming","mx_host":"evolution-com.mail.protection.outlook.com"},{"id":8,"name":"Matevž Mazij","title":"CEO & Chairman","company":"Bragg Gaming Group","domain":"bragg.group","email":"sales@bragg.group","contact_portal":"https://bragg.group","category":"iGaming Aggregators & B2B","region":"North America & Europe","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Bragg Gaming Group's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Bragg%20Gaming%20Group","mx_host":"aspmx.l.google.com"},{"id":9,"name":"Michael Golembo","title":"Sales Director","company":"SkillOnNet","domain":"skillonnet.com","email":"sales@skillonnet.com","contact_portal":"https://skillonnet.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into SkillOnNet's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20SkillOnNet","mx_host":"skillonnet-com.mail.protection.outlook.com"},{"id":10,"name":"Stanislav Silin","title":"CEO","company":"Altenar","domain":"altenar.com","email":"sales@altenar.com","contact_portal":"https://altenar.com/contact/","category":"iGaming Aggregators & B2B","region":"Europe & LatAm","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Altenar's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Altenar","mx_host":"alt2.aspmx.l.google.com"},{"id":11,"name":"Uri Poliavich","title":"CEO","company":"Soft2Bet","domain":"soft2bet.com","email":"sales@soft2bet.com","contact_portal":"https://soft2bet.com","category":"iGaming Aggregators & B2B","region":"Europe & LatAm","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Soft2Bet's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Soft2Bet","mx_host":"alt3.aspmx.l.google.com"},{"id":12,"name":"Richard Carter","title":"CEO","company":"GiG Software PLC","domain":"gig.com","email":"sales@gig.com","contact_portal":"https://gig.com/contact-us/","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into GiG Software PLC's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20GiG%20Software%20PLC","mx_host":"aspmx.l.google.com"},{"id":13,"name":"Kirill Miroshnichenko","title":"CCO","company":"Endorphina","domain":"endorphina.com","email":"mail@endorphina.com","contact_portal":"https://endorphina.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Endorphina's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Endorphina","mx_host":"mail.endorphina.com"},{"id":14,"name":"Andrzej Hyla","title":"CCO","company":"Wazdan","domain":"wazdan.com","email":"sales@wazdan.com","contact_portal":"https://wazdan.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Wazdan's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Wazdan","mx_host":"mail.wazdan.com"},{"id":15,"name":"Irina Semyonova","title":"Head of Partnerships","company":"SoftGamings","domain":"softgamings.com","email":"sales@softgamings.com","contact_portal":"https://softgamings.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into SoftGamings's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20SoftGamings","mx_host":"alt3.aspmx.l.google.com"},{"id":16,"name":"Denis Kosinsky","title":"COO","company":"NuxGame","domain":"nuxgame.com","email":"info@nuxgame.com","contact_portal":"https://nuxgame.com","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into NuxGame's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20NuxGame","mx_host":"aspmx.l.google.com"},{"id":17,"name":"Tornike Tvauri","title":"CEO","company":"Upgaming","domain":"upgaming.com","email":"sales@upgaming.com","contact_portal":"https://upgaming.com","category":"iGaming Aggregators & B2B","region":"Europe & LatAm","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Upgaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Upgaming","mx_host":"mx1.upgaming.com"},{"id":18,"name":"Carsten Koerl","title":"CEO","company":"Sportradar","domain":"sportradar.com","email":"info@sportradar.com","contact_portal":"https://sportradar.com","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Sportradar's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Sportradar","mx_host":"mxa-006e7101.gslb.pphosted.com"},{"id":19,"name":"Kristian Nylén","title":"CEO","company":"Kambi Group","domain":"kambi.com","email":"sales@kambi.com","contact_portal":"https://kambi.com/contact-us/","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Kambi Group's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Kambi%20Group","mx_host":"kambi-com.mail.protection.outlook.com"},{"id":20,"name":"Tsachi Maimon","title":"CEO","company":"Aspire Global","domain":"aspireglobal.com","email":"sales@aspireglobal.com","contact_portal":"https://aspireglobal.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Aspire Global's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Aspire%20Global","mx_host":"us-smtp-inbound-1.mimecast.com"},{"id":21,"name":"Alex Leese","title":"CEO","company":"Pronet Gaming","domain":"pronetgaming.com","email":"sales@pronetgaming.com","contact_portal":"https://pronetgaming.com","category":"iGaming Aggregators & B2B","region":"Emerging Markets & LatAm","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Pronet Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Pronet%20Gaming","mx_host":"mailgw1.pronetgaming.com"},{"id":22,"name":"Adrian Bailey","title":"Managing Director","company":"Pariplay","domain":"pariplayltd.com","email":"info@pariplayltd.com","contact_portal":"https://pariplayltd.com","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Pariplay's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Pariplay","mx_host":"us-smtp-inbound-2.mimecast.com"},{"id":23,"name":"Matt Wilson","title":"CEO","company":"Light & Wonder","domain":"lnw.com","email":"IR@lnw.com","contact_portal":"https://explore.lnw.com/contact-us/","category":"iGaming Aggregators & B2B","region":"North America & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Light & Wonder's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Light%20%26%20Wonder","mx_host":"lnw-com.mail.protection.outlook.com"},{"id":24,"name":"Marina Ostrovtsova","title":"CEO","company":"BGaming","domain":"bgaming.com","email":"info@bgaming.com","contact_portal":"https://bgaming.com/contact-us/","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into BGaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20BGaming","mx_host":"aspmx.l.google.com"},{"id":25,"name":"Dima Reiderman","title":"Managing Director","company":"BtoBet","domain":"btobet.com","email":"sales@btobet.com","contact_portal":"https://btobet.com","category":"iGaming Aggregators & B2B","region":"Europe, LatAm, Africa","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into BtoBet's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20BtoBet","mx_host":"us-smtp-inbound-1.mimecast.com"},{"id":26,"name":"Yana Khaidukova","title":"Managing Director","company":"Slotegrator","domain":"slotegrator.com","email":"sales@slotegrator.com","contact_portal":"https://slotegrator.pro","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Slotegrator's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Slotegrator","mx_host":"aspmx.l.google.com"},{"id":27,"name":"George Shamugia","title":"CEO","company":"Singular","domain":"singular.uk","email":"contact@singular.uk","contact_portal":"https://singular.uk","category":"iGaming Aggregators & B2B","region":"Europe","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Singular's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Singular","mx_host":"singular-uk.mail.protection.outlook.com"},{"id":28,"name":"David Natroshvili","title":"Managing Partner","company":"Spribe","domain":"spribe.co","email":"info@spribe.co","contact_portal":"https://spribe.co","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Spribe's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Spribe","mx_host":"aspmx.l.google.com"},{"id":29,"name":"Hayk Sargsyan","title":"CEO","company":"Galaxsys","domain":"galaxsys.co","email":"info@galaxsys.co","contact_portal":"https://galaxsys.co","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Galaxsys's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Galaxsys","mx_host":"galaxsys-co.mail.protection.outlook.com"},{"id":30,"name":"Vadim Potapenko","title":"Head of Sales","company":"Turbo Games","domain":"turbogames.io","email":"partners@turbogames.io","contact_portal":"https://turbogames.io","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Turbo Games's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Turbo%20Games","mx_host":"aspmx.l.google.com"},{"id":31,"name":"Marcus Cordes","title":"CEO","company":"Hacksaw Gaming","domain":"hacksawgaming.com","email":"info@hacksawgaming.com","contact_portal":"https://hacksawgaming.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Hacksaw Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Hacksaw%20Gaming","mx_host":"aspmx.l.google.com"},{"id":32,"name":"Jonas Tegman","title":"Co-Founder","company":"Nolimit City","domain":"nolimitcity.com","email":"sales@nolimitcity.com","contact_portal":"https://nolimitcity.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Nolimit City's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Nolimit%20City","mx_host":"aspmx.l.google.com"},{"id":33,"name":"James Marshall","title":"CEO","company":"Push Gaming","domain":"pushgaming.com","email":"sales@pushgaming.com","contact_portal":"https://pushgaming.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Push Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Push%20Gaming","mx_host":"aspmx.l.google.com"},{"id":34,"name":"Simon Hammon","title":"CEO","company":"Relax Gaming","domain":"relax-gaming.com","email":"contact@relax-gaming.com","contact_portal":"https://relax-gaming.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Relax Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Relax%20Gaming","mx_host":"relaxgaming-com01c.mail.protection.outlook.com"},{"id":35,"name":"James Curwen","title":"CEO","company":"Yggdrasil Gaming","domain":"yggdrasilgaming.com","email":"sales@yggdrasilgaming.com","contact_portal":"https://yggdrasilgaming.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Yggdrasil Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Yggdrasil%20Gaming","mx_host":"yggdrasilgaming-com.mail.protection.outlook.com"},{"id":36,"name":"Ivan Kravchuk","title":"CEO","company":"Evoplay","domain":"evoplay.games","email":"business@evoplay.games","contact_portal":"https://evoplay.games","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Evoplay's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Evoplay","mx_host":"aspmx.l.google.com"},{"id":37,"name":"Alex Ivshin","title":"CEO","company":"Playson","domain":"playson.com","email":"sales@playson.com","contact_portal":"https://playson.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Playson's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Playson","mx_host":"aspmx.l.google.com"},{"id":38,"name":"Lior Shvartz","title":"CEO","company":"Spinomenal","domain":"spinomenal.com","email":"info@spinomenal.com","contact_portal":"https://spinomenal.com","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Spinomenal's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Spinomenal","mx_host":"aspmx.l.google.com"},{"id":39,"name":"Ivo Georgiev","title":"CEO","company":"Amusnet","domain":"amusnet.com","email":"sales@amusnet.com","contact_portal":"https://amusnet.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Amusnet's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Amusnet","mx_host":"aspmx.l.google.com"},{"id":40,"name":"Michael Bauer","title":"CGO","company":"Greentube (Novomatic)","domain":"greentube.com","email":"sales@greentube.com","contact_portal":"https://greentube.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Greentube (Novomatic)'s aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Greentube%20(Novomatic)","mx_host":"mx2.greentube.com"},{"id":41,"name":"Ivan Kodaj","title":"CEO","company":"Synot Games","domain":"synotgames.com","email":"info@synotgames.com","contact_portal":"https://synotgames.com","category":"iGaming Aggregators & B2B","region":"Europe","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Synot Games's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Synot%20Games","mx_host":"synotgames-com.mail.protection.outlook.com"},{"id":42,"name":"Ondrej Lapides","title":"CEO","company":"Tom Horn Gaming","domain":"tomhorngaming.com","email":"info@tomhorngaming.com","contact_portal":"https://tomhorngaming.com","category":"iGaming Aggregators & B2B","region":"Europe","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Tom Horn Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Tom%20Horn%20Gaming","mx_host":"aspmx.l.google.com"},{"id":43,"name":"Kateryna Goy","title":"Head of BD","company":"Belatra Games","domain":"belatragames.com","email":"info@belatragames.com","contact_portal":"https://belatragames.com","category":"iGaming Aggregators & B2B","region":"Global & LatAm","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Belatra Games's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Belatra%20Games","mx_host":"mxs.activeby.net"},{"id":44,"name":"Clare Bowring","title":"Commercial Director","company":"Betsoft Gaming","domain":"betsoft.com","email":"sales@betsoft.com","contact_portal":"https://betsoft.com","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Betsoft Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Betsoft%20Gaming","mx_host":"mxrelay.betsoftgaming.com"},{"id":45,"name":"Niko Mazger","title":"CEO","company":"Fugaso","domain":"fugaso.com","email":"info@fugaso.com","contact_portal":"https://fugaso.com","category":"iGaming Aggregators & B2B","region":"Europe","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Fugaso's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Fugaso","mx_host":"mx.yandex.net"},{"id":46,"name":"Nikita Gorshkov","title":"CEO","company":"Mancala Gaming","domain":"mancalagaming.com","email":"info@mancalagaming.com","contact_portal":"https://mancalagaming.com","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Mancala Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Mancala%20Gaming","mx_host":"alt1.aspmx.l.google.com"},{"id":47,"name":"Carlos Sánchez","title":"Managing Director","company":"Red Rake Gaming","domain":"redrakegaming.com","email":"info@redrakegaming.com","contact_portal":"https://redrakegaming.com","category":"iGaming Aggregators & B2B","region":"Europe & LatAm","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Red Rake Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Red%20Rake%20Gaming","mx_host":"mail.redrakegaming.com"},{"id":48,"name":"Stephan van den Oetelaar","title":"CEO","company":"Stakelogic","domain":"stakelogic.com","email":"sales@stakelogic.com","contact_portal":"https://stakelogic.com","category":"iGaming Aggregators & B2B","region":"Europe","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Stakelogic's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Stakelogic","mx_host":"stakelogic-com.mail.protection.outlook.com"},{"id":49,"name":"David Mann","title":"CEO","company":"Swintt","domain":"swintt.com","email":"sales@swintt.com","contact_portal":"https://swintt.com","category":"iGaming Aggregators & B2B","region":"Europe","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Swintt's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Swintt","mx_host":"swintt-com.mail.protection.outlook.com"},{"id":50,"name":"Kevin Reid","title":"CEO","company":"1X2 Network","domain":"1x2network.com","email":"info@1x2network.com","contact_portal":"https://1x2network.com","category":"iGaming Aggregators & B2B","region":"Europe","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into 1X2 Network's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%201X2%20Network","mx_host":"1x2network-com.mail.protection.outlook.com"},{"id":51,"name":"Aleksandr Kosogov","title":"CEO","company":"Gamzix","domain":"gamzix.com","email":"info@gamzix.com","contact_portal":"https://gamzix.com","category":"iGaming Aggregators & B2B","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Gamzix's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Gamzix","mx_host":"aspmx.l.google.com"},{"id":52,"name":"Christina Muratkina","title":"CEO","company":"Onlyplay","domain":"onlyplay.net","email":"info@onlyplay.net","contact_portal":"https://onlyplay.net","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Onlyplay's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Onlyplay","mx_host":"aspmx.l.google.com"},{"id":53,"name":"Martijn Peters","title":"CEO","company":"Platipus Gaming","domain":"platipusgaming.com","email":"info@platipusgaming.com","contact_portal":"https://platipusgaming.com","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Platipus Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Platipus%20Gaming","mx_host":"aspmx.l.google.com"},{"id":54,"name":"Arcangelo Lonoce","title":"Head of BD","company":"Habanero Systems","domain":"habanerosystems.com","email":"sales@habanerosystems.com","contact_portal":"https://habanerosystems.com","category":"iGaming Aggregators & B2B","region":"Asia & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Habanero Systems's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Habanero%20Systems","mx_host":"mailstream-east.mxrecord.io"},{"id":55,"name":"Peter Nolte","title":"CEO","company":"Salsa Technology","domain":"salsatechnology.com","email":"info@salsatechnology.com","contact_portal":"https://salsatechnology.com","category":"iGaming Aggregators & B2B","region":"Latin America (Brazil)","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Salsa Technology's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Salsa%20Technology","mx_host":"salsatechnology-com.mail.protection.outlook.com"},{"id":56,"name":"Dmitry Starostenkov","title":"CEO","company":"EvenBet Gaming","domain":"evenbetgaming.com","email":"sales@evenbetgaming.com","contact_portal":"https://evenbetgaming.com","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into EvenBet Gaming's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20EvenBet%20Gaming","mx_host":"evenbetgaming-com.mail.protection.outlook.com"},{"id":57,"name":"Gaurav Soni","title":"CEO","company":"GammaStack","domain":"gammastack.com","email":"sales@gammastack.com","contact_portal":"https://gammastack.com","category":"iGaming Aggregators & B2B","region":"Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into GammaStack's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20GammaStack","mx_host":"aspmx.l.google.com"},{"id":58,"name":"Brian Ward","title":"CEO","company":"Savvy Games Group","domain":"savvygames.com","email":"partnerships@savvygames.com","contact_portal":"https://savvygames.com","category":"MENA & GCC Conglomerates","region":"Saudi Arabia (KSA)","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Savvy%20Games%20Group","mx_host":"savvygames-com.mail.protection.outlook.com"},{"id":59,"name":"Tao Yang","title":"Chairman & CEO","company":"Yalla Group","domain":"yalla.com","email":"ir@yalla.com","contact_portal":"https://yalla.com","category":"MENA & GCC Conglomerates","region":"UAE & Global","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Yalla%20Group","mx_host":"mxn.mxhichina.com"},{"id":60,"name":"Sam Barnett","title":"CEO","company":"MBC Group (Shahid)","domain":"mbc.net","email":"corporate@mbc.net","contact_portal":"https://mbc.net","category":"MENA & GCC Conglomerates","region":"MENA Region","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20MBC%20Group%20(Shahid)","mx_host":"mbc-net.mail.protection.outlook.com"},{"id":61,"name":"Mohamad Haj-Hasan","title":"CEO","company":"Jawaker (Stillfront)","domain":"jawaker.com","email":"business@jawaker.com","contact_portal":"https://jawaker.com","category":"MENA & GCC Conglomerates","region":"Jordan & UAE","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Jawaker%20(Stillfront)","mx_host":"aspmx.l.google.com"},{"id":62,"name":"Hussam Hammo","title":"CEO & Founder","company":"Tamatem Games","domain":"tamatem.co","email":"partnerships@tamatem.co","contact_portal":"https://tamatem.co","category":"MENA & GCC Conglomerates","region":"Jordan & Saudi Arabia","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Tamatem%20Games","mx_host":"aspmx.l.google.com"},{"id":63,"name":"David Fernandez","title":"CEO","company":"Sandsoft Games","domain":"sandsoft.com","email":"info@sandsoft.com","contact_portal":"https://sandsoft.com","category":"MENA & GCC Conglomerates","region":"Saudi Arabia & UAE","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Sandsoft%20Games","mx_host":"mxa-00701001.gslb.pphosted.com"},{"id":64,"name":"MJ Fahmi","title":"CEO","company":"Babil Games","domain":"babilgames.com","email":"contact@babilgames.com","contact_portal":"https://babilgames.com","category":"MENA & GCC Conglomerates","region":"UAE & Jordan","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Babil%20Games","mx_host":"aspmx.l.google.com"},{"id":65,"name":"Hatem Dowidar","title":"Group CEO","company":"e& (Etisalat)","domain":"eand.com","email":"gaming@eand.com","contact_portal":"https://eand.com","category":"MENA & GCC Conglomerates","region":"UAE & Global","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20e%26%20(Etisalat)","mx_host":"mail.etisalat.ae"},{"id":66,"name":"Malek Hammoud","title":"Chief Investment Officer","company":"Zain Esports","domain":"zainesports.com","email":"info@zainesports.com","contact_portal":"https://zainesports.com","category":"MENA & GCC Conglomerates","region":"Kuwait & MENA","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Zain%20Esports","mx_host":"zainesports-com.mail.protection.outlook.com"},{"id":67,"name":"Aziz Aluthman Fakhroo","title":"Group CEO","company":"Ooredoo","domain":"ooredoo.com","email":"investments@ooredoo.com","contact_portal":"https://ooredoo.com","category":"MENA & GCC Conglomerates","region":"Qatar & MENA","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Ooredoo","mx_host":"mercury.ooredoo.qa"},{"id":68,"name":"Nour Khrais","title":"CEO","company":"Maysalward","domain":"maysalward.com","email":"info@maysalward.com","contact_portal":"https://maysalward.com","category":"MENA & GCC Conglomerates","region":"Jordan & UAE","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Maysalward","mx_host":"aspmx.l.google.com"},{"id":69,"name":"Eddy Maroun","title":"Co-Founder & CEO","company":"Anghami","domain":"anghami.com","email":"business@anghami.com","contact_portal":"https://anghami.com","category":"MENA & GCC Conglomerates","region":"UAE & Egypt","angle":"Monetize the massive cultural affinity for Backgammon (Tawla), Dominoes, and Chess across the Middle East with Nizalo's 6-language turnkey infrastructure.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Anghami","mx_host":"aspmx.l.google.com"},{"id":70,"name":"Edward Craven","title":"Co-Founder","company":"Stake.com","domain":"stake.com","email":"partners@stake.com","contact_portal":"https://stake.com","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Stake.com's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Stake.com","mx_host":"au-smtp-inbound-1.mimecast.com"},{"id":71,"name":"Razer","title":"Co-Founder","company":"Rollbit","domain":"rollbit.com","email":"partnerships@rollbit.com","contact_portal":"https://rollbit.com","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Rollbit's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Rollbit","mx_host":"aspmx.l.google.com"},{"id":72,"name":"Jack Dorset","title":"CEO","company":"BC.Game","domain":"bc.game","email":"business@bc.game","contact_portal":"https://bc.game","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into BC.Game's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20BC.Game","mx_host":"mail.protonmail.ch"},{"id":73,"name":"Matt Duea","title":"Chief Operating Officer","company":"Roobet","domain":"roobet.com","email":"partnerships@roobet.com","contact_portal":"https://roobet.com","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Roobet's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Roobet","mx_host":"aspmx.l.google.com"},{"id":74,"name":"Noah Dummett","title":"CEO & Founder","company":"Shuffle.com","domain":"shuffle.com","email":"partnerships@shuffle.com","contact_portal":"https://shuffle.com","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Shuffle.com's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Shuffle.com","mx_host":"aspmx.l.google.com"},{"id":75,"name":"Marco Pagnotta","title":"CEO","company":"Duelbits","domain":"duelbits.com","email":"partnerships@duelbits.com","contact_portal":"https://duelbits.com","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Duelbits's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Duelbits","mx_host":"aspmx.l.google.com"},{"id":76,"name":"Felix Roemer","title":"Founder","company":"Gamdom","domain":"gamdom.com","email":"business@gamdom.com","contact_portal":"https://gamdom.com","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Gamdom's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Gamdom","mx_host":"in1-smtp.messagingengine.com"},{"id":77,"name":"Tim Heath","title":"Founder","company":"Sportsbet.io (Yolo Group)","domain":"yolo.com","email":"info@yolo.com","contact_portal":"https://yolo.com","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Sportsbet.io (Yolo Group)'s ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Sportsbet.io%20(Yolo%20Group)","mx_host":"aspmx.l.google.com"},{"id":78,"name":"Kaupo Kangro","title":"Managing Director","company":"Bitcasino.io","domain":"bitcasino.io","email":"affiliates@bitcasino.io","contact_portal":"https://bitcasino.io","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Bitcasino.io's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Bitcasino.io","mx_host":"aspmx.l.google.com"},{"id":79,"name":"Leandro Rossi","title":"Director of Operations","company":"Cloudbet","domain":"cloudbet.com","email":"partnerships@cloudbet.com","contact_portal":"https://cloudbet.com","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Cloudbet's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Cloudbet","mx_host":"aspmx.l.google.com"},{"id":80,"name":"Dmitry Dyakonov","title":"CEO","company":"Betfury","domain":"betfury.io","email":"partnerships@betfury.io","contact_portal":"https://betfury.io","category":"Crypto & Web3 Gaming","region":"Global Crypto","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Betfury's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Betfury","mx_host":"aspmx.l.google.com"},{"id":81,"name":"Shayne Coplan","title":"Founder & CEO","company":"Polymarket","domain":"polymarket.com","email":"partnerships@polymarket.com","contact_portal":"https://polymarket.com","category":"Crypto & Web3 Gaming","region":"Global Web3","angle":"Deploy Nizalo's server-authoritative 1v1 mind sports with sub-60s crypto cashier (USDT, BTC, ETH) into Polymarket's ecosystem for high-margin rake without bankroll variance.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Polymarket","mx_host":"aspmx.l.google.com"},{"id":82,"name":"Andrew Paradise","title":"CEO","company":"Skillz Inc","domain":"skillz.com","email":"bizdev@skillz.com","contact_portal":"https://skillz.com","category":"Real-Money Skill Gaming","region":"North America","angle":"Expand Skillz Inc's competitive skill portfolio with instant web-based P2P Chess Blitz, Draughts, and Tawla duels, slashing CAC through viral multiplayer challenges.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Skillz%20Inc","mx_host":"aspmx.l.google.com"},{"id":83,"name":"Sai Srinivas","title":"Co-Founder & CEO","company":"Mobile Premier League (MPL)","domain":"mpl.live","email":"partnerships@mpl.live","contact_portal":"https://mpl.live","category":"Real-Money Skill Gaming","region":"Asia & North America","angle":"Expand Mobile Premier League (MPL)'s competitive skill portfolio with instant web-based P2P Chess Blitz, Draughts, and Tawla duels, slashing CAC through viral multiplayer challenges.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Mobile%20Premier%20League%20(MPL)","mx_host":"aspmx.l.google.com"},{"id":84,"name":"Paavan Nanda","title":"Co-Founder","company":"WinZO Games","domain":"winzogames.com","email":"partnerships@winzogames.com","contact_portal":"https://winzogames.com","category":"Real-Money Skill Gaming","region":"India & Global","angle":"Expand WinZO Games's competitive skill portfolio with instant web-based P2P Chess Blitz, Draughts, and Tawla duels, slashing CAC through viral multiplayer challenges.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20WinZO%20Games","mx_host":"alt2.aspmx.l.google.com"},{"id":85,"name":"Oon Knoxx","title":"CEO","company":"Papaya Gaming","domain":"papayagaming.com","email":"bizdev@papayagaming.com","contact_portal":"https://papayagaming.com","category":"Real-Money Skill Gaming","region":"North America & Europe","angle":"Expand Papaya Gaming's competitive skill portfolio with instant web-based P2P Chess Blitz, Draughts, and Tawla duels, slashing CAC through viral multiplayer challenges.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Papaya%20Gaming","mx_host":"aspmx.l.google.com"},{"id":86,"name":"Vickie Chen","title":"Founder & CEO","company":"AviaGames","domain":"aviagames.com","email":"partnerships@aviagames.com","contact_portal":"https://aviagames.com","category":"Real-Money Skill Gaming","region":"North America","angle":"Expand AviaGames's competitive skill portfolio with instant web-based P2P Chess Blitz, Draughts, and Tawla duels, slashing CAC through viral multiplayer challenges.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20AviaGames","mx_host":"aspmx.l.google.com"},{"id":87,"name":"Dilsher Singh Malhi","title":"Founder & CEO","company":"Zupee","domain":"zupee.com","email":"partnerships@zupee.com","contact_portal":"https://zupee.com","category":"Real-Money Skill Gaming","region":"India","angle":"Expand Zupee's competitive skill portfolio with instant web-based P2P Chess Blitz, Draughts, and Tawla duels, slashing CAC through viral multiplayer challenges.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Zupee","mx_host":"aspmx.l.google.com"},{"id":88,"name":"Bhavin Pandya","title":"Co-CEO","company":"Games24x7","domain":"games24x7.com","email":"corporate@games24x7.com","contact_portal":"https://games24x7.com","category":"Real-Money Skill Gaming","region":"India & Global","angle":"Expand Games24x7's competitive skill portfolio with instant web-based P2P Chess Blitz, Draughts, and Tawla duels, slashing CAC through viral multiplayer challenges.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Games24x7","mx_host":"aspmx.l.google.com"},{"id":89,"name":"Gavin Isaacs","title":"CEO","company":"Entain plc","domain":"entaingroup.com","email":"corporate.development@entaingroup.com","contact_portal":"https://entaingroup.com","category":"Tier-1 Regulated Operators","region":"UK & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Entain plc's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Entain%20plc","mx_host":"entaingroup-com.mail.protection.outlook.com"},{"id":90,"name":"Peter Jackson","title":"CEO","company":"Flutter Entertainment","domain":"flutter.com","email":"corporate.development@flutter.com","contact_portal":"https://flutter.com","category":"Tier-1 Regulated Operators","region":"US, UK & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Flutter Entertainment's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Flutter%20Entertainment","mx_host":"de-smtp-inbound-1.mimecast.com"},{"id":91,"name":"Denise Coates","title":"Founder & CEO","company":"Bet365","domain":"bet365.com","email":"support-eng@customerservices365.com","contact_portal":"https://bet365.com","category":"Tier-1 Regulated Operators","region":"UK & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Bet365's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Bet365","mx_host":"mx1.bet365.com"},{"id":92,"name":"Pontus Lindwall","title":"CEO","company":"Betsson Group","domain":"betssongroup.com","email":"info@betssongroup.com","contact_portal":"https://betssongroup.com","category":"Tier-1 Regulated Operators","region":"Scandinavia & LatAm","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Betsson Group's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Betsson%20Group","mx_host":"betssongroup-com.mail.protection.outlook.com"},{"id":93,"name":"Per Widerström","title":"CEO","company":"888 Holdings (Evoke)","domain":"evokeplc.com","email":"corporate@evokeplc.com","contact_portal":"https://evokeplc.com","category":"Tier-1 Regulated Operators","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into 888 Holdings (Evoke)'s aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20888%20Holdings%20(Evoke)","mx_host":"mx1.hc1715-26.c3s2.iphmx.com"},{"id":94,"name":"Nils Andén","title":"CEO","company":"Kindred Group","domain":"kindredgroup.com","email":"info@kindredgroup.com","contact_portal":"https://kindredgroup.com","category":"Tier-1 Regulated Operators","region":"Europe","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Kindred Group's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Kindred%20Group","mx_host":"kindredgroup-com.mail.protection.outlook.com"},{"id":95,"name":"Gustaf Hagman","title":"CEO","company":"LeoVegas Group (MGM)","domain":"leovegasgroup.com","email":"investor.relations@leovegasgroup.com","contact_portal":"https://leovegasgroup.com","category":"Tier-1 Regulated Operators","region":"Europe & Global","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into LeoVegas Group (MGM)'s aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20LeoVegas%20Group%20(MGM)","mx_host":"ASPMX.L.GOOGLE.com"},{"id":96,"name":"George Daskalakis","title":"CEO","company":"Kaizen Gaming (Betano)","domain":"kaizengaming.com","email":"contact@kaizengaming.com","contact_portal":"https://kaizengaming.com","category":"Tier-1 Regulated Operators","region":"Europe & LatAm (Brazil)","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Kaizen Gaming (Betano)'s aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Kaizen%20Gaming%20(Betano)","mx_host":"aspmx.l.google.com"},{"id":97,"name":"Neal Menashe","title":"CEO","company":"Betway (Super Group)","domain":"supergroup.co.uk","email":"contact@supergroup.co.uk","contact_portal":"https://supergroup.co.uk","category":"Tier-1 Regulated Operators","region":"Global & Africa","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Betway (Super Group)'s aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Betway%20(Super%20Group)","mx_host":"supergroup.co.uk.mx4.mailanyone.net"},{"id":98,"name":"Rodolfo Odoni","title":"Chairman","company":"Novibet","domain":"novibet.com","email":"support@novibet.com","contact_portal":"https://novibet.com","category":"Tier-1 Regulated Operators","region":"Europe & LatAm","angle":"Integrate Nizalo's 11 proprietary P2P skill mind sports engines into Novibet's aggregation catalog to give sportsbook operators high-margin, zero-house-risk player retention.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Novibet","mx_host":"aspmx.l.google.com"},{"id":99,"name":"Matt Davey","title":"Founder & Chairman","company":"Tekkorp Capital","domain":"tekkorp.com","email":"info@tekkorp.com","contact_portal":"https://tekkorp.com","category":"Gaming M&A & Private Equity","region":"US & Global","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Tekkorp%20Capital","mx_host":"tekkorp-com.mail.protection.outlook.com"},{"id":100,"name":"Robin Reed","title":"Managing Partner","company":"HappyHour.io","domain":"happyhour.io","email":"hello@happyhour.io","contact_portal":"https://happyhour.io","category":"Gaming M&A & Private Equity","region":"Malta & Europe","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20HappyHour.io","mx_host":"aspmx.l.google.com"},{"id":101,"name":"Dave VanEgmond","title":"Founder & Managing Partner","company":"Bettor Capital","domain":"bettorcapital.com","email":"contact@bettorcapital.com","contact_portal":"https://bettorcapital.com","category":"Gaming M&A & Private Equity","region":"US","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Bettor%20Capital","mx_host":"mx1-us1.ppe-hosted.com"},{"id":102,"name":"Henric Suuronen","title":"Founding Partner","company":"Play Ventures","domain":"playventures.vc","email":"info@playventures.vc","contact_portal":"https://playventures.vc","category":"Gaming M&A & Private Equity","region":"Singapore & Europe","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Play%20Ventures","mx_host":"alt1.aspmx.l.google.com"},{"id":103,"name":"Evan Hoff","title":"Partner","company":"Velo Partners","domain":"velopartners.com","email":"info@velopartners.com","contact_portal":"https://velopartners.com","category":"Gaming M&A & Private Equity","region":"UK","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Velo%20Partners","mx_host":"mail.velopartners.com"},{"id":104,"name":"Daniel Burns","title":"Managing Partner","company":"Oakvale Capital","domain":"oakvalecapital.com","email":"info@oakvalecapital.com","contact_portal":"https://oakvalecapital.com","category":"Gaming M&A & Private Equity","region":"UK","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Oakvale%20Capital","mx_host":"oakvalecapital-com.mail.protection.outlook.com"},{"id":105,"name":"Rob Dowling","title":"Co-Founder","company":"Partis Solutions","domain":"partissolutions.com","email":"info@partissolutions.com","contact_portal":"https://partissolutions.com","category":"Gaming M&A & Private Equity","region":"US & Europe","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Partis%20Solutions","mx_host":"eu-smtp-inbound-1.mimecast.com"},{"id":106,"name":"Bruce Milne","title":"CEO & Founder","company":"Corum Group","domain":"corumgroup.com","email":"info@corumgroup.com","contact_portal":"https://corumgroup.com","category":"Gaming M&A & Private Equity","region":"US & Europe","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Corum%20Group","mx_host":"d27521a.ess.barracudanetworks.com"},{"id":107,"name":"Thomas Smale","title":"CEO","company":"FE International","domain":"feinternational.com","email":"acquisitions@feinternational.com","contact_portal":"https://feinternational.com","category":"Gaming M&A & Private Equity","region":"US & UK","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20FE%20International","mx_host":"feinternational-com.mail.protection.outlook.com"},{"id":108,"name":"David Fairley","title":"Managing Director","company":"Website Properties","domain":"websiteproperties.com","email":"info@websiteproperties.com","contact_portal":"https://websiteproperties.com","category":"Gaming M&A & Private Equity","region":"US","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Website%20Properties","mx_host":"smtp.google.com"},{"id":109,"name":"Jens Hilgers","title":"Founding General Partner","company":"BITKRAFT Ventures","domain":"bitkraft.vc","email":"info@bitkraft.vc","contact_portal":"https://bitkraft.vc","category":"Gaming M&A & Private Equity","region":"US & Europe","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20BITKRAFT%20Ventures","mx_host":"aspmx.l.google.com"},{"id":110,"name":"Peter Levin","title":"Managing Director","company":"Griffin Gaming Partners","domain":"griffingp.com","email":"info@griffingp.com","contact_portal":"https://griffingp.com","category":"Gaming M&A & Private Equity","region":"US","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Griffin%20Gaming%20Partners","mx_host":"griffingp-com.mail.protection.outlook.com"},{"id":111,"name":"Michael Cheung","title":"Partner","company":"Makers Fund","domain":"makersfund.com","email":"info@makersfund.com","contact_portal":"https://makersfund.com","category":"Gaming M&A & Private Equity","region":"US & Asia","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Makers%20Fund","mx_host":"makersfund-com.mail.protection.outlook.com"},{"id":112,"name":"Andrew Gazdecki","title":"CEO & Founder","company":"Acquire.com","domain":"acquire.com","email":"support@acquire.com","contact_portal":"https://acquire.com","category":"Gaming M&A & Private Equity","region":"US & Global","angle":"Acquire 100% worldwide IP and unencumbered source code ($500K) or syndicate B2B white-label licenses across portfolio gaming and media assets.","whatsapp_url":"https://wa.me/201069999557?text=Hi%20Hifzy%2C%20regarding%20Nizalo%20acquisition%20inquiry%20for%20Acquire.com","mx_host":"aspmx.l.google.com"}];
+  const STORAGE_KEY = "nizalo_outreach_sent_112_v1";
+  const PAGE_SIZE = 50;
+
+  let sentSet = new Set();
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) sentSet = new Set(JSON.parse(saved));
+  } catch(e) {}
+
+  let activeCategory = "all";
+  let searchQuery = "";
+  let currentPage = 1;
+
+  function getSubject() {
+    return "Strategic Acquisition: 11-Engine P2P Skill Gaming Infrastructure (Nizalo)";
+  }
+
+  function getBody(b) {
+    const firstName = b.name.split(" ")[0];
+    return `Hi ${firstName},
+
+I’ve been following ${b.company}’s leadership in competitive gaming and platform solutions.
+
+I am reaching out to introduce Nizalo (https://nizalo.com) — an institutional-grade, real-money P2P skill gaming platform engineered to deliver sustainable player liquidity with 0% house risk.
+
+Asset Highlights:
+• 11 In-House Game Engines: Chess Blitz (FIDE rules, millisecond validation), Backgammon / Tawla, Dominoes, Checkers, Speed Math, Connect Four + 5 casual games. 100% proprietary code with zero third-party licensing royalties.
+• Anti-Cheat & Determinism: Cryptographic server-side dice, deterministic move replay, and automated collusion detection.
+• Automated Fintech Rails: Multi-currency crypto cashier (USDT, BTC, ETH) with sub-60-second automated payouts and zero-trust double-entry ledger.
+• 6-Language Native White-Label: Ready for turnkey deployment in under 48 hours.
+
+Review Assets:
+👉 Interactive Sandbox: https://demo.nizalo.com/b2b
+👉 12-Slide Pitch Deck: https://demo.nizalo.com/pitch-deck.html
+👉 Executive Teaser: https://demo.nizalo.com/teaser.html
+
+We are currently reviewing divestment options: either a Full Source Code & IP Buyout ($500K) or a Turnkey White-Label License ($35K–$75K).
+
+Would you be open to a 10-minute introductory call or reviewing our data room this week?
+
+Best regards,
+Hifzy Hifzy
+Founder & Systems Architect | Nizalo
+WhatsApp: +201069999557 (https://wa.me/201069999557)
+Email: HHifzy@gmail.com`;
+  }
+
+  function updateStats() {
+    const total = buyersData.length;
+    const sent = sentSet.size;
+    const remaining = total - sent;
+    document.getElementById("sent-count").textContent = sent;
+    document.getElementById("remaining-count").textContent = remaining;
+    const pct = Math.round((sent / total) * 100);
+    document.getElementById("progress-fill").style.width = pct + "%";
+  }
+
+  function toggleSent(id) {
+    if (sentSet.has(id)) {
+      sentSet.delete(id);
+    } else {
+      sentSet.add(id);
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(sentSet)));
+    updateStats();
+    renderCards();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2000);
+  }
+
+  function copyText(txt, label) {
+    navigator.clipboard.writeText(txt).then(() => {
+      showToast(`تم نسخ ${label} بنجاح! ✓`);
+    });
+  }
+
+  function getFilteredData() {
+    return buyersData.filter(b => {
+      // Category filter
+      if (activeCategory === "iGaming B2B" && !b.category.includes("iGaming")) return false;
+      if (activeCategory === "Skill Gaming" && !b.category.includes("Skill")) return false;
+      if (activeCategory === "Crypto" && !b.category.includes("Crypto")) return false;
+      if (activeCategory === "Regional" && !b.category.includes("Regional")) return false;
+      if (activeCategory === "Esports" && !b.category.includes("Esports")) return false;
+      if (activeCategory === "M&A" && !b.category.includes("M&A")) return false;
+
+      // Search filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const match = 
+          b.name.toLowerCase().includes(q) ||
+          b.company.toLowerCase().includes(q) ||
+          b.title.toLowerCase().includes(q) ||
+          b.email.toLowerCase().includes(q) ||
+          b.category.toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderCards() {
+    const container = document.getElementById("leads-container");
+    container.innerHTML = "";
+
+    const filtered = getFilteredData();
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+    if (currentPage > totalPages) currentPage = 1;
+
+    document.getElementById("page-info").textContent = `صفحة ${currentPage} من ${totalPages} (${filtered.length} جهة)`;
+    document.getElementById("prev-btn").disabled = currentPage === 1;
+    document.getElementById("next-btn").disabled = currentPage === totalPages;
+
+    const startIdx = (currentPage - 1) * PAGE_SIZE;
+    const endIdx = startIdx + PAGE_SIZE;
+    const pageItems = filtered.slice(startIdx, endIdx);
+
+    if (pageItems.length === 0) {
+      container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--text-dim);">لا توجد نتائج مطابقة لبحثك.</div>`;
+      return;
+    }
+
+    pageItems.forEach(b => {
+      const isSent = sentSet.has(b.id);
+      const subject = getSubject();
+      const body = getBody(b);
+      const gmailUrl = `https://mail.google.com/mail/u/2/?view=cm&fs=1&to=${encodeURIComponent(b.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      const mailtoUrl = `mailto:${b.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      const card = document.createElement("div");
+      card.className = `lead-card ${isSent ? 'sent' : ''}`;
+      card.innerHTML = `
+        <div>
+          <div class="card-header">
+            <div>
+              <div class="lead-name">
+                <span class="lead-id">#${b.id}</span>
+                <span>${b.name}</span>
+              </div>
+              <div class="lead-title">${b.title}</div>
+              <div class="lead-company">🏢 ${b.company}</div>
+            </div>
+            <span class="category-tag">${b.category.split('&')[0]}</span>
+          </div>
+
+          <div class="card-body">
+            <div class="lead-email-row">
+              <span class="email-text">${b.email}</span>
+              <button class="btn-action btn-copy" onclick="copyText('${b.email}', 'الإيميل')">نسخ</button>
+            </div>
+            <div class="angle-text">💡 <strong>زاوية الشراء:</strong> ${b.angle}</div>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <div class="btn-row-primary">
+            <a href="${gmailUrl}" target="_blank" rel="noopener noreferrer" class="btn-action btn-gmail" onclick="markSentAutomated(${b.id})">
+              🚀 فتح في Gmail (/u/2)
+            </a>
+            <a href="${mailtoUrl}" class="btn-action btn-mail" onclick="markSentAutomated(${b.id})">
+              📧 تطبيق الإيميل
+            </a>
+          </div>
+
+          <div class="btn-row-primary" style="margin-top: 4px;">
+            <button class="btn-action btn-copy" style="flex: 1;" onclick="copyFullPitch(${b.id})">
+              📋 نسخ نص الرسالة بالكامل
+            </button>
+          </div>
+
+          <div class="status-toggle">
+            <label class="checkbox-wrap">
+              <input type="checkbox" ${isSent ? 'checked' : ''} onchange="toggleSent(${b.id})">
+              <span>${isSent ? 'تم الإرسال ✓' : 'وضع علامة تم الإرسال'}</span>
+            </label>
+            <a href="https://${b.domain}" target="_blank" rel="noopener noreferrer" style="color: var(--text-dim); text-decoration: none; font-size: 11.5px;">
+              🌐 ${b.domain} ↗
+            </a>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function prevPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      renderCards();
+      window.scrollTo({ top: 350, behavior: 'smooth' });
+    }
+  }
+
+  function nextPage() {
+    const filtered = getFilteredData();
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderCards();
+      window.scrollTo({ top: 350, behavior: 'smooth' });
+    }
+  }
+
+  function markSentAutomated(id) {
+    sentSet.add(id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(sentSet)));
+    updateStats();
+    setTimeout(renderCards, 500);
+  }
+
+  function copyFullPitch(id) {
+    const b = buyersData.find(x => x.id === id);
+    if (!b) return;
+    const body = getBody(b);
+    copyText(body, `رسالة ${b.name}`);
+  }
+
+  // Event Listeners
+  document.getElementById("search-input").addEventListener("input", (e) => {
+    searchQuery = e.target.value.trim();
+    currentPage = 1;
+    renderCards();
+  });
+
+  document.querySelectorAll(".pill-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".pill-btn").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      activeCategory = btn.getAttribute("data-cat");
+      currentPage = 1;
+      renderCards();
+    });
+  });
+
+  // Init
+  updateStats();
+  renderCards();
+</script>
+</body>
+</html>

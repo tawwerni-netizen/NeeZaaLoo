@@ -1,0 +1,122 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-xl);
+  padding: var(--nz-space-8) var(--nz-space-6);
+  gap: var(--nz-space-5);
+  max-width: 440px;
+  width: 100%;
+  margin: var(--nz-space-6) auto;
+}
+
+.radar {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  border: 2px solid var(--nz-line);
+  background: radial-gradient(circle, rgba(255, 90, 43, 0.05) 0%, transparent 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.radarRings {
+  position: absolute;
+  inset: 18px;
+  border-radius: 999px;
+  border: 1px dashed var(--nz-line-strong);
+}
+
+.sweepLine {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--nz-accent), transparent);
+  transform-origin: 0% 0%;
+  animation: radarSweep 2s linear infinite;
+}
+
+.radarCenter {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--nz-accent);
+  box-shadow: 0 0 14px var(--nz-accent);
+  z-index: 2;
+}
+
+.title {
+  font-family: var(--nz-font-display);
+  font-size: var(--nz-text-xl);
+  font-weight: 700;
+  color: var(--nz-text);
+  margin: 0;
+}
+
+.matchParams {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.paramBadge {
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  padding: 4px 10px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-text-2);
+}
+
+.timer {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--nz-text-2xl);
+  font-weight: 800;
+  color: var(--nz-text);
+  letter-spacing: 0.05em;
+}
+
+.cancelBtn {
+  padding: 10px 24px;
+  border-radius: var(--nz-radius-pill);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  color: var(--nz-loss);
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: var(--nz-loss);
+}
+
+@keyframes radarSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweepLine {
+    animation: none;
+  }
+}

@@ -1,0 +1,73 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nz-space-1);
+  padding: 3px 10px;
+  border-radius: var(--nz-radius-pill);
+  font-family: var(--nz-font-ui);
+  font-size: var(--nz-text-xs);
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  letter-spacing: var(--nz-tracking-tight);
+}
+
+.ratingNum {
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.tierBronze {
+  background: rgba(180, 83, 9, 0.12);
+  border-color: rgba(180, 83, 9, 0.35);
+  color: #d97706;
+}
+
+.tierSilver {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.35);
+  color: #cbd5e1;
+}
+
+.tierGold {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+}
+
+.tierPlatinum {
+  background: rgba(45, 212, 191, 0.12);
+  border-color: rgba(45, 212, 191, 0.38);
+  color: #2dd4bf;
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.15);
+}
+
+.tierDiamond {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.2);
+}
+
+.tierGrandmaster {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.25);
+}
+
+.crestIcon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+:global([dir="rtl"]) .badge {
+  letter-spacing: 0;
+}
+
+:global([dir="rtl"]) .ratingNum {
+  direction: ltr;
+  unicode-bidi: embed;
+}

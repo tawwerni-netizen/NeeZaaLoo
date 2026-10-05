@@ -1,0 +1,263 @@
+.window {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  background: var(--nz-surface-1);
+  /* A caller that needs a different size (ChatDrawer, sizing itself as a
+     floating panel or a mobile bottom sheet) sets --chat-window-height on
+     an ancestor; the standalone /chat page sets none and keeps this
+     original fixed height. */
+  height: var(--chat-window-height, 480px);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--nz-space-3) var(--nz-space-4);
+  border-bottom: 1px solid var(--nz-line);
+}
+
+.title {
+  font-size: var(--nz-text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-2);
+  margin: 0;
+}
+
+.status {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+}
+
+/* With the title hidden (ChatDrawer already shows it in its own bar), the
+   status dot is the header row's only child -- push it to the same end
+   `justify-content: space-between` would have placed it at otherwise. */
+.statusAlone {
+  margin-inline-start: auto;
+}
+
+.statusLive::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nz-win);
+  margin-inline-end: var(--nz-space-2);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--nz-space-3) var(--nz-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-3);
+}
+
+.empty {
+  margin: auto;
+  color: var(--nz-text-2);
+  font-size: var(--nz-text-sm);
+}
+
+.row {
+  display: flex;
+  gap: var(--nz-space-3);
+}
+
+.systemRow {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--nz-space-1);
+}
+
+.systemLabel {
+  font-size: var(--nz-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-3);
+  background: var(--nz-surface-2);
+  border-radius: var(--nz-radius-pill);
+  padding: 2px var(--nz-space-3);
+}
+
+.bubble {
+  min-width: 0;
+  flex: 1;
+}
+
+.metaRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--nz-space-2);
+}
+
+.nicknameButton {
+  font: inherit;
+  font-weight: 700;
+  font-size: var(--nz-text-sm);
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--nz-text);
+  cursor: pointer;
+}
+
+.nicknameButton:hover {
+  color: var(--nz-accent);
+  text-decoration: underline;
+}
+
+.badge {
+  font-size: var(--nz-text-sm);
+}
+
+.time {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+  margin-inline-start: auto;
+}
+
+.content {
+  margin: var(--nz-space-1) 0 0;
+  font-size: var(--nz-text-base);
+  line-height: var(--nz-leading-body);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.removedContent {
+  composes: content;
+  color: var(--nz-text-3);
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  gap: var(--nz-space-3);
+  margin-top: var(--nz-space-1);
+}
+
+.actionLink {
+  font: inherit;
+  font-size: var(--nz-text-xs);
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--nz-text-3);
+  cursor: pointer;
+}
+
+.actionLink:hover {
+  color: var(--nz-accent);
+}
+
+.actionLinkAdmin {
+  color: #f59e0b;
+}
+
+.actionLinkAdmin:hover {
+  color: #fbbf24;
+}
+
+.actionLinkDanger {
+  color: #ef4444;
+}
+
+.actionLinkDanger:hover {
+  color: #f87171;
+}
+
+.notice {
+  padding: var(--nz-space-2) var(--nz-space-4);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-warn);
+  background: rgba(154, 97, 0, 0.08);
+}
+
+.form {
+  display: flex;
+  gap: var(--nz-space-2);
+  padding: var(--nz-space-3);
+  border-top: 1px solid var(--nz-line);
+}
+
+.input {
+  flex: 1;
+  font: inherit;
+  font-size: var(--nz-text-base);
+  padding: var(--nz-space-2) var(--nz-space-3);
+  border-radius: var(--nz-radius-md);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-bg);
+  color: var(--nz-text);
+}
+
+.input:focus-visible {
+  outline: none;
+  box-shadow: var(--nz-focus);
+}
+
+/* --- The small report/block panel, an overlay within the window --- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 13, 16, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nz-space-4);
+}
+
+.panel {
+  width: 100%;
+  max-width: 320px;
+  background: var(--nz-surface-1);
+  border: 1px solid var(--nz-line);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-5);
+}
+
+.panelTitle {
+  font-size: var(--nz-text-md);
+  margin: 0 0 var(--nz-space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-2);
+  margin-bottom: var(--nz-space-4);
+}
+
+.field label {
+  font-size: var(--nz-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--nz-tracking-caps);
+  color: var(--nz-text-2);
+}
+
+.field select,
+.field input,
+.field textarea {
+  font: inherit;
+  font-size: var(--nz-text-base);
+  padding: var(--nz-space-2) var(--nz-space-3);
+  border-radius: var(--nz-radius-md);
+  border: 1px solid var(--nz-line);
+  background: var(--nz-bg);
+  color: var(--nz-text);
+}
+
+.panelActions {
+  display: flex;
+  gap: var(--nz-space-3);
+}

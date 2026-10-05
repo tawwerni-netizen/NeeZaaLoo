@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- brand/logo/nizalo-mark.svg, for light grounds -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <group>
+        <clip-path android:pathData="M8,8h18l44,58V8h18v80H70L26,30v58H8z" />
+        <path android:fillColor="#0B0D10" android:pathData="M6,6h84v84h-84z" />
+        <path android:fillColor="#FF5A2B" android:pathData="M22,2.727L74,71.273v22L22,24.727z" />
+    </group>
+</vector>

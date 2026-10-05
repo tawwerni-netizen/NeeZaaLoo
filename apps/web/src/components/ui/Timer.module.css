@@ -1,0 +1,82 @@
+.timerContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  padding: 4px 12px;
+  border-radius: var(--nz-radius-md);
+  background: var(--nz-surface-2);
+  border: 1px solid var(--nz-line);
+  font-family: var(--nz-font-num);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  font-size: var(--nz-text-base);
+  font-weight: 700;
+  color: var(--nz-text);
+  transition: all var(--nz-dur-fast) ease;
+}
+
+.active {
+  background: rgba(255, 90, 43, 0.12);
+  border-color: var(--nz-accent);
+  color: var(--nz-text);
+  box-shadow: 0 0 12px rgba(255, 90, 43, 0.25);
+}
+
+.warning {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: var(--nz-warn);
+  color: var(--nz-warn);
+  animation: timerWarning 1.2s infinite ease-in-out;
+}
+
+.critical {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: var(--nz-loss);
+  color: var(--nz-loss);
+  animation: timerCritical 0.6s infinite ease-in-out;
+}
+
+.clockIcon {
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.timeDisplay {
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+@keyframes timerWarning {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+  }
+}
+
+@keyframes timerCritical {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+  }
+}
+
+:global([dir="rtl"]) .timeDisplay {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .warning,
+  .critical {
+    animation: none;
+  }
+}

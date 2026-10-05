@@ -1,0 +1,8 @@
+{
+  "name": "@nizalo/tournament",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/tournament.mjs",
+  "scripts": { "test": "node --test" }
+}

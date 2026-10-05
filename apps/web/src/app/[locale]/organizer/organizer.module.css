@@ -1,0 +1,228 @@
+/* ==========================================================================
+   B2B Tournament Organizer (TO) Dashboard
+   ========================================================================== */
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-8);
+  padding-block: var(--nz-space-6) var(--nz-space-16);
+  min-height: 80vh;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 860px;
+}
+
+.badgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.b2bBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--nz-radius-pill);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: rgba(139, 92, 246, 0.12); /* Violet tint for Organizer */
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: #c4b5fd;
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.15);
+  width: fit-content;
+}
+
+.heading {
+  font-size: clamp(1.75rem, 3.8vw, 2.75rem);
+  font-weight: 900;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.subHeading {
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  line-height: 1.65;
+  max-width: 780px;
+}
+
+.dashboardLayout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: var(--nz-space-6);
+  align-items: start;
+}
+
+.sidebar {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-4);
+}
+
+.sidebarTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: var(--nz-space-2);
+}
+
+.sidebarMetric {
+  background: rgba(0, 0, 0, 0.2);
+  padding: var(--nz-space-4);
+  border-radius: var(--nz-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.metricLabel {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+
+.metricValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #F59E0B; /* Gold for earnings */
+}
+
+.mainContent {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--nz-radius-lg);
+  padding: var(--nz-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nz-space-6);
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  padding-bottom: var(--nz-space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Form Styles */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--nz-space-5);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroupFull {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.input, .select {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--nz-radius-sm);
+  padding: 12px 14px;
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.input:focus, .select:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.select option {
+  background: #111;
+  color: #fff;
+}
+
+.submitBtn {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  color: #fff;
+  border: none;
+  border-radius: var(--nz-radius-md);
+  padding: 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: var(--nz-space-2);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.errorMsg {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 12px;
+  border-radius: var(--nz-radius-sm);
+  font-size: 0.9rem;
+  margin-bottom: var(--nz-space-4);
+}
+
+.successMsg {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+  padding: 12px;
+  border-radius: var(--nz-radius-sm);
+  font-size: 0.9rem;
+  margin-bottom: var(--nz-space-4);
+}
+
+@media (max-width: 900px) {
+  .dashboardLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,113 @@
+.strip {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-3);
+  padding: 8px 16px;
+  border-radius: var(--nz-radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(22, 27, 34, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  width: 100%;
+  max-width: 460px;
+  margin-inline: auto;
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.active {
+  border-color: #ff5a2b;
+  box-shadow: 0 0 24px rgba(255, 90, 43, 0.4), inset 0 0 12px rgba(255, 90, 43, 0.15);
+  animation: turnPulse 2s ease-in-out infinite;
+}
+
+@keyframes turnPulse {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(255, 90, 43, 0.35), inset 0 0 10px rgba(255, 90, 43, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(255, 90, 43, 0.65), inset 0 0 18px rgba(255, 90, 43, 0.25);
+  }
+}
+
+.info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--nz-space-2);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nickname { overflow: hidden; text-overflow: ellipsis; }
+
+.meta {
+  display: flex;
+  gap: var(--nz-space-3);
+  font-size: var(--nz-text-xs);
+  color: var(--nz-text-3);
+}
+
+.disconnected {
+  font-size: var(--nz-text-xs);
+  color: var(--nz-warn);
+}
+
+.clock {
+  font-size: var(--nz-text-xl);
+  font-weight: 600;
+  padding: var(--nz-space-1) var(--nz-space-3);
+  border-radius: var(--nz-radius-sm);
+  background: var(--nz-surface-2);
+  flex: none;
+}
+
+.low { color: var(--nz-warn); }
+.critical {
+  color: var(--nz-loss);
+  animation: pulseCritical 1s ease-in-out infinite;
+}
+.flagged { color: var(--nz-loss); background: var(--nz-accent-soft); }
+
+@keyframes pulseCritical {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.03); }
+}
+
+.reverse {
+  flex-direction: row-reverse;
+}
+
+@media (max-width: 640px) {
+  .strip {
+    padding: 6px 10px;
+    gap: 8px;
+    border-radius: var(--nz-radius-lg);
+    max-width: 100%;
+  }
+
+  .nameRow {
+    gap: 4px;
+    font-size: 11px;
+    max-width: 90px;
+  }
+
+  .nickname {
+    font-size: 11px;
+  }
+
+  .meta {
+    gap: 4px;
+    font-size: 9px;
+  }
+
+  .clock {
+    font-size: 12.5px;
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+}
