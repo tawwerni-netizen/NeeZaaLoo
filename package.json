@@ -37,5 +37,8 @@
     "@electric-sql/pglite": "^0.5.8",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
+  },
+  "overrides": {
+    "source-map-js": "^1.2.2"
   }
 }
